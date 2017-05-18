@@ -49,6 +49,9 @@ if __name__ == '__main__':
     x = [[], []]
     y = [[], []]
     z = [[], []]
+    x_jitter = [[], []]
+    y_jitter = [[], []]
+    z_jitter = [[], []]
     t = [[], []]
 
     for t1 in range(0, 18800, 100):
@@ -58,7 +61,6 @@ if __name__ == '__main__':
             eccentricity = (ra[sat] - rp[sat]) / (ra[sat] + rp[sat])
             h = (rp[sat] * (1.0 + eccentricity * np.cos(0)) * mu)**0.5
             period_orbit = 2.0 * np.pi / mu**2 * (h / (1 - eccentricity**2.0)**0.5)**3.0
-
 
             Me = 2 * np.pi * t_orbit / period_orbit
 
@@ -102,9 +104,23 @@ if __name__ == '__main__':
             if sat == 0:
                 print(R)
 
+
+            # play here and see, how it will jitter!
+            random_range_low = -100.0
+            random_range_high = 100.0
+
+            x_dif = random.uniform(random_range_low, random_range_high)
+            y_dif = random.uniform(random_range_low, random_range_high)
+            z_dif = random.uniform(random_range_low, random_range_high)
+
             x[sat].append(R[0,0])
             y[sat].append(R[0,1])
             z[sat].append(R[0,2])
+
+            x_jitter[sat].append(R[0,0] + x_dif)
+            y_jitter[sat].append(R[0,1] + y_dif)
+            z_jitter[sat].append(R[0,2] + z_dif)
+
             t[sat].append(t1)
 
 
@@ -116,10 +132,15 @@ if __name__ == '__main__':
     ax = fig.gca(projection='3d')
     for sat in range(len(ra)):
         ax.plot(x[sat], y[sat], z[sat], "o", label='orbit original')
-        f = open("orbit"+str(sat)+".dat", "w")
+        ax.plot(x_jitter[sat], y_jitter[sat], z_jitter[sat], "o-", label='orbit jittery')
+        f1 = open("orbit"+str(sat)+"perfect.dat", "w")
+        f2 = open("orbit"+str(sat)+"jittery.dat", "w")
+
         for i in range(len(z[sat])):
-            f.write(str(t[sat][i]) +","+ str(x[sat][i]) +","+ str(y[sat][i]) +","+ str(z[sat][i]) + "\n")
-        f.close
+            f1.write(str(t[sat][i]) +","+ str(x[sat][i]) +","+ str(y[sat][i]) +","+ str(z[sat][i]) + "\n")
+            f2.write(str(t[sat][i]) +","+ str(x_jitter[sat][i]) +","+ str(y_jitter[sat][i]) +","+ str(z_jitter[sat][i]) + "\n")
+        f1.close
+        f2.close
     ax.legend()
 
     plt.show()
