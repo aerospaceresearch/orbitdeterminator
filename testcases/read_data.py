@@ -21,3 +21,12 @@ def load_data(filename):
 		orbit.append(data_tup)
 
 	return orbit
+
+if __name__ == "__main__":
+
+	orbit = load_data(orbit0perfect.csv)
+
+	print("[Time \tX\tY\tZ ]")
+
+	for point in orbit:
+		print(point)
