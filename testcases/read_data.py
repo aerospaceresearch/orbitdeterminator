@@ -24,7 +24,7 @@ def load_data(filename):
 
 if __name__ == "__main__":
 
-	orbit = load_data(orbit0perfect.csv)
+	orbit = load_data('orbit0perfect.csv')
 
 	print("[Time \tX\tY\tZ ]")
 
