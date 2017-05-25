@@ -6,27 +6,48 @@ Date Created : 21/05/2017
 import os
 import sys
 import csv
+import pickle
 import numpy as np
 
-def load_data(filename):
+def load_data(folder_name):
 	'''
-	Returns a list of numpy arrays with each array of the format 
-	[timestamp, x-coordinate, y-coordinate, z-coordinate]
+	Returns a dictionary with the following format :
+	{
+		'filename1' : orbit1
+		'filename2' : orbit2
+		.
+		.
+		.
+	
+		}
+
+	Each point of the orbit is of the 
+	format : [timestamp, x-coordinate, y-coordinate, z-coordinate]
 	'''
 
-	data_list = list(csv.reader(open(filename, "r"), delimiter = ","))
-	orbit = []
-	for i in data_list:
-		data_tup = np.array(i, dtype = np.float)
-		orbit.append(data_tup)
+	parsed_orbits = {}
+	
+	for file in os.listdir(os.getcwd() + '/' + folder_name):
+		if file.endswith('.csv'):
 
-	return orbit
+			orbit_file = list(csv.reader(open(os.getcwd() + '/' + folder_name + '/' + str(file), "r"), delimiter = ","))
+			
+			orbit = []
+			
+			for point in orbit_file:
+				point_tuple = np.array(point, dtype = np.float)
+				
+				orbit.append(point_tuple)
+			parsed_orbits[file] = orbit
+
+	return parsed_orbits
 
 if __name__ == "__main__":
 
-	orbit = load_data('orbit0perfect.csv')
+	orbits = load_data(sys.argv[1])
 
-	print("[Time \tX\tY\tZ ]")
+	for file in orbits.keys():
+		print(file)
+		for points in orbits[file]:
+			print(points)
 
-	for point in orbit:
-		print(point)
