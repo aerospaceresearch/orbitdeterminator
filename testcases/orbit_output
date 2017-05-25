@@ -1,5 +1,5 @@
-Created by Alexandros Kazantzidis
-Date 25/05/17
+# Created by Alexandros Kazantzidis
+# Date 25/05/17
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -32,7 +32,7 @@ pd.set_option('display.max_rows', None)
 def pandas_data():
     df = pd.DataFrame(my_data)
     df = df.rename(columns={0: 'Time (sec)', 1: 'x (km)', 2: 'y (km)', 3: 'z (km)'})
-    print (df)
+    return df
 
 
 
@@ -84,7 +84,8 @@ if __name__ == "__main__":
 
 
     print ("Displaying the positional data set")
-    work = pandas_data()
+    df = pandas_data()
+    print(df)
 
     user = input('Do you want to see the graphical representation of the data you inserted? (Y/N):')
     if user == "Y":
