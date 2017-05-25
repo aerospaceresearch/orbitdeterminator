@@ -1,3 +1,6 @@
+Created by Alexandros Kazantzidis
+Date 26/05/17
+
 import numpy as np
 import matplotlib.pylab as plt
 import matplotlib as mpl
