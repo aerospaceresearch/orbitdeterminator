@@ -1,5 +1,5 @@
-Created by Alexandros Kazantzidis
-Date 25/05/17
+# Created by Alexandros Kazantzidis
+# Date 25/05/17
 
 
 from math import *
@@ -187,4 +187,4 @@ r = np.array([ 5.0756899358316559e+03,-4.5590381308371752e+03,  1.93222281777316
 v = np. array([ 1.3360847905126974e+00, -1.5698574946888049e+00, -7.2117328822023676e+00])
 
 kep=state_kep(r,v)
-print kep
+print (kep)
