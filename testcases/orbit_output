@@ -11,8 +11,8 @@ import qgrid
 
 ## This code will take as input an numpy array with positional satellite data sets and will present it to the
 ## user using pandas and matplotilib 3d graph and do some simple statistical filtering 
-## it needs a csv file in the same folder called 'orbit' to work properly, needs implementation with Nilesh read_data code to
-## be completed 
+## IMPORTANT TO RUN : it needs a csv file in the same folder called 'orbit' to work properly, 
+## needs implementation with Nilesh read_data code to be completed 
 
 
 
@@ -131,6 +131,10 @@ def extreme_values():
 
 
 
+
+
+
+
 if __name__ == "__main__":
 
     print("Displaying the positional data set")
@@ -172,5 +176,7 @@ if __name__ == "__main__":
             break
         else:
             print('Please provide a letter like Y or N')
+
+    user = input('Press ENTER to end program')
 
 
