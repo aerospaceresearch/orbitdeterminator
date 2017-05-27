@@ -1,5 +1,5 @@
 ## read_data.py
 
-Alexandros work on the project
+Read data from a folder in the same directory as that of read_data.py
 
 Usage : python3 read_data.py [folder_name]
