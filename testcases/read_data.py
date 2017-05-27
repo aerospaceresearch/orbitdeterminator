@@ -46,8 +46,8 @@ if __name__ == "__main__":
 
 	orbits = load_data(sys.argv[1])
 
-	for file in orbits.keys():
-		print(file)
-		for points in orbits[file]:
-			print(points)
+	pickle.dump(orbits, open("orbits.p", "wb"))
+
+	print("Object file created with the name 'orbits.p'!!")
+
 
