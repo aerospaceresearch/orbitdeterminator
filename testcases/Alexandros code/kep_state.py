@@ -1,3 +1,6 @@
+# Created by Alexandros Kazantzidis
+# Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
+
 import numpy as np
 from math import *
 import pandas as pd
