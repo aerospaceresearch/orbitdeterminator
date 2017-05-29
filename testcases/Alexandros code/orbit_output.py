@@ -1,5 +1,7 @@
-# Created by Alexandros Kazantzidis
-# Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
+'''
+Created by Alexandros Kazantzidis
+Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
+'''
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -21,6 +23,7 @@ import qgrid
 
 from numpy import genfromtxt
 name = 'orbit.csv'
+
 def get_data(folder):
     my_data = genfromtxt(name, delimiter = ',')
     return my_data
@@ -28,23 +31,29 @@ my_data = get_data(name)
 
 
 
-## present the values with pandas frame
 
 import pandas as pd
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 def pandas_data():
+    '''
+    present the values with pandas frame
+    '''
+
     df = pd.DataFrame(my_data)
     df = df.rename(columns={0: 'Time (sec)', 1: 'x (km)', 2: 'y (km)', 3: 'z (km)'})
     return df
 
 
 
-## present a 3d matplotlib graph diplaying the orbit
+
 
 def graph():
-    mpl.rcParams['legend.fontsize'] = 10
+    '''
+    present a 3d matplotlib graph diplaying the orbit
+    '''
 
+    mpl.rcParams['legend.fontsize'] = 10
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
@@ -58,10 +67,16 @@ def graph():
 
 
 
-## present a graph about the absolute value of the position vector r = (x**2 + y**2 + z**2) ** (0.5) which will help us
-## identify some extreme jittery values of the data set
+
 
 def absolute_value():
+    '''
+    computes the absolute value of the position vector 
+    r = (x**2 + y**2 + z**2) ** (0.5) which will help us
+    identify some extreme jittery values of the data set
+    '''
+
+
 
     r = np.zeros((len(my_data), 1))
     for i in range(0,len(my_data)):
@@ -74,6 +89,11 @@ def absolute_value():
     return r
 
 def absolute_graph():
+    ''' 
+    plots the graph of the absolute value of the position vector r
+    '''
+
+
     r = absolute_value()
     fig_r = plt.figure()
     ax1 = plt.gca()
@@ -87,11 +107,14 @@ def absolute_graph():
     plt.show()
 
 
-## find some extreme jittery values by seeking big differences between two consecutive values of the |r|
-## first off we find the mean value and std for all the two consecutive differences
-## then we use these information to identify some extreme values and isolate them
+
 
 def extreme_values():
+    '''
+    find some extreme jittery values by seeking big differences between two consecutive values of the |r|
+    first off we find the mean value and std for all the two consecutive differences
+    then we use these information to identify some extreme values and isolate them
+    '''
 
     r = absolute_value()
     dif = np.zeros(((len(r)-1), 1))
@@ -139,7 +162,7 @@ if __name__ == "__main__":
 
     print("Displaying the positional data set")
     df = pandas_data()
-    print (df)
+    print(df)
 
 
     while True:
