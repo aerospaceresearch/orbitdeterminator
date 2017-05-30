@@ -1,4 +1,3 @@
 numpy
 matplotlib
 pandas
-Pykep (library for orbital mechanics computations)
