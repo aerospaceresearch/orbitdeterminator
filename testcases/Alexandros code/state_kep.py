@@ -53,23 +53,19 @@ def state_kep(r,v):
 
 	input
 
-	mu = central body gravitational constant (km**3/sec**2)
-	r  = eci position vector (kilometers)
-	v  = eci velocity vector (kilometers/second)
+	r  = eci position vector (kilometers) (3,1 numpy array)
+	v  = eci velocity vector (kilometers/second) (3,1 numpy array)
 
 	output
 
 	oev(1) = semimajor axis (kilometers)
 	oev(2) = orbital eccentricity (non-dimensional)
 	         (0 <= eccentricity < 1)
-	oev(3) = orbital inclination (radians)
-	         (0 <= inclination <= pi)
-	oev(4) = argument of perigee (radians)
-	         (0 <= argument of perigee <= 2 pi)
-	oev(5) = right ascension of ascending node (radians)
-	         (0 <= raan <= 2 pi)
-	oev(6) = true anomaly (radians)
-	         (0 <= true anomaly <= 2 pi)
+	oev(3) = orbital inclination (degrees)	         
+	oev(4) = argument of perigee (degress)	         
+	oev(5) = right ascension of ascending node (degrees)
+	oev(6) = true anomaly (degrees)
+	         
 	'''
 	
 	mu = 398600.4405
@@ -171,8 +167,13 @@ def state_kep(r,v):
 	firstint=int(first)
 	secondint=int(second)
 	tanom = first - (secondint*(firstint/secondint))
+
+
+
 	inc = degrees(inc)
-	
+	argper = degrees(argper)
+	raan = degrees(raan)
+	tanom = degrees(tanom)
 
 # load orbital element vector
 	oev = np.zeros((6,1))
