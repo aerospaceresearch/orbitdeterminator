@@ -1,5 +1,6 @@
-# Created by Alexandros Kazantzidis
-# Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
+''' Created by Alexandros Kazantzidis
+Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
+'''
 
 from math import *
 from decimal import *
@@ -12,17 +13,18 @@ np.set_printoptions(precision=16)
 
 
 def atan3(a,b):
-		
-	# four quadrant inverse tangent
 
-	# input
+	'''four quadrant inverse tangent
 
-	#  a = sine of angle
-	#  b = cosine of angle
+	input
 
-	# output
+	a = sine of angle
+	b = cosine of angle
 
-	#  y = angle (radians 0 =< c <= 2 * pi)
+	output
+
+	y = angle (radians 0 =< c <= 2 * pi)
+	'''
 
 	epsilon = 0.0000000001
 
@@ -46,28 +48,25 @@ def atan3(a,b):
 def state_kep(r,v):
 	
 	
-	# convert eci state vector to six classical orbital
-	# elements via equinoctial elements
+	'''convert eci state vector to six classical orbital
+	elements via equinoctial elements
 
-	# input
+	input
 
-	#  mu = central body gravitational constant (km**3/sec**2)
-	#  r  = eci position vector (kilometers)
-	#  v  = eci velocity vector (kilometers/second)
+	r  = eci position vector (kilometers) (3,1 numpy array)
+	v  = eci velocity vector (kilometers/second) (3,1 numpy array)
 
-	# output
+	output
 
-	#  oev(1) = semimajor axis (kilometers)
-	#  oev(2) = orbital eccentricity (non-dimensional)
-	#           (0 <= eccentricity < 1)
-	#  oev(3) = orbital inclination (radians)
-	#           (0 <= inclination <= pi)
-	#  oev(4) = argument of perigee (radians)
-	#           (0 <= argument of perigee <= 2 pi)
-	#  oev(5) = right ascension of ascending node (radians)
-	#           (0 <= raan <= 2 pi)
-	#  oev(6) = true anomaly (radians)
-	#           (0 <= true anomaly <= 2 pi)
+	oev(1) = semimajor axis (kilometers)
+	oev(2) = orbital eccentricity (non-dimensional)
+	         (0 <= eccentricity < 1)
+	oev(3) = orbital inclination (degrees)	         
+	oev(4) = argument of perigee (degress)	         
+	oev(5) = right ascension of ascending node (degrees)
+	oev(6) = true anomaly (degrees)
+	         
+	'''
 	
 	mu = 398600.4405
 
@@ -168,8 +167,13 @@ def state_kep(r,v):
 	firstint=int(first)
 	secondint=int(second)
 	tanom = first - (secondint*(firstint/secondint))
+
+
+
 	inc = degrees(inc)
-	
+	argper = degrees(argper)
+	raan = degrees(raan)
+	tanom = degrees(tanom)
 
 # load orbital element vector
 	oev = np.zeros((6,1))
@@ -182,8 +186,11 @@ def state_kep(r,v):
 	return oev
 	
 
-r = np.array([ 5.0756899358316559e+03,-4.5590381308371752e+03,  1.9322228177731663e+03])
-v = np. array([ 1.3360847905126974e+00, -1.5698574946888049e+00, -7.2117328822023676e+00])
 
-kep=state_kep(r,v)
-print(kep)
+if __name__ == "__main__":
+
+	r = np.array([ 5.0756899358316559e+03,-4.5590381308371752e+03,  1.9322228177731663e+03])
+	v = np. array([ 1.3360847905126974e+00, -1.5698574946888049e+00, -7.2117328822023676e+00])
+
+	kep=state_kep(r,v)
+	print(kep)
