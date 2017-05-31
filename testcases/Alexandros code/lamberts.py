@@ -4,9 +4,7 @@ Date : 29/05/17
 '''
 
 import numpy as np
-import pandas as pd
 import matplotlib.pylab as plt
-import matplotlib as mpl
 import orbit_output
 import PyKEP as pkp
 from math import *

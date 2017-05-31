@@ -169,10 +169,13 @@ def state_kep(r,v):
 	tanom = first - (secondint*(firstint/secondint))
 
 
-
 	inc = degrees(inc)
 	argper = degrees(argper)
+
 	raan = degrees(raan)
+
+	if raan > 300.0:
+		raan = raan - 360.0
 	tanom = degrees(tanom)
 
 # load orbital element vector

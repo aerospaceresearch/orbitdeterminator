@@ -99,7 +99,7 @@ def absolute_graph():
 
 
     r = absolute_value()
-    fig_r = plt.figure()
+
     ax1 = plt.gca()
 
 
@@ -180,6 +180,7 @@ if __name__ == "__main__":
 
         user = input('Do you want to see the graphical representation of the data you inserted? (Y/N):')
         if user == "Y":
+            print(".........")
             print('Use the left click to rotate the grafh and the right click to zoom in and out')
             work = graph()
             break
@@ -190,6 +191,7 @@ if __name__ == "__main__":
 
 
     while True:
+        print(".........")
         user = input('Do you want to see the graphical representation of the absolute value of the positional vector (Y/N):')
         if user == "Y":
             work = absolute_graph()
@@ -201,9 +203,11 @@ if __name__ == "__main__":
 
 
     while True:
+        print(".........")
         user = input( 'Do you want to see and delete some extremely jittery data (Y/N):')
         if user == "Y":
             df, new_data = extreme_values()
+            print(".........")
             print(df)
             print('These data have been deleted from the initial data set')
             break
@@ -212,6 +216,7 @@ if __name__ == "__main__":
         else:
             print('Please provide a letter like Y or N')
 
+    print(".........")
     user = input('Press ENTER to end program')
 
 
