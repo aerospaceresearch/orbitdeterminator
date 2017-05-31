@@ -1,5 +1,6 @@
-''' Created by Alexandros Kazantzidis
-Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
+''' 
+Created by Alexandros Kazantzidis
+Date 25/05/17 
 '''
 
 from math import *
@@ -39,7 +40,6 @@ def atan3(a,b):
 
 	if (abs(b) < epsilon):
 		y = c
-		
 	else:
 		y = c + np.sign(a) * np.sign(b) * (abs(atan(a / b)) - pidiv2)
 		
@@ -61,8 +61,8 @@ def state_kep(r,v):
 	oev(1) = semimajor axis (kilometers)
 	oev(2) = orbital eccentricity (non-dimensional)
 	         (0 <= eccentricity < 1)
-	oev(3) = orbital inclination (degrees)	         
-	oev(4) = argument of perigee (degress)	         
+	oev(3) = orbital inclination (degrees)
+	oev(4) = argument of perigee (degress)
 	oev(5) = right ascension of ascending node (degrees)
 	oev(6) = true anomaly (degrees)
 	         

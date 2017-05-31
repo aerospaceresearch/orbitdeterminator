@@ -14,9 +14,9 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 ## This code will take as input an numpy array with positional satellite data sets and will present it to the
-## user using pandas and matplotilib 3d graph and do some simple statistical filtering 
-## IMPORTANT TO RUN : it needs a csv file in the same folder called 'orbit' to work properly, 
-## needs implementation with Nilesh read_data code to be completed 
+## user using pandas and matplotilib 3d graph and do some simple statistical filtering
+## IMPORTANT TO RUN : it needs a csv file in the same folder called 'orbit' to work properly,
+## needs implementation with Nilesh read_data code to be completed
 
 
 
@@ -75,7 +75,7 @@ def graph():
 
 def absolute_value():
     '''
-    computes the absolute value of the position vector 
+    computes the absolute value of the position vector
     r = (x**2 + y**2 + z**2) ** (0.5) which will help us
     identify some extreme jittery values of the data set
     '''
@@ -93,7 +93,7 @@ def absolute_value():
     return r
 
 def absolute_graph():
-    ''' 
+    '''
     plots the graph of the absolute value of the position vector r
     '''
 
@@ -123,7 +123,7 @@ def extreme_values():
     Output
     
     df = a pandas dataframe containing all the jittery data that are going to be deleted
-    newmy_data = the new data without the jittery ones in the form that have been inputed 
+    newmy_data = the new data without the jittery ones in the form that have been inputed
     (numpy array holding the time,x,y,z positional data)
     '''
 

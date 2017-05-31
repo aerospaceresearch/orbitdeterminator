@@ -19,8 +19,7 @@ def create_kep(data):
 
     '''This function computes all the keplerian elements for every point of the orbit you provide
        It implements a tool for deleting all the points that give extremely jittery state vectors 
-       
-    
+
         Input
         
         data = read file csv that contains the positional data set in (Time, x, y, z) Format
@@ -28,8 +27,8 @@ def create_kep(data):
         Output
         
         kep = a numpy array containing all the keplerian elements computed for the orbit given in 
-              [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω), 
-              right ascension of the ascending node (Ω), true anomaly (v)] format 
+            [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω), 
+            right ascension of the ascending node (Ω), true anomaly (v)] format 
     '''
 
     kep1 = np.zeros((len(my_data), 6))

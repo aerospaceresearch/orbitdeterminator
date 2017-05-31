@@ -1,4 +1,4 @@
-''' 
+'''
 Created by Alexandros Kazantzidis
 Date : 29/05/17
 '''
@@ -15,7 +15,8 @@ my_data = orbit_output.get_data('orbit')
 
 
 def lamberts(x1, x2):
-    '''Takes two position points - numpy arrays with time,x,y,z as elements
+    '''
+    Takes two position points - numpy arrays with time,x,y,z as elements
     and produces two vectors with the state vector for both positions using Lamberts solution
 
     Input
@@ -61,7 +62,7 @@ def transform(r, v):
     Output
     
     kep = keplerian elements [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω), 
-          right ascension of the ascending node (Ω), true anomaly (v)]
+        right ascension of the ascending node (Ω), true anomaly (v)]
     '''
 
     import state_kep
