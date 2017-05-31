@@ -1,6 +1,6 @@
 '''
 Created by Alexandros Kazantzidis
-Date 25/05/17 
+Date 25/05/17
 '''
 
 import numpy as np
