@@ -1,6 +1,6 @@
 '''
 Created by Alexandros Kazantzidis
-Date 30/05/17
+Date 30/05/17 (Kalman fitlers implementation in 31/05/17)
 '''
 
 from math import *
