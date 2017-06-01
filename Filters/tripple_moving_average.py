@@ -42,15 +42,28 @@ def triple_moving_average(signal_array, window_size):
        A filtered array of size same as that of signal_array 
     '''
     filtered_signal = []
-    for point in signal_array:
-        A = []
-        B = []
-        while(window_size !=0 ):
+    arr_len = len(signal_array)
+    
+    for point in signal_array[]:
+        if (signal_array.index(point) < window_size or signal_array.index(point) > arr_len - window_size ):
+            filtered_signal.append(point)
+
+        else:
+            A, B = [], []
+            pos = signal_array.index(point)
+            
+            for i in range(1, window_size):
+                A.append[signal_array[pos + i]]
+                b.append[signal_array[pos - i]]
+
+            wa_A = weighted_average(A)
+            wa_B = weighted_average(B)
+            filtered_signal.append((point + wa_B + wa_A ) / 3)
+
+    return filtered_signal
 
 
 
-
-    pass
 
 
 if __name__ == "__main__":
