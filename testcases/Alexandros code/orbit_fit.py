@@ -74,7 +74,7 @@ def create_kep(data):
         j += 1
 
 
-    ## collecting the position vector r(x ,y, z) that come along with the velocities with kept above
+    ## collecting the position vector r(x ,y, z) that come along with the velocities kept above
     final_r = np.zeros((len(store_i), 3))
     j = 0
     for i in store_i:
