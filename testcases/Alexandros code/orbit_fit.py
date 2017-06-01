@@ -16,7 +16,7 @@ import orbit_output
 
 
 
-def create_kep(data):
+def create_kep(data, bool):
 
     '''This function computes all the keplerian elements for every point of the orbit you provide
        It implements a tool for deleting all the points that give extremely jittery state vectors
@@ -24,6 +24,7 @@ def create_kep(data):
         Input
         
         data = read file csv that contains the positional data set in (Time, x, y, z) Format
+        bool = True if the motion is retrogade, bool = False if the motion is counter - clock wise
         
         Output
         
@@ -35,7 +36,7 @@ def create_kep(data):
 
     v_hold = np.zeros((len(my_data), 3))
     v_abs1 = np.empty([len(my_data)])
-    v1, v2 = lamberts.lamberts(my_data[0, :], my_data[1, :])
+    v1, v2 = lamberts.lamberts(my_data[0, :], my_data[1, :], bool)
     v_abs1[0] = (v1[0]**2 + v1[1]**2 + v1[2]**2) ** (0.5)
     v_hold[0] = v1
 
@@ -43,7 +44,7 @@ def create_kep(data):
     for i in range(1, (len(my_data)-1)):
 
         j = i + 1
-        v1, v2 = lamberts.lamberts(my_data[i, :], my_data[j, :])
+        v1, v2 = lamberts.lamberts(my_data[i, :], my_data[j, :], bool)
 
 
         ##compute the absolute value of the velocity vector for every point
@@ -166,8 +167,23 @@ def kalman(kep):
 
 if __name__ == "__main__":
 
+
+    while True:
+        user = input("Is the motion retrogade or counter-clock wise[Retro/Counter]: ")
+        print(" ")
+        if user == "Retro":
+            bool = True
+            break
+        elif user == "Counter":
+            bool = False
+            break
+        else:
+            print("Please provide a valid answer")
+            print(" ")
+
+
     my_data = orbit_output.get_data('orbit')
-    kep = create_kep(my_data)
+    kep = create_kep(my_data, bool)
     df = pd.DataFrame(kep)
     df = df.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
                             4: 'Ω (degrees)', 5: 'v (degrees)'})
@@ -177,15 +193,14 @@ if __name__ == "__main__":
 
 
     my_data = orbit_output.get_data('orbit')
-    kep = create_kep(my_data)
+    kep = create_kep(my_data, bool)
     kep_final = kalman(kep)
     df1 = pd.DataFrame(kep_final)
     df1 = df1.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
-                            4: 'Ω (degrees)', 5: 'v (degrees)'})
-
+                              4: 'Ω (degrees)', 5: 'v (degrees)'})
 
     user = input('Press ENTER to see kalman filters solution')
-    print(".........")
+    print(" ")
     print("These are the final fitted values for the keplerian elements based on kalman filtering")
     print(df1)
 
