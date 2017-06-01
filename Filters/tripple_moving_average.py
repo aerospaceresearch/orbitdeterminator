@@ -41,12 +41,19 @@ def triple_moving_average(signal_array, window_size):
     Returns:
        A filtered array of size same as that of signal_array 
     '''
+    filtered_signal = []
+    for point in signal_array:
+        A = []
+        B = []
+        while(window_size !=0 ):
+
+
 
 
     pass
 
 
-if __name__ = "__main__":
+if __name__ == "__main__":
 
     signal_x = []
 
