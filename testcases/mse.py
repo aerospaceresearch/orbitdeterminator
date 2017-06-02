@@ -3,8 +3,8 @@ Author: Nilesh Chaturvedi
 Date created: 2nd June, 2017
 
 Calculates mean error between true value and smooth value
-arg[1]: true data, 
-arg[2]: filtered data
+arg[1]: true data,
+arg[2]:filtered data
 '''
 import os
 import sys
@@ -20,7 +20,7 @@ def error(true, filtered):
 	filtered: objective matrix
 
 	Returns:
-	percentage error between the two matrices 
+	percentage error between the two matrices
 	'''
 	error_x = numpy.absolute(true[:,1] - filtered[:,1])
 	error_y = numpy.absolute(true[:,2] - filtered[:,2])

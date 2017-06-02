@@ -26,8 +26,7 @@ def load_data(filename):
 
 if __name__ == "__main__":
 	'''
-	Returns a dictionary with key being the name of the file and value being
-	the orbit.
+	Returns a dictionary of the format {filename: orbit}
 	'''
 	parsed_orbits = {}
 	files = os.listdir(os.getcwd() + '/' + sys.argv[1])

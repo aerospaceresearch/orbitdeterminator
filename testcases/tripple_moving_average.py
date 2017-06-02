@@ -2,7 +2,7 @@
 Author : Nilesh Chaturvedi
 Date Created : 31st May, 2017
 
-Triple Moving Average : Here we take the average of 3 terms x0, A, B where, 
+Triple Moving Average : Here we take the average of 3 terms x0, A, B where,
 x0 = The point to be estimated
 A = weighted average of n terms previous to x0
 B = weighted avreage of n terms ahead of x0
@@ -28,7 +28,6 @@ def weighted_average(params):
     weighted_sum = 0
     weight = len(params)
     weight_sum = weight * (weight+1) / 2
-    
     for num in params:
         weighted_sum += weight*num
         weight -= 1
@@ -42,11 +41,11 @@ def triple_moving_average(signal_array, window_size):
 
     Args:
         signal_array: the array of values on which the filter is to be applied
-        window_size: the no. of points before and after x0 which should be 
+        window_size: the no. of points before and after x0 which should be
         considered for calculating A and B
 
     Returns:
-       A filtered array of size same as that of signal_array 
+       A filtered array of size same as that of signal_array
     '''
     filtered_signal = []
     arr_len = len(signal_array)
