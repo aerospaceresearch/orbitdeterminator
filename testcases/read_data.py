@@ -25,9 +25,8 @@ def load_data(filename):
 	return np.array(orbit)
 
 if __name__ == "__main__":
-	'''
-	Returns a dictionary of the format {filename: orbit}
-	'''
+	'''Returns a dictionary of the format {filename: orbit}'''
+	
 	parsed_orbits = {}
 	files = os.listdir(os.getcwd() + '/' + sys.argv[1])
 
