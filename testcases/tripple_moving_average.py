@@ -8,6 +8,13 @@ A = weighted average of n terms previous to x0
 B = weighted avreage of n terms ahead of x0
 n = window size
 '''
+import os
+import sys
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import read_data as rd
+
+
 def weighted_average(params):
     '''
     Calculates the weighted average of terms in the input
@@ -44,7 +51,7 @@ def triple_moving_average(signal_array, window_size):
     filtered_signal = []
     arr_len = len(signal_array)
     
-    for point in signal_array[]:
+    for point in signal_array:
         if (signal_array.index(point) < window_size or signal_array.index(point) > arr_len - window_size ):
             filtered_signal.append(point)
 
@@ -53,8 +60,8 @@ def triple_moving_average(signal_array, window_size):
             pos = signal_array.index(point)
             
             for i in range(1, window_size):
-                A.append[signal_array[pos + i]]
-                b.append[signal_array[pos - i]]
+                A.append(signal_array[pos + i])
+                B.append(signal_array[pos - i])
 
             wa_A = weighted_average(A)
             wa_B = weighted_average(B)
@@ -62,14 +69,19 @@ def triple_moving_average(signal_array, window_size):
 
     return filtered_signal
 
-
-
-
-
 if __name__ == "__main__":
 
-    signal_x = []
+    signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
+    window = 3
 
-    moving_window = 3
+    averaged_x = triple_moving_average(list(signal[:,1]), window)
+    averaged_y = triple_moving_average(list(signal[:,2]), window)
+    averaged_z = triple_moving_average(list(signal[:,3]), window)
 
-    averaged_signal = triple_moving_average(signal_x, moving_window)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot(averaged_x, averaged_y, averaged_z, 'b', label='filtered')
+    ax.plot(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
+    ax.legend(['Filtered Orbit', 'Noisy Orbit'])
+    plt.show()
