@@ -12,7 +12,7 @@ from math import *
 my_data = orbit_output.get_data('orbit')
 
 
-def lamberts(x1, x2, bool):
+def lamberts(x1, x2):
     '''
     Takes two position points - numpy arrays with time,x,y,z as elements
     and produces two vectors with the state vector for both positions using Lamberts solution
@@ -37,8 +37,22 @@ def lamberts(x1, x2, bool):
     x2_new = [1, 1, 1]
     x2_new[:] = x2[1:4]
     time = x2[0] - x1[0]
-    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, bool)
 
+    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
+
+    v1 = l.get_v1()
+    v2 = l.get_v2()
+    v1 = np.asarray(v1)
+    v2 = np.asarray(v2)
+    v1 = np.reshape(v1, 3)
+    v2 = np.reshape(v2, 3)
+
+
+    check = (np.greater(v1, np.array([100.0, 100.0, 100.0])))
+    check2 = (np.less(v1, np.array([-100.0, -100.0, -100.0])))
+
+    if np.any(check) or np.any(check2) == True:
+        l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, True)
 
     v1 = l.get_v1()
     v2 = l.get_v2()
@@ -74,23 +88,9 @@ def transform(r, v):
 if __name__ == "__main__":
 
 
-    while True:
-        user = input("Is the motion retrogade or counter-clock wise[Retro/Counter]: ")
-        print(" ")
-        if user == "Retro":
-            bool = True
-            break
-        elif user == "Counter":
-            bool = False
-            break
-        else:
-            print("Please provide a valid answer")
-            print(" ")
-
-
     r1 = my_data[0, 1:4]
     r2 = my_data[1, 1:4]
-    v1, v2 = lamberts(my_data[0, :], my_data[1, :], bool)
+    v1, v2 = lamberts(my_data[2, :], my_data[3, :])
     kep1 = transform(r1, v1)
     print('These are the velocities for the two first points of your data set')
     print(v1, v2)
