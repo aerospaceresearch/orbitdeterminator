@@ -1,3 +1,9 @@
+'''
+Created by Alexandros Kazantzidis
+Date 10/02/17
+'''
+
+
 from math import *
 from decimal import *
 import numpy as np
@@ -16,11 +22,11 @@ def ypol_a(y):
 	
 	# function which computes the 1x6 vector y_parag (contains velocity and
 	# acceleration values) by using the state vector y
-	# keplerian motion to initialize the acceleration vector 
+	# keplerian motion to initialize the acceleration vector
 
 	# input
 
-	# y = state vector (y(1),y(2),y(3) = position vector and y(4),y(5),y(6) = velocity vector) 
+	# y = state vector (y(1),y(2),y(3) = position vector and y(4),y(5),y(6) = velocity vector)
 	# y(1),y(2),y(3) m and y(4),y(5),y(6) m/s
 
 	# output
@@ -168,9 +174,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 	beta[11,9] = 6.0 / 41
 	beta[12,9] = 12.0 / 41
 	beta[12,11] = 1.0
-	df1=pd.DataFrame(beta)
-	
-	
+
 	
 	f = np.zeros((neq,13));
 
@@ -187,7 +191,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 
 		twrk = ti  
 		xwrk[:,0] = x[:,0]
-		
+
 	# check for last dt
 
 		if abs(dt) > abs(tf - ti):
@@ -198,7 +202,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 		if abs(ti - tf) < 0.00000001:
 			xout = x
 			return xout
-			break
+
 			
 		xdot = ypol_a(x)
 		xdot_tra=np.transpose(xdot)

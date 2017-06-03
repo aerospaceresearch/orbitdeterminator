@@ -7,9 +7,6 @@ from math import *
 import numpy as np
 import pandas as pd
 pd.set_option('display.width', 1000)
-import matplotlib.pylab as plt
-import matplotlib as mpl
-import pylab
 
 import lamberts
 import orbit_output
@@ -37,7 +34,7 @@ def create_kep(my_data):
 
     v_hold = np.zeros((len(my_data), 3))
     v_abs1 = np.empty([len(my_data)])
-    v1, v2 = lamberts.lamberts(my_data[0, :], my_data[1, :])
+    v1 = lamberts.lamberts(my_data[0, :], my_data[1, :])
     v_abs1[0] = (v1[0]**2 + v1[1]**2 + v1[2]**2) ** (0.5)
     v_hold[0] = v1
 
@@ -45,7 +42,7 @@ def create_kep(my_data):
     for i in range(1, (len(my_data)-1)):
 
         j = i + 1
-        v1, v2 = lamberts.lamberts(my_data[i, :], my_data[j, :])
+        v1 = lamberts.lamberts(my_data[i, :], my_data[j, :])
 
 
         ##compute the absolute value of the velocity vector for every point
@@ -89,13 +86,21 @@ def create_kep(my_data):
 
         kep[i] = np.ravel(lamberts.transform(final_r[i], final_v[i]))
 
+    ## check in every row to see if eccentricity is over 1 then the solution is completely wrong and needs
+    ## to be deleted
+
+
+
+
+
+
     return kep
 
 ## find the mean value of all keplerian elements set and then do a kalman filtering to find the best fit
 
 def kalman(kep):
     '''
-    This function takes as an input lots of sets of keplerian elements and produces 
+    This function takes as an input lots of sets of keplerian elements and produces
     the fitted value of them by applying kalman filters
     
     Input
@@ -182,7 +187,7 @@ if __name__ == "__main__":
     #         print("Please provide a valid answer")
     #         print(" ")
 
-    my_data = orbit_output.get_data('orbit')
+    my_data = orbit_output.get_data('orbit1')
     my_data = golay_filter.golay(my_data)
     kep = create_kep(my_data)
     df = pd.DataFrame(kep)

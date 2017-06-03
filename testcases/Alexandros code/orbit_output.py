@@ -10,15 +10,10 @@ import matplotlib.pylab as plt
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 
-
-
-
 ## This code will take as input an numpy array with positional satellite data sets and will present it to the
 ## user using pandas and matplotilib 3d graph and do some simple statistical filtering
 ## IMPORTANT TO RUN : it needs a csv file in the same folder called 'orbit' to work properly,
 ## needs implementation with Nilesh read_data code to be completed
-
-
 
 
 ## First part the numpy array holding the time,x,y,z positional data
@@ -32,9 +27,6 @@ def get_data(folder):
 my_data = get_data(name)
 
 
-
-
-
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 def pandas_data():
@@ -45,9 +37,6 @@ def pandas_data():
     df = pd.DataFrame(my_data)
     df = df.rename(columns={0: 'Time (sec)', 1: 'x (km)', 2: 'y (km)', 3: 'z (km)'})
     return df
-
-
-
 
 
 def graph():
@@ -70,17 +59,12 @@ def graph():
     return ax
 
 
-
-
-
 def absolute_value():
     '''
     computes the absolute value of the position vector
     r = (x**2 + y**2 + z**2) ** (0.5) which will help us
     identify some extreme jittery values of the data set
     '''
-
-
 
     r = np.zeros((len(my_data), 1))
     for i in range(0,len(my_data)):
@@ -97,11 +81,9 @@ def absolute_graph():
     plots the graph of the absolute value of the position vector r
     '''
 
-
     r = absolute_value()
 
     ax1 = plt.gca()
-
 
     plt.plot(my_data[:,0], r, "o-", label='Absolute value of position vector r')
     ax1.legend()
@@ -110,8 +92,6 @@ def absolute_graph():
 
     plt.show()
     return ax1
-
-
 
 
 def extreme_values():
@@ -164,11 +144,6 @@ def extreme_values():
     return df, newmy_data
 
 
-
-
-
-
-
 if __name__ == "__main__":
 
     print("Displaying the positional data set")
@@ -218,5 +193,3 @@ if __name__ == "__main__":
 
     print(".........")
     user = input('Press ENTER to end program')
-
-

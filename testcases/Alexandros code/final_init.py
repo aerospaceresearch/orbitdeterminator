@@ -1,11 +1,16 @@
+'''
+Created by Alexandros Kazantzidis
+Date 03/06/17
+'''
+
+
 from math import *
 import numpy as np
 import pandas as pd
 pd.set_option('display.width', 1000)
 import matplotlib.pylab as plt
 import matplotlib as mpl
-import pylab
-from numpy import genfromtxt
+from mpl_toolkits.mplot3d import Axes3D
 
 import lamberts
 import orbit_output
@@ -43,16 +48,16 @@ def mainf(datafile):
 
     ## setting some inputs for the Runge Kutta numerical integration to run and find different state vectors for various
     ## time intervals
-    keep_state = np.zeros((6, 40))
+    keep_state = np.zeros((6, 20))
     ti = 0.0
-    tf = 50.0
+    tf = 100.0
     x = state
     h = 1.0
     tetol = 1e-04
-    for i in range(0, 40):
+    for i in range(0, 20):
 
         keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
-        tf = tf + 50
+        tf = tf + 100
 
     positions = keep_state[0:3, :]
 
@@ -68,7 +73,7 @@ def mainf(datafile):
     print(df)
 
     print(' ')
-    user = input("Press enter to continue")
+
     print(' ')
     print('Displaying the keplerian elements final computation given by the use of the filtered data set, Lamberts '
           'solution and Kalman filtering')
@@ -88,8 +93,8 @@ def mainf(datafile):
     ax = fig.gca(projection='3d')
 
     ax.plot(my_data[:, 1], my_data[:, 2], my_data[:, 3], ".", label='Initial data ')
-    ax.plot(my_data_filt[:, 1], my_data_filt[:, 2], my_data_filt[:, 3], "k", linestyle='-', label='Filtered data with golay')
-    ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after lamberts - kalman')
+    ax.plot(my_data_filt[:, 1], my_data_filt[:, 2], my_data_filt[:, 3], "k", linestyle='-', label='Filtered data with Savitzky - Golay filter')
+    ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after Lamberts - Kalman')
     ax.legend()
     ax.can_zoom()
     ax.set_xlabel('x (km)')

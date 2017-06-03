@@ -22,7 +22,7 @@ def lamberts(x1, x2):
     x1 = [time1,x1,y1,z1]
     x2 = [time2,x2,y2,z2]
     bool = True if the motion is retrogade, bool = False if the motion is counter - clock wise
-    
+
 
     Output
 
@@ -61,7 +61,7 @@ def lamberts(x1, x2):
     v1 = np.reshape(v1, 3)
     v2 = np.reshape(v2, 3)
 
-    return v1, v2
+    return v1
 
 
 def transform(r, v):
@@ -90,9 +90,9 @@ if __name__ == "__main__":
 
     r1 = my_data[0, 1:4]
     r2 = my_data[1, 1:4]
-    v1, v2 = lamberts(my_data[2, :], my_data[3, :])
+    v1 = lamberts(my_data[0, :], my_data[1, :])
     kep1 = transform(r1, v1)
-    print('These are the velocities for the two first points of your data set')
-    print(v1, v2)
+    print('This the velocity for the first points of your data set')
+    print(v1)
 
 
