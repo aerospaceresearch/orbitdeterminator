@@ -59,7 +59,7 @@ def graph():
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
-    ax.plot(my_data[:,1], my_data[:,2], my_data[:,3], "o-", label='Orbit visualization')
+    ax.plot(my_data[:, 1], my_data[:, 2], my_data[:, 3], "o-", label='Orbit visualization')
     ax.legend()
     ax.can_zoom()
     ax.set_xlabel('x (km)')

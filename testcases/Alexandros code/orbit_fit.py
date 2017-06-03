@@ -13,10 +13,11 @@ import pylab
 
 import lamberts
 import orbit_output
+import golay_filter
 
 
 
-def create_kep(data, bool):
+def create_kep(my_data):
 
     '''This function computes all the keplerian elements for every point of the orbit you provide
        It implements a tool for deleting all the points that give extremely jittery state vectors
@@ -36,7 +37,7 @@ def create_kep(data, bool):
 
     v_hold = np.zeros((len(my_data), 3))
     v_abs1 = np.empty([len(my_data)])
-    v1, v2 = lamberts.lamberts(my_data[0, :], my_data[1, :], bool)
+    v1, v2 = lamberts.lamberts(my_data[0, :], my_data[1, :])
     v_abs1[0] = (v1[0]**2 + v1[1]**2 + v1[2]**2) ** (0.5)
     v_hold[0] = v1
 
@@ -44,7 +45,7 @@ def create_kep(data, bool):
     for i in range(1, (len(my_data)-1)):
 
         j = i + 1
-        v1, v2 = lamberts.lamberts(my_data[i, :], my_data[j, :], bool)
+        v1, v2 = lamberts.lamberts(my_data[i, :], my_data[j, :])
 
 
         ##compute the absolute value of the velocity vector for every point
@@ -128,7 +129,7 @@ def kalman(kep):
         z[:, i] = kep[:, i]
 
 
-        Q = 1e-5  # process variance
+        Q = 1e-8  # process variance
 
         xhat = np.zeros((sz, 6))  # a posteri estimate of x
         P = np.zeros((sz, 6))  # a posteri error estimate
@@ -136,7 +137,7 @@ def kalman(kep):
         Pminus = np.zeros((sz, 6))  # a priori error estimate
         K = np.zeros((sz, 6))  # gain or blending factor
 
-        R = 0.1 ** 2  # estimate of measurement variance, change to see effect
+        R = 0.01 ** 2  # estimate of measurement variance, change to see effect
 
         # intial guesses
         xhat[0, i] = mean_kep[0, i]
@@ -168,22 +169,22 @@ def kalman(kep):
 if __name__ == "__main__":
 
 
-    while True:
-        user = input("Is the motion retrogade or counter-clock wise[Retro/Counter]: ")
-        print(" ")
-        if user == "Retro":
-            bool = True
-            break
-        elif user == "Counter":
-            bool = False
-            break
-        else:
-            print("Please provide a valid answer")
-            print(" ")
-
+    # while True:
+    #     user = input("Is the motion retrogade or counter-clock wise[Retro/Counter]: ")
+    #     print(" ")
+    #     if user == "Retro":
+    #         bool = True
+    #         break
+    #     elif user == "Counter":
+    #         bool = False
+    #         break
+    #     else:
+    #         print("Please provide a valid answer")
+    #         print(" ")
 
     my_data = orbit_output.get_data('orbit')
-    kep = create_kep(my_data, bool)
+    my_data = golay_filter.golay(my_data)
+    kep = create_kep(my_data)
     df = pd.DataFrame(kep)
     df = df.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
                             4: 'Ω (degrees)', 5: 'v (degrees)'})
@@ -191,9 +192,6 @@ if __name__ == "__main__":
     print(df)
 
 
-
-    my_data = orbit_output.get_data('orbit')
-    kep = create_kep(my_data, bool)
     kep_final = kalman(kep)
     df1 = pd.DataFrame(kep_final)
     df1 = df1.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',

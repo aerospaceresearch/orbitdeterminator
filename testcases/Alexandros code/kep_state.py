@@ -60,18 +60,18 @@ def Kep_state (kep):
 	
 	
 	
-	r = np.zeros((6,1))
+	r = np.zeros((6, 1))
 	mu = 398600.4405
 	
 	# unload orbital elements array
 	
-	sma_pre= (398600.4405*(86400**2))/((kep[5,0]**2)*4*(pi**2));
-	sma = sma_pre**(1.0/3.0) # sma is semi major axis, we use mean motion (kep(6)) to compute this
-	ecc = kep[2,0] # eccentricity
-	inc = kep[0,0] # inclination
+
+	sma = kep[0,0]
+	ecc = kep[1,0] # eccentricity
+	inc = kep[2,0] # inclination
 	argper = kep[3,0] # argument of perigee
-	raan = kep[1,0];# right ascension of the ascending node
-	tanom = Mtov(kep[4,0],ecc) # we use mean anomaly(kep(5)) and the function Mtov to compute true anomaly (tanom)
+	raan = kep[4,0]# right ascension of the ascending node
+	tanom = kep[5,0] # we use mean anomaly(kep(5)) and the function Mtov to compute true anomaly (tanom)
 	
 	tanom=radians(tanom)
 	slr = sma * (1 - ecc * ecc)
