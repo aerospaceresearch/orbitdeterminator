@@ -1,10 +1,15 @@
+'''
+Created by Alexandros Kazantzidis
+Date 03/06/17
+'''
+
+
 from math import *
 import numpy as np
 import pandas as pd
 pd.set_option('display.width', 1000)
 import matplotlib.pylab as plt
 import matplotlib as mpl
-import pylab
 from numpy import genfromtxt
 
 import lamberts
@@ -15,7 +20,7 @@ import rkf78
 import golay_filter
 
 
-my_data = orbit_output.get_data('orbit')
+my_data = orbit_output.get_data('orbit1')
 my_data = golay_filter.golay(my_data)
 
 kep = orbit_fit.create_kep(my_data)

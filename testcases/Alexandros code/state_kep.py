@@ -1,6 +1,6 @@
 ''' 
 Created by Alexandros Kazantzidis
-Date 25/05/17 
+Date 25/05/17
 '''
 
 from math import *
@@ -42,7 +42,7 @@ def atan3(a,b):
 		y = c
 	else:
 		y = c + np.sign(a) * np.sign(b) * (abs(atan(a / b)) - pidiv2)
-		
+
 	return y
 
 def state_kep(r,v):

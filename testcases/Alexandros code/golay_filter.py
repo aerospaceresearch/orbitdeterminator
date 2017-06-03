@@ -1,11 +1,15 @@
+'''
+Created by Alexandros Kazantzidis
+Date 02/06/17
+'''
+
+
 from math import *
 import numpy as np
 import pandas as pd
 pd.set_option('display.width', 1000)
 import matplotlib.pylab as plt
-import matplotlib as mpl
 import pylab
-from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
 
 import orbit_output

@@ -10,7 +10,7 @@ import pandas as pd
 def Mtov (M,e):
 
 	'''
-	Computes true anomaly v from a given mean anomaly M and eccentricity e by using Newton-Raphson method 
+	Computes true anomaly v from a given mean anomaly M and eccentricity e by using Newton-Raphson method
 
 	input
 	M = mean anomaly (degrees)
@@ -39,7 +39,7 @@ def Mtov (M,e):
 	
 def Kep_state (kep):
 	'''
-    this function uses the keplerian elements to compute the position and velocity vector 
+    this function uses the keplerian elements to compute the position and velocity vector
 
     input
 
