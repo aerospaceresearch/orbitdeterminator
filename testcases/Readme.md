@@ -15,7 +15,7 @@ not python 3.6
 
 * triple_moving_average.py
 
-apply custom filter to the jittery data. The filter give mse value of 22.6214472424 compared to orbit0jittery.csv which gives mse value of 47.8632703865.
+apply custom filter to the jittery data. The filter give mse value of `22.6214472424` compared to orbit0jittery.csv which gives mse value of `47.8632703865`
 Usage: python3 triple_moving_average.py filename.csv
 
 * mse.py
