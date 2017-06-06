@@ -10,6 +10,7 @@ n = window size
 '''
 import os
 import sys
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import read_data as rd
@@ -58,7 +59,7 @@ def triple_moving_average(signal_array, window_size):
             for i in range(1, window_size):
                 A.append(signal_array[pos + i])
                 B.append(signal_array[pos - i])
-                
+
             wa_A = weighted_average(A)
             wa_B = weighted_average(B)
             filtered_signal.append((point + wa_B + wa_A ) / 3)
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
     window = 3
 
-    averaged_x = triple_moving_average(list(signal[:,1]), window)
+    averaged_x = (triple_moving_average(list(signal[:,1]), window))
     averaged_y = triple_moving_average(list(signal[:,2]), window)
     averaged_z = triple_moving_average(list(signal[:,3]), window)
 
