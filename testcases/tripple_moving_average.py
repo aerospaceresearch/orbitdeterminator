@@ -75,6 +75,12 @@ if __name__ == "__main__":
     averaged_y = triple_moving_average(list(signal[:,2]), window)
     averaged_z = triple_moving_average(list(signal[:,3]), window)
 
+    output = np.hstack(((signal[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
+        (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
+    np.savetxt("filtered.csv", output, delimiter=",")
+
+    print("Filtered output saved as filtered.csv")
+
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
