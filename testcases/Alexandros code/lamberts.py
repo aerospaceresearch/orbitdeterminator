@@ -92,7 +92,7 @@ if __name__ == "__main__":
     r2 = my_data[1, 1:4]
     v1 = lamberts(my_data[0, :], my_data[1, :])
     kep1 = transform(r1, v1)
-    print('This the velocity for the first points of your data set')
+    print('This the velocity for the first point of your data set')
     print(v1)
 
 

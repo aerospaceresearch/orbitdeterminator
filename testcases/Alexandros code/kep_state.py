@@ -123,14 +123,7 @@ def Kep_state (kep):
 	
 	return r
 
-if __name__ == "__main__":
 
-
-	kep = np.array([[98.5517],[271.9207],[0.0002336],[137.9790],[222.1574],[14.34543485]])
-
-	r = Kep_state (kep)
-	df = pd.DataFrame (r)
-	print (df)
 
 
 

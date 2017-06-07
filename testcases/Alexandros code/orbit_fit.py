@@ -188,7 +188,8 @@ if __name__ == "__main__":
     #         print(" ")
 
     my_data = orbit_output.get_data('orbit1')
-    my_data = golay_filter.golay(my_data)
+    window = 41
+    my_data = golay_filter.golay(my_data, window)
     kep = create_kep(my_data)
     df = pd.DataFrame(kep)
     df = df.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
