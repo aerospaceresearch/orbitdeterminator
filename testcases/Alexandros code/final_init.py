@@ -20,16 +20,17 @@ import rkf78
 import golay_filter
 
 
-def mainf(datafile):
+def mainf(datafile, window):
 
     '''This function takes as an input a .csv data file with satellite positional data in the format of
-    (Time, x, y, z) and uses them alone with Savitzky - Golay filtering, Lambert's solution for the preliminary
-    orbit determination problem and Kalman filters to produce a final keplerian elements set of the orbit that these
-    inital data set produce
+    (Time, x, y, z) and uses them alone with Savitzky - Golay filtering that needs a window input, Lambert's 
+    solution for the preliminary orbit determination problem and Kalman filters to produce a final keplerian elements 
+    set of the orbit that these inital data set produce
     
     Input
     
     datafile = a .csv data file of the format (Time, x, y, z)
+    window = its better to select it as the len(data)/4 and it needs to be an odd number
     
     Output
     
@@ -38,7 +39,7 @@ def mainf(datafile):
     '''
 
     my_data = orbit_output.get_data(datafile)
-    my_data_filt = golay_filter.golay(my_data)
+    my_data_filt = golay_filter.golay(my_data, window)
 
     kep = orbit_fit.create_kep(my_data_filt)
     kep_final = orbit_fit.kalman(kep)
@@ -107,5 +108,5 @@ def mainf(datafile):
 
 if __name__ == "__main__":
 
-    kep = mainf('orbit')
+    kep = mainf('orbit', 41)
 
