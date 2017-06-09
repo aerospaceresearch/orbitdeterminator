@@ -1,6 +1,7 @@
 ## Orbit determination
 
 All the scripts run in python 3.4 version (we chose 3.4 because PyKEP library is not compatible for python 3.6 version)
+Libraries needed: Numpy, Pandas, Matplotlib, Scipy, PyKEP
 
 
 
