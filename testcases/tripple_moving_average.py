@@ -66,8 +66,7 @@ def triple_moving_average(signal_array, window_size):
 
     return filtered_signal
 
-def generate_filtered_data(filename):
-    window = 3
+def generate_filtered_data(filename, window):
 
     averaged_x = (triple_moving_average(list(filename[:,1]), window))
     averaged_y = triple_moving_average(list(filename[:,2]), window)
@@ -82,7 +81,7 @@ if __name__ == "__main__":
 
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
     
-    output = generate_filtered_data(signal)
+    output = generate_filtered_data(signal, 3)
     np.savetxt("filtered.csv", output, delimiter=",")
 
     print("Filtered output saved as filtered.csv")

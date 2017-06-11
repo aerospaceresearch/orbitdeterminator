@@ -30,6 +30,7 @@ def golay(data):
     new_positions[:, 2] = y_new
     new_positions[:, 3] = z_new
     new_positions[:, 0] = data[:, 0]
+    print(data[:, 0])
 
     return new_positions
 
@@ -51,4 +52,6 @@ def golay(data):
 if __name__ == "__main__":
     my_data = orbit_output.get_data('orbit')
     positions_filtered = golay(my_data)
-    print(positions_filtered - my_data)
+    print(positions_filtered.shape)
+    print(my_data[:, 0])
+    #print(positions_filtered - my_data)
