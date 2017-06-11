@@ -66,17 +66,22 @@ def triple_moving_average(signal_array, window_size):
 
     return filtered_signal
 
+def generate_filtered_data(filename, window):
+
+    averaged_x = (triple_moving_average(list(filename[:,1]), window))
+    averaged_y = triple_moving_average(list(filename[:,2]), window)
+    averaged_z = triple_moving_average(list(filename[:,3]), window)
+
+    output = np.hstack(((filename[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
+        (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
+
+    return output
+
 if __name__ == "__main__":
 
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
-    window = 3
-
-    averaged_x = (triple_moving_average(list(signal[:,1]), window))
-    averaged_y = triple_moving_average(list(signal[:,2]), window)
-    averaged_z = triple_moving_average(list(signal[:,3]), window)
-
-    output = np.hstack(((signal[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
-        (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
+    
+    output = generate_filtered_data(signal, 3)
     np.savetxt("filtered.csv", output, delimiter=",")
 
     print("Filtered output saved as filtered.csv")
@@ -84,7 +89,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.plot(averaged_x, averaged_y, averaged_z, 'b', label='filtered')
+    ax.plot(output[:,1], output[:,2], output[:,3], 'b', label='filtered')
     ax.plot(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
     ax.legend(['Filtered Orbit', 'Noisy Orbit'])
     plt.show()
