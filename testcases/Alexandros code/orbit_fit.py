@@ -88,11 +88,14 @@ def create_kep(my_data):
 
     ## check in every row to see if eccentricity is over 1 then the solution is completely wrong and needs
     ## to be deleted
+    kep_new = list()
+    for i in range(0, len(kep)):
+        if kep[i, 1] > 1.0:
+            pass
+        else:
+            kep_new.append(kep[i, :])
 
-
-
-
-
+    kep = np.asarray(kep_new)
 
     return kep
 
@@ -174,21 +177,9 @@ def kalman(kep):
 if __name__ == "__main__":
 
 
-    # while True:
-    #     user = input("Is the motion retrogade or counter-clock wise[Retro/Counter]: ")
-    #     print(" ")
-    #     if user == "Retro":
-    #         bool = True
-    #         break
-    #     elif user == "Counter":
-    #         bool = False
-    #         break
-    #     else:
-    #         print("Please provide a valid answer")
-    #         print(" ")
-
     my_data = orbit_output.get_data('orbit1')
-    my_data = golay_filter.golay(my_data)
+    window = 41
+    my_data = golay_filter.golay(my_data, window)
     kep = create_kep(my_data)
     df = pd.DataFrame(kep)
     df = df.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',

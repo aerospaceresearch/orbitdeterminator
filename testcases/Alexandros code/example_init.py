@@ -21,12 +21,21 @@ import golay_filter
 
 
 my_data = orbit_output.get_data('orbit1')
-my_data = golay_filter.golay(my_data)
+window = 41
+my_data = golay_filter.golay(my_data, window)
 
 kep = orbit_fit.create_kep(my_data)
 kep_final = orbit_fit.kalman(kep)
 kep_final = np.transpose(kep_final)
 kep_final2 = np.array([[15711.578566], [0.377617], [90.0], [0.887383], [0.0], [28.357744]])
+
+
+df2 = pd.DataFrame(kep_final)
+df2 = df2.rename(index={0: 'Semi major axis (km)', 1: 'Eccentricity (float number)', 2: 'Inclination (degrees)',
+                            3: 'Argument of perigee (degrees)', 4: 'Right ascension of the ascending node (degrees)',
+                            5: 'True anomally (degrees)'})
+df2 = df2.rename(columns={0: 'Final Results'})
+print(df2)
 
 
 state = kep_state.Kep_state(kep_final)
