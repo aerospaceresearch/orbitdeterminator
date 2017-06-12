@@ -30,6 +30,7 @@ def golay(data, window):
     new_positions[:, 2] = y_new
     new_positions[:, 3] = z_new
     new_positions[:, 0] = data[:, 0]
+    print(data[:, 0])
 
     return new_positions
 

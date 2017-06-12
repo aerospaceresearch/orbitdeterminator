@@ -2,3 +2,4 @@ numpy
 matplotlib
 pandas
 PyKEP
+pytest

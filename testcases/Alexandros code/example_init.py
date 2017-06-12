@@ -21,7 +21,7 @@ import golay_filter
 
 
 my_data = orbit_output.get_data('orbit1')
-window = 41
+window = 21
 my_data = golay_filter.golay(my_data, window)
 
 kep = orbit_fit.create_kep(my_data)
