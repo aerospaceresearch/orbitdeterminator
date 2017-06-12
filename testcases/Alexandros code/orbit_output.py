@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pylab as plt
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
+import read_data
 
 ## This code will take as input an numpy array with positional satellite data sets and will present it to the
 ## user using pandas and matplotilib 3d graph and do some simple statistical filtering
@@ -19,13 +20,10 @@ from mpl_toolkits.mplot3d import Axes3D
 ## First part the numpy array holding the time,x,y,z positional data
 
 
-name = 'orbit.csv'
 
 def get_data(folder):
-    my_data = genfromtxt(name, delimiter = ',')
+    my_data = read_data.load_data(folder)
     return my_data
-my_data = get_data(name)
-
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -146,50 +144,52 @@ def extreme_values():
 
 if __name__ == "__main__":
 
+    name = 'orbit.csv'
+    my_data = get_data(name)
     print("Displaying the positional data set")
     df = pandas_data()
     print(df)
-
-
-    while True:
-
-        user = input('Do you want to see the graphical representation of the data you inserted? (Y/N):')
-        if user == "Y":
-            print(".........")
-            print('Use the left click to rotate the grafh and the right click to zoom in and out')
-            work = graph()
-            break
-        elif user == "N":
-            break
-        else:
-            print('Please provide a letter like Y or N')
-
-
-    while True:
-        print(".........")
-        user = input('Do you want to see the graphical representation of the absolute value of the positional vector (Y/N):')
-        if user == "Y":
-            work = absolute_graph()
-            break
-        elif user == "N":
-            break
-        else:
-            print('Please provide a letter like Y or N')
-
-
-    while True:
-        print(".........")
-        user = input( 'Do you want to see and delete some extremely jittery data (Y/N):')
-        if user == "Y":
-            df, new_data = extreme_values()
-            print(".........")
-            print(df)
-            print('These data have been deleted from the initial data set')
-            break
-        elif user == "N":
-            break
-        else:
-            print('Please provide a letter like Y or N')
-
-    print(".........")
-    user = input('Press ENTER to end program')
+    #
+    #
+    # while True:
+    #
+    #     user = input('Do you want to see the graphical representation of the data you inserted? (Y/N):')
+    #     if user == "Y":
+    #         print(".........")
+    #         print('Use the left click to rotate the grafh and the right click to zoom in and out')
+    #         work = graph()
+    #         break
+    #     elif user == "N":
+    #         break
+    #     else:
+    #         print('Please provide a letter like Y or N')
+    #
+    #
+    # while True:
+    #     print(".........")
+    #     user = input('Do you want to see the graphical representation of the absolute value of the positional vector (Y/N):')
+    #     if user == "Y":
+    #         work = absolute_graph()
+    #         break
+    #     elif user == "N":
+    #         break
+    #     else:
+    #         print('Please provide a letter like Y or N')
+    #
+    #
+    # while True:
+    #     print(".........")
+    #     user = input( 'Do you want to see and delete some extremely jittery data (Y/N):')
+    #     if user == "Y":
+    #         df, new_data = extreme_values()
+    #         print(".........")
+    #         print(df)
+    #         print('These data have been deleted from the initial data set')
+    #         break
+    #     elif user == "N":
+    #         break
+    #     else:
+    #         print('Please provide a letter like Y or N')
+    #
+    # print(".........")
+    # user = input('Press ENTER to end program')

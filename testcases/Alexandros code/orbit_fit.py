@@ -9,7 +9,7 @@ import pandas as pd
 pd.set_option('display.width', 1000)
 
 import lamberts
-import orbit_output
+import read_data
 import golay_filter
 
 
@@ -177,8 +177,8 @@ def kalman(kep):
 if __name__ == "__main__":
 
 
-    my_data = orbit_output.get_data('orbit1')
-    window = 41
+    my_data = read_data.load_data('orbit.csv')
+    window = 21
     my_data = golay_filter.golay(my_data, window)
     kep = create_kep(my_data)
     df = pd.DataFrame(kep)

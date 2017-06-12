@@ -42,7 +42,7 @@ computed from 2 positional vectors and times
 
 * orbit_fit.py
 
-using lamberts.py it produces all the sets of keplerian elemenets for the whole data set (orbit.csv). For example if the data set has 
+using lamberts.py it produces all the sets of keplerian elemenets for the whole data set (orbit.csv). For example if the data set has
 200 points then this script will compute 199 sets of keplerian elements. Then it uses kalman filtering to find the final estimation
 for the keplerian elements of the orbit formed by the points in the orbit.csv file
 
@@ -50,10 +50,10 @@ for the keplerian elements of the orbit formed by the points in the orbit.csv fi
 
 * golay_filter.py
 
-uses Scipy library and the Savintzky - Golay filter to smooth the initial data set (orbit.csv)
-Important! the window variable needs to be around len(data_set) / 4 
-Example : the points of the data set are 200 then the window needs to be around 200 / 4 = 50 but it can only be an odd number so 51
-The odd number restriction comes from the Scipy documentation 
+uses Scipy library and the Savintzky - Golay filter to smooth the initial data set (orbit.csv).
+Important! the window variable needs to be around len(data_set) / 8.
+Example : the points of the data set are 200 then the window needs to be around 200 / 8 = 25 and it can only be an odd number so 25 is fine.
+The odd number restriction comes from the Scipy documentation.
 
 
 
@@ -61,8 +61,8 @@ The odd number restriction comes from the Scipy documentation
 
 Runs the whole process for the orbit_jiitery.csv file we have. 
 Process : Apply the Savintzky - Golay filter, then compute all the keplerian elements with Lambert's solution and finally for all these sets
-of keplerian elements do a Kalman filter to find the best estimation
-It plots the filtered positions, the final orbit after Kalman and the perfect orbit 
+of keplerian elements do a Kalman filter to find the best estimation.
+It plots the filtered positions, the final orbit after Kalman and the perfect orbit.
 It prints the final keplerian elements set too.
 
 
@@ -71,7 +71,7 @@ It prints the final keplerian elements set too.
 
 Runs the whole process for an orbit.csv file
 Process : Apply the Savintzky - Golay filter, then compute all the keplerian elements with Lambert's solution and finally for all these sets
-of keplerian elements do a Kalman filter to find the best estimation
-It plots the initial positions, the after Savintzky - Golay filter positions and the final orbit after Lambert's solution and Kalman filtering 
+of keplerian elements do a Kalman filter to find the best estimation.
+It plots the initial positions, the after Savintzky - Golay filter positions and the final orbit after Lambert's solution and Kalman filtering.
 It prints the final keplerian elements set too.
 
