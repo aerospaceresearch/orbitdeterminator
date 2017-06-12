@@ -8,8 +8,8 @@ import matplotlib.pylab as plt
 import orbit_output
 import PyKEP as pkp
 from math import *
+import read_data
 
-my_data = orbit_output.get_data('orbit')
 
 
 def lamberts(x1, x2):
@@ -87,7 +87,7 @@ def transform(r, v):
 
 if __name__ == "__main__":
 
-
+    my_data = read_data.load_data('orbit.csv')
     r1 = my_data[0, 1:4]
     r2 = my_data[1, 1:4]
     v1 = lamberts(my_data[0, :], my_data[1, :])

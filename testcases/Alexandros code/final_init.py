@@ -18,7 +18,8 @@ import orbit_fit
 import kep_state
 import rkf78
 import golay_filter
-
+import read_data
+import tripple_moving_average
 
 def mainf(datafile, window):
 
@@ -38,7 +39,8 @@ def mainf(datafile, window):
     format -- (a (km), e (float number), i (degrees), ω (degrees), Ω (degrees), v (degress))
     '''
 
-    my_data = orbit_output.get_data(datafile)
+    my_data = read_data.load_data(datafile)
+    my_data = tripple_moving_average.generate_filtered_data(my_data, 3)
     my_data_filt = golay_filter.golay(my_data, window)
 
     kep = orbit_fit.create_kep(my_data_filt)
@@ -108,5 +110,5 @@ def mainf(datafile, window):
 
 if __name__ == "__main__":
 
-    kep = mainf('orbit', 41)
+    kep = mainf('orbit.csv', 21)
 

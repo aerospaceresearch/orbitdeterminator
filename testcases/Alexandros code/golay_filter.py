@@ -11,8 +11,7 @@ pd.set_option('display.width', 1000)
 import matplotlib.pylab as plt
 import pylab
 from scipy.signal import savgol_filter
-
-import orbit_output
+import read_data
 
 
 def golay(data, window):
@@ -30,13 +29,12 @@ def golay(data, window):
     new_positions[:, 2] = y_new
     new_positions[:, 3] = z_new
     new_positions[:, 0] = data[:, 0]
-    print(data[:, 0])
 
     return new_positions
 
 
 if __name__ == "__main__":
-    my_data = orbit_output.get_data('orbit')
-    window = 41
+    my_data = read_data.load_data('orbit.csv')
+    window = 21
     positions_filtered = golay(my_data, window)
     print(positions_filtered - my_data)
