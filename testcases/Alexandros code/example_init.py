@@ -1,6 +1,6 @@
 '''
 Created by Alexandros Kazantzidis
-Date 03/06/17
+Date 03/06/17 (Integrated with Nilesh's code at 12/06/17)
 '''
 
 
@@ -66,16 +66,16 @@ positions2 = keep_state2[0:3, :]
 df = pd.DataFrame(positions)
 
 
-# mpl.rcParams['legend.fontsize'] = 10
-# fig = plt.figure()
-# ax = fig.gca(projection='3d')
-#
-# ax.plot(my_data[:, 1], my_data[:, 2], my_data[:, 3], "o", label='Filtered data with golay')
-# ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after lamberts - kalman')
-# ax.plot(positions2[0, :], positions2[1, :], positions2[2, :], "o-", label='Perfect orbit')
-# ax.legend()
-# ax.can_zoom()
-# ax.set_xlabel('x (km)')
-# ax.set_ylabel('y (km)')
-# ax.set_zlabel('z (km)')
-# plt.show()
+mpl.rcParams['legend.fontsize'] = 10
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+ax.plot(my_data[:, 1], my_data[:, 2], my_data[:, 3], "o", label='Filtered data with golay')
+ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after lamberts - kalman')
+ax.plot(positions2[0, :], positions2[1, :], positions2[2, :], "o-", label='Perfect orbit')
+ax.legend()
+ax.can_zoom()
+ax.set_xlabel('x (km)')
+ax.set_ylabel('y (km)')
+ax.set_zlabel('z (km)')
+plt.show()
