@@ -58,9 +58,11 @@ def triple_moving_average(signal_array, window_size):
             pos = signal_array.index(point)
             for i in range(1, window_size):
                 A.append(signal_array[pos + i])
+
                 B.append(signal_array[pos - i])
 
             wa_A = weighted_average(A)
+            print(A)
             wa_B = weighted_average(B)
             filtered_signal.append((point + wa_B + wa_A ) / 3)
 
