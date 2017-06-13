@@ -56,7 +56,7 @@ def triple_moving_average(signal_array, window_size):
         else:
             A, B = [], []
             pos = signal_array.index(point)
-            for i in range(1, window_size):
+            for i in range(0, window_size):
                 A.append(signal_array[pos + i])
                 B.append(signal_array[pos - i])
 
