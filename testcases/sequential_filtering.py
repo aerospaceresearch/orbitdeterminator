@@ -7,7 +7,6 @@ Analysis of varying parameres with filters in sequence
 import os
 import mse
 import numpy
-import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
 import read_data as rd
