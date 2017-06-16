@@ -20,9 +20,9 @@ def golay(data, window):
     x = data[:, 1]
     y = data[:, 2]
     z = data[:, 3]
-    x_new = savgol_filter(x, window, 6)
-    y_new = savgol_filter(y, window, 6)
-    z_new = savgol_filter(z, window, 6)
+    x_new = savgol_filter(x, window, 3)
+    y_new = savgol_filter(y, window, 3)
+    z_new = savgol_filter(z, window, 3)
 
     new_positions = np.zeros((len(data), 4))
     new_positions[:, 1] = x_new

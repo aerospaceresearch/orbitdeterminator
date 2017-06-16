@@ -24,7 +24,7 @@ import tripple_moving_average
 
 my_data = read_data.load_data('orbit.csv')
 my_data = tripple_moving_average.generate_filtered_data(my_data, 3)
-window = 61
+window = 21
 my_data = golay_filter.golay(my_data, window)
 
 kep = orbit_fit.create_kep(my_data)
