@@ -11,8 +11,9 @@ n = window size
 import os
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
 import read_data as rd
 
 
@@ -34,6 +35,51 @@ def weighted_average(params):
         weight -= 1
 
     return weighted_sum / weight_sum
+
+def extrapolation_padding(path, window):
+    '''Pad the input with approximate values. To be called with size of data being
+    equal to the window size.
+
+    Args:
+        path: path matrix.
+        window: window size to be used in triple moving average
+    Returns:
+        extrapolated: 3D path matrix with extrapolated padding on either sides of the path.
+    '''
+    size = len(path)-1
+
+    path_x = path[:, 1]
+    path_y = path[:, 2]
+    path_z = path[:, 3]
+
+    pre_factor_x = path_x[1]/path_x[2]
+    pre_factor_y = path_y[1]/path_y[2]
+    pre_factor_z = path_z[1]/path_z[2]
+    post_factor_x = path_x[size]/path_x[size-1]
+    post_factor_y = path_y[size]/path_y[size-1]
+    post_factor_z = path_z[size]/path_z[size-1]
+
+    pre_x, pre_y, pre_z, post_x, post_y, post_z = [], [], [], [], [], []
+
+    for index in range(window):
+        pre_x.append(path_x[index+1]*(pre_factor_x ** (index+1)))
+        post_x.append(path_x[size]*(post_factor_x ** (index+1)))
+        pre_y.append(path_y[index+1]*(pre_factor_y ** (index+1)))
+        post_y.append(path_y[size]*(post_factor_y ** (index+1)))    
+        pre_z.append(path_z[1]*(pre_factor_z ** (index+1)))
+        post_z.append(path_z[size]*(post_factor_z ** (index+1)))
+
+    pre_x = np.flipud(pre_x)
+    pre_y = np.flipud(pre_y)
+    pre_x = np.flipud(pre_x)
+
+    new_x = np.concatenate((pre_x, path_x, post_x), axis =0)
+    new_y = np.concatenate((pre_y, path_y, post_y), axis =0)
+    new_z = np.concatenate((pre_z, path_z, post_z), axis =0)
+
+    extrapolated = np.hstack(((new_x)[:, np.newaxis], (new_y)[:, np.newaxis], (new_z)[:, np.newaxis]))
+
+    return extrapolated
 
 
 def triple_moving_average(signal_array, window_size):
@@ -80,7 +126,7 @@ def generate_filtered_data(filename, window):
 if __name__ == "__main__":
 
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
-    
+
     output = generate_filtered_data(signal, 3)
     np.savetxt("filtered.csv", output, delimiter=",")
 
@@ -90,6 +136,6 @@ if __name__ == "__main__":
     ax = fig.add_subplot(111, projection='3d')
 
     ax.plot(output[:,1], output[:,2], output[:,3], 'b', label='filtered')
-    ax.plot(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
+    ax.scatter(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
     ax.legend(['Filtered Orbit', 'Noisy Orbit'])
     plt.show()
