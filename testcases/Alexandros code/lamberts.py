@@ -68,13 +68,13 @@ def transform(r, v):
     '''
     This function transforms a state vector to a vector containing the six keplerian elements
     Inputs and outputs in numpy array format
-
+    
     Input
-
+    
     r = position vector [x, y, z]
     v = velocity vector (vx, vy, vz)
     Output
-
+    
     kep = keplerian elements [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω), 
         right ascension of the ascending node (Ω), true anomaly (v)]
     '''

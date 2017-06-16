@@ -13,6 +13,7 @@ import matplotlib as mpl
 from numpy import genfromtxt
 
 import lamberts
+import orbit_output
 import orbit_fit
 import kep_state
 import rkf78
@@ -23,13 +24,13 @@ import tripple_moving_average
 
 my_data = read_data.load_data('orbit.csv')
 my_data = tripple_moving_average.generate_filtered_data(my_data, 3)
-window = 59
+window = 61
 my_data = golay_filter.golay(my_data, window)
 
 kep = orbit_fit.create_kep(my_data)
 kep_final = orbit_fit.kalman(kep)
 kep_final = np.transpose(kep_final)
-kep_final2 = np.array([[15300], [0.372549], [90.0], [0.854792], [0.0], [28.207374]])
+kep_final2 = np.array([[15711.578566], [0.377617], [90.0], [0.887383], [0.0], [28.357744]])
 
 
 df2 = pd.DataFrame(kep_final)
@@ -77,5 +78,4 @@ ax.can_zoom()
 ax.set_xlabel('x (km)')
 ax.set_ylabel('y (km)')
 ax.set_zlabel('z (km)')
-
 plt.show()

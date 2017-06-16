@@ -25,7 +25,7 @@ def mainf(datafile, window):
 
     '''This function takes as an input a .csv data file with satellite positional data in the format of
     (Time, x, y, z) and uses them alone with Savitzky - Golay filtering that needs a window input, Lambert's 
-    solution for the preliminary orbit determination problem and Kalman filters to produce a final keplerian elements
+    solution for the preliminary orbit determination problem and Kalman filters to produce a final keplerian elements 
     set of the orbit that these inital data set produce
     
     Input
@@ -35,7 +35,7 @@ def mainf(datafile, window):
     
     Output
     
-    kep_final = a 6x1 numpy array containing the final estimated keplerian elements of the orbit
+    kep_final = a 6x1 numpy array containing the final estimated keplerian elements of the orbit 
     format -- (a (km), e (float number), i (degrees), ω (degrees), Ω (degrees), v (degress))
     '''
 
@@ -110,5 +110,5 @@ def mainf(datafile, window):
 
 if __name__ == "__main__":
 
-    kep = mainf('orbit.csv', 59)
+    kep = mainf('orbit.csv', 61)
 

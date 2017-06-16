@@ -11,7 +11,6 @@ pd.set_option('display.width', 1000)
 import lamberts
 import read_data
 import golay_filter
-import tripple_moving_average
 
 
 
@@ -21,12 +20,12 @@ def create_kep(my_data):
        It implements a tool for deleting all the points that give extremely jittery state vectors
 
         Input
-
+        
         data = read file csv that contains the positional data set in (Time, x, y, z) Format
         bool = True if the motion is retrogade, bool = False if the motion is counter - clock wise
-
+        
         Output
-
+        
         kep = a numpy array containing all the keplerian elements computed for the orbit given in
             [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
             right ascension of the ascending node (Ω), true anomaly (v)] format
@@ -180,7 +179,7 @@ if __name__ == "__main__":
 
     my_data = read_data.load_data('orbit.csv')
     my_data = tripple_moving_average.generate_filtered_data(my_data, 3)
-    window = 59
+    window = 61
     my_data = golay_filter.golay(my_data, window)
     kep = create_kep(my_data)
     df = pd.DataFrame(kep)

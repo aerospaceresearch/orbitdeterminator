@@ -35,6 +35,6 @@ def golay(data, window):
 
 if __name__ == "__main__":
     my_data = read_data.load_data('orbit.csv')
-    window = 59
+    window = 21
     positions_filtered = golay(my_data, window)
     print(positions_filtered - my_data)
