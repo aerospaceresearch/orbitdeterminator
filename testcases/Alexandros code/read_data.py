@@ -16,7 +16,7 @@ def load_data(filename):
 	format : [timestamp, x-coordinate, y-coordinate, z-coordinate]
 	'''
 	orbit_file = list(csv.reader(open(filename, "r"), delimiter = ","))
-			
+
 	orbit = []
 	for point in orbit_file:
 		point_tuple = np.array(point, dtype = np.float)

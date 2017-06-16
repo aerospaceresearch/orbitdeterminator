@@ -46,8 +46,8 @@ def atan3(a,b):
 	return y
 
 def state_kep(r,v):
-	
-	
+
+
 	'''convert eci state vector to six classical orbital
 	elements via equinoctial elements
 
@@ -83,7 +83,7 @@ def state_kep(r,v):
 	rhat = r[:] / rmag
 
 # angular momentum vectors
-	
+
 	hv = np.cross(r, v)
 
 	hhat = hv / np.linalg.norm(hv)
@@ -105,22 +105,20 @@ def state_kep(r,v):
 	q = -hhat[1] / (1.0 + hhat[2])
 
 	const1 = 1.0 / (1.0 + p * p + q * q)
-	
+
 	fhat=np.array([1.0,2.0,3])
 	fhat[0] = const1 * (1.0 - p * p + q * q)
 	fhat[1] = const1 * 2.0 * p * q
 	fhat[2] = -const1 * 2.0 * p
-	
-	
-	
-	
+
+
 	ghat=np.array([1.0,2.0,3.0])
 	ghat[0]=(const1 * 2.0 * p * q)
 	ghat[1] = const1 * (1.0 + p * p - q * q)
 	ghat[2] = const1 * 2.0 * q
-	
+
 	h = np.dot(ecc, ghat)
-	
+
 	xk = np.dot(ecc, fhat)
 
 	x1 = np.dot(r, fhat)
@@ -128,9 +126,9 @@ def state_kep(r,v):
 	y1 = np.dot(r, ghat)
 
 # orbital eccentricity
-	
+
 	eccm = sqrt((h * h + xk * xk))
-	
+
 # orbital inclination
 
 	inc = 2.0 * atan(sqrt(p * p + q * q))
@@ -155,13 +153,13 @@ def state_kep(r,v):
 		firstint=int(first)
 		secondint=int(second)
 		argper = first - (secondint*(firstint/secondint))
-		
+
 	else:
 		argper = 0.0
 
 
 # true anomaly
-	
+
 	first = xlambdat - raan - argper
 	second = pi2
 	firstint=int(first)
@@ -187,7 +185,6 @@ def state_kep(r,v):
 	oev[4,0] = raan
 	oev[5,0] = tanom
 	return oev
-	
 
 
 if __name__ == "__main__":

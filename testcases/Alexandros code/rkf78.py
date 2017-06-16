@@ -19,7 +19,7 @@ def hello1(x):
 	return x_parag
 
 def ypol_a(y):
-	
+
 	# function which computes the 1x6 vector y_parag (contains velocity and
 	# acceleration values) by using the state vector y
 	# keplerian motion to initialize the acceleration vector
@@ -34,20 +34,20 @@ def ypol_a(y):
 	# y_parag = y' vector which contains the velocity and acceleration values
 	# y_parag(1,2,3) = velocity vector and y_parag(4,5,6) = acceleration vector
 	# y_parag(1,2,3) = m/s and y_parag(4,5,6) = m/s^2
-	
+
 	mu=398600.4405;
 	y_parag = np.zeros((6,1))
 	agrav = np.zeros((3,1))
-	
-	
+
+
 	r2 = y[0,0]*y[0,0] + y[1,0]*y[1,0] + y[2,0]*y[2,0]
 	r1 = sqrt(r2)
 	r3 = r2*r1
-	
+
 	for i in range(0,3):
 		agrav[i,0] = agrav[i,0] -(mu * y[i,0] / r3)
-		
-	
+
+
 	y_parag[0,0]=y[3,0]
 	y_parag[1,0]=y[4,0]
 	y_parag[2,0]=y[5,0]
@@ -55,8 +55,7 @@ def ypol_a(y):
 	y_parag[4,0]=agrav[1,0]
 	y_parag[5,0]=agrav[2,0]
 	return y_parag
-		
-	
+
 
 
 def rkf78 (neq,ti,tf,h,tetol,x):
@@ -83,7 +82,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 
 
 
-	
+
 
 
 
@@ -97,7 +96,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 	ch = np.zeros((13,1))
 	alph = np.zeros((13,1))
 	beta = np.zeros((13, 12))
-	
+
 	ch[5,0] = 34.0 / 105
 	ch[6,0] = 9.0 / 35
 	ch[7,0] = ch[6,0]
@@ -105,7 +104,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 	ch[9,0] = ch[8,0]
 	ch[11,0] = 41.0 / 840
 	ch[12,0] = ch[11,0]
- 
+
 	alph[1,0] = 2.0 / 27
 	alph[2,0] = 1.0 / 9
 	alph[3,0] = 1.0 / 6
@@ -117,7 +116,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 	alph[9,0] = 1.0 / 3
 	alph[10,0] = 1
 	alph[12,0] = 1
-	
+
 
 	beta[1,0] = 2.0 / 27
 	beta[2,0]  = 1.0 / 36
@@ -175,7 +174,7 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 	beta[12,9] = 12.0 / 41
 	beta[12,11] = 1.0
 
-	
+
 	f = np.zeros((neq,13));
 
 	xdot = np.zeros((neq,1));
@@ -184,33 +183,33 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 
 	# compute integration "direction"
 	dt=h
-	
+
 	while True:
 
 	# load "working" time and integration vector
 
-		twrk = ti  
+		twrk = ti
 		xwrk[:,0] = x[:,0]
 
 	# check for last dt
 
 		if abs(dt) > abs(tf - ti):
 			dt = tf - ti
-	
+
 	# check for end of integration period
-		
+
 		if abs(ti - tf) < 0.00000001:
 			xout = x
 			return xout
 
-			
+
 		xdot = ypol_a(x)
 		xdot_tra=np.transpose(xdot)
 		f[:, 0] = xdot_tra
 		
 		for k in range(1,13):
-			
-      
+
+
 			for i in range(0,neq):
 				
 				x[i,0] = xwrk[i,0] + dt * sum(beta[k, 0:k] * f[i, 0:k])
@@ -218,32 +217,30 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 				xdot = ypol_a(x);
 				xdot_tra=np.transpose(xdot)
 				f[:,k] = xdot_tra;
-		
+
 		xerr = tetol;
 		for i in range(0,neq):
 			f_tra=np.transpose(f)
 			x[i,0] = xwrk[i,0] + dt * sum(ch[:,0] * f_tra[:,i])
-			
+
 			# truncation error calculations
 
 			ter = abs((f[i, 0] + f[i, 10] - f[i, 11] - f[i, 12]) * ch[11,0] * dt)
 			tol = abs(x[i,0]) * tetol + tetol
 			tconst = ter / tol
-		
+
 		if tconst > xerr: xerr = tconst
 ##
 		# compute new step size
 
 		dt = 0.8 * dt * (1.0 / xerr) ** (1.0 / 8)
-		
+
 		if (xerr > 1):
 		# reject current step
 			ti = twrk
 			x = xwrk
-		
-		
-		
-	
+
+
 if __name__ == "__main__":
 	neq=6
 	ti=1.0

@@ -20,9 +20,9 @@ def golay(data, window):
     x = data[:, 1]
     y = data[:, 2]
     z = data[:, 3]
-    x_new = savgol_filter(x, window, 3)
-    y_new = savgol_filter(y, window, 3)
-    z_new = savgol_filter(z, window, 3)
+    x_new = savgol_filter(x, window, 6)
+    y_new = savgol_filter(y, window, 6)
+    z_new = savgol_filter(z, window, 6)
 
     new_positions = np.zeros((len(data), 4))
     new_positions[:, 1] = x_new
@@ -35,6 +35,6 @@ def golay(data, window):
 
 if __name__ == "__main__":
     my_data = read_data.load_data('orbit.csv')
-    window = 21
+    window = 59
     positions_filtered = golay(my_data, window)
     print(positions_filtered - my_data)
