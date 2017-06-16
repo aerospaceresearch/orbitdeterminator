@@ -18,11 +18,10 @@ import read_data as rd
 
 
 def weighted_average(params):
-    '''
-    Calculates the weighted average of terms in the input
+    '''Calculates the weighted average of terms in the input.
 
     Args:
-        params: a list of numbers
+        params: a list of numbers.
 
     Returns:
         weighted average of the terms in the list
@@ -42,7 +41,8 @@ def extrapolation_padding(path, window):
 
     Args:
         path: path matrix.
-        window: window size to be used in triple moving average
+        window: window size to be used in triple moving average.
+
     Returns:
         extrapolated: 3D path matrix with extrapolated padding on either sides of the path.
     '''
@@ -83,16 +83,15 @@ def extrapolation_padding(path, window):
 
 
 def triple_moving_average(signal_array, window_size):
-    '''
-    Apply triple moving average to a signal
+    '''Apply triple moving average to a signal.
 
     Args:
-        signal_array: the array of values on which the filter is to be applied
+        signal_array: the array of values on which the filter is to be applied.
         window_size: the no. of points before and after x0 which should be
-        considered for calculating A and B
+        considered for calculating A and B.
 
     Returns:
-       A filtered array of size same as that of signal_array
+       A filtered array of size same as that of signal_array.
     '''
     filtered_signal = []
     arr_len = len(signal_array)
@@ -112,13 +111,21 @@ def triple_moving_average(signal_array, window_size):
 
     return filtered_signal
 
-def generate_filtered_data(filename, window):
+def generate_filtered_data(file, window):
+    '''Apply filtering to individual co-ordinates
 
-    averaged_x = (triple_moving_average(list(filename[:,1]), window))
-    averaged_y = triple_moving_average(list(filename[:,2]), window)
-    averaged_z = triple_moving_average(list(filename[:,3]), window)
+    Args:
+        file: 4D orbit data [time, x, y, z].
+        window: window size to be used in triple moving average.
 
-    output = np.hstack(((filename[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
+    Returns:
+        output: 4D filtered orbit data [time, x, y, z].
+    '''
+    averaged_x = (triple_moving_average(list(file[:,1]), window))
+    averaged_y = triple_moving_average(list(file[:,2]), window)
+    averaged_z = triple_moving_average(list(file[:,3]), window)
+
+    output = np.hstack(((file[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
         (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
 
     return output
