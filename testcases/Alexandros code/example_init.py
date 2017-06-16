@@ -77,4 +77,5 @@ ax.can_zoom()
 ax.set_xlabel('x (km)')
 ax.set_ylabel('y (km)')
 ax.set_zlabel('z (km)')
+
 plt.show()
