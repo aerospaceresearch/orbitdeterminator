@@ -1,5 +1,9 @@
 ## Orbit determination
 
+### Coding Guidelines
+We are folloing standard PEP8 guidelines
+For docstrings, we are following [Google style](http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html#example-google)
+
 * read_data.py
 
 Read data from a folder in the same directory as that of read_data.py
