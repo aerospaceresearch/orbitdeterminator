@@ -110,5 +110,5 @@ def mainf(datafile, window):
 
 if __name__ == "__main__":
 
-    kep = mainf('orbit.csv', 21)
+    kep = mainf('orbit.csv', 61)
 
