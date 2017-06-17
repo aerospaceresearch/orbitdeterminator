@@ -10,10 +10,8 @@ import pandas as pd
 pd.set_option('display.width', 1000)
 import matplotlib.pylab as plt
 import matplotlib as mpl
-from numpy import genfromtxt
 
-import lamberts
-import orbit_output
+
 import orbit_fit
 import kep_state
 import rkf78

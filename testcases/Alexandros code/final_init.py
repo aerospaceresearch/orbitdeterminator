@@ -10,10 +10,7 @@ import pandas as pd
 pd.set_option('display.width', 1000)
 import matplotlib.pylab as plt
 import matplotlib as mpl
-from mpl_toolkits.mplot3d import Axes3D
 
-import lamberts
-import orbit_output
 import orbit_fit
 import kep_state
 import rkf78
@@ -27,16 +24,15 @@ def mainf(datafile, window):
     (Time, x, y, z) and uses them alone with Savitzky - Golay filtering that needs a window input, Lambert's 
     solution for the preliminary orbit determination problem and Kalman filters to produce a final keplerian elements 
     set of the orbit that these inital data set produce
-    
-    Input
-    
-    datafile = a .csv data file of the format (Time, x, y, z)
-    window = its better to select it as the len(data)/4 and it needs to be an odd number
-    
-    Output
-    
-    kep_final = a 6x1 numpy array containing the final estimated keplerian elements of the orbit 
-    format -- (a (km), e (float number), i (degrees), ω (degrees), Ω (degrees), v (degress))
+
+    Args:
+        datafile(csv file) =  format (Time, x, y, z)
+        window(int) = number for the window of the Savintzky - Golay filter
+                      its better to select it as the len(data)/3 and it needs to be an odd number
+
+    Return:
+        kep_final(numpy array) = a 6x1 numpy array containing the final estimated keplerian elements of the orbit 
+        format (a (km), e (float number), i (degrees), ω (degrees), Ω (degrees), v (degress))
     '''
 
     my_data = read_data.load_data(datafile)

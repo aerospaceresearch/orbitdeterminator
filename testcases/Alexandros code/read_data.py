@@ -10,13 +10,14 @@ import pickle
 import numpy as np
 
 def load_data(filename):
+
 	'''
 	Returns a 2D numpy array of the orbit
 	Each point of the orbit is of the 
 	format : [timestamp, x-coordinate, y-coordinate, z-coordinate]
 	'''
 	orbit_file = list(csv.reader(open(filename, "r"), delimiter = ","))
-			
+
 	orbit = []
 	for point in orbit_file:
 		point_tuple = np.array(point, dtype = np.float)

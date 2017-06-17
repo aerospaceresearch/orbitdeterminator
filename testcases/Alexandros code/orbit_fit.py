@@ -17,19 +17,17 @@ import tripple_moving_average
 
 def create_kep(my_data):
 
-    '''This function computes all the keplerian elements for every point of the orbit you provide
+    '''Computes all the keplerian elements for every point of the orbit you provide
        It implements a tool for deleting all the points that give extremely jittery state vectors
 
-        Input
-        
-        data = read file csv that contains the positional data set in (Time, x, y, z) Format
-        bool = True if the motion is retrogade, bool = False if the motion is counter - clock wise
-        
-        Output
-        
-        kep = a numpy array containing all the keplerian elements computed for the orbit given in
-            [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
-            right ascension of the ascending node (Ω), true anomaly (v)] format
+        Args:  
+            data(csv file) = read file csv that contains the positional data set in (Time, x, y, z) Format
+ 
+
+        Returns:
+            kep(numpy array) = a numpy array containing all the keplerian elements computed for the orbit given in
+                               [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
+                               right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
 
 
@@ -103,18 +101,18 @@ def create_kep(my_data):
 ## find the mean value of all keplerian elements set and then do a kalman filtering to find the best fit
 
 def kalman(kep):
+
     '''
-    This function takes as an input lots of sets of keplerian elements and produces
+    Takes as an input lots of sets of keplerian elements and produces
     the fitted value of them by applying kalman filters
     
-    Input
+    Args:
     
-    kep = numpy array containing keplerian elements in this format
+        kep(numpy array) = containing keplerian elements in this format
         (a, e, i, ω, Ω, v)
         
-    Output
-    
-    final_kep = one final set of keplerian elements describing the orbit based on kalman filtering
+    Returns:
+        final_kep(numpy array) = one final set of keplerian elements describing the orbit based on kalman filtering
     '''
 
 
