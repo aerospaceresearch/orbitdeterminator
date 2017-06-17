@@ -8,7 +8,6 @@ from math import *
 import numpy as np
 import pandas as pd
 pd.set_option('display.width', 1000)
-import matplotlib.pylab as plt
 import pylab
 from scipy.signal import savgol_filter
 import read_data
@@ -16,6 +15,17 @@ import read_data
 
 def golay(data, window):
 
+    '''Apply the Savintzky - Golay filter to a positional data set with a 6th order polynomial
+       
+       Args:
+           data(csv file) = A file containing all of the positional data in the format of (Time, x, y, z)
+           window = number for the window of the Savintzky - Golay filter
+                    its better to select it as the len(data)/3 and it needs to be an odd number
+                    
+                    
+        Return:
+            new_positions(numpy array) = filtered data in the same format
+    '''
 
     x = data[:, 1]
     y = data[:, 2]

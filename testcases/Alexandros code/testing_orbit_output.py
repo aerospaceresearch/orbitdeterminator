@@ -4,7 +4,6 @@ Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
 '''
 
 import numpy as np
-from numpy import genfromtxt
 import pandas as pd
 import matplotlib.pylab as plt
 import matplotlib as mpl
@@ -149,47 +148,47 @@ if __name__ == "__main__":
     print("Displaying the positional data set")
     df = pandas_data()
     print(df)
-    #
-    #
-    # while True:
-    #
-    #     user = input('Do you want to see the graphical representation of the data you inserted? (Y/N):')
-    #     if user == "Y":
-    #         print(".........")
-    #         print('Use the left click to rotate the grafh and the right click to zoom in and out')
-    #         work = graph()
-    #         break
-    #     elif user == "N":
-    #         break
-    #     else:
-    #         print('Please provide a letter like Y or N')
-    #
-    #
-    # while True:
-    #     print(".........")
-    #     user = input('Do you want to see the graphical representation of the absolute value of the positional vector (Y/N):')
-    #     if user == "Y":
-    #         work = absolute_graph()
-    #         break
-    #     elif user == "N":
-    #         break
-    #     else:
-    #         print('Please provide a letter like Y or N')
-    #
-    #
-    # while True:
-    #     print(".........")
-    #     user = input( 'Do you want to see and delete some extremely jittery data (Y/N):')
-    #     if user == "Y":
-    #         df, new_data = extreme_values()
-    #         print(".........")
-    #         print(df)
-    #         print('These data have been deleted from the initial data set')
-    #         break
-    #     elif user == "N":
-    #         break
-    #     else:
-    #         print('Please provide a letter like Y or N')
-    #
-    # print(".........")
-    # user = input('Press ENTER to end program')
+
+
+    while True:
+
+        user = input('Do you want to see the graphical representation of the data you inserted? (Y/N):')
+        if user == "Y":
+            print(".........")
+            print('Use the left click to rotate the grafh and the right click to zoom in and out')
+            work = graph()
+            break
+        elif user == "N":
+            break
+        else:
+            print('Please provide a letter like Y or N')
+
+
+    while True:
+        print(".........")
+        user = input('Do you want to see the graphical representation of the absolute value of the positional vector (Y/N):')
+        if user == "Y":
+            work = absolute_graph()
+            break
+        elif user == "N":
+            break
+        else:
+            print('Please provide a letter like Y or N')
+
+
+    while True:
+        print(".........")
+        user = input( 'Do you want to see and delete some extremely jittery data (Y/N):')
+        if user == "Y":
+            df, new_data = extreme_values()
+            print(".........")
+            print(df)
+            print('These data have been deleted from the initial data set')
+            break
+        elif user == "N":
+            break
+        else:
+            print('Please provide a letter like Y or N')
+
+    print(".........")
+    user = input('Press ENTER to end program')

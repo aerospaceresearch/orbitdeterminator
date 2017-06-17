@@ -5,7 +5,6 @@ Date : 29/05/17
 
 import numpy as np
 import matplotlib.pylab as plt
-import orbit_output
 import PyKEP as pkp
 from math import *
 import read_data
@@ -17,17 +16,15 @@ def lamberts(x1, x2):
     Takes two position points - numpy arrays with time,x,y,z as elements
     and produces two vectors with the state vector for both positions using Lamberts solution
 
-    Input
+    Args:
+        x1(numpy array) = time and position for point 1 [time1,x1,y1,z1]
+        x2(numpy array) = time and position for point 2 [time2,x2,y2,z2]
+        
 
-    x1 = [time1,x1,y1,z1]
-    x2 = [time2,x2,y2,z2]
-    bool = True if the motion is retrogade, bool = False if the motion is counter - clock wise
 
-
-    Output
-
-    v1 = velocity vector for position 1 (v1x, v1y, v1z)
-    v2 = velocity for position 2 (v2x, v2y, v2z)
+    Returns:
+        v1(numpy array) = velocity vector for point 1 (v1x, v1y, v1z)
+        v2(numpy array) = velocity for point 2 (v2x, v2y, v2z)
     '''
 
     time = np.array([x2[0] - x1[0]])
@@ -66,17 +63,16 @@ def lamberts(x1, x2):
 
 def transform(r, v):
     '''
-    This function transforms a state vector to a vector containing the six keplerian elements
+    Transforms a state vector to a vector containing the six keplerian elements
     Inputs and outputs in numpy array format
     
-    Input
-    
-    r = position vector [x, y, z]
-    v = velocity vector (vx, vy, vz)
-    Output
-    
-    kep = keplerian elements [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω), 
-        right ascension of the ascending node (Ω), true anomaly (v)]
+    Args:
+        r(numpy arrray) = position vector [x, y, z]
+        v(numpy arrray) = velocity vector (vx, vy, vz)
+
+    Returns:
+        kep(numpy array) = keplerian elements [semi major axis (a), eccentricity (e), inclination (i), 
+                           argument of perigee (ω), right ascension of the ascending node (Ω), true anomaly (v)]
     '''
 
     import state_kep
