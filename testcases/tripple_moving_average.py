@@ -132,8 +132,10 @@ def generate_filtered_data(file, window):
 
     return output
 
-if __name__ == "__main__":
-
+def main():
+    '''Reads the data, filters it, generated csv of filtered data and 
+    plots the result.
+    '''
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
 
     output = generate_filtered_data(signal, 5)
@@ -143,8 +145,11 @@ if __name__ == "__main__":
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-
     ax.plot(output[:,1], output[:,2], output[:,3], 'b', label='filtered')
     ax.scatter(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
     ax.legend(['Filtered Orbit', 'Noisy Orbit'])
     plt.show()
+
+if __name__ == "__main__":
+    
+    main()
