@@ -133,7 +133,7 @@ def generate_filtered_data(file, window):
     return output
 
 def main():
-    '''Reads the data, filters it, generated csv of filtered data and 
+    '''Reads the data, filters it, generated csv of filtered data and
     plots the result.
     '''
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
@@ -151,5 +151,4 @@ def main():
     plt.show()
 
 if __name__ == "__main__":
-    
     main()

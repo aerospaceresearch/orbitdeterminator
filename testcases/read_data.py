@@ -10,36 +10,36 @@ import pickle
 import numpy as np
 
 def load_data(filename):
-	''' Loads the data in numpy array for further processing.
+    ''' Loads the data in numpy array for further processing.
     	
-	Args:
-		filename: name of the csv file to be parsed
+    Args:
+        filename: name of the csv file to be parsed
 
     Returns:
         orbit: 2D numpy array of the orbit.
         Each point of the orbit is of the 
         format : [timestamp, x-coordinate, y-coordinate, z-coordinate]
-	'''
-	orbit_file = list(csv.reader(open(filename, "r"), delimiter = ","))
-			
-	orbit = []
-	for point in orbit_file:
-		point_tuple = np.array(point, dtype = np.float)
-		orbit.append(point_tuple)
+    '''
+    orbit_file = list(csv.reader(open(filename, "r"), delimiter = ","))
+
+    orbit = []
+    for point in orbit_file:
+        point_tuple = np.array(point, dtype = np.float)
+        orbit.append(point_tuple)
 
     orbit = np.array(orbit)
 	return orbit
 
 if __name__ == "__main__":
 	#Returns a dictionary of the format {filename: orbit}
-	parsed_orbits = {}
-	files = os.listdir(os.getcwd() + '/' + sys.argv[1])
+    parsed_orbits = {}
+    files = os.listdir(os.getcwd() + '/' + sys.argv[1])
 
-	for file in files:
-		if file.endswith('.csv'):
-			orbit = load_data(os.getcwd() + '/' + sys.argv[1] + '/' + str(file))
-			parsed_orbits[file] = orbit
+    for file in files:
+        if file.endswith('.csv'):
+            orbit = load_data(os.getcwd() + '/' + sys.argv[1] + '/' + str(file))
+            parsed_orbits[file] = orbit
 
-	pickle.dump(parsed_orbits, open("orbits.p", "wb"))
+    pickle.dump(parsed_orbits, open("orbits.p", "wb"))
 
-	print("Object file created with the name 'orbits.p'!!")
+    print("Object file created with the name 'orbits.p'!!")
