@@ -6,7 +6,6 @@ Date Created : 21/05/2017
 import os
 import sys
 import csv
-import pickle
 import numpy as np
 
 def load_data(filename):
