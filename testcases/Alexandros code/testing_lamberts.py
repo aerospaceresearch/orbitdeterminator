@@ -1,3 +1,8 @@
+'''
+Created by Alexandros Kazantzidis
+Date : 29/05/17
+'''
+
 from math import *
 import numpy as np
 import pandas as pd
