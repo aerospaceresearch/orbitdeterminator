@@ -10,18 +10,19 @@ import pandas as pd
 pd.set_option('display.width', 1000)
 import matplotlib.pylab as plt
 import matplotlib as mpl
-from numpy import genfromtxt
 
-import lamberts
-import orbit_output
+
 import orbit_fit
 import kep_state
 import rkf78
 import golay_filter
+import read_data
+import tripple_moving_average
 
 
-my_data = orbit_output.get_data('orbit1')
-window = 41
+my_data = read_data.load_data('orbit.csv')
+my_data = tripple_moving_average.generate_filtered_data(my_data, 3)
+window = 61
 my_data = golay_filter.golay(my_data, window)
 
 kep = orbit_fit.create_kep(my_data)

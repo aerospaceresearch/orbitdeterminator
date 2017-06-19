@@ -5,20 +5,18 @@ Date 25/05/17
 
 import numpy as np
 from math import *
-import pandas as pd
 
 def Mtov (M,e):
 
 	'''
 	Computes true anomaly v from a given mean anomaly M and eccentricity e by using Newton-Raphson method
 
-	input
-	M = mean anomaly (degrees)
-	e = eccentricity (number)
+	Args:
+		M(float) = mean anomaly (degrees)
+		e(float) = eccentricity (number)
 	
-	output
-	
-	v = true anomaly (degrees)'''
+	Returns:
+		v(float) = true anomaly (degrees)'''
 
 	i=1
 	Eo=100
@@ -39,23 +37,21 @@ def Mtov (M,e):
 	
 def Kep_state (kep):
 	'''
-    this function uses the keplerian elements to compute the position and velocity vector
+    Uses the keplerian elements to compute the position and velocity vector
 
-    input
+    Args:
+		kep(numpy array) = a 1x6 matrix which contains the following variables
+			kep(0)=inclination (degrees)
+			kep(1)=right ascension of the ascending node (degrees)
+			kep(2)=eccentricity (number)
+			kep(3)=argument of perigee (degrees)
+			kep(4)=mean anomaly (degrees)
+			kep(5)=mean motion (revs per day)
 
-	kep is a 1x6 matrix which contains the following variables
-	kep(0)=inclination (degrees)
-	kep(1)=right ascension of the ascending node (degrees)
-	kep(2)=eccentricity (number)
-	kep(3)=argument of perigee (degrees)
-	kep(4)=mean anomaly (degrees)
-	kep(5)=mean motion (revs per day)
-
-	output
-
-	r = 1x6 matrix which contains the position and velocity vector
-	r(0),r(1),r(2) = position vector (rx,ry,rz) m
-	r(3),r(4),r(5) = velocity vector (vx,vy,vz) m/s
+	Returns:
+		r(numpy array) = 1x6 matrix which contains the position and velocity vector
+		r(0),r(1),r(2) = position vector (rx,ry,rz) m
+		r(3),r(4),r(5) = velocity vector (vx,vy,vz) m/s
 	'''
 	
 	

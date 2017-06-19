@@ -4,11 +4,11 @@ Date 25/05/17 (The basic statistical filtering was implemented in 26/05/17)
 '''
 
 import numpy as np
-from numpy import genfromtxt
 import pandas as pd
 import matplotlib.pylab as plt
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
+import read_data
 
 ## This code will take as input an numpy array with positional satellite data sets and will present it to the
 ## user using pandas and matplotilib 3d graph and do some simple statistical filtering
@@ -19,13 +19,10 @@ from mpl_toolkits.mplot3d import Axes3D
 ## First part the numpy array holding the time,x,y,z positional data
 
 
-name = 'orbit.csv'
 
 def get_data(folder):
-    my_data = genfromtxt(name, delimiter = ',')
+    my_data = read_data.load_data(folder)
     return my_data
-my_data = get_data(name)
-
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -146,6 +143,8 @@ def extreme_values():
 
 if __name__ == "__main__":
 
+    name = 'orbit.csv'
+    my_data = get_data(name)
     print("Displaying the positional data set")
     df = pandas_data()
     print(df)
