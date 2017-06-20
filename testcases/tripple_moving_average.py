@@ -81,7 +81,6 @@ def extrapolation_padding(path, window):
 
     return extrapolated
 
-
 def triple_moving_average(signal_array, window_size):
     '''Apply triple moving average to a signal.
 
@@ -95,19 +94,19 @@ def triple_moving_average(signal_array, window_size):
     '''
     filtered_signal = []
     arr_len = len(signal_array)
-    for point in signal_array:
-        if (signal_array.index(point) < window_size or signal_array.index(point) > arr_len - window_size ):
-            filtered_signal.append(point)
-        else:
-            A, B = [], []
-            pos = signal_array.index(point)
-            for i in range(0, window_size):
-                A.append(signal_array[pos + i])
-                B.append(signal_array[pos - i])
+    for point in signal_array[ window_size - 1 : arr_len - window_size -1 ]:
+        # if (signal_array.index(point) < window_size or signal_array.index(point) > arr_len - window_size ):
+        #     filtered_signal.append(point)
+        # else:
+        A, B = [], []
+        pos = signal_array.index(point)
+        for i in range(1, window_size):
+            A.append(signal_array[pos + i])
+            B.append(signal_array[pos - i])
 
-            wa_A = weighted_average(A)
-            wa_B = weighted_average(B)
-            filtered_signal.append((point + wa_B + wa_A ) / 3)
+        wa_A = weighted_average(A)
+        wa_B = weighted_average(B)
+        filtered_signal.append((point + wa_B + wa_A ) / 3)
 
     return filtered_signal
 
@@ -121,28 +120,35 @@ def generate_filtered_data(file, window):
     Returns:
         output: 4D filtered orbit data [time, x, y, z].
     '''
-    averaged_x = (triple_moving_average(list(file[:,1]), window))
-    averaged_y = triple_moving_average(list(file[:,2]), window)
-    averaged_z = triple_moving_average(list(file[:,3]), window)
+    data = extrapolation_padding(file, window)
+    averaged_x = (triple_moving_average(list(data[:,0]), window))
+    averaged_y = triple_moving_average(list(data[:,1]), window)
+    averaged_z = triple_moving_average(list(data[:,2]), window)
 
+    print(len(averaged_y))
+    print(len(file[:, 0]))
     output = np.hstack(((file[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
         (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
 
     return output
 
-if __name__ == "__main__":
-
+def main():
+    '''Reads the data, filters it, generated csv of filtered data and
+    plots the result.
+    '''
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
 
-    output = generate_filtered_data(signal, 3)
+    output = generate_filtered_data(signal, 5)
     np.savetxt("filtered.csv", output, delimiter=",")
 
     print("Filtered output saved as filtered.csv")
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-
     ax.plot(output[:,1], output[:,2], output[:,3], 'b', label='filtered')
     ax.scatter(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
     ax.legend(['Filtered Orbit', 'Noisy Orbit'])
     plt.show()
+
+if __name__ == "__main__":
+    main()
