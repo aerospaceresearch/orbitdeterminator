@@ -1,6 +1,10 @@
 ''' 
 Created by Alexandros Kazantzidis
 Date 25/05/17
+
+State to Keplerian: Take a state vector (x, y, z, vx, vy, vz) where v is the velocity of the satellite and 
+transfroms it into set of keplerian elements (a, e, i, ω, Ω, v)
+
 '''
 
 from math import *
@@ -60,7 +64,6 @@ def state_kep(r, v):
         oev(4) = argument of perigee (degress)
         oev(5) = right ascension of ascending node (degrees)
         oev(6) = true anomaly (degrees)
-
     '''
 
     mu = 398600.4405

@@ -10,10 +10,10 @@ n = window size
 '''
 import os
 import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-
 import read_data as rd
 
 
@@ -125,8 +125,8 @@ def generate_filtered_data(file, window):
     averaged_y = triple_moving_average(list(data[:,1]), window)
     averaged_z = triple_moving_average(list(data[:,2]), window)
 
-    print(len(averaged_y))
-    print(len(file[:, 0]))
+    # print(len(averaged_y))
+    # print(len(file[:, 0]))
     output = np.hstack(((file[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
         (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
 
@@ -136,7 +136,7 @@ def main():
     '''Reads the data, filters it, generated csv of filtered data and
     plots the result.
     '''
-    signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
+    signal = rd.load_data(os.getcwd() + '/' + "orbit.csv")
 
     output = generate_filtered_data(signal, 5)
     np.savetxt("filtered.csv", output, delimiter=",")
@@ -150,5 +150,7 @@ def main():
     ax.legend(['Filtered Orbit', 'Noisy Orbit'])
     plt.show()
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     signal = rd.load_data(os.getcwd() + '/' + "orbit.csv")
+#     output = generate_filtered_data(signal, 3)
+#     print(output)

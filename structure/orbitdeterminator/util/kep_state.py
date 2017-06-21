@@ -1,54 +1,32 @@
 '''
 Created by Alexandros Kazantzidis
 Date 25/05/17
+
+Keplerian to State: Take a set of keplerian elements (a, e, i, ω, Ω, v) and transfroms it into a state vector 
+(x, y, z, vx, vy, vz) where v is the velocity of the satellite
 '''
 
 import numpy as np
 from math import *
 
 
-def Mtov(M, e):
-    '''
-    Computes true anomaly v from a given mean anomaly M and eccentricity e by using Newton-Raphson method
-
-    Args:
-        M(float) = mean anomaly (degrees)
-        e(float) = eccentricity (number)
-
-    Returns:
-        v(float) = true anomaly (degrees)'''
-
-    i = 1
-    Eo = 100
-    while True:
-        E = Eo - ((Eo - e * sin(Eo) - M) / (1 - e * cos(Eo)))
-        Eo = E
-        i = i + 1
-        if i == 100: break
-
-    v_pre = (cos(E) - e) / (1 - e * cos(E))
-    v = acos(v_pre)
-    v = degrees(v)
-    return v
-
-
-def Kep_state(kep):
+def kep_state(kep):
     '''
     Uses the keplerian elements to compute the position and velocity vector
 
     Args:
         kep(numpy array) = a 1x6 matrix which contains the following variables
-            kep(0)=inclination (degrees)
-            kep(1)=right ascension of the ascending node (degrees)
-            kep(2)=eccentricity (number)
+            kep(0)=semi major axis (km)
+            kep(1)=eccentricity (number)
+            kep(2)=inclination (degrees)
             kep(3)=argument of perigee (degrees)
-            kep(4)=mean anomaly (degrees)
-            kep(5)=mean motion (revs per day)
+            kep(4)=right ascension of the ascending node (degrees)
+            kep(5)=true anomaly (degrees)
 
     Returns:
         r(numpy array) = 1x6 matrix which contains the position and velocity vector
-        r(0),r(1),r(2) = position vector (rx,ry,rz) m
-        r(3),r(4),r(5) = velocity vector (vx,vy,vz) m/s
+        r(0),r(1),r(2) = position vector (x,y,z) km
+        r(3),r(4),r(5) = velocity vector (vx,vy,vz) km/s
     '''
 
     r = np.zeros((6, 1))
@@ -56,13 +34,12 @@ def Kep_state(kep):
 
     # unload orbital elements array
 
-
     sma = kep[0, 0]
-    ecc = kep[1, 0]  # eccentricity
-    inc = kep[2, 0]  # inclination
-    argper = kep[3, 0]  # argument of perigee
-    raan = kep[4, 0]  # right ascension of the ascending node
-    tanom = kep[5, 0]  # we use mean anomaly(kep(5)) and the function Mtov to compute true anomaly (tanom)
+    ecc = kep[1, 0]
+    inc = kep[2, 0]
+    argper = kep[3, 0]
+    raan = kep[4, 0]
+    tanom = kep[5, 0]
 
     tanom = radians(tanom)
     slr = sma * (1 - ecc * ecc)
@@ -106,7 +83,10 @@ def Kep_state(kep):
 
     return r
 
-
+if __name__ == "__main__":
+	kep = np.array([[15711.578566], [0.377617], [90.0], [0.887383], [0.0], [28.357744]])
+	r = kep_state(kep)
+	print(r)
 
 
 
