@@ -7,33 +7,31 @@ elements (a, e, i, ω, Ω, v) using Lambert's solution for preliminary orbit det
 '''
 
 import sys
-import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-
 from util import state_kep
 import numpy as np
 import matplotlib.pylab as plt
 import PyKEP as pkp
 from math import *
-import read_data
+from util import read_data
 import pandas as pd
 pd.set_option('display.width', 1000)
 
 
 def lamberts(x1, x2):
-    '''Takes two points (time,x,y,z) and produces two vectors with the state vector for both positions 
-    using Lamberts solution
+
+    '''Takes two position points - numpy arrays with time,x,y,z as elements
+    and produces two vectors with the state vector for both positions using Lamberts solution
 
     Args:
-        x1(numpy array) = time and position for point 1 [time1,x1,y1,z1]
-        x2(numpy array) = time and position for point 2 [time2,x2,y2,z2]
+        x1(numpy array): time and position for point 1 [time1,x1,y1,z1]
+        x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
 
     Returns:
-        v1(numpy array) = velocity vector for point 1 (v1x, v1y, v1z)
-        v2(numpy array) = velocity for point 2 (v2x, v2y, v2z)
+        v1(numpy array): velocity vector for point 1 (v1x, v1y, v1z)
+        v2(numpy array): velocity for point 2 (v2x, v2y, v2z)
     '''
-
     time = np.array([x2[0] - x1[0]])
 
     x1_new = [1, 1, 1]
@@ -66,15 +64,14 @@ def create_kep(my_data):
        It implements a tool for deleting all the points that give extremely jittery state vectors
 
         Args:  
-            data(csv file) = read file csv that contains the positional data set in (Time, x, y, z) Format
+            data(csv file) : read file csv that contains the positional data set in (Time, x, y, z) Format
 
 
         Returns:
-            kep(numpy array) = a numpy array containing all the keplerian elements computed for the orbit given in
+            kep(numpy array) : a numpy array containing all the keplerian elements computed for the orbit given in
                                [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
                                right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
-
     v_hold = np.zeros((len(my_data), 3))
     v_abs1 = np.empty([len(my_data)])
     v1 = lamberts(my_data[0, :], my_data[1, :])
@@ -148,16 +145,14 @@ def kalman(kep, R):
     the fitted value of them by applying kalman filters
 
     Args:
-        kep(numpy array) = containing keplerian elements in this format
-        (a, e, i, ω, Ω, v)
-        R = estimate of measurement variance
+        kep(numpy array): containing keplerian elements in this format (a, e, i, ω, Ω, v)
+        R : estimate of measurement variance
 
     Returns:
-        final_kep(numpy array) = one final set of keplerian elements describing the orbit based on kalman filtering
+        final_kep(numpy array): one final set of keplerian elements describing the orbit based on kalman filtering
     '''
-
+    
     ## first find the mean values for every keplerian element
-
     mean_kep = np.zeros((1, 6))
     for i in range(0, 6):
         mean_kep[0, i] = np.mean(kep[:, i])
@@ -180,8 +175,6 @@ def kalman(kep, R):
         xhatminus = np.zeros((sz, 6))  # a priori estimate of x
         Pminus = np.zeros((sz, 6))  # a priori error estimate
         K = np.zeros((sz, 6))  # gain or blending factor
-
-
 
         # intial guesses
         xhat[0, i] = mean_kep[0, i]
@@ -223,7 +216,6 @@ def kalman(kep, R):
 #     print("These are the final fitted values for the keplerian elements based on kalman filtering")
 #     print(df1)
 #
-
 
 
 

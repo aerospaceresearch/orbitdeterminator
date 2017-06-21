@@ -12,21 +12,22 @@ import numpy
 import read_data as rd
 
 def error(true, filtered):
-	'''
-	Calculated the mean square error between the arrays of the two numpy matrices
+	'''Calculated the mean square error between the arrays of the two numpy matrices
 
 	Args:
-	true: reference matrix
-	filtered: objective matrix
+	true: reference numpy array of true data
+	filtered: numpy array with processed data
 
 	Returns:
-	percentage error between the two matrices
+	mean: percentage error between the two matrices
 	'''
 	error_x = numpy.absolute(true[:,1] - filtered[:,1])
 	error_y = numpy.absolute(true[:,2] - filtered[:,2])
 	error_z = numpy.absolute(true[:,3] - filtered[:,3])
 
-	return numpy.mean(numpy.dstack((error_x, error_y, error_z)))
+	mean_error = numpy.mean(numpy.dstack((error_x, error_y, error_z)))
+
+	return mean_error
 
 if __name__ == "__main__":
 
