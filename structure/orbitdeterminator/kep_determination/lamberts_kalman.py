@@ -7,25 +7,22 @@ import numpy as np
 import matplotlib.pylab as plt
 import PyKEP as pkp
 from math import *
+import state_kep
 import read_data
 
 
 def lamberts(x1, x2):
-    '''
-    Takes two position points - numpy arrays with time,x,y,z as elements
+    '''Takes two position points - numpy arrays with time,x,y,z as elements
     and produces two vectors with the state vector for both positions using Lamberts solution
 
     Args:
-        x1(numpy array) = time and position for point 1 [time1,x1,y1,z1]
-        x2(numpy array) = time and position for point 2 [time2,x2,y2,z2]
-
-
+        x1(numpy array): time and position for point 1 [time1,x1,y1,z1]
+        x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
 
     Returns:
-        v1(numpy array) = velocity vector for point 1 (v1x, v1y, v1z)
-        v2(numpy array) = velocity for point 2 (v2x, v2y, v2z)
+        v1(numpy array): velocity vector for point 1 (v1x, v1y, v1z)
+        v2(numpy array): velocity for point 2 (v2x, v2y, v2z)
     '''
-
     time = np.array([x2[0] - x1[0]])
 
     x1_new = [1, 1, 1]
@@ -58,26 +55,21 @@ def lamberts(x1, x2):
 
     return v1
 
-
 def transform(r, v):
     '''
     Transforms a state vector to a vector containing the six keplerian elements
     Inputs and outputs in numpy array format
 
     Args:
-        r(numpy arrray) = position vector [x, y, z]
-        v(numpy arrray) = velocity vector (vx, vy, vz)
+        r(numpy arrray): position vector [x, y, z]
+        v(numpy arrray): velocity vector (vx, vy, vz)
 
     Returns:
-        kep(numpy array) = keplerian elements [semi major axis (a), eccentricity (e), inclination (i), 
-                           argument of perigee (ω), right ascension of the ascending node (Ω), true anomaly (v)]
+        kep(numpy array): keplerian elements [semi major axis (a), eccentricity (e), inclination (i), 
+                        argument of perigee (ω), right ascension of the ascending node (Ω), true anomaly (v)]
     '''
-
-    import state_kep
-
     kep = state_kep.state_kep(r, v)
     return kep
-
 
 if __name__ == "__main__":
     my_data = read_data.load_data('orbit.csv')
@@ -88,14 +80,11 @@ if __name__ == "__main__":
     print('This the velocity for the first point of your data set')
     print(v1)
 
+
 '''
 Created by Alexandros Kazantzidis
 Date 30/05/17 (Kalman fitlers implementation in 31/05/17)
 '''
-
-
-
-
 def create_kep(my_data):
     '''Computes all the keplerian elements for every point of the orbit you provide
        It implements a tool for deleting all the points that give extremely jittery state vectors
@@ -109,7 +98,6 @@ def create_kep(my_data):
                                [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
                                right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
-
     v_hold = np.zeros((len(my_data), 3))
     v_abs1 = np.empty([len(my_data)])
     v1 = lamberts.lamberts(my_data[0, :], my_data[1, :])
@@ -183,16 +171,14 @@ def kalman(kep):
     the fitted value of them by applying kalman filters
 
     Args:
-
-        kep(numpy array) = containing keplerian elements in this format
+        kep(numpy array): containing keplerian elements in this format
         (a, e, i, ω, Ω, v)
 
     Returns:
-        final_kep(numpy array) = one final set of keplerian elements describing the orbit based on kalman filtering
+        final_kep(numpy array): one final set of keplerian elements describing the orbit based on kalman filtering
     '''
-
+    
     ## first find the mean values for every keplerian element
-
     mean_kep = np.zeros((1, 6))
     for i in range(0, 6):
         mean_kep[0, i] = np.mean(kep[:, i])
@@ -259,8 +245,3 @@ if __name__ == "__main__":
     print(" ")
     print("These are the final fitted values for the keplerian elements based on kalman filtering")
     print(df1)
-
-
-
-
-

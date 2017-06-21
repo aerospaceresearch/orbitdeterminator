@@ -4,6 +4,7 @@ Date Created : 21/05/2017
 '''
 
 import os
+import sys
 import csv
 import pickle
 import numpy as np
@@ -13,7 +14,7 @@ _DESTINATION = "../filtered data"
 
 def load_data(filename):
     ''' Loads the data in numpy array for further processing.
-
+    	
     Args:
         filename: name of the csv file to be parsed
 
@@ -33,12 +34,6 @@ def load_data(filename):
     return orbit
 
 def save_orbits(source, destination):
-    ''' Saves objects returned from load_data
-
-    Args:
-        source: path to raw csv files.
-        destination: path where objects need to be saved.
-    '''
     if os.path.isdir(source):
         pass
     else:
@@ -50,5 +45,10 @@ def save_orbits(source, destination):
             pickle.dump(orbit, open(destination + "/%s.p" %file[:-4], "wb"))
 
 if __name__ == "__main__":
-
     save_orbits(_SOURCE, _DESTINATION)
+
+	# #Returns a dictionary of the format {filename: orbit}
+ #    parsed_orbits = {}
+ #    files = os.listdir(os.getcwd() + '/' + sys.argv[1])
+
+    
