@@ -1,5 +1,5 @@
 numpy
 matplotlib
 pandas
-PyKEP
+PyKEP==1.2.2
 pytest
