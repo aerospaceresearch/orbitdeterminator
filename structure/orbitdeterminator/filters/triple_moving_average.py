@@ -80,7 +80,7 @@ def generate_filtered_data(filename, window):
 if __name__ == "__main__":
 
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
-    
+
     output = generate_filtered_data(signal, 2)
     np.savetxt("filtered.csv", output, delimiter=",")
 
