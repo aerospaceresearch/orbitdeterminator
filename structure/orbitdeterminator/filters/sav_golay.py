@@ -46,7 +46,7 @@ def golay(data, window, degree):
 
     return new_positions
 
-#
+
 #
 # if __name__ == "__main__":
 #
@@ -56,4 +56,4 @@ def golay(data, window, degree):
 #     degree = 6
 #     positions_filtered = golay(my_data, window, degree)
 #     print(positions_filtered - my_data)
-
+#

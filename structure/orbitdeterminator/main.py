@@ -1,5 +1,5 @@
 '''
-Main : Runs the whole process in one file
+Runs the whole process in one file
 Input a .csv positional data file (time, x, y, z) and this script generated the final set of keplerian elements
 along with a plot and a filtered.csv data file
 '''
@@ -27,7 +27,7 @@ data_after_filter = triple_moving_average.generate_filtered_data(data, 3)
 
 
 ## Apply the Savintzky - Golay filter with window = 31 and polynomail parameter = 6
-data_after_filter = sav_golay.golay(data_after_filter, 31, 6)
+data_after_filter = sav_golay.golay(data_after_filter, 61, 6)
 
 
 ## Save the filtered data into a new csv called "filtered"
