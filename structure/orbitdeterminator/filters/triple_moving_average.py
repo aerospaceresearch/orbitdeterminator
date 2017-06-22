@@ -12,8 +12,9 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from mpl_toolkits.mplot3d import Axes3D
-import read_data as rd
+from util import read_data as rd
 
 
 def weighted_average(params):
