@@ -1,17 +1,26 @@
 '''
 Created by Alexandros Kazantzidis
-Date : 29/05/17
+Date : 31/05/17
+
+Lamberts Kalman: Takes a positional data set in the format of (time, x, y, z) and produces one set of six keplerian
+elements (a, e, i, ω, Ω, v) using Lambert's solution for preliminary orbit determination and Kalman filters
 '''
 
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from util import state_kep
 import numpy as np
 import matplotlib.pylab as plt
 import PyKEP as pkp
 from math import *
-import state_kep
-import read_data
+from util import read_data
+import pandas as pd
+pd.set_option('display.width', 1000)
 
 
 def lamberts(x1, x2):
+
     '''Takes two position points - numpy arrays with time,x,y,z as elements
     and produces two vectors with the state vector for both positions using Lamberts solution
 
@@ -34,11 +43,8 @@ def lamberts(x1, x2):
     l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
 
     v1 = l.get_v1()
-    v2 = l.get_v2()
     v1 = np.asarray(v1)
-    v2 = np.asarray(v2)
     v1 = np.reshape(v1, 3)
-    v2 = np.reshape(v2, 3)
 
     check = (np.greater(v1, np.array([100.0, 100.0, 100.0])))
     check2 = (np.less(v1, np.array([-100.0, -100.0, -100.0])))
@@ -47,60 +53,28 @@ def lamberts(x1, x2):
         l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, True)
 
     v1 = l.get_v1()
-    v2 = l.get_v2()
     v1 = np.asarray(v1)
-    v2 = np.asarray(v2)
     v1 = np.reshape(v1, 3)
-    v2 = np.reshape(v2, 3)
 
     return v1
 
-def transform(r, v):
-    '''
-    Transforms a state vector to a vector containing the six keplerian elements
-    Inputs and outputs in numpy array format
 
-    Args:
-        r(numpy arrray): position vector [x, y, z]
-        v(numpy arrray): velocity vector (vx, vy, vz)
-
-    Returns:
-        kep(numpy array): keplerian elements [semi major axis (a), eccentricity (e), inclination (i), 
-                        argument of perigee (ω), right ascension of the ascending node (Ω), true anomaly (v)]
-    '''
-    kep = state_kep.state_kep(r, v)
-    return kep
-
-if __name__ == "__main__":
-    my_data = read_data.load_data('orbit.csv')
-    r1 = my_data[0, 1:4]
-    r2 = my_data[1, 1:4]
-    v1 = lamberts(my_data[0, :], my_data[1, :])
-    kep1 = transform(r1, v1)
-    print('This the velocity for the first point of your data set')
-    print(v1)
-
-
-'''
-Created by Alexandros Kazantzidis
-Date 30/05/17 (Kalman fitlers implementation in 31/05/17)
-'''
 def create_kep(my_data):
     '''Computes all the keplerian elements for every point of the orbit you provide
        It implements a tool for deleting all the points that give extremely jittery state vectors
 
         Args:  
-            data(csv file) = read file csv that contains the positional data set in (Time, x, y, z) Format
+            data(csv file) : read file csv that contains the positional data set in (Time, x, y, z) Format
 
 
         Returns:
-            kep(numpy array) = a numpy array containing all the keplerian elements computed for the orbit given in
+            kep(numpy array) : a numpy array containing all the keplerian elements computed for the orbit given in
                                [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
                                right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
     v_hold = np.zeros((len(my_data), 3))
     v_abs1 = np.empty([len(my_data)])
-    v1 = lamberts.lamberts(my_data[0, :], my_data[1, :])
+    v1 = lamberts(my_data[0, :], my_data[1, :])
     v_abs1[0] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
     v_hold[0] = v1
 
@@ -108,7 +82,7 @@ def create_kep(my_data):
     for i in range(1, (len(my_data) - 1)):
 
         j = i + 1
-        v1 = lamberts.lamberts(my_data[i, :], my_data[j, :])
+        v1 = lamberts(my_data[i, :], my_data[j, :])
 
         ##compute the absolute value of the velocity vector for every point
         v_abs1[i] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
@@ -147,7 +121,7 @@ def create_kep(my_data):
     ## finally we transform the state vectors = position vectors + velocity vectors into keplerian elements
     kep = np.zeros((len(store_i), 6))
     for i in range(0, len(final_r)):
-        kep[i] = np.ravel(lamberts.transform(final_r[i], final_v[i]))
+        kep[i] = np.ravel(state_kep.state_kep(final_r[i], final_v[i]))
 
     ## check in every row to see if eccentricity is over 1 then the solution is completely wrong and needs
     ## to be deleted
@@ -165,14 +139,14 @@ def create_kep(my_data):
 
 ## find the mean value of all keplerian elements set and then do a kalman filtering to find the best fit
 
-def kalman(kep):
+def kalman(kep, R):
     '''
     Takes as an input lots of sets of keplerian elements and produces
     the fitted value of them by applying kalman filters
 
     Args:
-        kep(numpy array): containing keplerian elements in this format
-        (a, e, i, ω, Ω, v)
+        kep(numpy array): containing keplerian elements in this format (a, e, i, ω, Ω, v)
+        R : estimate of measurement variance
 
     Returns:
         final_kep(numpy array): one final set of keplerian elements describing the orbit based on kalman filtering
@@ -202,8 +176,6 @@ def kalman(kep):
         Pminus = np.zeros((sz, 6))  # a priori error estimate
         K = np.zeros((sz, 6))  # gain or blending factor
 
-        R = 0.01 ** 2  # estimate of measurement variance, change to see effect
-
         # intial guesses
         xhat[0, i] = mean_kep[0, i]
         P[0, i] = 1.0
@@ -221,27 +193,29 @@ def kalman(kep):
 
         x_final[:, i] = xhat[k, i]
 
-    return (x_final)
+    return x_final
+
+#
+# if __name__ == "__main__":
+#
+#     my_data = read_data.load_data('orbit.csv')
+#     kep = create_kep(my_data)
+#     df = pd.DataFrame(kep)
+#     df = df.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
+#                             4: 'Ω (degrees)', 5: 'v (degrees)'})
+#     print("These are the computed keplerian elements for the available points of your orbit")
+#     print(df)
+#
+#     kep_final = kalman(kep, 0.01 ** 2)
+#     df1 = pd.DataFrame(kep_final)
+#     df1 = df1.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
+#                               4: 'Ω (degrees)', 5: 'v (degrees)'})
+#
+#     user = input('Press ENTER to see kalman filters solution')
+#     print(" ")
+#     print("These are the final fitted values for the keplerian elements based on kalman filtering")
+#     print(df1)
+#
 
 
-if __name__ == "__main__":
-    my_data = read_data.load_data('orbit.csv')
-    my_data = tripple_moving_average.generate_filtered_data(my_data, 3)
-    window = 61
-    my_data = golay_filter.golay(my_data, window)
-    kep = create_kep(my_data)
-    df = pd.DataFrame(kep)
-    df = df.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
-                            4: 'Ω (degrees)', 5: 'v (degrees)'})
-    print("These are the computed keplerian elements for the available points of your orbit")
-    print(df)
 
-    kep_final = kalman(kep)
-    df1 = pd.DataFrame(kep_final)
-    df1 = df1.rename(columns={0: 'a(km or m)', 1: 'e (number)', 2: 'i (degrees)', 3: 'ω (degrees)',
-                              4: 'Ω (degrees)', 5: 'v (degrees)'})
-
-    user = input('Press ENTER to see kalman filters solution')
-    print(" ")
-    print("These are the final fitted values for the keplerian elements based on kalman filtering")
-    print(df1)

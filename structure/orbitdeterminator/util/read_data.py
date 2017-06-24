@@ -8,8 +8,8 @@ import csv
 import pickle
 import numpy as np
 
-_SOURCE = "../../raw"
-_DESTINATION = "../../filtered"
+_SOURCE = "../raw data"
+_DESTINATION = "../filtered data"
 
 def load_data(filename):
     ''' Loads the data in numpy array for further processing.

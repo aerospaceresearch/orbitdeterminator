@@ -1,8 +1,10 @@
 '''
 Created by Alexandros Kazantzidis
 Date 10/02/17
-'''
 
+Runge Kutta Fehlberg 7(8): Used Runge Kutta Fehlberg 7(8) numerical integration method to compute the state vector in
+a time interval tf given an initial state vector y0 at time ti.
+'''
 
 from math import *
 from decimal import *
@@ -28,14 +30,12 @@ def ypol_a(y):
 	y_parag = np.zeros((6,1))
 	agrav = np.zeros((3,1))
 
-
 	r2 = y[0,0]*y[0,0] + y[1,0]*y[1,0] + y[2,0]*y[2,0]
 	r1 = sqrt(r2)
 	r3 = r2*r1
 
 	for i in range(0,3):
 		agrav[i,0] = agrav[i,0] -(mu * y[i,0] / r3)
-
 
 	y_parag[0,0]=y[3,0]
 	y_parag[1,0]=y[4,0]
@@ -44,8 +44,6 @@ def ypol_a(y):
 	y_parag[4,0]=agrav[1,0]
 	y_parag[5,0]=agrav[2,0]
 	return y_parag
-
-
 
 
 def rkf78 (neq,ti,tf,h,tetol,x):
@@ -93,7 +91,6 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 	alph[9,0] = 1.0 / 3
 	alph[10,0] = 1
 	alph[12,0] = 1
-
 
 	beta[1,0] = 2.0 / 27
 	beta[2,0]  = 1.0 / 36
@@ -151,7 +148,6 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 	beta[12,9] = 12.0 / 41
 	beta[12,11] = 1.0
 
-
 	f = np.zeros((neq,13));
 
 	xdot = np.zeros((neq,1));
@@ -179,13 +175,11 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 			xout = x
 			return xout
 
-
 		xdot = ypol_a(x)
 		xdot_tra=np.transpose(xdot)
 		f[:, 0] = xdot_tra
 
 		for k in range(1,13):
-
 
 			for i in range(0,neq):
 
@@ -218,16 +212,15 @@ def rkf78 (neq,ti,tf,h,tetol,x):
 			x = xwrk
 
 
-
 if __name__ == "__main__":
-	neq=6
-	ti=1.0
-	tf=100.0
-	h=0.1
-	tetol=1e-04
-	x= np.array([[1.51303397e+03],[-2.48429276e+03],[6.46549360e+03],[2.99258730e+00],[-6.15860507e+00],[-3.06500279e+00]])
+	neq = 6
+	ti = 1.0
+	tf = 100.0
+	h = 0.1
+	tetol = 1e-04
+	x = np.array([[1.51303397e+03],[-2.48429276e+03],[6.46549360e+03],[2.99258730e+00],[-6.15860507e+00],[-3.06500279e+00]])
 
-	xout = rkf78(neq,ti,tf,h,tetol,x)
+	xout = rkf78(neq, ti, tf, h, tetol, x)
 	print(sqrt(xout[0]**2+xout[1]**2+xout[2]**2))
 	print(xout)
 
