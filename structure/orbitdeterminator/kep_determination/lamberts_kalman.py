@@ -6,6 +6,7 @@ Lamberts Kalman: Takes a positional data set in the format of (time, x, y, z) an
 elements (a, e, i, ω, Ω, v) using Lambert's solution for preliminary orbit determination and Kalman filters
 '''
 
+
 import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
@@ -19,10 +20,40 @@ import pandas as pd
 pd.set_option('display.width', 1000)
 
 
-def lamberts(x1, x2):
+def orbittrajectory(x1_new, x2_new, time):
+    '''Check if we want to keep the result of lamberts() for retrograde or counter-clock wise motion
+    
+    Args:
+        x1(numpy array): time and position for point 1 [time1,x1,y1,z1]
+        x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
+        time: time difference between the 2 points
+        
+    Returns:
+    	traj(boolean) : True if we want to keep retrogade, False if we want counter-clock wise
+    '''
 
+    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
+
+    v1 = l.get_v1()
+    v1 = np.asarray(v1)
+    v1 = np.reshape(v1, 3)
+
+    check = (np.greater(v1, np.array([100.0, 100.0, 100.0])))
+    check2 = (np.less(v1, np.array([-100.0, -100.0, -100.0])))
+
+    if np.any(check) or np.any(check2) == True:
+        traj = True
+    elif np.all(check) or np.all(check2) == False:
+        traj = False
+    else:
+        print("Can't compute for these 2 points")
+
+    return traj
+
+
+def lamberts(x1, x2):
     '''Takes two position points - numpy arrays with time,x,y,z as elements
-    and produces two vectors with the state vector for both positions using Lamberts solution
+       and produces two vectors with the state vector for both positions using Lamberts solution
 
     Args:
         x1(numpy array): time and position for point 1 [time1,x1,y1,z1]
@@ -40,23 +71,42 @@ def lamberts(x1, x2):
     x2_new[:] = x2[1:4]
     time = x2[0] - x1[0]
 
-    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
+    traj = orbittrajectory(x1_new, x2_new, time)
 
-    v1 = l.get_v1()
-    v1 = np.asarray(v1)
-    v1 = np.reshape(v1, 3)
-
-    check = (np.greater(v1, np.array([100.0, 100.0, 100.0])))
-    check2 = (np.less(v1, np.array([-100.0, -100.0, -100.0])))
-
-    if np.any(check) or np.any(check2) == True:
-        l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, True)
+    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, traj)
 
     v1 = l.get_v1()
     v1 = np.asarray(v1)
     v1 = np.reshape(v1, 3)
 
     return v1
+
+
+def check_keplerian(kep):
+    '''Checks all the sets of keplerian elements to see if they have wrong values like eccentricity greater that 1 or
+       a negative number for semi major axis 
+    
+     Args:
+        kep(numpy array): all the sets of keplerian elements in [semi major axis (a), eccentricity (e), 
+                          inclination (i), argument of perigee (ω), right ascension of the ascending node (Ω), 
+                          true anomaly (v)] format
+     
+     Returns:
+        kep_final(numpy array): the final corrected set of keplerian elements that will be inputed in the kalman filter
+    '''
+
+    kep_new = list()
+    for i in range(0, len(kep)):
+        if kep[i, 1] > 1.0:
+            pass
+        elif kep[i, 0] < 0.0:
+            pass
+        else:
+            kep_new.append(kep[i, :])
+
+    kep_final = np.asarray(kep_new)
+
+    return kep_final
 
 
 def create_kep(my_data):
@@ -78,7 +128,7 @@ def create_kep(my_data):
     v_abs1[0] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
     v_hold[0] = v1
 
-    ## Produce all the 2 consecutive pairs and find the velocity with lamberts.lamberts() method
+    ## Produce all the 2 consecutive pairs and find the velocity with lamberts() method
     for i in range(1, (len(my_data) - 1)):
 
         j = i + 1
@@ -93,7 +143,7 @@ def create_kep(my_data):
         else:
             v_hold[i] = v1
 
-    ## we know have lots of [0, 0, 0] indead our numpy array v(vx, vy, vz) and we dont want them because they produce a bug
+    ## we know have lots of [0, 0, 0] inside our numpy array v(vx, vy, vz) and we dont want them because they produce a bug
     ## when we'll try to transform these products to keplerian elements
     bo = list()
     store_i = list()
@@ -123,16 +173,7 @@ def create_kep(my_data):
     for i in range(0, len(final_r)):
         kep[i] = np.ravel(state_kep.state_kep(final_r[i], final_v[i]))
 
-    ## check in every row to see if eccentricity is over 1 then the solution is completely wrong and needs
-    ## to be deleted
-    kep_new = list()
-    for i in range(0, len(kep)):
-        if kep[i, 1] > 1.0:
-            pass
-        else:
-            kep_new.append(kep[i, :])
-
-    kep = np.asarray(kep_new)
+    kep = check_keplerian(kep)
 
     return kep
 
