@@ -94,21 +94,25 @@ def triple_moving_average(signal_array, window_size):
     '''
     filtered_signal = []
     arr_len = len(signal_array)
-    for point in signal_array[ window_size - 1 : arr_len - window_size -1 ]:
-        # if (signal_array.index(point) < window_size or signal_array.index(point) > arr_len - window_size ):
-        #     filtered_signal.append(point)
-        # else:
-        A, B = [], []
-        pos = signal_array.index(point)
-        for i in range(1, window_size):
-            A.append(signal_array[pos + i])
-            B.append(signal_array[pos - i])
 
-        wa_A = weighted_average(A)
-        wa_B = weighted_average(B)
-        filtered_signal.append((point + wa_B + wa_A ) / 3)
+    if window_size == 0 :
+        return signal_array
+    else:
+        for point in signal_array[ window_size: arr_len - window_size]:
+            # if (signal_array.index(point) < window_size or signal_array.index(point) > arr_len - window_size ):
+            #     filtered_signal.append(point)
+            # else:
+            A, B = [], []
+            pos = signal_array.index(point)
+            for i in range(1, window_size):
+                A.append(signal_array[pos + i])
+                B.append(signal_array[pos - i])
 
-    return filtered_signal
+            wa_A = weighted_average(A)
+            wa_B = weighted_average(B)
+            filtered_signal.append((point + wa_B + wa_A ) / 3)
+
+        return filtered_signal
 
 def generate_filtered_data(file, window):
     '''Apply filtering to individual co-ordinates
@@ -121,7 +125,7 @@ def generate_filtered_data(file, window):
         output: 4D filtered orbit data [time, x, y, z].
     '''
     data = extrapolation_padding(file, window)
-    averaged_x = (triple_moving_average(list(data[:,0]), window))
+    averaged_x = triple_moving_average(list(data[:,0]), window)
     averaged_y = triple_moving_average(list(data[:,1]), window)
     averaged_z = triple_moving_average(list(data[:,2]), window)
 
@@ -138,16 +142,20 @@ def main():
     '''
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
 
-    output = generate_filtered_data(signal, 5)
+    output = generate_filtered_data(signal, 0)
     np.savetxt("filtered.csv", output, delimiter=",")
+
+    print(output)
 
     print("Filtered output saved as filtered.csv")
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot(output[:,1], output[:,2], output[:,3], 'b', label='filtered')
-    ax.scatter(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
-    ax.legend(['Filtered Orbit', 'Noisy Orbit'])
+    ax1 = fig.add_subplot(221, projection='3d')
+    ax2 = fig.add_subplot(224, projection='3d')
+    ax1.plot(output[:,1], output[:,2], output[:,3], 'b', label='filtered')
+    ax2.plot(list(signal[:,1]), list(signal[:,2]), list(signal[:,3]), 'r', label='noisy')
+    ax1.legend(['Filtered Orbit'])
+    ax2.legend(['Noisy Orbit'])
     plt.show()
 
 if __name__ == "__main__":
