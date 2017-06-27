@@ -1,0 +1,276 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>orbitdeterminator.util.state_kep &#8212; Orbit Determinator 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for orbitdeterminator.util.state_kep</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39; </span>
+<span class="sd">Created by Alexandros Kazantzidis</span>
+<span class="sd">Date 25/05/17</span>
+
+<span class="sd">State to Keplerian: Take a state vector (x, y, z, vx, vy, vz) where v is the velocity of the satellite and </span>
+<span class="sd">transfroms it into set of keplerian elements (a, e, i, ω, Ω, v)</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">decimal</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_rows&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="atan3"><a class="viewcode-back" href="../../../index.html#orbitdeterminator.util.state_kep.atan3">[docs]</a><span class="k">def</span> <span class="nf">atan3</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;four quadrant inverse tangent</span>
+
+<span class="sd">    input</span>
+
+<span class="sd">    a = sine of angle</span>
+<span class="sd">    b = cosine of angle</span>
+
+<span class="sd">    output</span>
+
+<span class="sd">    y = angle (radians 0 =&lt; c &lt;= 2 * pi)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.0000000001</span>
+
+    <span class="n">pidiv2</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">pi</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">b</span><span class="p">))</span> <span class="o">*</span> <span class="n">pidiv2</span>
+        <span class="k">return</span> <span class="n">y</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="o">*</span> <span class="n">pidiv2</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">c</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">atan</span><span class="p">(</span><span class="n">a</span> <span class="o">/</span> <span class="n">b</span><span class="p">))</span> <span class="o">-</span> <span class="n">pidiv2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="state_kep"><a class="viewcode-back" href="../../../index.html#orbitdeterminator.util.state_kep.state_kep">[docs]</a><span class="k">def</span> <span class="nf">state_kep</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Convert state vector to six classical orbital</span>
+<span class="sd">    elements via equinoctial elements</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        r(numpy array) = position vector</span>
+<span class="sd">        v(numpy array) = velocity vector</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        oev(numpy array) = keplerian elements</span>
+<span class="sd">        oev(1) = semimajor axis (kilometers)</span>
+<span class="sd">        oev(2) = orbital eccentricity (non-dimensional)</span>
+<span class="sd">                 (0 &lt;= eccentricity &lt; 1)</span>
+<span class="sd">        oev(3) = orbital inclination (degrees)</span>
+<span class="sd">        oev(4) = argument of perigee (degress)</span>
+<span class="sd">        oev(5) = right ascension of ascending node (degrees)</span>
+<span class="sd">        oev(6) = true anomaly (degrees)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">mu</span> <span class="o">=</span> <span class="mf">398600.4405</span>
+
+    <span class="n">pi2</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">pi</span>
+
+    <span class="c1"># position and velocity magnitude</span>
+
+    <span class="n">rmag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="n">vmag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># position unit vector</span>
+
+    <span class="n">rhat</span> <span class="o">=</span> <span class="n">r</span><span class="p">[:]</span> <span class="o">/</span> <span class="n">rmag</span>
+
+    <span class="c1"># angular momentum vectors</span>
+
+    <span class="n">hv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="n">hhat</span> <span class="o">=</span> <span class="n">hv</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">hv</span><span class="p">)</span>
+
+    <span class="c1"># eccentricity vector</span>
+
+    <span class="n">vtmp</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:]</span> <span class="o">/</span> <span class="n">mu</span>
+
+    <span class="n">ecc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">vtmp</span><span class="p">,</span> <span class="n">hv</span><span class="p">)</span>
+
+    <span class="n">ecc</span> <span class="o">=</span> <span class="n">ecc</span> <span class="o">-</span> <span class="n">rhat</span>
+
+    <span class="c1"># semimajor axis</span>
+
+    <span class="n">sma</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">/</span> <span class="n">rmag</span> <span class="o">-</span> <span class="n">vmag</span> <span class="o">*</span> <span class="n">vmag</span> <span class="o">/</span> <span class="n">mu</span><span class="p">)</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">hhat</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">hhat</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="o">-</span><span class="n">hhat</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">hhat</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">const1</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="n">q</span> <span class="o">*</span> <span class="n">q</span><span class="p">)</span>
+
+    <span class="n">fhat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+    <span class="n">fhat</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">const1</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">p</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="n">q</span> <span class="o">*</span> <span class="n">q</span><span class="p">)</span>
+    <span class="n">fhat</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">const1</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">p</span> <span class="o">*</span> <span class="n">q</span>
+    <span class="n">fhat</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">const1</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">p</span>
+
+    <span class="n">ghat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+    <span class="n">ghat</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">const1</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">p</span> <span class="o">*</span> <span class="n">q</span><span class="p">)</span>
+    <span class="n">ghat</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">const1</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">p</span> <span class="o">*</span> <span class="n">p</span> <span class="o">-</span> <span class="n">q</span> <span class="o">*</span> <span class="n">q</span><span class="p">)</span>
+    <span class="n">ghat</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">const1</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">q</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ecc</span><span class="p">,</span> <span class="n">ghat</span><span class="p">)</span>
+
+    <span class="n">xk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ecc</span><span class="p">,</span> <span class="n">fhat</span><span class="p">)</span>
+
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">fhat</span><span class="p">)</span>
+
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ghat</span><span class="p">)</span>
+
+    <span class="c1"># orbital eccentricity</span>
+
+    <span class="n">eccm</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">((</span><span class="n">h</span> <span class="o">*</span> <span class="n">h</span> <span class="o">+</span> <span class="n">xk</span> <span class="o">*</span> <span class="n">xk</span><span class="p">))</span>
+
+    <span class="c1"># orbital inclination</span>
+
+    <span class="n">inc</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="n">q</span> <span class="o">*</span> <span class="n">q</span><span class="p">))</span>
+
+    <span class="c1"># true longitude</span>
+
+    <span class="n">xlambdat</span> <span class="o">=</span> <span class="n">atan3</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">x1</span><span class="p">)</span>
+
+    <span class="c1"># check for equatorial orbit</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">inc</span> <span class="o">&gt;</span> <span class="mf">0.00000001</span><span class="p">):</span>
+        <span class="n">raan</span> <span class="o">=</span> <span class="n">atan3</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">raan</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># check for circular orbit</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">eccm</span> <span class="o">&gt;</span> <span class="mf">0.00000001</span><span class="p">):</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="n">atan3</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">xk</span><span class="p">)</span> <span class="o">-</span> <span class="n">raan</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="n">pi2</span>
+        <span class="n">firstint</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
+        <span class="n">secondint</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">second</span><span class="p">)</span>
+        <span class="n">argper</span> <span class="o">=</span> <span class="n">first</span> <span class="o">-</span> <span class="p">(</span><span class="n">secondint</span> <span class="o">*</span> <span class="p">(</span><span class="n">firstint</span> <span class="o">/</span> <span class="n">secondint</span><span class="p">))</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">argper</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># true anomaly</span>
+
+    <span class="n">first</span> <span class="o">=</span> <span class="n">xlambdat</span> <span class="o">-</span> <span class="n">raan</span> <span class="o">-</span> <span class="n">argper</span>
+    <span class="n">second</span> <span class="o">=</span> <span class="n">pi2</span>
+    <span class="n">firstint</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
+    <span class="n">secondint</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">second</span><span class="p">)</span>
+    <span class="n">tanom</span> <span class="o">=</span> <span class="n">first</span> <span class="o">-</span> <span class="p">(</span><span class="n">secondint</span> <span class="o">*</span> <span class="p">(</span><span class="n">firstint</span> <span class="o">/</span> <span class="n">secondint</span><span class="p">))</span>
+
+    <span class="n">inc</span> <span class="o">=</span> <span class="n">degrees</span><span class="p">(</span><span class="n">inc</span><span class="p">)</span>
+    <span class="n">argper</span> <span class="o">=</span> <span class="n">degrees</span><span class="p">(</span><span class="n">argper</span><span class="p">)</span>
+
+    <span class="n">raan</span> <span class="o">=</span> <span class="n">degrees</span><span class="p">(</span><span class="n">raan</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">raan</span> <span class="o">&gt;</span> <span class="mf">300.0</span><span class="p">:</span>
+        <span class="n">raan</span> <span class="o">=</span> <span class="n">raan</span> <span class="o">-</span> <span class="mf">360.0</span>
+    <span class="n">tanom</span> <span class="o">=</span> <span class="n">degrees</span><span class="p">(</span><span class="n">tanom</span><span class="p">)</span>
+
+    <span class="c1"># load orbital element vector</span>
+    <span class="n">oev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">oev</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">sma</span>
+    <span class="n">oev</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">eccm</span>
+    <span class="n">oev</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">inc</span>
+    <span class="n">oev</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">argper</span>
+    <span class="n">oev</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">raan</span>
+    <span class="n">oev</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">tanom</span>
+    <span class="k">return</span> <span class="n">oev</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">5.0756899358316559e+03</span><span class="p">,</span> <span class="o">-</span><span class="mf">4.5590381308371752e+03</span><span class="p">,</span> <span class="mf">1.9322228177731663e+03</span><span class="p">])</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.3360847905126974e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5698574946888049e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.2117328822023676e+00</span><span class="p">])</span>
+
+    <span class="n">kep</span> <span class="o">=</span> <span class="n">state_kep</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kep</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Nilesh Chaturvedi, Alexandros Kazantzidis.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
