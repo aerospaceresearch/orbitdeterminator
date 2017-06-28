@@ -29,7 +29,7 @@ def load_data(filename):
         point_tuple = np.array(point, dtype = np.float)
         orbit.append(point_tuple)
 
-    orbit = np.array(orbit)
+    orbit = np.array(orbit) 
     return orbit
 
 def save_orbits(source, destination):
