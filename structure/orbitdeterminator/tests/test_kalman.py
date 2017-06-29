@@ -5,7 +5,6 @@ from orbitdeterminator.kep_determination import lamberts_kalman
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
-from numpy.testing import assert_raises
 
 # The first test checks the fact that if we give to the kalman filter three identical sets of keplerian elements
 # the final approximation will be equal to this set
@@ -31,7 +30,7 @@ given = lamberts_kalman.kalman(kep2, 0.01**2)
 expected = lamberts_kalman.kalman(kep2, 0.001**2)
 
 @pytest.mark.xfail(reason= "We change the R parameter which changes the result")
-def test_simple_pass():
+def test_fail():
 	assert_array_equal(given, expected)
 
 pytest.main()
