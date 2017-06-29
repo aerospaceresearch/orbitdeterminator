@@ -2,7 +2,7 @@
 Created by Alexandros Kazantzidis
 Date 02/06/17
 
-Savintzky Golay: Takes a positional data set (time, x, y, z) and applies the Savintzky Golay filter on it based on the 
+Savintzky Golay: Takes a positional data set (time, x, y, z) and applies the Savintzky Golay filter on it based on the
 polynomial and window parameters we input
 '''
 
