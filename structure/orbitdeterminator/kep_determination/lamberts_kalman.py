@@ -20,7 +20,7 @@ import pandas as pd
 pd.set_option('display.width', 1000)
 
 
-def orbittrajectory(x1_new, x2_new, time):
+def orbit_trajectory(x1_new, x2_new, time):
     '''Check if we want to keep the result of lamberts() for retrograde or counter-clock wise motion
     
     Args:
@@ -71,7 +71,7 @@ def lamberts(x1, x2):
     x2_new[:] = x2[1:4]
     time = x2[0] - x1[0]
 
-    traj = orbittrajectory(x1_new, x2_new, time)
+    traj = orbit_trajectory(x1_new, x2_new, time)
 
     l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, traj)
 
