@@ -8,23 +8,20 @@ from numpy.testing import assert_array_equal
 
 # The first test checks the fact that if we give to the kalman filter three identical sets of keplerian elements
 # the final approximation will be equal to this set
-kep1 = np.array([[15711.578566, 0.377617, 90.0, 0.887383, 0.0, 28.35774],
-				[15711.578566, 0.377617, 90.0, 0.887383, 0.0, 28.35774],
-				[15711.578566, 0.377617, 90.0, 0.887383, 0.0, 28.35774]])
+kep1 = np.array([[10000, 0.10, 90.0, 0.80, 0.0, 28.00],
+				[10000, 0.10, 90.0, 0.80, 0.0, 28.00],
+				[10000, 0.10, 90.0, 0.80, 0.0, 28.00]])
 
 
-@pytest.mark.parametrize("givenkep1, givenR, expected", [
-	(kep1, 0.01**2, kep1[0, :])
-])
-def test_simple_pass(givenkep1, givenR, expected):
-	assert_array_equal(np.ravel(lamberts_kalman.kalman(givenkep1, givenR)), expected)
+def test_simple_pass():
+	assert_array_equal(np.ravel(lamberts_kalman.kalman(kep1, 0.01**2)), kep1[0, :])
 
 
 # The second test checks the fact that if we change the R parameter for the same given set it produces a different
 # result
-kep2 = np.array([[12311.578566, 0.177617, 90.0, 0.83247383, 0.0, 28.34574],
-				[14511.578566, 0.277617, 90.2, 0.83247383, 0.1, 28.3543574],
-				[15711.578566, 0.377617, 90.1, 0.8687383, 0.011, 28.6774]])
+kep2 = np.array([[10000, 0.10, 90.0, 0.80, 0.0, 28.00],
+				[12000, 0.20, 92.0, 0.82, 0.1, 28.20],
+				[13500, 0.15, 95.0, 0.85, 0.3, 28.50]])
 
 given = lamberts_kalman.kalman(kep2, 0.01**2)
 expected = lamberts_kalman.kalman(kep2, 0.001**2)
