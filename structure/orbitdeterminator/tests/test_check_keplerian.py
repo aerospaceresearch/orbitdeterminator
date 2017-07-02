@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
-# First test just checks the normal functionality with two normal rows
+# First test just checks the function with two normal rows
 kep1 = np.array([[15711.578566, 0.377617, 90.0, 0.887383, 0.0, 28.357744],
 				[13741.575236, 0.477617, 90.0, 0.853233, 0.2, 28.332744]])
 
@@ -26,13 +26,13 @@ kep1 = np.array([[15711.578566, -0.377617, 90.0, 0.887383, 0.0, 28.35774],
 				[13741.575236, 0.477617, 90.0, 0.853233, 0.2, 28.332744]])
 
 
-# Second test just checks the normal functionality with three rows that the first and second rows has wrong inputs
+# Second test checks the function with three rows that the first and second row has wrong inputs
 @pytest.mark.xfail(reason="First row has negative eccentricity, Second row has negative semi major axis")
 def test_fail(given, expected):
 	assert_array_equal(lamberts_kalman.check_keplerian(kep1), kep1)
 
 
-# Third test just checks the normal functionality with three rows that the first row has wrong inputs
+# Third test just the function with three rows that the first row has wrong inputs
 kep2 = np.array([[2000711.578566, 0.377617, 90.0, 0.887383, 0.0, 28.357744],
 				[13741.575236, 1.477617, 90.0, 0.853233, 0.2, 28.332744]])
 

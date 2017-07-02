@@ -6,11 +6,12 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+
 # This test checks the function by giving two points to it. In the first case we give the points as point1 and point2
 # and it returns True because the motion is retrogade. Now if we put the points in reverse order we expect to get
 # a false value meaning that the motion to be counter-clock wise.
-x1 = np.array([0.0, 9590.23587, -16.18944252, -81.11536784])
-x2 = np.array([100.0, 9593.120102, -35.01886926, 743.0390134])
+x1 = np.array([0.0, 9590.0, -16.0, -80.0])
+x2 = np.array([100.0, 9593.0, -35.0, 740.0])
 x1_new = [1, 1, 1]
 x1_new[:] = x1[1:4]
 x2_new = [1, 1, 1]
