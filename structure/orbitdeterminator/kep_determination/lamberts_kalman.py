@@ -110,7 +110,7 @@ def check_keplerian(kep):
 
 
 def create_kep(my_data):
-    '''Computes all the keplerian elements for every point of the orbit you provide
+    '''Computes all the keplerian elements for every point of the orbit you provide using Lambert's solution
        It implements a tool for deleting all the points that give extremely jittery state vectors
 
         Args:
