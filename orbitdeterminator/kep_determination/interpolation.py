@@ -5,6 +5,16 @@ Date Created:4th July, 2017
 Description: Interpoaltion using splines for calculating velocity at a point 
 and hence the orbital elements.
 '''
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
+import scipy
+import numpy as np
+
+from orbitdeterminator.util import state_kep
+from orbitdeterminator.util import read_data
+
 
 def compute_keplerians(position, velocity):
 	''' Compute orbital elements from the state vectors(position, velocity).
@@ -29,16 +39,22 @@ def quadratic_spline(data_points):
 	'''
 	pass
 
-def cubic_spline(data_points):
-	''' Compute polynomial spline of degree 3 between 2 intermediate points of input
+def cubic_spline(orbit_data):
+	''' Compute component wise cubic spline of points of input data
 		
 		Args:
-			data_points (numpy array): array of orbit data points.
+			orbit_data (numpy array): array of orbit data points of the 
+				format [time, x, y, z]
 
 		Returns:
-			spline_array (numpy array): array of cubic splines of orbit data points 
+			splines (list): component wise cubic splines of orbit data points 
+				of the format [spline_x, spline_y, spline_z]
 	'''
-	pass
+	time = orbit_data[:,:1]
+	co-ordinates = list([orbit_data[:,1:2], orbit_data[:,2:3], orbit_data[:,3:4]])
+	splines = list(map(lambda a:CubicSpline(time.ravel(),a.ravel()), co-ordinates))
+
+	return splines
 
 def compute_velocity(spline, point):
 	''' Calculate the velocity at a point given the spline.
