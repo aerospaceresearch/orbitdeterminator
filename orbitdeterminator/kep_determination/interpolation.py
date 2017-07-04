@@ -63,13 +63,16 @@ def compute_velocity(spline, point):
 	given spline corresponds to). This gives the velocity at that point.
 
 	Args:
-		spline (numpy array): spline function of two points
-		point (numpy array): one of the two points of the spline on which derivative
-			is to be calculated.
+		spline (list): component wise cubic splines of orbit data points 
+			of the format [spline_x, spline_y, spline_z].
+		point (numpy array): point at which velocity is to be calculated.
 
 	Returns:
 		velocity (numpy array): velocity vector at the given point
 	'''
+	velocity = list(map(lambda s, x:s(x, 1), spline, point))
+
+	return numpy.array(velocity)
 
 if __name__ == "__main__":
 
