@@ -11,22 +11,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 import scipy
 import numpy as np
+from scipy.interpolate import CubicSpline
 
-from orbitdeterminator.util import state_kep
-from orbitdeterminator.util import read_data
+from util import state_kep
+from util import read_data
 
-
-def compute_keplerians(position, velocity):
-	''' Compute orbital elements from the state vectors(position, velocity).
-
-	Args:
-		position (numpy array): position vector of a point
-		velocity (numpy array): velocity vector at that point
-
-	Returns:
-		keplerians (numpy array): orbital elements based on the state vector.
-	'''
-	pass
 
 def quadratic_spline(data_points):
 	''' Compute spline of degree 2 between 2 intermediate points of input
@@ -51,8 +40,8 @@ def cubic_spline(orbit_data):
 				of the format [spline_x, spline_y, spline_z]
 	'''
 	time = orbit_data[:,:1]
-	co-ordinates = list([orbit_data[:,1:2], orbit_data[:,2:3], orbit_data[:,3:4]])
-	splines = list(map(lambda a:CubicSpline(time.ravel(),a.ravel()), co-ordinates))
+	coordinates = list([orbit_data[:,1:2], orbit_data[:,2:3], orbit_data[:,3:4]])
+	splines = list(map(lambda a:CubicSpline(time.ravel(),a.ravel()), coordinates))
 
 	return splines
 
@@ -70,10 +59,27 @@ def compute_velocity(spline, point):
 	Returns:
 		velocity (numpy array): velocity vector at the given point
 	'''
-	velocity = list(map(lambda s, x:s(x, 1), spline, point))
+	velocity = list(map(lambda s, x:s(x, 1), spline, point)) 
 
-	return numpy.array(velocity)
+	return np.array(velocity)
+
+def main():
+	data_points = read_data.load_data("../filtered.csv")
+
+	splines = cubic_spline(data_points)
+
+	points = data_points[:,1:4].tolist()
+
+	keplerians = [] # Keplerian elements for each of the points
+	
+	for point in points:
+		keplerians.append(state_kep.state_kep(point, compute_velocity(splines, point)))
+
+	print(np.array(keplerians).mean(axis=0))
+
+
 
 if __name__ == "__main__":
 
-	pass
+	main()
+
