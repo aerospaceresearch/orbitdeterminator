@@ -22,10 +22,19 @@ Golay
 Interpolation:
 --------------
 
-Lamberts-Kalman interpolation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Lamberts-Kalman Method
+~~~~~~~~~~~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.kep_determination.lamberts_kalman
    :members:
+
+Gibbs Method
+~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.kep_determination.gibbs
+   :members:
+
+Spline Interpolation
+~~~~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.kep_determination.interpolation
 
 Utils:
 ------
