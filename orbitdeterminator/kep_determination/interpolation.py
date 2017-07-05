@@ -65,20 +65,34 @@ def compute_velocity(spline, point):
 def main():
     data_points = read_data.load_data("../filtered.csv")
 
-    splines = cubic_spline(data_points)
+    velocity_vectors = []
+    keplerians = []
 
-    points = data_points[:,1:4].tolist()
+    for index in range(len(data_points)-1):
+        # Take a pair of points from data_points
+        spline_input = data_points[index:index+2]
 
-    keplerians = [] # Keplerian elements for each of the points
-    
-    for point in points:
-        keplerians.append(state_kep.state_kep(point, compute_velocity(splines, point)))
+        # Calculate spline corresponding to these two points
+        spline = cubic_spline(spline_input)
 
-    print(np.array(keplerians).mean(axis=0))
+        # Calculate velocity corresponding 1st of the 2 points of spline_input
+        velocity = compute_velocity(spline, spline_input[0:,1:4][0])
 
+        # Calculate keplerian elements correspong to the state vector(position, velocity)
+        orbital_elements = state_kep.state_kep(spline_input[0:,1:4][0], velocity)
+
+        velocity_vectors.append(velocity)
+        keplerians.append(orbital_elements)
+
+    # Uncomment the below statement to save the velocity vectors in a csv file.
+    # np.savetxt('velo.csv', velocity_vectors, delimiter=",")
+
+    # Take average of the keplerian elements corresponding to all the state vectors
+    orbit = np.array(keplerians).mean(axis=0)
+
+    print(orbit)
 
 
 if __name__ == "__main__":
 
     main()
-
