@@ -171,13 +171,13 @@ def state_kep(r, v):
     tanom = degrees(tanom)
 
     # load orbital element vector
-    oev = np.zeros((6, 1))
-    oev[0, 0] = sma
-    oev[1, 0] = eccm
-    oev[2, 0] = inc
-    oev[3, 0] = argper
-    oev[4, 0] = raan
-    oev[5, 0] = tanom
+    oev = np.zeros(6)
+    oev[0] = sma
+    oev[1] = eccm
+    oev[2] = inc
+    oev[3] = argper
+    oev[4] = raan
+    oev[5] = tanom
     return oev
 
 
