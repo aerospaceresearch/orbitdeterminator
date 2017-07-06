@@ -14,7 +14,7 @@ Triple Moving Average
 .. automodule:: orbitdeterminator.filters.triple_moving_average
    :members:
 
-Golay
+Savintzky - Golay
 ~~~~~
 .. automodule:: orbitdeterminator.filters.sav_golay
    :members:
