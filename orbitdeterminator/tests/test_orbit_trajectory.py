@@ -20,12 +20,12 @@ time = x2[0] - x1[0]
 
 
 @pytest.mark.parametrize("givenx1,givenx2,giventime, expected", [
-	(x1_new, x2_new, time, True),
-	(x2_new, x1_new, time, False)
+    (x1_new, x2_new, time, True),
+    (x2_new, x1_new, time, False)
 ])
 
 def test_simple_pass(givenx1, givenx2, giventime, expected):
-	assert_array_equal(lamberts_kalman.orbit_trajectory(givenx1, givenx2, giventime), expected)
+    assert_array_equal(lamberts_kalman.orbit_trajectory(givenx1, givenx2, giventime), expected)
 
 
 pytest.main()

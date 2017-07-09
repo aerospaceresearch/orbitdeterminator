@@ -2,7 +2,7 @@
 Created by Alexandros Kazantzidis
 Date 25/05/17
 
-State to Keplerian: Take a state vector (x, y, z, vx, vy, vz) where v is the velocity of the satellite and 
+State to Keplerian: Take a state vector (x, y, z, vx, vy, vz) where v is the velocity of the satellite and
 transfroms it into set of keplerian elements (a, e, i, ω, Ω, v)
 
 '''

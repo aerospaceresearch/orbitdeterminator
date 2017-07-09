@@ -46,8 +46,8 @@ kep_final = np.transpose(kep_final)
 ## Print the final orbital elements
 df = pd.DataFrame(kep_final)
 df = df.rename(index={0: 'Semi major axis (km)', 1: 'Eccentricity (float number)', 2: 'Inclination (degrees)',
-						3: 'Argument of perigee (degrees)', 4: 'Right ascension of the ascending node (degrees)',
-						5: 'True anomally (degrees)'})
+                        3: 'Argument of perigee (degrees)', 4: 'Right ascension of the ascending node (degrees)',
+                        5: 'True anomally (degrees)'})
 df = df.rename(columns={0: 'Final Results'})
 print(df)
 
@@ -68,9 +68,9 @@ x = state
 h = 1.0
 tetol = 1e-04
 for i in range(0, 20):
-	keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
-	t_hold[i, 0] = tf
-	tf = tf + 100
+    keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
+    t_hold[i, 0] = tf
+    tf = tf + 100
 
 positions = keep_state[0:3, :]
 
@@ -81,7 +81,7 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')
 ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
 ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-		label='Filtered data')
+        label='Filtered data')
 ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after Lamberts - Kalman')
 ax.legend()
 ax.can_zoom()

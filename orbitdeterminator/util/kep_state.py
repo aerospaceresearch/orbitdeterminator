@@ -46,7 +46,7 @@ def kep_state(kep):
     rm = slr / (1 + ecc * cos(tanom))
     tanom = degrees(tanom)
 
-    arglat = argper + tanom;  # argument of latitude
+    arglat = argper + tanom  # argument of latitude
 
     arglat = radians(arglat)
     sarglat = sin(arglat)
