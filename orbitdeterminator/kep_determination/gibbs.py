@@ -93,11 +93,6 @@ def kep_gibbs(x1, x2, x3):
     S = x1*(r2 - r3) + x2*(r3 - r1) + x3*(r1 - r2)
     e = np.linalg.norm(S)/np.linalg.norm(D)
 
-    # Q = w x r, calculate w then find Q
-
-    W = N/np.linalg.norm(N)
-    Q = S/np.linalg.norm(S)
-
     # Calculate B and L
 
     B = np.cross(D,x2);
@@ -120,8 +115,6 @@ def kep_gibbs(x1, x2, x3):
 
     v=np.linalg.norm(v2)
     r=np.linalg.norm(x2)
-
-    vr = np.dot(x2,v2)/r
 
     E = 1/mu*((v*v - mu/r)*x2 - np.dot(x2,v2)*v2)
 
