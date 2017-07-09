@@ -31,16 +31,17 @@ def mtov(m, e):
         v(float) = true anomaly 
     '''
 
-    i = 1
+    if m <= 0:
+        m = 360.0 + m
     Eo = 100
-    while True:
+    z = 1
+    while z == 1:
         E = Eo - ((Eo - e * sin(Eo) - m) / (1 - e * cos(Eo)))
+        if abs(E - Eo) < 0.000001:
+            z = 0
         Eo = E
-        i = i + 1
-        if i == 100: break
 
     v_pre = (cos(E) - e) / (1 - e * cos(E))
-    v_pre = radians(v_pre)
     v = acos(v_pre)
     v = degrees(v)
     return v
@@ -65,7 +66,6 @@ def kep_gibbs(x1, x2, x3):
     mu = 398600.4418
     pi = 3.141592653
 
-
     # Calculate vector magnitudes and cross products
 
     r1 = np.linalg.norm(x1)
@@ -76,15 +76,14 @@ def kep_gibbs(x1, x2, x3):
     c23 = np.cross(x2,x3)
     c31 = np.cross(x3,x1)
 
-    #Calculate D and N vectors
+    # Calculate D and N vectors
 
     N = r1*c23 + r2*c31 + r3*c12
     D = c12 + c23 + c31
 
     # Check for sanity
 
-
-    # Calcualte P, from pD = N
+    # Calculate P, from pD = N
 
     p = np.linalg.norm(N)/np.linalg.norm(D)
 
@@ -95,7 +94,7 @@ def kep_gibbs(x1, x2, x3):
 
     # Calculate B and L
 
-    B = np.cross(D,x2);
+    B = np.cross(D,x2)
     L = sqrt(mu/(np.linalg.norm(D) * np.linalg.norm(N)))
 
     # Calculate V2
@@ -106,7 +105,7 @@ def kep_gibbs(x1, x2, x3):
 
     H = np.cross(x2,v2)
 
-    #Calculate i (inclination)
+    # Calculate i (inclination)
 
     inclination = acos(H[2]/np.linalg.norm(H))
     inclination = inclination * 180/pi
@@ -118,21 +117,21 @@ def kep_gibbs(x1, x2, x3):
 
     E = 1/mu*((v*v - mu/r)*x2 - np.dot(x2,v2)*v2)
 
-    #Calculate Omega (longitude of the ascending node)
+    # Calculate Omega (longitude of the ascending node)
 
     Omega = acos(n[0]/np.linalg.norm(n)) * 180/pi
 
-    #Calculate omega (argument of periapsis)
+    # Calculate omega (argument of periapsis)
 
     omega = acos(np.dot(n,E)/(np.linalg.norm(n) * np.linalg.norm(E))) * 180/pi
 
-    #Calculate nu (mean anomaly)
+    # Calculate nu (mean anomaly)
 
     nu = acos(np.dot(E,x2)/(np.linalg.norm(E) * np.linalg.norm(x2))) * 180/pi
 
     v = mtov(nu, e)
 
-    #Calculate eccentricity
+    # Calculate eccentricity
 
     e = np.linalg.norm(E)
 
