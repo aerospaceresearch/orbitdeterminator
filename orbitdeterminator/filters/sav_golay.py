@@ -20,7 +20,7 @@ def golay(data, window, degree):
     '''Apply the Savintzky-Golay filter to a positional data set.
 
        Args:
-           data (csv file): A file containing, all of the positional data in the format of (time, x, y, z).
+           data (numpy array): containing all of the positional data in the format of (time, x, y, z).
            window (int): window size of the Savintzky-Golay filter.
            degree (int): degree of the ploynomial in Savintzky-Golay filter.
 
