@@ -1,3 +1,8 @@
+'''
+Created by Alexandros Kazantzidis
+Date Created : 11/07/2017
+'''
+
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
