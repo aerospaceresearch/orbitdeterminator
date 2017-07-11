@@ -197,7 +197,7 @@ def kalman(kep, R):
     for i in range(0, 6):
         mean_kep[0, i] = np.mean(kep[:, i])
 
-    # the mean value will be selected a the initial guess
+    # the mean value will be selected as the initial guess
 
     x_final = np.zeros((1, 6))
     for i in range(0, 6):
