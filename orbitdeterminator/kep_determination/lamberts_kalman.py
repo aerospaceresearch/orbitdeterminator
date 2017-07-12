@@ -15,7 +15,6 @@ import numpy as np
 import matplotlib.pylab as plt
 import PyKEP as pkp
 from math import *
-from util import read_data
 import pandas as pd
 pd.set_option('display.width', 1000)
 
@@ -84,11 +83,11 @@ def lamberts(x1, x2):
 
 def check_keplerian(kep):
     '''Checks all the sets of keplerian elements to see if they have wrong values like eccentricity greater that 1 or
-       a negative number for semi major axis 
-    
+       a negative number for semi major axis
+
      Args:
-        kep(numpy array): all the sets of keplerian elements in [semi major axis (a), eccentricity (e), 
-                          inclination (i), argument of perigee (ω), right ascension of the ascending node (Ω), 
+        kep(numpy array): all the sets of keplerian elements in [semi major axis (a), eccentricity (e),
+                          inclination (i), argument of perigee (ω), right ascension of the ascending node (Ω),
                           true anomaly (v)] format
      
      Returns:
@@ -114,7 +113,7 @@ def create_kep(my_data):
        It implements a tool for deleting all the points that give extremely jittery state vectors
 
         Args:
-            data(csv file) : read file csv that contains the positional data set in (Time, x, y, z) Format
+            data(numpy array) : contains the positional data set in (Time, x, y, z) Format
 
 
         Returns:
@@ -198,7 +197,7 @@ def kalman(kep, R):
     for i in range(0, 6):
         mean_kep[0, i] = np.mean(kep[:, i])
 
-    # the mean value will be selected a the initial guess
+    # the mean value will be selected as the initial guess
 
     x_final = np.zeros((1, 6))
     for i in range(0, 6):
