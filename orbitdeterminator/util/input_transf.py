@@ -11,7 +11,7 @@ from math import *
 
 def cart_to_spher(data):
     ''' Converts cartesian co-ordinates to spherical co-ordinates.
-    
+
     Takes as an input a data set containing points in cartesian format (time, x, y, z) and returns the computed
     spherical coordinates (time, azimuth, elevation, r)
 

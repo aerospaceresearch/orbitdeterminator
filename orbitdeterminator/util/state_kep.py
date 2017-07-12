@@ -46,7 +46,7 @@ def atan3(a, b):
 
 def state_kep(r, v):
     ''' Converts state vector to orbital elements.
-    
+
     Convert state vector to six classical orbital elements via equinoctial
      elements.
 
