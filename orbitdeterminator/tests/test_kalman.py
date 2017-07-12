@@ -13,7 +13,7 @@ kep1 = np.array([[10000, 0.10, 90.0, 0.80, 0.0, 28.00],
                 [10000, 0.10, 90.0, 0.80, 0.0, 28.00]])
 
 
-def test_simple_pass():
+def test_kalman():
     assert_array_equal(np.ravel(lamberts_kalman.kalman(kep1, 0.01**2)), kep1[0, :])
 
 
@@ -26,8 +26,9 @@ kep2 = np.array([[10000, 0.10, 90.0, 0.80, 0.0, 28.00],
 given = lamberts_kalman.kalman(kep2, 0.01**2)
 expected = lamberts_kalman.kalman(kep2, 0.001**2)
 
+
 @pytest.mark.xfail(reason= "We change the R parameter which changes the result")
-def test_fail():
+def test_kalman_fail():
     assert_array_equal(given, expected)
 
 pytest.main()

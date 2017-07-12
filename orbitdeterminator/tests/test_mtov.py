@@ -11,7 +11,8 @@ M = 350.0
 e = 0.3
 expected = gibbs.mtov(-10.0, e)
 
-def test_simple_pass():
+
+def test_mtov():
     assert_array_equal(gibbs.mtov(M, e), expected)
 
 pytest.main()

@@ -14,5 +14,6 @@ from numpy.testing import assert_array_equal
 expected = np.array([[0, 1000, 1000, 2000]])
 given = input_transf.cart_to_spher(expected)
 
-def test_simple_pass():
+
+def test_imput_transf():
     assert_array_equal(input_transf.spher_to_cart(given), expected)
