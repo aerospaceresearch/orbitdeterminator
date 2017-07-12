@@ -17,16 +17,13 @@ np.set_printoptions(precision=16)
 
 
 def atan3(a, b):
-    '''four quadrant inverse tangent
+    ''' Four quadrant inverse tangent
+    Args:
+		a: sine of angle
+		b: cosine of angle
 
-    input
-
-    a = sine of angle
-    b = cosine of angle
-
-    output
-
-    y = angle (radians 0 =< c <= 2 * pi)
+	Returns:
+		y: angle (radians 0 =< c <= 2 * pi)
     '''
 
     epsilon = 0.0000000001
@@ -48,22 +45,24 @@ def atan3(a, b):
 
 
 def state_kep(r, v):
-    '''Convert state vector to six classical orbital
-    elements via equinoctial elements
+    ''' Converts state vector to orbital elements.
+    
+    Convert state vector to six classical orbital elements via equinoctial
+     elements.
 
     Args:
-        r(numpy array) = position vector
-        v(numpy array) = velocity vector
+        r (numpy array): position vector
+        v (numpy array): velocity vector
 
     Returns:
-        oev(numpy array) = keplerian elements
-        oev(1) = semimajor axis (kilometers)
-        oev(2) = orbital eccentricity (non-dimensional)
+        oev (numpy array): keplerian elements
+        oev(1): semimajor axis (kilometers)
+        oev(2): orbital eccentricity (non-dimensional)
                  (0 <= eccentricity < 1)
-        oev(3) = orbital inclination (degrees)
-        oev(4) = argument of perigee (degress)
-        oev(5) = right ascension of ascending node (degrees)
-        oev(6) = true anomaly (degrees)
+        oev(3): orbital inclination (degrees)
+        oev(5): right ascension of ascending node (degrees)
+        oev(4): argument of perigee (degress)
+        oev(6): true anomaly (degrees)
     '''
 
     mu = 398600.4405

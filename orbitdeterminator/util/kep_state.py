@@ -11,22 +11,21 @@ from math import *
 
 
 def kep_state(kep):
-    '''
-    Uses the keplerian elements to compute the position and velocity vector
+    ''' Converts the keplerian elements to position and velocity vector
 
     Args:
-        kep(numpy array) = a 1x6 matrix which contains the following variables
-            kep(0)=semi major axis (km)
-            kep(1)=eccentricity (number)
-            kep(2)=inclination (degrees)
-            kep(3)=argument of perigee (degrees)
-            kep(4)=right ascension of the ascending node (degrees)
-            kep(5)=true anomaly (degrees)
+        kep(numpy array): a 1x6 matrix which contains the following variables
+            kep(0): semi major axis (km)
+            kep(1): eccentricity (number)
+            kep(2): inclination (degrees)
+            kep(3): argument of perigee (degrees)
+            kep(4): right ascension of the ascending node (degrees)
+            kep(5): true anomaly (degrees)
 
     Returns:
-        r(numpy array) = 1x6 matrix which contains the position and velocity vector
-        r(0),r(1),r(2) = position vector (x,y,z) km
-        r(3),r(4),r(5) = velocity vector (vx,vy,vz) km/s
+        r (numpy array): 1x6 matrix which contains the position and velocity vector
+        r(0),r(1),r(2): position vector (x,y,z) km
+        r(3),r(4),r(5): velocity vector (vx,vy,vz) km/s
     '''
 
     r = np.zeros((6, 1))
