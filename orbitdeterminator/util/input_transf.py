@@ -10,14 +10,16 @@ from util import read_data
 from math import *
 
 def cart_to_spher(data):
-    '''Takes as an input a data set containing points in cartesian format (time, x, y, z) and returns the computed
+    ''' Converts cartesian co-ordinates to spherical co-ordinates.
+
+    Takes as an input a data set containing points in cartesian format (time, x, y, z) and returns the computed
     spherical coordinates (time, azimuth, elevation, r)
 
     Args:
-        data(numpy array) = containing the cartesian coordinates in format of (time, x, y, z)
+        data (numpy array): containing the cartesian coordinates in format of (time, x, y, z)
 
     Returns:
-        result(numpy array) = containing the spherical coordinates in format of (time, azimuth, elevation, r)
+        result (numpy array): containing the spherical coordinates in format of (time, azimuth, elevation, r)
     '''
 
     for i in range(0, len(data)):
@@ -37,14 +39,16 @@ def cart_to_spher(data):
 
 
 def spher_to_cart(data):
-    ''' Takes as an input a data set containing points in spherical format (time, azimuth, elevation, r) and
-    returns the computed cartesian coordinates (time, x, y, z)
+    ''' Converts spherical co-ordinates cartesian co-ordinates.
+
+    Takes as an input a data set containing points in spherical format (time, azimuth, elevation, r) and
+    returns the computed cartesian coordinates (time, x, y, z).
 
     Args:
-        data(numpy array) = containing the spherical coordinates in format of (time, azimuth, elevation, r)
+        data (numpy array): containing the spherical coordinates in format of (time, azimuth, elevation, r)
 
     Returns:
-        result(numpy array) = containing the cartesian coordinates in format of (time, x, y, z)
+        result (numpy array): containing the cartesian coordinates in format of (time, x, y, z)
     '''
 
     for i in range(0, len(data)):

@@ -32,7 +32,6 @@ Gibbs Method
 .. automodule:: orbitdeterminator.kep_determination.gibbs
    :members:
 
-
 Spline Interpolation
 ~~~~~~~~~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.kep_determination.interpolation

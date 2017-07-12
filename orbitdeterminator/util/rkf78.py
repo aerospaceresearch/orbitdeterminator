@@ -16,14 +16,15 @@ np.set_printoptions(precision=16)
 
 
 def ypol_a(y):
+    ''' State vector to velocity and acceleratiion
 
-    '''Computes velocity and acceleration values by using the state vector y and keplerian motion
+    Computes velocity and acceleration values by using the state vector y and keplerian motion
 
     Args:
-    y(numpy array) = state vector (position + velocity)
+    y (numpy array): state vector (position + velocity)
 
     Returns:
-        y_parag(numpy array) =  derivative of the state vector (velocity + acceleration)
+        y_parag (numpy array):  derivative of the state vector (velocity + acceleration)
 
     '''
     mu=398600.4405;
@@ -47,21 +48,20 @@ def ypol_a(y):
 
 
 def rkf78 (neq,ti,tf,h,tetol,x):
+    ''' Runge-Kutta-Fehlberg 7[8] method
 
-    '''solve first order system of differential equations
-
-    Runge-Kutta-Fehlberg 7[8] method
+    Solve first order system of differential equations
 
     Args:
-        neq(int) = number of differential equations
-        ti(float) = initial simulation time
-        tf(float) = final simulation time
-        h(float) = initial guess for integration step size
-        tetol(float) = truncation error tolerance [non-dimensional]
-        x(numpy array) = integration vector at time = ti
+        neq (int): number of differential equations
+        ti (float): initial simulation time
+        tf (float): final simulation time
+        h (float): initial guess for integration step size
+        tetol (float): truncation error tolerance [non-dimensional]
+        x (numpy array): integration vector at time = ti
 
     Returns:
-        xout(numpy array)  = state vector at time = tf
+        xout (numpy array): state vector at time = tf
     '''
 
     # allocate arrays
