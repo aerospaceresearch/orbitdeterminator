@@ -36,40 +36,33 @@ def kep_state(kep):
     sma = kep[0, 0]
     ecc = kep[1, 0]
     inc = kep[2, 0]
+    inc = radians(inc)
     argper = kep[3, 0]
+    argper = radians(argper)
     raan = kep[4, 0]
+    raan = radians(raan)
     tanom = kep[5, 0]
-
     tanom = radians(tanom)
+
     slr = sma * (1 - ecc * ecc)
     rm = slr / (1 + ecc * cos(tanom))
-    tanom = degrees(tanom)
 
     arglat = argper + tanom  # argument of latitude
 
-    arglat = radians(arglat)
     sarglat = sin(arglat)
     carglat = cos(arglat)
-    arglat = degrees(arglat)
 
-    argper = radians(argper)
     c4 = sqrt(mu / slr)
     c5 = ecc * cos(argper) + carglat
     c6 = ecc * sin(argper) + sarglat
-    argper = degrees(argper)
 
-    inc = radians(inc)
     sinc = sin(inc)
     cinc = cos(inc)
-    inc = degrees(inc)
 
-    raan = radians(raan)
     sraan = sin(raan)
     craan = cos(raan)
-    raan = degrees(raan)
 
     # position vector
-
     r[0, 0] = rm * (craan * carglat - sraan * cinc * sarglat)
     r[1, 0] = rm * (sraan * carglat + cinc * sarglat * craan)
     r[2, 0] = rm * sinc * sarglat
@@ -80,6 +73,33 @@ def kep_state(kep):
     r[4, 0] = -c4 * (sraan * c6 - craan * cinc * c5)
     r[5, 0] = c4 * c5 * sinc
 
+    # # transform r and v into ECI frame
+	#
+    # R1inc = np.array([[1, 0, 0],
+    #                   [0, cos(-inc), sin(-inc)],
+    #                   [0, -sin(-inc), cos(-inc)]
+    #                   ])
+    # R3raan = np.array([[cos(-raan), sin(-raan), 0],
+    #                   [-sin(-raan), cos(-raan), 0],
+    #                   [0, 0, 1]
+    #                    ])
+    # R3argper = np.array([[cos(-argper), sin(-argper), 0],
+    #                     [-sin(-argper), cos(-argper), 0],
+    #                     [0, 0, 1]
+    #                      ])
+	#
+    # r_final1 = np.dot(R3raan, R1inc)
+    # r_final2 = np.dot(R3argper, r[0:3])
+	#
+    # r_final = np.dot(r_final1, r_final2)
+    # print(r_final)
+    # v_final1 = np.dot(R3raan, R1inc)
+    # v_final2 = np.dot(R3argper, r[3:6])
+    # v_final = np.dot(v_final1, v_final2)
+    # print(v_final)
+	#
+    # r[0:3] = r_final
+    # r[3:6] = v_final
     return r
 
 if __name__ == "__main__":
