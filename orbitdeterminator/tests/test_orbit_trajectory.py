@@ -25,6 +25,3 @@ time = x2[0] - x1[0]
 ])
 def test_orbit_trajectory(givenx1, givenx2, giventime, expected):
     assert_array_equal(lamberts_kalman.orbit_trajectory(givenx1, givenx2, giventime), expected)
-
-
-pytest.main()
