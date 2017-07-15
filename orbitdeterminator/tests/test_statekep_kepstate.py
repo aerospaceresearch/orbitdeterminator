@@ -4,8 +4,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 from util import (state_kep, kep_state)
 import numpy as np
 import numpy.testing as npt
-import pytest
-from numpy.testing import assert_array_equal
 
 
 # Initial state vector which is going to be transformed into keplerian elements and then back to the initial state
