@@ -7,12 +7,11 @@ import pytest
 from numpy.testing import assert_array_equal
 
 # First test just checks the function with negative value for M
-M = 350.0
-e = 0.3
-expected = gibbs.mtov(-10.0, e)
 
 
 def test_mtov():
-    assert_array_equal(gibbs.mtov(M, e), expected)
+    M = 350.0
+    e = 0.3
+    expected = gibbs.mtov(-10.0, e)
 
-pytest.main()
+    assert_array_equal(gibbs.mtov(M, e), expected)
