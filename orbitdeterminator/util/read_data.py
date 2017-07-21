@@ -22,7 +22,7 @@ def load_data(filename):
         Each point of the orbit is of the 
         format : [timestamp, x-coordinate, y-coordinate, z-coordinate]
     '''
-    orbit_file = list(csv.reader(open(filename, "r"), delimiter = ","))
+    orbit_file = list(csv.reader(open(filename, "r"), delimiter = ","))[1:]
 
     orbit = []
     for point in orbit_file:

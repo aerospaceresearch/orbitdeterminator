@@ -10,24 +10,32 @@ Method: 1. Initialize the source repository with git.
         6. Repeat steps 2-5 in a loop for near-real time processing.
 """
 
+import os
+import time
 from subprocess import PIPE, run
 
 
-def git_status_result(absolute_path):
-    """Parse output of `git-status`
+SOURCE_ABSOLUTE = "src"  # Absolute path of source directory
+DESTINATION_ABSOLUTE = "dst"  # Absolute path of destination directory
 
-    Args:
-        absolute_path (string): Absolute path of source folder
+
+def untracked_files():
+    """Parses output of `git-status` and returns untracked files.
 
     Returns:
-        res (string): List of "\n" separated output lines
+        res (string): List of files.
     """
+    os.system("cd %s; git init" % (SOURCE_ABSOLUTE))
     res = run(
-        "cd %s ; git status" % (absolute_path),
+        "cd %s ; git status" % (SOURCE_ABSOLUTE),
         stdout=PIPE, stderr=PIPE,
         universal_newlines=True,
         shell=True
         )
-    res = [line.strip() for line in res.stdout.split("\n")]
+    result = [line.strip() for line in res.stdout.split("\n")]
 
-    return res
+    files = [SOURCE_ABSOLUTE + "/" + file
+             for file in result if (file.endswith(".txt")
+             and not file.startswith("new file"))]
+
+    return files
