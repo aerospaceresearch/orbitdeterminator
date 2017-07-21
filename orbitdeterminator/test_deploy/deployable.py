@@ -11,21 +11,19 @@ Method: 1. Initialize the source repository with git.
 """
 
 import os
-import time
 from subprocess import PIPE, run
 
 
-SOURCE_ABSOLUTE = "src"  # Absolute path of source directory
-DESTINATION_ABSOLUTE = "dst"  # Absolute path of destination directory
+SOURCE_ABSOLUTE = os.getcwd() + "/src"  # Absolute path of source directory
+os.system("cd %s; git init" % (SOURCE_ABSOLUTE))
 
 
 def untracked_files():
     """Parses output of `git-status` and returns untracked files.
 
     Returns:
-        res (string): List of files.
+        res (string): List of untracked files.
     """
-    os.system("cd %s; git init" % (SOURCE_ABSOLUTE))
     res = run(
         "cd %s ; git status" % (SOURCE_ABSOLUTE),
         stdout=PIPE, stderr=PIPE,
@@ -34,9 +32,10 @@ def untracked_files():
         )
     result = [line.strip() for line in res.stdout.split("\n")]
 
-    files = [SOURCE_ABSOLUTE + "/" + file
+    files = [file
              for file in result if (file.endswith(".txt")
-             and not file.startswith("new file"))]
+             and not (file.startswith("new file") or
+             file.startswith("deleted") or file.startswith("modified")))]
 
     return files
 
@@ -48,9 +47,30 @@ def stage(processed):
         processed (list): List of processed files.
     '''
     for file in processed:
-        res = run(
-            "cd %s ; git add %s" % (SOURCE_ABSOLUTE, file),
+        print("staging")
+        run(
+            "cd %s;git add %s" % (SOURCE_ABSOLUTE, file),
             stdout=PIPE, stderr=PIPE,
             universal_newlines=True,
             shell=True
-            )
+        )
+        print("File %s has been staged." % (file))
+
+
+def main():
+
+    while True:
+        raw_files = untracked_files()
+        if not raw_files:
+            pass
+        else:
+            for file in raw_files:
+                print("processing")
+                with open(SOURCE_ABSOLUTE + "/" + file, "r") as a:
+                    for i in a:
+                        print(i)
+            stage(raw_files)
+
+
+if __name__ == "__main__":
+    main()
