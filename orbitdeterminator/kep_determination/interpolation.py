@@ -79,7 +79,7 @@ def main():
     # Take average of the keplerian elements corresponding to all the state vectors
     #orbit = np.array(keplerians).mean(axis=0)
 
-    [print(i) for i in keplerians]
+    print(keplerians)
 
 
 if __name__ == "__main__":
