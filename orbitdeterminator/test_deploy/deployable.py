@@ -39,3 +39,18 @@ def untracked_files():
              and not file.startswith("new file"))]
 
     return files
+
+
+def stage(processed):
+    '''Stage the processed files into git file system
+
+    Agrs:
+        processed (list): List of processed files.
+    '''
+    for file in processed:
+        res = run(
+            "cd %s ; git add %s" % (SOURCE_ABSOLUTE, file),
+            stdout=PIPE, stderr=PIPE,
+            universal_newlines=True,
+            shell=True
+            )
