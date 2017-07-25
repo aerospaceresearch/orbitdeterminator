@@ -11,8 +11,8 @@ from numpy.testing import assert_array_equal
 # with cart_to_spher function and then apply to that computed array the vice versa process to
 # see if the final results if the initial array
 
-expected = np.array([[0, 1000, 1000, 2000]])
-given = input_transf.cart_to_spher(expected)
+def test_imput_transf():
+    expected = np.array([[0, 1000, 1000, 2000]])
+    given = input_transf.cart_to_spher(expected)
 
-def test_simple_pass():
     assert_array_equal(input_transf.spher_to_cart(given), expected)

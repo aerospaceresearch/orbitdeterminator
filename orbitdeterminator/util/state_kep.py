@@ -1,48 +1,5 @@
-'''
-Created by Alexandros Kazantzidis
-Date 25/05/17
-
-State to Keplerian: Take a state vector (x, y, z, vx, vy, vz) where v is the velocity of the satellite and
-transfroms it into set of keplerian elements (a, e, i, ω, Ω, v)
-
-'''
-
-from math import *
-from decimal import *
 import numpy as np
-import pandas as pd
-
-pd.set_option('display.max_rows', 500)
-np.set_printoptions(precision=16)
-
-
-def atan3(a, b):
-    ''' Four quadrant inverse tangent
-    Args:
-		a: sine of angle
-		b: cosine of angle
-
-	Returns:
-		y: angle (radians 0 =< c <= 2 * pi)
-    '''
-
-    epsilon = 0.0000000001
-
-    pidiv2 = 0.5 * pi
-
-    if (abs(a) < epsilon):
-        y = (1 - np.sign(b)) * pidiv2
-        return y
-    else:
-        c = (2 - np.sign(a)) * pidiv2
-
-    if (abs(b) < epsilon):
-        y = c
-    else:
-        y = c + np.sign(a) * np.sign(b) * (abs(atan(a / b)) - pidiv2)
-
-    return y
-
+import math
 
 def state_kep(r, v):
     ''' Converts state vector to orbital elements.
@@ -55,129 +12,66 @@ def state_kep(r, v):
         v (numpy array): velocity vector
 
     Returns:
-        oev (numpy array): keplerian elements
-        oev(1): semimajor axis (kilometers)
-        oev(2): orbital eccentricity (non-dimensional)
+        kep (numpy array): keplerian elements
+        kep(0): semimajor axis (kilometers)
+        kep(1): orbital eccentricity (non-dimensional)
                  (0 <= eccentricity < 1)
-        oev(3): orbital inclination (degrees)
-        oev(5): right ascension of ascending node (degrees)
-        oev(4): argument of perigee (degress)
-        oev(6): true anomaly (degrees)
+        kep(2): orbital inclination (degrees)
+        kep(3): right ascension of ascending node (degrees)
+        kep(4): argument of perigee (degress)
+        kep(5): true anomaly (degrees)
     '''
 
     mu = 398600.4405
+    mag_r = np.sqrt(r.dot(r))
+    mag_v = np.sqrt(v.dot(v))
 
-    pi2 = 2.0 * pi
+    h = np.cross(r, v)
+    mag_h = np.sqrt(h.dot(h))
 
-    # position and velocity magnitude
+    e = ((np.cross(v, h)) / mu) - (r / mag_r)
+    mag_e = np.sqrt(e.dot(e))
 
-    rmag = np.linalg.norm(r)
+    n = np.array([-h[1], h[0], 0])
+    mag_n = np.sqrt(n.dot(n))
 
-    vmag = np.linalg.norm(v)
+    true_anom = math.acos(np.dot(e, r) / (mag_r * mag_e))
+    if np.dot(r, v) < 0:
+        true_anom = 2 * math.pi - true_anom
+    true_anom = math.degrees(true_anom)
 
-    # position unit vector
+    i = math.acos(h[2] / mag_h)
+    i = math.degrees(i)
 
-    rhat = r[:] / rmag
+    ecc = mag_e
 
-    # angular momentum vectors
+    raan = math.acos(n[0] / mag_n)
+    if n[1] < 0:
+        raan = 2 * math.pi - raan
+    raan = math.degrees(raan)
 
-    hv = np.cross(r, v)
+    per = math.acos(np.dot(n, e) / (mag_n * mag_e))
+    if e[2] < 0:
+        per = 2 * math.pi - per
+    per = math.degrees(per)
 
-    hhat = hv / np.linalg.norm(hv)
+    a = 1 / ((2 / mag_r) - (mag_v**2 / mu))
 
-    # eccentricity vector
+    if i >= 360.0:
+        i = i - 360
+    if raan >= 360.0:
+        raan = raan - 360
+    if per >= 360.0:
+        per = per - 360
 
-    vtmp = v[:] / mu
-
-    ecc = np.cross(vtmp, hv)
-
-    ecc = ecc - rhat
-
-    # semimajor axis
-
-    sma = 1.0 / (2.0 / rmag - vmag * vmag / mu)
-
-    p = hhat[0] / (1.0 + hhat[2])
-
-    q = -hhat[1] / (1.0 + hhat[2])
-
-    const1 = 1.0 / (1.0 + p * p + q * q)
-
-    fhat = np.array([1.0, 2.0, 3])
-    fhat[0] = const1 * (1.0 - p * p + q * q)
-    fhat[1] = const1 * 2.0 * p * q
-    fhat[2] = -const1 * 2.0 * p
-
-    ghat = np.array([1.0, 2.0, 3.0])
-    ghat[0] = (const1 * 2.0 * p * q)
-    ghat[1] = const1 * (1.0 + p * p - q * q)
-    ghat[2] = const1 * 2.0 * q
-
-    h = np.dot(ecc, ghat)
-
-    xk = np.dot(ecc, fhat)
-
-    x1 = np.dot(r, fhat)
-
-    y1 = np.dot(r, ghat)
-
-    # orbital eccentricity
-
-    eccm = sqrt((h * h + xk * xk))
-
-    # orbital inclination
-
-    inc = 2.0 * atan(sqrt(p * p + q * q))
-
-    # true longitude
-
-    xlambdat = atan3(y1, x1)
-
-    # check for equatorial orbit
-
-    if (inc > 0.00000001):
-        raan = atan3(p, q)
-    else:
-        raan = 0.0
-
-    # check for circular orbit
-
-    if (eccm > 0.00000001):
-        first = atan3(h, xk) - raan
-        second = pi2
-        firstint = int(first)
-        secondint = int(second)
-        argper = first - (secondint * (firstint / secondint))
-
-    else:
-        argper = 0.0
-
-    # true anomaly
-
-    first = xlambdat - raan - argper
-    second = pi2
-    firstint = int(first)
-    secondint = int(second)
-    tanom = first - (secondint * (firstint / secondint))
-
-    inc = degrees(inc)
-    argper = degrees(argper)
-
-    raan = degrees(raan)
-
-    if raan > 300.0:
-        raan = raan - 360.0
-    tanom = degrees(tanom)
-
-    # load orbital element vector
-    oev = np.zeros(6)
-    oev[0] = sma
-    oev[1] = eccm
-    oev[2] = inc
-    oev[3] = argper
-    oev[4] = raan
-    oev[5] = tanom
-    return oev
+    kep = np.zeros(6)
+    kep[0] = a
+    kep[1] = ecc
+    kep[2] = i
+    kep[3] = per
+    kep[4] = raan
+    kep[5] = true_anom
+    return kep
 
 
 if __name__ == "__main__":
