@@ -57,6 +57,13 @@ def state_kep(r, v):
 
     a = 1 / ((2 / mag_r) - (mag_v**2 / mu))
 
+    if i >= 360.0:
+        i = i - 360
+    if raan >= 360.0:
+        raan = raan - 360
+    if per >= 360.0:
+        per = per - 360
+
     kep = np.zeros(6)
     kep[0] = a
     kep[1] = ecc
