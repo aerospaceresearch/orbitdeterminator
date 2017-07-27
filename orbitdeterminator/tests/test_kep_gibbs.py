@@ -8,9 +8,9 @@ from numpy.testing import assert_array_equal
 
 @pytest.fixture()
 def my_kep():
-	kep = np.array([[0, 100, 1000, 2000],
-					[200, 300, 800, 2500],
-					[400, 600, 750, 2700],
+	kep = np.array([[0, 1000, 10000, 20000],
+					[200, 3000, 8000, 25000],
+					[400, 6000, 7500, 27000],
 					], dtype=float)
 	return kep
 

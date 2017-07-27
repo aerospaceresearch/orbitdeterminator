@@ -135,14 +135,14 @@ def create_kep(my_data):
     time = my_data[1, 0] - my_data[0, 0]
     traj = orbit_trajectory(x1_new, x2_new, time)
 
-    v1 = lamberts(my_data[0, :], my_data[100, :], traj)
+    v1 = lamberts(my_data[0, :], my_data[1, :], traj)
     # v_abs1[0] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
     v_hold[0] = v1
 
     # Produce all the 2 consecutive pairs and find the velocity with lamberts() method
-    for i in range(1, (len(my_data) - 100)):
+    for i in range(1, (len(my_data) - 1)):
 
-        j = i + 100
+        j = i + 1
         v1 = lamberts(my_data[i, :], my_data[j, :], traj)
 
         v_hold[i] = v1
