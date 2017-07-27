@@ -10,7 +10,7 @@ elements (a, e, i, ω, Ω, v) using Lambert's solution for preliminary orbit det
 import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from util import state_kep
+from orbitdeterminator.util import state_kep
 import numpy as np
 import matplotlib.pylab as plt
 import PyKEP as pkp
@@ -36,21 +36,21 @@ def orbit_trajectory(x1_new, x2_new, time):
     v1 = l.get_v1()
     v1 = np.asarray(v1)
     v1 = np.reshape(v1, 3)
+    x1_new = np.asarray(x1_new)
 
-    check = (np.greater(v1, np.array([100.0, 100.0, 100.0])))
-    check2 = (np.less(v1, np.array([-100.0, -100.0, -100.0])))
+    kep1 = state_kep.state_kep(x1_new, v1)
 
-    if np.any(check) or np.any(check2) == True:
+    if kep1[0] < 0.0:
         traj = True
-    elif np.all(check) or np.all(check2) == False:
-        traj = False
+    elif kep1[1] > 1.0:
+        traj = True
     else:
-        print("Can't compute for these 2 points")
+        traj = False
 
     return traj
 
 
-def lamberts(x1, x2):
+def lamberts(x1, x2, traj):
     '''Takes two position points - numpy arrays with time,x,y,z as elements
        and produces two vectors with the state vector for both positions using Lamberts solution
 
@@ -60,9 +60,7 @@ def lamberts(x1, x2):
 
     Returns:
         v1(numpy array): velocity vector for point 1 (v1x, v1y, v1z)
-        v2(numpy array): velocity for point 2 (v2x, v2y, v2z)
     '''
-    time = np.array([x2[0] - x1[0]])
 
     x1_new = [1, 1, 1]
     x1_new[:] = x1[1:4]
@@ -70,7 +68,7 @@ def lamberts(x1, x2):
     x2_new[:] = x2[1:4]
     time = x2[0] - x1[0]
 
-    traj = orbit_trajectory(x1_new, x2_new, time)
+    # traj = orbit_trajectory(x1_new, x2_new, time)
 
     l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, traj)
 
@@ -96,6 +94,12 @@ def check_keplerian(kep):
 
     kep_new = list()
     for i in range(0, len(kep)):
+
+        if kep[i, 3] < 0.0:
+            kep[i, 3] = 360 + kep[i, 3]
+        elif kep[i, 4] < 0.0:
+            kep[i, 4] = 360 + kep[i, 4]
+
         if kep[i, 1] > 1.0:
             pass
         elif kep[i, 0] < 0.0:
@@ -122,25 +126,34 @@ def create_kep(my_data):
                                right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
     v_hold = np.zeros((len(my_data), 3))
-    v_abs1 = np.empty([len(my_data)])
-    v1 = lamberts(my_data[0, :], my_data[1, :])
-    v_abs1[0] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
+    # v_abs1 = np.empty([len(my_data)])
+
+    x1_new = [1, 1, 1]
+    x1_new[:] = my_data[0, 1:4]
+    x2_new = [1, 1, 1]
+    x2_new[:] = my_data[1, 1:4]
+    time = my_data[1, 0] - my_data[0, 0]
+    traj = orbit_trajectory(x1_new, x2_new, time)
+
+    v1 = lamberts(my_data[0, :], my_data[100, :], traj)
+    # v_abs1[0] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
     v_hold[0] = v1
 
     # Produce all the 2 consecutive pairs and find the velocity with lamberts() method
-    for i in range(1, (len(my_data) - 1)):
+    for i in range(1, (len(my_data) - 100)):
 
-        j = i + 1
-        v1 = lamberts(my_data[i, :], my_data[j, :])
+        j = i + 100
+        v1 = lamberts(my_data[i, :], my_data[j, :], traj)
 
-        #compute the absolute value of the velocity vector for every point
-        v_abs1[i] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
+        v_hold[i] = v1
+        # compute the absolute value of the velocity vector for every point
+        # v_abs1[i] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
 
         # If the value of v_abs(i) > v_abs(0) * 10, then we dont keep that value v(i) because it is propably a bad jiitery product
-        if v_abs1[i] > (10 * v_abs1[0]):
-            pass
-        else:
-            v_hold[i] = v1
+        # if v_abs1[i] > (10 * v_abs1[0]):
+        #     v_hold[i] = v1
+        # else:
+        #     v_hold[i] = v1
 
     # we know have lots of [0, 0, 0] inside our numpy array v(vx, vy, vz) and we dont want them because they produce a bug
     # when we'll try to transform these products to keplerian elements
@@ -173,7 +186,7 @@ def create_kep(my_data):
         kep[i] = np.ravel(state_kep.state_kep(final_r[i], final_v[i]))
 
     kep = check_keplerian(kep)
-
+    # np.savetxt("kep11.csv", kep, delimiter=",")
     return kep
 
 
