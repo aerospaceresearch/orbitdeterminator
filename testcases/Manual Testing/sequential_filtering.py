@@ -55,7 +55,7 @@ def golay(data, window, degree):
     return new_positions
 
 ######################################################################################
-noisy_path = os.getcwd() + "/track1/"
+noisy_path = os.getcwd() + "/track/"
 noisy_files = os.listdir(noisy_path)
 true_keps = open("true_kep_dict.p", 'rb')
 kep_dict = pickle.load(true_keps)
