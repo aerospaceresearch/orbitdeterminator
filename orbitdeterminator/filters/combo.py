@@ -12,5 +12,6 @@ def c(error):
 	return c
 
 
-x_error = 10   # x_error = 10 means, 10km a-priori error estimation, for points with time difference of 1 second
-print(c(x_error))
+if __name__ == "__main__":
+	x_error = 10   # x_error = 10 means, 10km a-priori error estimation, for points with time difference of 1 second
+	print(c(x_error))
