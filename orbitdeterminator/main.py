@@ -22,10 +22,13 @@ data = read_data.load_data("orbit.csv")
 data = data[1:, :]
 data[:, 1:4] = data[:, 1:4] / 1000
 
+
 # Apply the Triple moving average filter with window = 3
 data_after_filter = triple_moving_average.generate_filtered_data(data, 3)
 
-error_apriori = 20
+
+## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
+error_apriori = 20 # input the a-priori error estimation for the data set
 c = golay_window.c(error_apriori)
 c = int(c)
 if (c % 2) == 0:
