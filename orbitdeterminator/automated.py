@@ -14,7 +14,6 @@ import matplotlib as mpl
 import matplotlib.pylab as plt
 pd.set_option('display.width', 1000)
 
-
 def process(data_file):
 
     # First read the csv file called "orbit" with the positional data
