@@ -10,7 +10,7 @@ elements (a, e, i, ω, Ω, v) using Lambert's solution for preliminary orbit det
 import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from orbitdeterminator.util import state_kep
+from util import state_kep
 import numpy as np
 import matplotlib.pylab as plt
 import PyKEP as pkp

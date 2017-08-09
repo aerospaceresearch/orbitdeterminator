@@ -5,9 +5,9 @@ along with a plot and a filtered.csv data file
 '''
 
 
-from orbitdeterminator.util import (read_data, kep_state, rkf78)
-from orbitdeterminator.filters import (sav_golay, triple_moving_average, golay_window)
-from orbitdeterminator.kep_determination import (lamberts_kalman, interpolation)
+from util import (read_data, kep_state, rkf78)
+from filters import (sav_golay, triple_moving_average, golay_window)
+from kep_determination import (lamberts_kalman, interpolation)
 import numpy as np
 import pandas as pd
 import matplotlib as mpl

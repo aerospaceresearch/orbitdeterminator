@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 import numpy as np
 from scipy.interpolate import CubicSpline
 
-from orbitdeterminator.util import (state_kep, read_data)
+from util import (state_kep, read_data)
 
 
 def cubic_spline(orbit_data):
