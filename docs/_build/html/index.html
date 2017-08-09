@@ -1,0 +1,602 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to Orbit Determinator’s documentation! &#8212; Orbit Determinator 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-orbit-determinator-s-documentation">
+<h1>Welcome to Orbit Determinator’s documentation!<a class="headerlink" href="#welcome-to-orbit-determinator-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="filters">
+<h2>Filters:<a class="headerlink" href="#filters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-orbitdeterminator.filters.triple_moving_average">
+<span id="triple-moving-average"></span><h3>Triple Moving Average<a class="headerlink" href="#module-orbitdeterminator.filters.triple_moving_average" title="Permalink to this headline">¶</a></h3>
+<p>Author : Nilesh Chaturvedi
+Date Created : 31st May, 2017</p>
+<p>Triple Moving Average : Here we take the average of 3 terms x0, A, B where,
+x0 = The point to be estimated
+A = weighted average of n terms previous to x0
+B = weighted avreage of n terms ahead of x0
+n = window size</p>
+<dl class="function">
+<dt id="orbitdeterminator.filters.triple_moving_average.triple_moving_average">
+<code class="descclassname">orbitdeterminator.filters.triple_moving_average.</code><code class="descname">triple_moving_average</code><span class="sig-paren">(</span><em>signal_array</em>, <em>window_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/filters/triple_moving_average.html#triple_moving_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.filters.triple_moving_average.triple_moving_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply triple moving average to a signal</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>signal_array</strong> – the array of values on which the filter is to be applied</li>
+<li><strong>window_size</strong> – the no. of points before and after x0 which should be</li>
+<li><strong>for calculating A and B</strong> (<em>considered</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A filtered array of size same as that of signal_array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.filters.triple_moving_average.weighted_average">
+<code class="descclassname">orbitdeterminator.filters.triple_moving_average.</code><code class="descname">weighted_average</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/filters/triple_moving_average.html#weighted_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.filters.triple_moving_average.weighted_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the weighted average of terms in the input</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> – a list of numbers</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">weighted average of the terms in the list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="savintzky-golay">
+<h3>Savintzky - Golay<a class="headerlink" href="#savintzky-golay" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-orbitdeterminator.filters.sav_golay"></span><p>Created by Alexandros Kazantzidis
+Date 02/06/17</p>
+<p>Savintzky Golay: Takes a positional data set (time, x, y, z) and applies the Savintzky Golay filter on it based on the
+polynomial and window parameters we input</p>
+<dl class="function">
+<dt id="orbitdeterminator.filters.sav_golay.golay">
+<code class="descclassname">orbitdeterminator.filters.sav_golay.</code><code class="descname">golay</code><span class="sig-paren">(</span><em>data</em>, <em>window</em>, <em>degree</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/filters/sav_golay.html#golay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.filters.sav_golay.golay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the Savintzky-Golay filter to a positional data set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>numpy array</em>) – containing all of the positional data in the format of (time, x, y, z).</li>
+<li><strong>window</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – window size of the Savintzky-Golay filter.</li>
+<li><strong>degree</strong> – degree of the ploynomial in Savintzky-Golay filter.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="interpolation">
+<h2>Interpolation:<a class="headerlink" href="#interpolation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-orbitdeterminator.kep_determination.lamberts_kalman">
+<span id="lamberts-kalman-method"></span><h3>Lamberts-Kalman Method<a class="headerlink" href="#module-orbitdeterminator.kep_determination.lamberts_kalman" title="Permalink to this headline">¶</a></h3>
+<p>Created by Alexandros Kazantzidis
+Date : 31/05/17</p>
+<p>Lamberts Kalman: Takes a positional data set in the format of (time, x, y, z) and produces one set of six keplerian
+elements (a, e, i, ω, Ω, v) using Lambert’s solution for preliminary orbit determination and Kalman filters</p>
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.lamberts_kalman.check_keplerian">
+<code class="descclassname">orbitdeterminator.kep_determination.lamberts_kalman.</code><code class="descname">check_keplerian</code><span class="sig-paren">(</span><em>kep</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/lamberts_kalman.html#check_keplerian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.lamberts_kalman.check_keplerian" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Checks all the sets of keplerian elements to see if they have wrong values like eccentricity greater that 1 or</dt>
+<dd>a negative number for semi major axis</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kep</strong> (<em>numpy array</em>) – all the sets of keplerian elements in [semi major axis (a), eccentricity (e),
+inclination (i), argument of perigee (ω), right ascension of the ascending node (Ω),
+true anomaly (v)] format</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the final corrected set of keplerian elements that will be inputed in the kalman filter</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">kep_final(numpy array)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.lamberts_kalman.create_kep">
+<code class="descclassname">orbitdeterminator.kep_determination.lamberts_kalman.</code><code class="descname">create_kep</code><span class="sig-paren">(</span><em>my_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/lamberts_kalman.html#create_kep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.lamberts_kalman.create_kep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes all the keplerian elements for every point of the orbit you provide using Lambert’s solution
+It implements a tool for deleting all the points that give extremely jittery state vectors</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Args:</dt>
+<dd>data(numpy array) : contains the positional data set in (Time, x, y, z) Format</dd>
+<dt>Returns:</dt>
+<dd><dl class="first last docutils">
+<dt>kep(numpy array) <span class="classifier-delimiter">:</span> <span class="classifier">a numpy array containing all the keplerian elements computed for the orbit given in</span></dt>
+<dd>[semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
+right ascension of the ascending node (Ω), true anomaly (v)] format</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.lamberts_kalman.kalman">
+<code class="descclassname">orbitdeterminator.kep_determination.lamberts_kalman.</code><code class="descname">kalman</code><span class="sig-paren">(</span><em>kep</em>, <em>R</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/lamberts_kalman.html#kalman"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.lamberts_kalman.kalman" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes as an input lots of sets of keplerian elements and produces
+the fitted value of them by applying kalman filters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>kep</strong> (<em>numpy array</em>) – containing keplerian elements in this format (a, e, i, ω, Ω, v)</li>
+<li><strong>R</strong> – estimate of measurement variance</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">one final set of keplerian elements describing the orbit based on kalman filtering</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">final_kep(numpy array)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.lamberts_kalman.lamberts">
+<code class="descclassname">orbitdeterminator.kep_determination.lamberts_kalman.</code><code class="descname">lamberts</code><span class="sig-paren">(</span><em>x1</em>, <em>x2</em>, <em>traj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/lamberts_kalman.html#lamberts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.lamberts_kalman.lamberts" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Takes two position points - numpy arrays with time,x,y,z as elements</dt>
+<dd>and produces two vectors with the state vector for both positions using Lamberts solution</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x1</strong> (<em>numpy array</em>) – time and position for point 1 [time1,x1,y1,z1]</li>
+<li><strong>x2</strong> (<em>numpy array</em>) – time and position for point 2 [time2,x2,y2,z2]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">velocity vector for point 1 (v1x, v1y, v1z)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">v1(numpy array)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.lamberts_kalman.orbit_trajectory">
+<code class="descclassname">orbitdeterminator.kep_determination.lamberts_kalman.</code><code class="descname">orbit_trajectory</code><span class="sig-paren">(</span><em>x1_new</em>, <em>x2_new</em>, <em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/lamberts_kalman.html#orbit_trajectory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.lamberts_kalman.orbit_trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if we want to keep the result of lamberts() for retrograde or counter-clock wise motion</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x1</strong> (<em>numpy array</em>) – time and position for point 1 [time1,x1,y1,z1]</li>
+<li><strong>x2</strong> (<em>numpy array</em>) – time and position for point 2 [time2,x2,y2,z2]</li>
+<li><strong>time</strong> – time difference between the 2 points</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if we want to keep retrogade, False if we want counter-clock wise</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">traj(boolean)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.kep_determination.gibbs">
+<span id="gibbs-method"></span><h3>Gibbs Method<a class="headerlink" href="#module-orbitdeterminator.kep_determination.gibbs" title="Permalink to this headline">¶</a></h3>
+<p>Created by Alexandros Kazantzidis
+Date : 2/07/17</p>
+<p>Gibbs: Takes a positional data set in the format of (time, x, y, z) and produces one set of six keplerian
+elements (a, e, i, ω, Ω, v) using Gibb’s solution for preliminary orbit determination and Kalman filters</p>
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.gibbs.create_kep">
+<code class="descclassname">orbitdeterminator.kep_determination.gibbs.</code><code class="descname">create_kep</code><span class="sig-paren">(</span><em>my_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbs.html#create_kep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbs.create_kep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes all the keplerian elements for every point of the orbit you provide using Gibbs method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>my_data</strong> (<em>csv file</em>) – read file csv that contains the positional data set in (Time, x, y, z) Format</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>a numpy array containing all the keplerian elements computed for the orbit given in</dt>
+<dd>[semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
+right ascension of the ascending node (Ω), true anomaly (v)] format</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">kep(numpy array)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.gibbs.kep_gibbs">
+<code class="descclassname">orbitdeterminator.kep_determination.gibbs.</code><code class="descname">kep_gibbs</code><span class="sig-paren">(</span><em>x1</em>, <em>x2</em>, <em>x3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbs.html#kep_gibbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbs.kep_gibbs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Takes three position points - numpy arrays with time,x,y,z as elements</dt>
+<dd>and produces the keplerian elements of the orbit these three points shape using Gibbs solution</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x1</strong> (<em>numpy array</em>) – time and position for point 1 [time1,x1,y1,z1]</li>
+<li><strong>x2</strong> (<em>numpy array</em>) – time and position for point 2 [time2,x2,y2,z2]</li>
+<li><strong>x3</strong> (<em>numpy array</em>) – time and position for point 2 [time2,x2,y2,z2]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>a numpy array containing the keplerian elements computed for the three points given</dt>
+<dd><p class="first last">[semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
+right ascension of the ascending node (Ω), true anomaly (v)] format</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">kep(numpy array)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.gibbs.mtov">
+<code class="descclassname">orbitdeterminator.kep_determination.gibbs.</code><code class="descname">mtov</code><span class="sig-paren">(</span><em>m</em>, <em>e</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbs.html#mtov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbs.mtov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes true anomaly v from a given mean anomaly M and eccentricity e by using Newton-Raphson method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>M</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – </li>
+<li><strong>e</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">v(float) = true anomaly</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.kep_determination.interpolation">
+<span id="spline-interpolation"></span><h3>Spline Interpolation<a class="headerlink" href="#module-orbitdeterminator.kep_determination.interpolation" title="Permalink to this headline">¶</a></h3>
+<p>Author: Nilesh Chaturvedi
+Date Created:4th July, 2017</p>
+<dl class="docutils">
+<dt>Description: Interpoaltion using splines for calculating velocity at a point</dt>
+<dd>and hence the orbital elements.</dd>
+</dl>
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.interpolation.compute_velocity">
+<code class="descclassname">orbitdeterminator.kep_determination.interpolation.</code><code class="descname">compute_velocity</code><span class="sig-paren">(</span><em>spline</em>, <em>point</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/interpolation.html#compute_velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.interpolation.compute_velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the velocity at a point given the spline.</p>
+<dl class="docutils">
+<dt>Calculate the deraivative of spline at the point(on the points the</dt>
+<dd>given spline corresponds to). This gives the velocity at that point.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spline</strong> (<em>list</em>) – component wise cubic splines of orbit data points
+of the format [spline_x, spline_y, spline_z].</li>
+<li><strong>point</strong> (<em>numpy array</em>) – point at which velocity is to be calculated.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">velocity vector at the given point</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">velocity (numpy array)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.interpolation.cubic_spline">
+<code class="descclassname">orbitdeterminator.kep_determination.interpolation.</code><code class="descname">cubic_spline</code><span class="sig-paren">(</span><em>orbit_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/interpolation.html#cubic_spline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.interpolation.cubic_spline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute component wise cubic spline of points of input data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>orbit_data</strong> (<em>numpy array</em>) – array of orbit data points of the
+format [time, x, y, z]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>component wise cubic splines of orbit data points</dt>
+<dd>of the format [spline_x, spline_y, spline_z]</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">splines (list)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="utils">
+<h2>Utils:<a class="headerlink" href="#utils" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-orbitdeterminator.util.kep_state">
+<span id="kep-state"></span><h3>kep_state<a class="headerlink" href="#module-orbitdeterminator.util.kep_state" title="Permalink to this headline">¶</a></h3>
+<p>Created by Alexandros Kazantzidis
+Date 25/05/17</p>
+<p>Keplerian to State: Take a set of keplerian elements (a, e, i, ω, Ω, v) and transfroms it into a state vector
+(x, y, z, vx, vy, vz) where v is the velocity of the satellite</p>
+<dl class="function">
+<dt id="orbitdeterminator.util.kep_state.kep_state">
+<code class="descclassname">orbitdeterminator.util.kep_state.</code><code class="descname">kep_state</code><span class="sig-paren">(</span><em>kep</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/kep_state.html#kep_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.kep_state.kep_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the keplerian elements to position and velocity vector</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kep</strong> (<em>numpy array</em>) – a 1x6 matrix which contains the following variables
+kep(0): semi major axis (km)
+kep(1): eccentricity (number)
+kep(2): inclination (degrees)
+kep(3): argument of perigee (degrees)
+kep(4): right ascension of the ascending node (degrees)
+kep(5): true anomaly (degrees)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">1x6 matrix which contains the position and velocity vector
+r(0),r(1),r(2): position vector (x,y,z) km
+r(3),r(4),r(5): velocity vector (vx,vy,vz) km/s</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">r (numpy array)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.util.read_data">
+<span id="read-data"></span><h3>read_data<a class="headerlink" href="#module-orbitdeterminator.util.read_data" title="Permalink to this headline">¶</a></h3>
+<p>Author : Nilesh Chaturvedi
+Date Created : 21/05/2017</p>
+<dl class="function">
+<dt id="orbitdeterminator.util.read_data.load_data">
+<code class="descclassname">orbitdeterminator.util.read_data.</code><code class="descname">load_data</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/read_data.html#load_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.read_data.load_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the data in numpy array for further processing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – name of the csv file to be parsed</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">numpy array of the orbit positions.
+Each point of the orbit is of the
+format : [timestamp, x-coordinate, y-coordinate, z-coordinate]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">orbit</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.util.read_data.save_orbits">
+<code class="descclassname">orbitdeterminator.util.read_data.</code><code class="descname">save_orbits</code><span class="sig-paren">(</span><em>source</em>, <em>destination</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/read_data.html#save_orbits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.read_data.save_orbits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves objects returned from load_data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source</strong> – path to raw csv files.</li>
+<li><strong>destination</strong> – path where objects need to be saved.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.util.state_kep">
+<span id="state-kep"></span><h3>state_kep<a class="headerlink" href="#module-orbitdeterminator.util.state_kep" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="orbitdeterminator.util.state_kep.state_kep">
+<code class="descclassname">orbitdeterminator.util.state_kep.</code><code class="descname">state_kep</code><span class="sig-paren">(</span><em>r</em>, <em>v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/state_kep.html#state_kep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.state_kep.state_kep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts state vector to orbital elements.</p>
+<dl class="docutils">
+<dt>Convert state vector to six classical orbital elements via equinoctial</dt>
+<dd>elements.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>r</strong> (<em>numpy array</em>) – position vector</li>
+<li><strong>v</strong> (<em>numpy array</em>) – velocity vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p>keplerian elements
+kep(0): semimajor axis (kilometers)
+kep(1): orbital eccentricity (non-dimensional)</p>
+<blockquote>
+<div><p>(0 &lt;= eccentricity &lt; 1)</p>
+</div></blockquote>
+<p>kep(2): orbital inclination (degrees)
+kep(3): right ascension of ascending node (degrees)
+kep(4): argument of perigee (degress)
+kep(5): true anomaly (degrees)</p>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">kep (numpy array)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to Orbit Determinator’s documentation!</a><ul>
+<li><a class="reference internal" href="#filters">Filters:</a><ul>
+<li><a class="reference internal" href="#module-orbitdeterminator.filters.triple_moving_average">Triple Moving Average</a></li>
+<li><a class="reference internal" href="#savintzky-golay">Savintzky - Golay</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#interpolation">Interpolation:</a><ul>
+<li><a class="reference internal" href="#module-orbitdeterminator.kep_determination.lamberts_kalman">Lamberts-Kalman Method</a></li>
+<li><a class="reference internal" href="#module-orbitdeterminator.kep_determination.gibbs">Gibbs Method</a></li>
+<li><a class="reference internal" href="#module-orbitdeterminator.kep_determination.interpolation">Spline Interpolation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#utils">Utils:</a><ul>
+<li><a class="reference internal" href="#module-orbitdeterminator.util.kep_state">kep_state</a></li>
+<li><a class="reference internal" href="#module-orbitdeterminator.util.read_data">read_data</a></li>
+<li><a class="reference internal" href="#module-orbitdeterminator.util.state_kep">state_kep</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Nilesh Chaturvedi, Alexandros Kazantzidis.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
