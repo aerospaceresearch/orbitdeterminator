@@ -1,8 +1,5 @@
 '''
-Created by Alexandros Kazantzidis
-Date 02/06/17
-
-Savintzky Golay: Takes a positional data set (time, x, y, z) and applies the Savintzky Golay filter on it based on the
+Takes a positional data set (time, x, y, z) and applies the Savintzky Golay filter on it based on the
 polynomial and window parameters we input
 '''
 
@@ -24,8 +21,8 @@ def golay(data, window, degree):
            window (int): window size of the Savintzky-Golay filter.
            degree (int): degree of the ploynomial in Savintzky-Golay filter.
 
-        Return:
-            new_positions (numpy array): filtered data in the same format
+        Returns:
+            Filtered data in the same format
     '''
 
     x = data[:, 1]

@@ -1,9 +1,5 @@
 '''
-Author: Nilesh Chaturvedi
-Date Created:4th July, 2017
-
-Description: Interpoaltion using splines for calculating velocity at a point
- and hence the orbital elements.
+Interpolation using splines for calculating velocity at a point and hence the orbital elements
 '''
 import os
 import sys
@@ -23,8 +19,7 @@ def cubic_spline(orbit_data):
                  format [time, x, y, z]
 
         Returns:
-            splines (list): component wise cubic splines of orbit data points
-                 of the format [spline_x, spline_y, spline_z]
+            component wise cubic splines of orbit data points of the format [spline_x, spline_y, spline_z]
     '''
     time = orbit_data[:,:1]
     coordinates = list([orbit_data[:,1:2], orbit_data[:,2:3], orbit_data[:,3:4]])
@@ -33,9 +28,7 @@ def cubic_spline(orbit_data):
     return splines
 
 def compute_velocity(spline, point):
-    ''' Calculate the velocity at a point given the spline.
-
-    Calculate the deraivative of spline at the point(on the points the
+    ''' Calculate the derivative of spline at the point(on the points the
      given spline corresponds to). This gives the velocity at that point.
 
     Args:
@@ -44,13 +37,21 @@ def compute_velocity(spline, point):
         point (numpy array): point at which velocity is to be calculated.
 
     Returns:
-        velocity (numpy array): velocity vector at the given point
+        velocity vector at the given point
     '''
     velocity = list(map(lambda s, x:s(x, 1), spline, point))
 
     return np.array(velocity)
 
 def main(data_points):
+    ''' Apply the whole process of interpolation for keplerian element computation
+
+    Args:
+        data_points (numpy array): positional data set in format of (x, y, z, time)
+
+    Returns:
+        computed keplerian elements for every point of the orbit
+    '''
 
     velocity_vectors = []
     keplerians = []
