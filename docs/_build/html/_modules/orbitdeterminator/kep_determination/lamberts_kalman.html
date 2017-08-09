@@ -1,0 +1,333 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>orbitdeterminator.kep_determination.lamberts_kalman &#8212; Orbit Determinator 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for orbitdeterminator.kep_determination.lamberts_kalman</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created by Alexandros Kazantzidis</span>
+<span class="sd">Date : 31/05/17</span>
+
+<span class="sd">Lamberts Kalman: Takes a positional data set in the format of (time, x, y, z) and produces one set of six keplerian</span>
+<span class="sd">elements (a, e, i, ω, Ω, v) using Lambert&#39;s solution for preliminary orbit determination and Kalman filters</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">pardir</span><span class="p">)))</span>
+<span class="kn">from</span> <span class="nn">orbitdeterminator.util</span> <span class="k">import</span> <span class="n">state_kep</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">PyKEP</span> <span class="k">as</span> <span class="nn">pkp</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.width&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="orbit_trajectory"><a class="viewcode-back" href="../../../index.html#orbitdeterminator.kep_determination.lamberts_kalman.orbit_trajectory">[docs]</a><span class="k">def</span> <span class="nf">orbit_trajectory</span><span class="p">(</span><span class="n">x1_new</span><span class="p">,</span> <span class="n">x2_new</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Check if we want to keep the result of lamberts() for retrograde or counter-clock wise motion</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        x1(numpy array): time and position for point 1 [time1,x1,y1,z1]</span>
+<span class="sd">        x2(numpy array): time and position for point 2 [time2,x2,y2,z2]</span>
+<span class="sd">        time: time difference between the 2 points</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">    	traj(boolean) : True if we want to keep retrogade, False if we want counter-clock wise</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">l</span> <span class="o">=</span> <span class="n">pkp</span><span class="o">.</span><span class="n">lambert_problem</span><span class="p">(</span><span class="n">x1_new</span><span class="p">,</span> <span class="n">x2_new</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="mf">398600.4405</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_v1</span><span class="p">()</span>
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">x1_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x1_new</span><span class="p">)</span>
+
+    <span class="n">kep1</span> <span class="o">=</span> <span class="n">state_kep</span><span class="o">.</span><span class="n">state_kep</span><span class="p">(</span><span class="n">x1_new</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">kep1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">kep1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="n">traj</span></div>
+
+
+<div class="viewcode-block" id="lamberts"><a class="viewcode-back" href="../../../index.html#orbitdeterminator.kep_determination.lamberts_kalman.lamberts">[docs]</a><span class="k">def</span> <span class="nf">lamberts</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">traj</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes two position points - numpy arrays with time,x,y,z as elements</span>
+<span class="sd">       and produces two vectors with the state vector for both positions using Lamberts solution</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x1(numpy array): time and position for point 1 [time1,x1,y1,z1]</span>
+<span class="sd">        x2(numpy array): time and position for point 2 [time2,x2,y2,z2]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        v1(numpy array): velocity vector for point 1 (v1x, v1y, v1z)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">x1_new</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">x1_new</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">x1</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">x2_new</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">x2_new</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">x2</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">x2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># traj = orbit_trajectory(x1_new, x2_new, time)</span>
+
+    <span class="n">l</span> <span class="o">=</span> <span class="n">pkp</span><span class="o">.</span><span class="n">lambert_problem</span><span class="p">(</span><span class="n">x1_new</span><span class="p">,</span> <span class="n">x2_new</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="mf">398600.4405</span><span class="p">,</span> <span class="n">traj</span><span class="p">)</span>
+
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">get_v1</span><span class="p">()</span>
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">v1</span></div>
+
+
+<div class="viewcode-block" id="check_keplerian"><a class="viewcode-back" href="../../../index.html#orbitdeterminator.kep_determination.lamberts_kalman.check_keplerian">[docs]</a><span class="k">def</span> <span class="nf">check_keplerian</span><span class="p">(</span><span class="n">kep</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Checks all the sets of keplerian elements to see if they have wrong values like eccentricity greater that 1 or</span>
+<span class="sd">       a negative number for semi major axis</span>
+
+<span class="sd">     Args:</span>
+<span class="sd">        kep(numpy array): all the sets of keplerian elements in [semi major axis (a), eccentricity (e),</span>
+<span class="sd">                          inclination (i), argument of perigee (ω), right ascension of the ascending node (Ω),</span>
+<span class="sd">                          true anomaly (v)] format</span>
+<span class="sd">     </span>
+<span class="sd">     Returns:</span>
+<span class="sd">        kep_final(numpy array): the final corrected set of keplerian elements that will be inputed in the kalman filter</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">kep_new</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">kep</span><span class="p">)):</span>
+
+        <span class="k">if</span> <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">360</span> <span class="o">+</span> <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">360</span> <span class="o">+</span> <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kep_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="n">kep_final</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kep_new</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kep_final</span></div>
+
+
+<div class="viewcode-block" id="create_kep"><a class="viewcode-back" href="../../../index.html#orbitdeterminator.kep_determination.lamberts_kalman.create_kep">[docs]</a><span class="k">def</span> <span class="nf">create_kep</span><span class="p">(</span><span class="n">my_data</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Computes all the keplerian elements for every point of the orbit you provide using Lambert&#39;s solution</span>
+<span class="sd">       It implements a tool for deleting all the points that give extremely jittery state vectors</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data(numpy array) : contains the positional data set in (Time, x, y, z) Format</span>
+
+
+<span class="sd">        Returns:</span>
+<span class="sd">            kep(numpy array) : a numpy array containing all the keplerian elements computed for the orbit given in</span>
+<span class="sd">                               [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),</span>
+<span class="sd">                               right ascension of the ascending node (Ω), true anomaly (v)] format</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">v_hold</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">my_data</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="c1"># v_abs1 = np.empty([len(my_data)])</span>
+
+    <span class="n">x1_new</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">x1_new</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">my_data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">x2_new</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">x2_new</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">my_data</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">my_data</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">my_data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">traj</span> <span class="o">=</span> <span class="n">orbit_trajectory</span><span class="p">(</span><span class="n">x1_new</span><span class="p">,</span> <span class="n">x2_new</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">lamberts</span><span class="p">(</span><span class="n">my_data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">my_data</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="n">traj</span><span class="p">)</span>
+    <span class="c1"># v_abs1[0] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)</span>
+    <span class="n">v_hold</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span>
+
+    <span class="c1"># Produce all the 2 consecutive pairs and find the velocity with lamberts() method</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">my_data</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+
+        <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">v1</span> <span class="o">=</span> <span class="n">lamberts</span><span class="p">(</span><span class="n">my_data</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">my_data</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:],</span> <span class="n">traj</span><span class="p">)</span>
+
+        <span class="n">v_hold</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span>
+        <span class="c1"># compute the absolute value of the velocity vector for every point</span>
+        <span class="c1"># v_abs1[i] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)</span>
+
+        <span class="c1"># If the value of v_abs(i) &gt; v_abs(0) * 10, then we dont keep that value v(i) because it is propably a bad jiitery product</span>
+        <span class="c1"># if v_abs1[i] &gt; (10 * v_abs1[0]):</span>
+        <span class="c1">#     v_hold[i] = v1</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     v_hold[i] = v1</span>
+
+    <span class="c1"># we know have lots of [0, 0, 0] inside our numpy array v(vx, vy, vz) and we dont want them because they produce a bug</span>
+    <span class="c1"># when we&#39;ll try to transform these products to keplerian elements</span>
+    <span class="n">bo</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">store_i</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v_hold</span><span class="p">)):</span>
+        <span class="n">bo</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">v_hold</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v_hold</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">bo</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">store_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># keeping only the rows with values and throwing all the [0, 0, 0] arrays</span>
+    <span class="n">final_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">store_i</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">store_i</span><span class="p">:</span>
+        <span class="n">final_v</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">v_hold</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># collecting the position vector r(x ,y, z) that come along with the velocities kept above</span>
+    <span class="n">final_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">store_i</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">store_i</span><span class="p">:</span>
+        <span class="n">final_r</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">my_data</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># finally we transform the state vectors = position vectors + velocity vectors into keplerian elements</span>
+    <span class="n">kep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">store_i</span><span class="p">),</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">final_r</span><span class="p">)):</span>
+        <span class="n">kep</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">state_kep</span><span class="o">.</span><span class="n">state_kep</span><span class="p">(</span><span class="n">final_r</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">final_v</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+    <span class="n">kep</span> <span class="o">=</span> <span class="n">check_keplerian</span><span class="p">(</span><span class="n">kep</span><span class="p">)</span>
+    <span class="c1"># np.savetxt(&quot;kep11.csv&quot;, kep, delimiter=&quot;,&quot;)</span>
+    <span class="k">return</span> <span class="n">kep</span></div>
+
+
+<span class="c1"># find the mean value of all keplerian elements set and then do a kalman filtering to find the best fit</span>
+
+<div class="viewcode-block" id="kalman"><a class="viewcode-back" href="../../../index.html#orbitdeterminator.kep_determination.lamberts_kalman.kalman">[docs]</a><span class="k">def</span> <span class="nf">kalman</span><span class="p">(</span><span class="n">kep</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Takes as an input lots of sets of keplerian elements and produces</span>
+<span class="sd">    the fitted value of them by applying kalman filters</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        kep(numpy array): containing keplerian elements in this format (a, e, i, ω, Ω, v)</span>
+<span class="sd">        R : estimate of measurement variance</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        final_kep(numpy array): one final set of keplerian elements describing the orbit based on kalman filtering</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># first find the mean values for every keplerian element</span>
+    <span class="n">mean_kep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+        <span class="n">mean_kep</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">kep</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># the mean value will be selected as the initial guess</span>
+
+    <span class="n">x_final</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+
+        <span class="c1"># intial parameters</span>
+        <span class="n">n_iter</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kep</span><span class="p">)</span>
+        <span class="n">sz</span> <span class="o">=</span> <span class="n">n_iter</span>  <span class="c1"># size of array</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">sz</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="n">z</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">kep</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+
+        <span class="n">Q</span> <span class="o">=</span> <span class="mf">1e-8</span>  <span class="c1"># process variance</span>
+
+        <span class="n">xhat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">sz</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>  <span class="c1"># a posteri estimate of x</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">sz</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>  <span class="c1"># a posteri error estimate</span>
+        <span class="n">xhatminus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">sz</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>  <span class="c1"># a priori estimate of x</span>
+        <span class="n">Pminus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">sz</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>  <span class="c1"># a priori error estimate</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">sz</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>  <span class="c1"># gain or blending factor</span>
+
+        <span class="c1"># intial guesses</span>
+        <span class="n">xhat</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_kep</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">P</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">):</span>
+            <span class="c1"># time update</span>
+            <span class="n">xhatminus</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">xhat</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">Pminus</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">Q</span>
+
+            <span class="c1"># measurement update</span>
+            <span class="n">K</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pminus</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">Pminus</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">R</span><span class="p">)</span>
+
+            <span class="n">xhat</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">xhatminus</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">K</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">xhatminus</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+            <span class="n">P</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">K</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">Pminus</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+
+        <span class="n">x_final</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">xhat</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">x_final</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Nilesh Chaturvedi, Alexandros Kazantzidis.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
