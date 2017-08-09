@@ -1,9 +1,6 @@
 '''
-Created by Alexandros Kazantzidis
-Date : 31/05/17
-
-Lamberts Kalman: Takes a positional data set in the format of (time, x, y, z) and produces one set of six keplerian
-elements (a, e, i, ω, Ω, v) using Lambert's solution for preliminary orbit determination and Kalman filters
+Takes a positional data set and produces sets of six keplerian elements
+using Lambert's solution for preliminary orbit determination and Kalman filters
 '''
 
 
@@ -20,15 +17,15 @@ pd.set_option('display.width', 1000)
 
 
 def orbit_trajectory(x1_new, x2_new, time):
-    '''Check if we want to keep the result of lamberts() for retrograde or counter-clock wise motion
+    '''Tool for checking if the motion of the sallite is retrogade or counter - clock wise
     
     Args:
-        x1(numpy array): time and position for point 1 [time1,x1,y1,z1]
-        x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
-        time: time difference between the 2 points
+        x1 (numpy array): time and position for point 1 [time1,x1,y1,z1]
+        x2 (numpy array): time and position for point 2 [time2,x2,y2,z2]
+        time (float): time difference between the 2 points
         
     Returns:
-    	traj(boolean) : True if we want to keep retrogade, False if we want counter-clock wise
+        True if we want to keep retrogade, False if we want counter-clock wise
     '''
 
     l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
@@ -59,7 +56,7 @@ def lamberts(x1, x2, traj):
         x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
 
     Returns:
-        v1(numpy array): velocity vector for point 1 (v1x, v1y, v1z)
+        velocity vector for point 1 (v1x, v1y, v1z)
     '''
 
     x1_new = [1, 1, 1]
@@ -83,13 +80,13 @@ def check_keplerian(kep):
     '''Checks all the sets of keplerian elements to see if they have wrong values like eccentricity greater that 1 or
        a negative number for semi major axis
 
-     Args:
+    Args:
         kep(numpy array): all the sets of keplerian elements in [semi major axis (a), eccentricity (e),
                           inclination (i), argument of perigee (ω), right ascension of the ascending node (Ω),
                           true anomaly (v)] format
      
      Returns:
-        kep_final(numpy array): the final corrected set of keplerian elements that will be inputed in the kalman filter
+        The final corrected set of keplerian elements that will be inputed in the kalman filter
     '''
 
     kep_new = list()
@@ -116,14 +113,14 @@ def create_kep(my_data):
     '''Computes all the keplerian elements for every point of the orbit you provide using Lambert's solution
        It implements a tool for deleting all the points that give extremely jittery state vectors
 
-        Args:
+    Args:
             data(numpy array) : contains the positional data set in (Time, x, y, z) Format
 
 
         Returns:
-            kep(numpy array) : a numpy array containing all the keplerian elements computed for the orbit given in
-                               [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
-                               right ascension of the ascending node (Ω), true anomaly (v)] format
+            A numpy array containing all the keplerian elements computed for the orbit given in
+            [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
+            right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
     v_hold = np.zeros((len(my_data), 3))
     # v_abs1 = np.empty([len(my_data)])
@@ -202,7 +199,7 @@ def kalman(kep, R):
         R : estimate of measurement variance
 
     Returns:
-        final_kep(numpy array): one final set of keplerian elements describing the orbit based on kalman filtering
+        One final set of keplerian elements describing the orbit based on kalman filtering
     '''
     
     # first find the mean values for every keplerian element

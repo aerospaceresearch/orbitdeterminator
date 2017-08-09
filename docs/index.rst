@@ -27,11 +27,6 @@ Lamberts-Kalman Method
 .. automodule:: orbitdeterminator.kep_determination.lamberts_kalman
    :members:
 
-Gibbs Method
-~~~~~~~~~~~~
-.. automodule:: orbitdeterminator.kep_determination.gibbs
-   :members:
-
 Spline Interpolation
 ~~~~~~~~~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.kep_determination.interpolation
@@ -55,11 +50,25 @@ state_kep
 .. automodule:: orbitdeterminator.util.state_kep
    :members:
 
+input_transf
+~~~~~~~~~
+.. automodule:: orbitdeterminator.util.input_transf
+   :members:
+
+rkf78
+~~~~~~~~~
+.. automodule:: orbitdeterminator.util.rkf78
+   :members:
+
+golay_window
+~~~~~~~~~
+.. automodule:: orbitdeterminator.util.golay_window
+   :members:
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
 
 
 Indices and tables
