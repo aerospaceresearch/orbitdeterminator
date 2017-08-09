@@ -12,8 +12,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 import numpy as np
 from scipy.interpolate import CubicSpline
 
-import state_kep
-import read_data
+from orbitdeterminator.util import (state_kep, read_data)
+
 
 def cubic_spline(orbit_data):
     ''' Compute component wise cubic spline of points of input data
@@ -50,8 +50,7 @@ def compute_velocity(spline, point):
 
     return np.array(velocity)
 
-def main():
-    data_points = read_data.load_data("track/orbit_simulated_1500453681d357_0.csv")
+def main(data_points):
 
     velocity_vectors = []
     keplerians = []
@@ -77,12 +76,13 @@ def main():
     # np.savetxt('velo.csv', velocity_vectors, delimiter=",")
 
     # Take average of the keplerian elements corresponding to all the state vectors
-    #orbit = np.array(keplerians).mean(axis=0)
+    # orbit = np.array(keplerians).mean(axis=0)
+    keplerians = np.asarray(keplerians)
 
-    print(keplerians)
+    return keplerians
 
-
-if __name__ == "__main__":
-
-    main()
+#
+# if __name__ == "__main__":
+#
+#     main()
  
