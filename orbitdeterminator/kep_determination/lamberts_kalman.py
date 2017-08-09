@@ -56,7 +56,7 @@ def lamberts(x1, x2, traj):
         x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
 
     Returns:
-        velocity vector for point 1 (v1x, v1y, v1z)
+        velocity vector for point 1 (vx, vy, vz)
     '''
 
     x1_new = [1, 1, 1]
@@ -85,7 +85,7 @@ def check_keplerian(kep):
                           inclination (i), argument of perigee (ω), right ascension of the ascending node (Ω),
                           true anomaly (v)] format
      
-     Returns:
+    Returns:
         The final corrected set of keplerian elements that will be inputed in the kalman filter
     '''
 
@@ -117,10 +117,10 @@ def create_kep(my_data):
             data(numpy array) : contains the positional data set in (Time, x, y, z) Format
 
 
-        Returns:
-            A numpy array containing all the keplerian elements computed for the orbit given in
-            [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
-            right ascension of the ascending node (Ω), true anomaly (v)] format
+    Returns:
+        An array containing all the keplerian elements computed for the orbit given in
+        [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
+        right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
     v_hold = np.zeros((len(my_data), 3))
     # v_abs1 = np.empty([len(my_data)])

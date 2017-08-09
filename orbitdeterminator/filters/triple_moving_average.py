@@ -40,8 +40,7 @@ def triple_moving_average(signal_array, window_size):
 
     Args:
         signal_array (numpy array): the array of values on which the filter is to be applied
-        window_size (int): the no. of points before and after x0 which should be
-        considered for calculating A and B
+        window_size (int): the no. of points before and after x0 which should be considered for calculating A and B
 
     Returns:
        A filtered array of size same as that of signal_array

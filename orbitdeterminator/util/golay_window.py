@@ -6,7 +6,7 @@ def c(error):
         error(float): the a-priori error estimation for each measurment
 
     Returns:
-        c(float): a constant which describes the window that needs to be inputed to the savintzky - golay filter
+        Constant which describes the window that needs to be inputed to the savintzky - golay filter
 
     '''
     if error <= 40.0:

@@ -1,7 +1,6 @@
 '''
-Runs the whole process in one file
-Input a .csv positional data file (time, x, y, z) and this script generated the final set of keplerian elements
-along with a plot and a filtered.csv data file
+Runs the whole process in one file for a .csv positional data file (time, x, y, z)
+and generates the final set of keplerian elements along with a plot and a filtered.csv data file
 '''
 
 
@@ -16,7 +15,16 @@ pd.set_option('display.width', 1000)
 
 
 def process(data_file):
+    ''' Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
+    file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
+    the initial, filtered data set and the final orbit.
 
+    Args:
+        data_file (string): The name of the .csv file containing the positional data
+
+    Returns:
+        Runs the whole process of the program
+    '''
     # First read the csv file called "orbit" with the positional data
     data = read_data.load_data(data_file)
     # data = np.genfromtxt("orbit.csv")

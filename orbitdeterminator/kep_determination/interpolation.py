@@ -14,12 +14,12 @@ from orbitdeterminator.util import (state_kep, read_data)
 def cubic_spline(orbit_data):
     ''' Compute component wise cubic spline of points of input data
 
-        Args:
-            orbit_data (numpy array): array of orbit data points of the
-                 format [time, x, y, z]
+    Args:
+        orbit_data (numpy array): array of orbit data points of the
+        format [time, x, y, z]
 
-        Returns:
-            component wise cubic splines of orbit data points of the format [spline_x, spline_y, spline_z]
+    Returns:
+        component wise cubic splines of orbit data points of the format [spline_x, spline_y, spline_z]
     '''
     time = orbit_data[:,:1]
     coordinates = list([orbit_data[:,1:2], orbit_data[:,2:3], orbit_data[:,3:4]])

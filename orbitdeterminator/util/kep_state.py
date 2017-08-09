@@ -1,8 +1,5 @@
 '''
-Created by Alexandros Kazantzidis
-Date 25/05/17
-
-Keplerian to State: Take a set of keplerian elements (a, e, i, ω, Ω, v) and transfroms it into a state vector 
+Takes a set of keplerian elements (a, e, i, ω, Ω, v) and transforms it into a state vector
 (x, y, z, vx, vy, vz) where v is the velocity of the satellite
 '''
 
@@ -23,7 +20,7 @@ def kep_state(kep):
             kep(5): true anomaly (degrees)
 
     Returns:
-        r (numpy array): 1x6 matrix which contains the position and velocity vector
+        1x6 matrix which contains the position and velocity vector
         r(0),r(1),r(2): position vector (x,y,z) km
         r(3),r(4),r(5): velocity vector (vx,vy,vz) km/s
     '''

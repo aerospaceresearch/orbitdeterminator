@@ -16,13 +16,13 @@ from util import read_data
 def golay(data, window, degree):
     '''Apply the Savintzky-Golay filter to a positional data set.
 
-       Args:
-           data (numpy array): containing all of the positional data in the format of (time, x, y, z).
-           window (int): window size of the Savintzky-Golay filter.
-           degree (int): degree of the ploynomial in Savintzky-Golay filter.
+    Args:
+        data (numpy array): containing all of the positional data in the format of (time, x, y, z)
+        window (int): window size of the Savintzky-Golay filter
+        degree (int): degree of the polynomial in Savintzky-Golay filter
 
-        Returns:
-            Filtered data in the same format
+    Returns:
+        Filtered data in the same format
     '''
 
     x = data[:, 1]
