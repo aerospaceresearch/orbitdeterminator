@@ -1,6 +1,5 @@
 '''
-Author : Nilesh Chaturvedi
-Date Created : 21/05/2017
+Reads the positional data set from a .csv file
 '''
 
 import os
@@ -15,12 +14,11 @@ def load_data(filename):
     ''' Loads the data in numpy array for further processing.
 
     Args:
-        filename: name of the csv file to be parsed
+        filename (string): name of the csv file to be parsed
 
     Returns:
-        orbit: numpy array of the orbit positions.
-        Each point of the orbit is of the 
-        format : [timestamp, x-coordinate, y-coordinate, z-coordinate]
+        Array of the orbit positions, each point of the orbit is of the
+        format (time, x, y, z)
     '''
     orbit_file = list(csv.reader(open(filename, "r"), delimiter = "\t"))[1:]
 

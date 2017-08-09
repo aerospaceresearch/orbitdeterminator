@@ -1,18 +1,21 @@
+'''
+Takes a state vector (x, y, z, vx, vy, vz) where v is the velocity of the satellite
+and transforms it into a set of keplerian elements (a, e, i, ω, Ω, v)
+
+'''
+
 import numpy as np
 import math
 
 def state_kep(r, v):
     ''' Converts state vector to orbital elements.
 
-    Convert state vector to six classical orbital elements via equinoctial
-     elements.
-
     Args:
         r (numpy array): position vector
         v (numpy array): velocity vector
 
     Returns:
-        kep (numpy array): keplerian elements
+        array of the computed keplerian elements
         kep(0): semimajor axis (kilometers)
         kep(1): orbital eccentricity (non-dimensional)
                  (0 <= eccentricity < 1)
