@@ -56,6 +56,9 @@ def stage(processed):
         )
         print("File %s has been staged." % (file))
 
+def process(file):
+    for line in file:
+        print(line)
 
 def main():
 
@@ -67,8 +70,7 @@ def main():
             for file in raw_files:
                 print("processing")
                 with open(SOURCE_ABSOLUTE + "/" + file, "r") as a:
-                    for i in a:
-                        print(i)
+                    process(a) # Here is where you call the main function.
             stage(raw_files)
 
 
