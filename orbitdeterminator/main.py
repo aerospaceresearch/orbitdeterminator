@@ -4,8 +4,8 @@ and generates the final set of keplerian elements along with a plot and a filter
 '''
 
 
-from util import (read_data, kep_state, rkf78)
-from filters import (sav_golay, triple_moving_average, golay_window)
+from util import (read_data, kep_state, rkf78, golay_window)
+from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation)
 import numpy as np
 import pandas as pd

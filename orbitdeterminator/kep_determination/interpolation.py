@@ -19,7 +19,7 @@ def cubic_spline(orbit_data):
         format [time, x, y, z]
 
     Returns:
-        component wise cubic splines of orbit data points of the format [spline_x, spline_y, spline_z]
+        list: component wise cubic splines of orbit data points of the format [spline_x, spline_y, spline_z]
     '''
     time = orbit_data[:,:1]
     coordinates = list([orbit_data[:,1:2], orbit_data[:,2:3], orbit_data[:,3:4]])
@@ -37,7 +37,7 @@ def compute_velocity(spline, point):
         point (numpy array): point at which velocity is to be calculated.
 
     Returns:
-        velocity vector at the given point
+        numpy array: velocity vector at the given point
     '''
     velocity = list(map(lambda s, x:s(x, 1), spline, point))
 
@@ -50,7 +50,7 @@ def main(data_points):
         data_points (numpy array): positional data set in format of (x, y, z, time)
 
     Returns:
-        computed keplerian elements for every point of the orbit
+        numpy array: computed keplerian elements for every point of the orbit
     '''
 
     velocity_vectors = []

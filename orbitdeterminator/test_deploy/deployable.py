@@ -1,7 +1,4 @@
 """
-Author: Nilesh Chaturvedi
-Date Created: 19th July, 2017
-
 Method: 1. Initialize the source repository with git.
         2. Parse output of git-status to know new files added to this folder.
         3. Append the filenames of these files in a list and process the files.
@@ -22,7 +19,7 @@ def untracked_files():
     """Parses output of `git-status` and returns untracked files.
 
     Returns:
-        res (string): List of untracked files.
+        (string): list of untracked files.
     """
     res = run(
         "cd %s ; git status" % (SOURCE_ABSOLUTE),

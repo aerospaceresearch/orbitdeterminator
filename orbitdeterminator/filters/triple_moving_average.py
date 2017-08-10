@@ -22,7 +22,7 @@ def weighted_average(params):
         params (list): a list of numbers
 
     Returns:
-        Weighted average of the terms in the list
+        list: weighted average of the terms in the list
     '''
     weighted_sum = 0
     weight = len(params)
@@ -43,7 +43,7 @@ def triple_moving_average(signal_array, window_size):
         window_size (int): the no. of points before and after x0 which should be considered for calculating A and B
 
     Returns:
-       A filtered array of size same as that of signal_array
+       numpy array: a filtered array of size same as that of signal_array
     '''
     filtered_signal = []
     arr_len = len(signal_array)
@@ -64,7 +64,15 @@ def triple_moving_average(signal_array, window_size):
     return filtered_signal
 
 def generate_filtered_data(filename, window):
+    ''' Apply the filter and generate the filtered data
 
+    Args:
+        filename (string): the name of the .csv file containing the positional data
+        window (int): window size applied into the filter
+
+    Returns:
+        numpy array: the final filtered array
+    '''
     averaged_x = (triple_moving_average(list(filename[:,1]), window))
     averaged_y = triple_moving_average(list(filename[:,2]), window)
     averaged_z = triple_moving_average(list(filename[:,3]), window)

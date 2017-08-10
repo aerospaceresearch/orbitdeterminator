@@ -9,11 +9,11 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
-from subprocess import PIPE, run
+from subprocess import (PIPE, run)
 import matplotlib.pylab as plt
 
-from util import (read_data, kep_state, rkf78)
-from filters import (sav_golay, triple_moving_average, golay_window)
+from util import (read_data, kep_state, rkf78, golay_window)
+from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation)
 pd.set_option('display.width', 1000)
 

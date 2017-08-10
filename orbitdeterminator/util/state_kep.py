@@ -15,7 +15,7 @@ def state_kep(r, v):
         v (numpy array): velocity vector
 
     Returns:
-        array of the computed keplerian elements
+        numpy array: array of the computed keplerian elements
         kep(0): semimajor axis (kilometers)
         kep(1): orbital eccentricity (non-dimensional)
                  (0 <= eccentricity < 1)
