@@ -20,7 +20,7 @@ def kep_state(kep):
             kep(5): true anomaly (degrees)
 
     Returns:
-        1x6 matrix which contains the position and velocity vector
+        numpy array: 1x6 matrix which contains the position and velocity vector
         r(0),r(1),r(2): position vector (x,y,z) km
         r(3),r(4),r(5): velocity vector (vx,vy,vz) km/s
     '''

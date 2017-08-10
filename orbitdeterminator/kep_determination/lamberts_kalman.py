@@ -25,7 +25,7 @@ def orbit_trajectory(x1_new, x2_new, time):
         time (float): time difference between the 2 points
         
     Returns:
-        True if we want to keep retrogade, False if we want counter-clock wise
+        bool: true if we want to keep retrogade, False if we want counter-clock wise
     '''
 
     l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
@@ -56,7 +56,7 @@ def lamberts(x1, x2, traj):
         x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
 
     Returns:
-        velocity vector for point 1 (vx, vy, vz)
+        numpy array: velocity vector for point 1 (vx, vy, vz)
     '''
 
     x1_new = [1, 1, 1]
@@ -86,7 +86,7 @@ def check_keplerian(kep):
                           true anomaly (v)] format
      
     Returns:
-        The final corrected set of keplerian elements that will be inputed in the kalman filter
+        numpy array: the final corrected set of keplerian elements that will be inputed in the kalman filter
     '''
 
     kep_new = list()
@@ -118,7 +118,7 @@ def create_kep(my_data):
 
 
     Returns:
-        An array containing all the keplerian elements computed for the orbit given in
+        numpy array: array containing all the keplerian elements computed for the orbit given in
         [semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
         right ascension of the ascending node (Ω), true anomaly (v)] format
     '''
@@ -181,7 +181,7 @@ def create_kep(my_data):
     kep = np.zeros((len(store_i), 6))
     for i in range(0, len(final_r)):
         kep[i] = np.ravel(state_kep.state_kep(final_r[i], final_v[i]))
-
+    print(kep)
     kep = check_keplerian(kep)
     # np.savetxt("kep11.csv", kep, delimiter=",")
     return kep
@@ -199,7 +199,7 @@ def kalman(kep, R):
         R : estimate of measurement variance
 
     Returns:
-        One final set of keplerian elements describing the orbit based on kalman filtering
+        numpy array: final set of keplerian elements describing the orbit based on kalman filtering
     '''
     
     # first find the mean values for every keplerian element

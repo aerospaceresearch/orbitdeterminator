@@ -22,7 +22,7 @@ def golay(data, window, degree):
         degree (int): degree of the polynomial in Savintzky-Golay filter
 
     Returns:
-        Filtered data in the same format
+        numpy array: filtered data in the same format
     '''
 
     x = data[:, 1]
