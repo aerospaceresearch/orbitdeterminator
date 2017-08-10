@@ -19,10 +19,10 @@ def ypol_a(y):
         y (numpy array): state vector (position + velocity)
 
     Returns:
-        Derivative of the state vector (velocity + acceleration)
+        numpy array: derivative of the state vector (velocity + acceleration)
 
     '''
-    mu=398600.4405;
+    mu=398600.4405
     y_parag = np.zeros((6,1))
     agrav = np.zeros((3,1))
 
@@ -54,7 +54,7 @@ def rkf78(neq,ti,tf,h,tetol,x):
         x (numpy array): integration vector at time = ti
 
     Returns:
-        array of state vector at time tf
+        numpy array: array of state vector at time tf
     '''
 
     # allocate arrays
@@ -86,16 +86,16 @@ def rkf78(neq,ti,tf,h,tetol,x):
     alph[12,0] = 1
 
     beta[1,0] = 2.0 / 27
-    beta[2,0]  = 1.0 / 36
+    beta[2,0] = 1.0 / 36
     beta[3,0] = 1.0 / 24
     beta[4,0] = 5.0 / 12
-    beta[5,0]   = 0.05
+    beta[5,0] = 0.05
     beta[6,0] = -25.0 / 108
     beta[7,0] = 31.0 / 300
     beta[8,0] = 2.0
     beta[9,0] = -91.0 / 108
     beta[10,0] = 2383.0 / 4100
-    beta[11,0]  = 3.0 / 205
+    beta[11,0] = 3.0 / 205
     beta[12,0] = -1777.0 / 4100
     beta[2,1] = 1.0 / 12
     beta[3,2] = 1.0 / 8
@@ -116,7 +116,7 @@ def rkf78(neq,ti,tf,h,tetol,x):
     beta[12,4] = beta[10,4]
     beta[6,5] = 125.0 / 54
     beta[7,5] = -2.0 / 9
-    beta[8,5]  = -107.0 / 9
+    beta[8,5] = -107.0 / 9
     beta[9,5] = 311.0 / 54
     beta[10,5] = -301.0 / 82
     beta[11,5] = -6.0 / 41
@@ -134,21 +134,21 @@ def rkf78(neq,ti,tf,h,tetol,x):
     beta[12,7] = 51.0 / 82
     beta[9,8] = -1.0 / 12
     beta[10,8] = 45.0 / 164
-    beta[11,8]  = 3.0 / 41
+    beta[11,8] = 3.0 / 41
     beta[12,8] = 33.0 / 164
     beta[10,9] = 18.0 / 41
     beta[11,9] = 6.0 / 41
     beta[12,9] = 12.0 / 41
     beta[12,11] = 1.0
 
-    f = np.zeros((neq,13));
+    f = np.zeros((neq,13))
 
-    xdot = np.zeros((neq,1));
+    xdot = np.zeros((neq,1))
 
-    xwrk = np.zeros((neq, 1));
+    xwrk = np.zeros((neq, 1))
 
     # compute integration "direction"
-    dt=h
+    dt = h
 
     while True:
 
@@ -169,7 +169,7 @@ def rkf78(neq,ti,tf,h,tetol,x):
             return xout
 
         xdot = ypol_a(x)
-        xdot_tra=np.transpose(xdot)
+        xdot_tra = np.transpose(xdot)
         f[:, 0] = xdot_tra
 
         for k in range(1,13):
@@ -177,12 +177,12 @@ def rkf78(neq,ti,tf,h,tetol,x):
             for i in range(0,neq):
 
                 x[i,0] = xwrk[i,0] + dt * sum(beta[k, 0:k] * f[i, 0:k])
-                ti = twrk + alph[k,0] * dt;
-                xdot = ypol_a(x);
+                ti = twrk + alph[k,0] * dt
+                xdot = ypol_a(x)
                 xdot_tra=np.transpose(xdot)
-                f[:,k] = xdot_tra;
+                f[:,k] = xdot_tra
 
-        xerr = tetol;
+        xerr = tetol
         for i in range(0,neq):
             f_tra=np.transpose(f)
             x[i,0] = xwrk[i,0] + dt * sum(ch[:,0] * f_tra[:,i])
