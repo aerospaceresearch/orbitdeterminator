@@ -64,7 +64,8 @@ def triple_moving_average(signal_array, window_size):
     return filtered_signal
 
 def generate_filtered_data(filename, window):
-    ''' Apply the filter and generate the filtered data
+    '''
+    Apply the filter and generate the filtered data
 
     Args:
         filename (string): the name of the .csv file containing the positional data

@@ -1,5 +1,6 @@
 def c(error):
-    '''Calculates the constant c which is needed to determine the savintzky - golay filter window
+    '''
+    Calculates the constant c which is needed to determine the savintzky - golay filter window
     window = len(data) / c ,where c is a constant strongly related to the error contained in the data set
 
     Args:

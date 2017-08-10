@@ -8,7 +8,8 @@ from math import *
 
 
 def kep_state(kep):
-    ''' Converts the keplerian elements to position and velocity vector
+    '''
+    Converts the keplerian elements to position and velocity vector
 
     Args:
         kep(numpy array): a 1x6 matrix which contains the following variables

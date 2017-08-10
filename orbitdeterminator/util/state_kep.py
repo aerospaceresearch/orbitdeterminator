@@ -8,7 +8,8 @@ import numpy as np
 import math
 
 def state_kep(r, v):
-    ''' Converts state vector to orbital elements.
+    '''
+    Converts state vector to orbital elements.
 
     Args:
         r (numpy array): position vector

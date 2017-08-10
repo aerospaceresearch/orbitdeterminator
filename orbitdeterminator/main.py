@@ -13,7 +13,8 @@ import matplotlib.pylab as plt
 
 
 def process(data_file):
-    ''' Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
+    '''
+    Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
     file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
     the initial, filtered data set and the final orbit.
 
