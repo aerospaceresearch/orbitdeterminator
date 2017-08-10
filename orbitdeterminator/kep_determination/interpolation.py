@@ -12,7 +12,8 @@ from util import (state_kep, read_data)
 
 
 def cubic_spline(orbit_data):
-    ''' Compute component wise cubic spline of points of input data
+    '''
+    Compute component wise cubic spline of points of input data
 
     Args:
         orbit_data (numpy array): array of orbit data points of the
@@ -28,8 +29,9 @@ def cubic_spline(orbit_data):
     return splines
 
 def compute_velocity(spline, point):
-    ''' Calculate the derivative of spline at the point(on the points the
-     given spline corresponds to). This gives the velocity at that point.
+    '''
+    Calculate the derivative of spline at the point(on the points the
+    given spline corresponds to). This gives the velocity at that point.
 
     Args:
         spline (list): component wise cubic splines of orbit data points
@@ -44,7 +46,8 @@ def compute_velocity(spline, point):
     return np.array(velocity)
 
 def main(data_points):
-    ''' Apply the whole process of interpolation for keplerian element computation
+    '''
+    Apply the whole process of interpolation for keplerian element computation
 
     Args:
         data_points (numpy array): positional data set in format of (x, y, z, time)

@@ -10,7 +10,8 @@ np.set_printoptions(precision=16)
 
 
 def ypol_a(y):
-    ''' Computes velocity and acceleration values by using the state vector y and keplerian motion
+    '''
+    Computes velocity and acceleration values by using the state vector y and keplerian motion
 
     Args:
         y (numpy array): state vector (position + velocity)
@@ -40,7 +41,8 @@ def ypol_a(y):
 
 
 def rkf78(neq,ti,tf,h,tetol,x):
-    ''' Runge-Kutta-Fehlberg 7[8] method, solve first order system of differential equations
+    '''
+    Runge-Kutta-Fehlberg 7[8] method, solve first order system of differential equations
 
     Args:
         neq (int): number of differential equations

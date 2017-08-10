@@ -14,7 +14,8 @@ from util import read_data
 
 
 def golay(data, window, degree):
-    '''Apply the Savintzky-Golay filter to a positional data set.
+    '''
+    Apply the Savintzky-Golay filter to a positional data set.
 
     Args:
         data (numpy array): containing all of the positional data in the format of (time, x, y, z)

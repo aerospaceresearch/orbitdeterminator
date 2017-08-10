@@ -15,7 +15,8 @@ from math import *
 
 
 def orbit_trajectory(x1_new, x2_new, time):
-    '''Tool for checking if the motion of the sallite is retrogade or counter - clock wise
+    '''
+    Tool for checking if the motion of the sallite is retrogade or counter - clock wise
     
     Args:
         x1 (numpy array): time and position for point 1 [time1,x1,y1,z1]
@@ -46,8 +47,9 @@ def orbit_trajectory(x1_new, x2_new, time):
 
 
 def lamberts(x1, x2, traj):
-    '''Takes two position points - numpy arrays with time,x,y,z as elements
-       and produces two vectors with the state vector for both positions using Lamberts solution
+    '''
+    Takes two position points - numpy arrays with time,x,y,z as elements
+    and produces two vectors with the state vector for both positions using Lamberts solution
 
     Args:
         x1(numpy array): time and position for point 1 [time1,x1,y1,z1]
@@ -75,8 +77,9 @@ def lamberts(x1, x2, traj):
 
 
 def check_keplerian(kep):
-    '''Checks all the sets of keplerian elements to see if they have wrong values like eccentricity greater that 1 or
-       a negative number for semi major axis
+    '''
+    Checks all the sets of keplerian elements to see if they have wrong values like eccentricity greater that 1 or
+    a negative number for semi major axis
 
     Args:
         kep(numpy array): all the sets of keplerian elements in [semi major axis (a), eccentricity (e),
@@ -108,8 +111,9 @@ def check_keplerian(kep):
 
 
 def create_kep(my_data):
-    '''Computes all the keplerian elements for every point of the orbit you provide using Lambert's solution
-       It implements a tool for deleting all the points that give extremely jittery state vectors
+    '''
+    Computes all the keplerian elements for every point of the orbit you provide using Lambert's solution
+    It implements a tool for deleting all the points that give extremely jittery state vectors
 
     Args:
             data(numpy array) : contains the positional data set in (Time, x, y, z) Format

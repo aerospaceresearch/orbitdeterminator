@@ -20,12 +20,15 @@ from kep_determination import (lamberts_kalman, interpolation)
 SOURCE_ABSOLUTE = os.getcwd() + "/src"  # Absolute path of source directory
 os.system("cd %s; git init" % (SOURCE_ABSOLUTE))
 
+
 def untracked_files():
-    """Parses output of `git-status` and returns untracked files.
+    '''
+    Parses output of `git-status` and returns untracked files.
 
     Returns:
         res (string): List of untracked files.
-    """
+    '''
+
     res = run(
         "cd %s ; git status" % (SOURCE_ABSOLUTE),
         stdout=PIPE, stderr=PIPE,
@@ -42,7 +45,8 @@ def untracked_files():
     return files
 
 def stage(processed):
-    '''Stage the processed files into git file system
+    '''
+    Stage the processed files into git file system
 
     Agrs:
         processed (list): List of processed files.

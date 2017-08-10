@@ -11,7 +11,8 @@ _SOURCE = "../raw data"
 _DESTINATION = "../filtered data"
 
 def load_data(filename):
-    ''' Loads the data in numpy array for further processing.
+    '''
+    Loads the data in numpy array for further processing.
 
     Args:
         filename (string): name of the csv file to be parsed
@@ -31,7 +32,8 @@ def load_data(filename):
     return orbit
 
 def save_orbits(source, destination):
-    ''' Saves objects returned from load_data
+    '''
+    Saves objects returned from load_data
 
     Args:
         source: path to raw csv files.

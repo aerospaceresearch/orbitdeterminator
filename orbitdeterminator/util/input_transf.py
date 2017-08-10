@@ -9,7 +9,8 @@ from util import read_data
 from math import *
 
 def cart_to_spher(data):
-    ''' Takes as an input a data set containing points in cartesian format (time, x, y, z) and returns the computed
+    '''
+    Takes as an input a data set containing points in cartesian format (time, x, y, z) and returns the computed
     spherical coordinates (time, azimuth, elevation, r)
 
     Args:
@@ -36,7 +37,8 @@ def cart_to_spher(data):
 
 
 def spher_to_cart(data):
-    ''' Takes as an input a data set containing points in spherical format (time, azimuth, elevation, r) and
+    '''
+    Takes as an input a data set containing points in spherical format (time, azimuth, elevation, r) and
     returns the computed cartesian coordinates (time, x, y, z).
 
     Args:
