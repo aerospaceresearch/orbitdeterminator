@@ -17,7 +17,7 @@ def load_data(filename):
         filename (string): name of the csv file to be parsed
 
     Returns:
-        Array of the orbit positions, each point of the orbit is of the
+        numpy array: array of the orbit positions, each point of the orbit is of the
         format (time, x, y, z)
     '''
     orbit_file = list(csv.reader(open(filename, "r"), delimiter = "\t"))[1:]

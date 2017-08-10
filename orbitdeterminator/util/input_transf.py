@@ -16,7 +16,7 @@ def cart_to_spher(data):
         data (numpy array): containing the cartesian coordinates in format of (time, x, y, z)
 
     Returns:
-        Array of spherical coordinates in format of (time, azimuth, elevation, r)
+        numpy array: array of spherical coordinates in format of (time, azimuth, elevation, r)
     '''
 
     for i in range(0, len(data)):
@@ -43,7 +43,7 @@ def spher_to_cart(data):
         data (numpy array): containing the spherical coordinates in format of (time, azimuth, elevation, r)
 
     Returns:
-        Array of cartesian coordinates in format of (time, x, y, z)
+        numpy array: array of cartesian coordinates in format of (time, x, y, z)
     '''
 
     for i in range(0, len(data)):
