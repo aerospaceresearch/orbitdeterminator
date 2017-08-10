@@ -6,9 +6,6 @@ a time interval tf
 from math import *
 from decimal import *
 import numpy as np
-import pandas as pd
-pd.set_option('display.max_rows', 500)
-
 np.set_printoptions(precision=16)
 
 

@@ -8,10 +8,8 @@ from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation)
 import numpy as np
-import pandas as pd
 import matplotlib as mpl
 import matplotlib.pylab as plt
-pd.set_option('display.width', 1000)
 
 
 def process(data_file):
@@ -53,21 +51,14 @@ def process(data_file):
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
     res = data_after_filter[:, 1:4] - data[:, 1:4]
     sums = np.sum(res, axis=0)
-    df_sums = pd.DataFrame(sums)
-    df_sums = df_sums.rename(index={0: 'x axis', 1: 'y axis',
-                                    2: 'z axis'})
-    df_sums = df_sums.rename(columns={0: 'Sum of the residuals (km)'})
+    print("Displaying the sum of the residuals for each axis")
+    print(sums)
+    print(" ")
 
     means = np.mean(res, axis=0)
-    df_means = pd.DataFrame(means)
-    df_means = df_means.rename(index={0: 'x axis', 1: 'y axis',
-                                      2: 'z axis'})
-    df_means = df_means.rename(columns={0: 'Mean of the residuals (km)'})
-    print(df_sums)
+    print("Displaying the mean of the residuals for each axis")
+    print(means)
     print(" ")
-    print(df_means)
-    print(" ")
-
 
     # Save the filtered data into a new csv called "filtered"
     np.savetxt("filtered.csv", data_after_filter, delimiter=",")
@@ -97,13 +88,8 @@ def process(data_file):
 
 
     # Print the final orbital elements for both solutions
-    df = pd.DataFrame(kep_final)
-    df = df.rename(index={0: 'Semi major axis (km)', 1: 'Eccentricity (float number)', 2: 'Inclination (degrees)',
-                            3: 'Argument of perigee (degrees)', 4: 'Right ascension of the ascending node (degrees)',
-                            5: 'True anomally (degrees)'})
-    df = df.rename(columns={0: 'Lamberts Results', 1: 'Interpolation Results'})
-    print(df)
-
+    print("Displaying the final keplerian elements, first row : Lamberts, second row : Interpolation")
+    print(kep_final)
 
     # Plot the initial data set, the filtered data set and the final orbit
 
