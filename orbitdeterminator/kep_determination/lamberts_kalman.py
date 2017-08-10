@@ -12,8 +12,6 @@ import numpy as np
 import matplotlib.pylab as plt
 import PyKEP as pkp
 from math import *
-import pandas as pd
-pd.set_option('display.width', 1000)
 
 
 def orbit_trajectory(x1_new, x2_new, time):
@@ -181,7 +179,7 @@ def create_kep(my_data):
     kep = np.zeros((len(store_i), 6))
     for i in range(0, len(final_r)):
         kep[i] = np.ravel(state_kep.state_kep(final_r[i], final_v[i]))
-    print(kep)
+
     kep = check_keplerian(kep)
     # np.savetxt("kep11.csv", kep, delimiter=",")
     return kep
