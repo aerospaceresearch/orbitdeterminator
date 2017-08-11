@@ -1,0 +1,446 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orbitdeterminator.util.rkf78 &mdash; Orbit Determinator 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Orbit Determinator 1.0.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orbit Determinator
+          
+
+          
+            
+            <img src="../../../_static/icon.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Package info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Modules documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orbit Determinator</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orbitdeterminator.util.rkf78</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orbitdeterminator.util.rkf78</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Uses Runge Kutta Fehlberg 7(8) numerical integration method to compute the state vector in</span>
+<span class="sd">a time interval tf</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">decimal</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ypol_a"><a class="viewcode-back" href="../../../modules.html#orbitdeterminator.util.rkf78.ypol_a">[docs]</a><span class="k">def</span> <span class="nf">ypol_a</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Computes velocity and acceleration values by using the state vector y and keplerian motion</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y (numpy array): state vector (position + velocity)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array: derivative of the state vector (velocity + acceleration)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">mu</span><span class="o">=</span><span class="mf">398600.4405</span>
+    <span class="n">y_parag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">agrav</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">r2</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">r1</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">r2</span><span class="p">)</span>
+    <span class="n">r3</span> <span class="o">=</span> <span class="n">r2</span><span class="o">*</span><span class="n">r1</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">agrav</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">agrav</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">r3</span><span class="p">)</span>
+
+    <span class="n">y_parag</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_parag</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_parag</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">y</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_parag</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">agrav</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_parag</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">agrav</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_parag</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">agrav</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">y_parag</span></div>
+
+
+<div class="viewcode-block" id="rkf78"><a class="viewcode-back" href="../../../modules.html#orbitdeterminator.util.rkf78.rkf78">[docs]</a><span class="k">def</span> <span class="nf">rkf78</span><span class="p">(</span><span class="n">neq</span><span class="p">,</span><span class="n">ti</span><span class="p">,</span><span class="n">tf</span><span class="p">,</span><span class="n">h</span><span class="p">,</span><span class="n">tetol</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Runge-Kutta-Fehlberg 7[8] method, solve first order system of differential equations</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        neq (int): number of differential equations</span>
+<span class="sd">        ti (float): initial simulation time</span>
+<span class="sd">        tf (float): final simulation time</span>
+<span class="sd">        h (float): initial guess for integration step size</span>
+<span class="sd">        tetol (float): truncation error tolerance [non-dimensional]</span>
+<span class="sd">        x (numpy array): integration vector at time = ti</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array: array of state vector at time tf</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># allocate arrays</span>
+
+   <span class="c1"># define integration coefficients</span>
+
+    <span class="n">ch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">13</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">alph</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">13</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">13</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+
+    <span class="n">ch</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">34.0</span> <span class="o">/</span> <span class="mi">105</span>
+    <span class="n">ch</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">9.0</span> <span class="o">/</span> <span class="mi">35</span>
+    <span class="n">ch</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ch</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ch</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">9.0</span> <span class="o">/</span> <span class="mi">280</span>
+    <span class="n">ch</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ch</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ch</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">41.0</span> <span class="o">/</span> <span class="mi">840</span>
+    <span class="n">ch</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ch</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">alph</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="mi">27</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">9</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">6</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">/</span> <span class="mi">12</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">/</span> <span class="mi">6</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">6</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="mi">3</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">3</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">alph</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">beta</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="mi">27</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">36</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">24</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">/</span> <span class="mi">12</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">25.0</span> <span class="o">/</span> <span class="mi">108</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">31.0</span> <span class="o">/</span> <span class="mi">300</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">91.0</span> <span class="o">/</span> <span class="mi">108</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2383.0</span> <span class="o">/</span> <span class="mi">4100</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="o">/</span> <span class="mi">205</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1777.0</span> <span class="o">/</span> <span class="mi">4100</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">12</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">8</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">25.0</span> <span class="o">/</span> <span class="mi">16</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">beta</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.25</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">125.0</span> <span class="o">/</span> <span class="mi">108</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">53.0</span> <span class="o">/</span> <span class="mi">6</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">23.0</span> <span class="o">/</span> <span class="mi">108</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">341.0</span> <span class="o">/</span> <span class="mi">164</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">65.0</span> <span class="o">/</span> <span class="mi">27</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">61.0</span> <span class="o">/</span> <span class="mi">225</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">704.0</span> <span class="o">/</span> <span class="mi">45</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">976.0</span> <span class="o">/</span> <span class="mi">135</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4496.0</span> <span class="o">/</span> <span class="mi">1025</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">125.0</span> <span class="o">/</span> <span class="mi">54</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span> <span class="o">/</span> <span class="mi">9</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">107.0</span> <span class="o">/</span> <span class="mi">9</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">311.0</span> <span class="o">/</span> <span class="mi">54</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">301.0</span> <span class="o">/</span> <span class="mi">82</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">6.0</span> <span class="o">/</span> <span class="mi">41</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">289.0</span> <span class="o">/</span> <span class="mi">82</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mf">13.0</span> <span class="o">/</span> <span class="mi">900</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mf">67.0</span> <span class="o">/</span> <span class="mi">90</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">19.0</span> <span class="o">/</span> <span class="mi">60</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2133.0</span> <span class="o">/</span> <span class="mi">4100</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="mi">205</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2193.0</span> <span class="o">/</span> <span class="mi">4100</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.0</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="mf">17.0</span> <span class="o">/</span> <span class="mi">6</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="mf">45.0</span> <span class="o">/</span> <span class="mi">82</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="mi">41</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="mf">51.0</span> <span class="o">/</span> <span class="mi">82</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mi">12</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mf">45.0</span> <span class="o">/</span> <span class="mi">164</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="o">/</span> <span class="mi">41</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mf">33.0</span> <span class="o">/</span> <span class="mi">164</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="mf">18.0</span> <span class="o">/</span> <span class="mi">41</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="mf">6.0</span> <span class="o">/</span> <span class="mi">41</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="mf">12.0</span> <span class="o">/</span> <span class="mi">41</span>
+    <span class="n">beta</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span><span class="mi">11</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">neq</span><span class="p">,</span><span class="mi">13</span><span class="p">))</span>
+
+    <span class="n">xdot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">neq</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">xwrk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">neq</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># compute integration &quot;direction&quot;</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">h</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+    <span class="c1"># load &quot;working&quot; time and integration vector</span>
+
+        <span class="n">twrk</span> <span class="o">=</span> <span class="n">ti</span>
+        <span class="n">xwrk</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># check for last dt</span>
+
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tf</span> <span class="o">-</span> <span class="n">ti</span><span class="p">):</span>
+            <span class="n">dt</span> <span class="o">=</span> <span class="n">tf</span> <span class="o">-</span> <span class="n">ti</span>
+
+    <span class="c1"># check for end of integration period</span>
+
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ti</span> <span class="o">-</span> <span class="n">tf</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.00000001</span><span class="p">:</span>
+            <span class="n">xout</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="k">return</span> <span class="n">xout</span>
+
+        <span class="n">xdot</span> <span class="o">=</span> <span class="n">ypol_a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">xdot_tra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">xdot</span><span class="p">)</span>
+        <span class="n">f</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">xdot_tra</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">13</span><span class="p">):</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">neq</span><span class="p">):</span>
+
+                <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">xwrk</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">beta</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">])</span>
+                <span class="n">ti</span> <span class="o">=</span> <span class="n">twrk</span> <span class="o">+</span> <span class="n">alph</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span>
+                <span class="n">xdot</span> <span class="o">=</span> <span class="n">ypol_a</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">xdot_tra</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">xdot</span><span class="p">)</span>
+                <span class="n">f</span><span class="p">[:,</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">xdot_tra</span>
+
+        <span class="n">xerr</span> <span class="o">=</span> <span class="n">tetol</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">neq</span><span class="p">):</span>
+            <span class="n">f_tra</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">xwrk</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ch</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">f_tra</span><span class="p">[:,</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="c1"># truncation error calculations</span>
+
+            <span class="n">ter</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">((</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span> <span class="o">-</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">11</span><span class="p">]</span> <span class="o">-</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">12</span><span class="p">])</span> <span class="o">*</span> <span class="n">ch</span><span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">tetol</span> <span class="o">+</span> <span class="n">tetol</span>
+            <span class="n">tconst</span> <span class="o">=</span> <span class="n">ter</span> <span class="o">/</span> <span class="n">tol</span>
+
+        <span class="k">if</span> <span class="n">tconst</span> <span class="o">&gt;</span> <span class="n">xerr</span><span class="p">:</span> <span class="n">xerr</span> <span class="o">=</span> <span class="n">tconst</span>
+<span class="c1">##</span>
+        <span class="c1"># compute new step size</span>
+
+        <span class="n">dt</span> <span class="o">=</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">xerr</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mi">8</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">xerr</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># reject current step</span>
+            <span class="n">ti</span> <span class="o">=</span> <span class="n">twrk</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">xwrk</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">neq</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">ti</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="mf">100.0</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">tetol</span> <span class="o">=</span> <span class="mf">1e-04</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.51303397e+03</span><span class="p">],[</span><span class="o">-</span><span class="mf">2.48429276e+03</span><span class="p">],[</span><span class="mf">6.46549360e+03</span><span class="p">],[</span><span class="mf">2.99258730e+00</span><span class="p">],[</span><span class="o">-</span><span class="mf">6.15860507e+00</span><span class="p">],[</span><span class="o">-</span><span class="mf">3.06500279e+00</span><span class="p">]])</span>
+
+    <span class="n">xout</span> <span class="o">=</span> <span class="n">rkf78</span><span class="p">(</span><span class="n">neq</span><span class="p">,</span> <span class="n">ti</span><span class="p">,</span> <span class="n">tf</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">tetol</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">xout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">xout</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">xout</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">xout</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Nilesh Chaturvedi, Alexandros Kazantzidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

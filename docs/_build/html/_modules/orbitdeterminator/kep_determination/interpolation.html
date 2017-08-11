@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>orbitdeterminator.kep_determination.interpolation &mdash; Orbit Determinator 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Orbit Determinator 1.0.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Orbit Determinator
+          
+
+          
+            
+            <img src="../../../_static/icon.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Package info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Modules documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Orbit Determinator</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>orbitdeterminator.kep_determination.interpolation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for orbitdeterminator.kep_determination.interpolation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Interpolation using splines for calculating velocity at a point and hence the orbital elements</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">pardir</span><span class="p">)))</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">CubicSpline</span>
+
+<span class="kn">from</span> <span class="nn">util</span> <span class="k">import</span> <span class="p">(</span><span class="n">state_kep</span><span class="p">,</span> <span class="n">read_data</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cubic_spline"><a class="viewcode-back" href="../../../modules.html#orbitdeterminator.kep_determination.interpolation.cubic_spline">[docs]</a><span class="k">def</span> <span class="nf">cubic_spline</span><span class="p">(</span><span class="n">orbit_data</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute component wise cubic spline of points of input data</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        orbit_data (numpy array): array of orbit data points of the</span>
+<span class="sd">        format [time, x, y, z]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: component wise cubic splines of orbit data points of the format [spline_x, spline_y, spline_z]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">orbit_data</span><span class="p">[:,:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="n">orbit_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">orbit_data</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="n">orbit_data</span><span class="p">[:,</span><span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">]])</span>
+    <span class="n">splines</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">a</span><span class="p">:</span><span class="n">CubicSpline</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span><span class="n">a</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="n">coordinates</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">splines</span></div>
+
+<div class="viewcode-block" id="compute_velocity"><a class="viewcode-back" href="../../../modules.html#orbitdeterminator.kep_determination.interpolation.compute_velocity">[docs]</a><span class="k">def</span> <span class="nf">compute_velocity</span><span class="p">(</span><span class="n">spline</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the derivative of spline at the point(on the points the</span>
+<span class="sd">    given spline corresponds to). This gives the velocity at that point.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spline (list): component wise cubic splines of orbit data points</span>
+<span class="sd">             of the format [spline_x, spline_y, spline_z].</span>
+<span class="sd">        point (numpy array): point at which velocity is to be calculated.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array: velocity vector at the given point</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">velocity</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="n">s</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">spline</span><span class="p">,</span> <span class="n">point</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">velocity</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../modules.html#orbitdeterminator.kep_determination.interpolation.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">data_points</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Apply the whole process of interpolation for keplerian element computation</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data_points (numpy array): positional data set in format of (x, y, z, time)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numpy array: computed keplerian elements for every point of the orbit</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">velocity_vectors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">keplerians</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1">#for index in range(len(data_points)-1):</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">):</span>
+        <span class="c1"># Take a pair of points from data_points</span>
+        <span class="n">spline_input</span> <span class="o">=</span> <span class="n">data_points</span><span class="p">[</span><span class="n">index</span><span class="p">:</span><span class="n">index</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Calculate spline corresponding to these two points</span>
+        <span class="n">spline</span> <span class="o">=</span> <span class="n">cubic_spline</span><span class="p">(</span><span class="n">spline_input</span><span class="p">)</span>
+
+        <span class="c1"># Calculate velocity corresponding 1st of the 2 points of spline_input</span>
+        <span class="n">velocity</span> <span class="o">=</span> <span class="n">compute_velocity</span><span class="p">(</span><span class="n">spline</span><span class="p">,</span> <span class="n">spline_input</span><span class="p">[</span><span class="mi">0</span><span class="p">:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Calculate keplerian elements correspong to the state vector(position, velocity)</span>
+        <span class="n">orbital_elements</span> <span class="o">=</span> <span class="n">state_kep</span><span class="o">.</span><span class="n">state_kep</span><span class="p">(</span><span class="n">spline_input</span><span class="p">[</span><span class="mi">0</span><span class="p">:,</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">velocity</span><span class="p">)</span>
+
+        <span class="n">velocity_vectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">velocity</span><span class="p">)</span>
+        <span class="n">keplerians</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">orbital_elements</span><span class="p">)</span>
+
+    <span class="c1"># Uncomment the below statement to save the velocity vectors in a csv file.</span>
+    <span class="c1"># np.savetxt(&#39;velo.csv&#39;, velocity_vectors, delimiter=&quot;,&quot;)</span>
+
+    <span class="c1"># Take average of the keplerian elements corresponding to all the state vectors</span>
+    <span class="c1"># orbit = np.array(keplerians).mean(axis=0)</span>
+    <span class="n">keplerians</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">keplerians</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">keplerians</span></div>
+
+<span class="c1">#</span>
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#</span>
+<span class="c1">#     main()</span>
+ 
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Nilesh Chaturvedi, Alexandros Kazantzidis.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
