@@ -96,7 +96,14 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Package info</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Modules documentation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-program-with-main-py">Run the program with main.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#process">Process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#results">Results</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -162,7 +169,68 @@
             
   <div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<p>This will be the example page</p>
+<div class="section" id="run-the-program-with-main-py">
+<h2>Run the program with main.py<a class="headerlink" href="#run-the-program-with-main-py" title="Permalink to this headline">¶</a></h2>
+<p>For the first example we will showcase how you can use the full features of the package
+with main.py. Simply executing the main.py by giving the name of .csv file that contains
+the positional data of the satellite, as an argument in the function process(data_file):</p>
+<dl class="docutils">
+<dt>def process(data_file):</dt>
+<dd><p class="first">‘’’
+Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
+file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
+the initial, filtered data set and the final orbit.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>data_file (string): The name of the .csv file containing the positional data</dd>
+<dt>Returns:</dt>
+<dd>Runs the whole process of the program</dd>
+</dl>
+<p class="last">‘’‘</p>
+</dd>
+</dl>
+<p>Simply input the name of the .csv file in the format of (time, x, y, z) like the orbit.csv that is located
+in the example data folder inside the orbitdeterminator package and the process will run:</p>
+<p>run = process(“orbit.csv”)</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If the format of you data is (time, azimuth, elevation, distance) you can must the input_transf function first</p>
+</div>
+<p>The process that will run with the use of the process function is, first the program reads your data from the .csv file
+then, applies both filters (Triple moving average and Savintzky - Golay), generates a .csv file called filtered, that included the filtered data set,
+computes the keplerian elements of the orbit with both methods (Lamberts - Kalman and Spline Interpolation) and finally prints and plots some results.
+More specifically, the results printed by this process will be first the sum and mean value of the residuals
+(difference between filtered and initial data), the computed keplerian elements in format of (a - semi major axis,
+e - eccentricity, i - inclination, ω - argument of perigee, Ω - right ascension of the ascending node,
+v - true anomaly) and a 3d matplotlib graph that plots the initial, filtered data set and the final computed orbit
+described by the keplerian elements (via the interpolation method).</p>
+<div class="section" id="process">
+<h3>Process<a class="headerlink" href="#process" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Reads the data</li>
+<li>Uses both filters on them (Triple moving average and Savintzky - Golay )</li>
+<li>Generates a .csv file called filtered that includes the filtered data set</li>
+<li>Computes keplerian elements with both methods (Lamberts - Kalman and Spline Interpolation)</li>
+<li>Prints results and plot a 3d matplotlib graph</li>
+</ul>
+</div>
+<div class="section" id="results">
+<h3>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Sum and mean of the residuals (differences between filtered and initial data set)</li>
+<li>Final keplerian elements from both methods (first column : Lamberts - Kalman, second column : Spline Interpolation)</li>
+<li>3d matplotlib graph with the initial, filtered data set and the final orbit described by the keplerian elements from Spline Interpolation</li>
+</ul>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Measurement unit for distance is kilometer and for angle degrees</p>
+</div>
+<p>The output should look like the following image.</p>
+<div class="figure">
+<img alt="_images/results.jpg" src="_images/results.jpg" />
+</div>
+</div>
+</div>
 </div>
 
 
