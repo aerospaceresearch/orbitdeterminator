@@ -12,6 +12,7 @@ This will be the first page
    :maxdepth: 2
    :caption: Contents:
 
+   introduction.rst
    modules.rst
    examples.rst
 
