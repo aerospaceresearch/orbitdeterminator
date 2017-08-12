@@ -15,6 +15,10 @@ def c(error):
     else:
         c = (- 0.046725 * error) + 13.102
 
+    c = int(c)
+    if (c % 2) == 0:
+        c = c + 1
+
     return c
 
 

@@ -184,7 +184,7 @@
 <span class="sd">        numpy array: array of the orbit positions, each point of the orbit is of the</span>
 <span class="sd">        format (time, x, y, z)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">orbit_file</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">),</span> <span class="n">delimiter</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">))[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">orbit_file</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">),</span> <span class="n">delimiter</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">))</span>
 
     <span class="n">orbit</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">orbit_file</span><span class="p">:</span>

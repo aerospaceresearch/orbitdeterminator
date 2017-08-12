@@ -61,23 +61,17 @@ def stage(processed):
         )
         print("File %s has been staged." % (file))
 
-def process(data_file):
+def process(data_file, error_apriori):
     # First read the csv file called "orbit" with the positional data
     data = data_file
-    # data = np.genfromtxt("orbit.csv")
-    data = data[1:, :]
-    data[:, 1:4] = data[:, 1:4] / 1000
+
 
     # Apply the Triple moving average filter with window = 3
     data_after_filter = triple_moving_average.generate_filtered_data(data, 3)
 
 
     ## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
-    error_apriori = 20  # input the a-priori error estimation for the data set
     c = golay_window.c(error_apriori)
-    c = int(c)
-    if (c % 2) == 0:
-        c = c + 1
     window = len(data) / c
     window = int(window)
 
@@ -166,7 +160,7 @@ def main():
             for file in raw_files:
                 print("processing")
                 a = read_data.load_data(SOURCE_ABSOLUTE + "/" + file)
-                process(a)
+                process(a, 20.0)
                 print("File : %s has been processed \n \n" % a)
             stage(raw_files)
 
