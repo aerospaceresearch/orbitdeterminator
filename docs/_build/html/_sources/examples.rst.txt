@@ -1,5 +1,5 @@
-Examples
-========
+Tutorials
+=========
 
 Run the program with main.py
 ----------------------------
