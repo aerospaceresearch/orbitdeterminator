@@ -22,17 +22,16 @@ the positional data of the satellite, as an argument in the function process(dat
             Runs the whole process of the program
         '''
 
-Simply input the name of the .csv file in the format of (time, x, y, z) like the orbit.csv that is located
-in the  orbitdeterminator package alongside main.py and the process will run. You also need
-to input a apriori estimation of the measurements errors which in the example case is 20km per point (points
-every 1 second). In the case you are using your own positional data set you need to estimate this value and input
-it because it is critical for the filtering process::
+Simply input the name of the .csv file in the format of (time, x, y, z) and **tab delimiter** like the orbit.csv that is
+located in the src folder and the process will run. You also need to input a apriori estimation of the measurements
+errors, which in the example case is 20km per point (points every 1 second). In the case you are using your own
+positional data set you need to estimate this value and input it because it is critical for the filtering process::
 
     run = process("orbit.csv")
 
 .. warning::
 
-   If the format of you data is (time, azimuth, elevation, distance) you can use the input_transf function first
+   If the format of you data is (time, azimuth, elevation, distance) you can use the input_transf function first and be sure that the delimiter for the data file is tab delimiter since this is the one read_data supports.
 
 The process that will run with the use of the process function is, first the program reads your data from the .csv file
 then, applies both filters (Triple moving average and Savintzky - Golay), generates a .csv file called filtered, that included the filtered data set,
@@ -74,7 +73,7 @@ Using certain modules
 
 In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
 path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
-located inside the orbitdeterminator package.
+located inside the src folder and has **tab delimeter** (read_data.py reads with this delimiter).
 
 Process
 ~~~~~~~
