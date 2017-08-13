@@ -29,14 +29,17 @@ def process(data_file, error_apriori):
     data = read_data.load_data(data_file)
 
 
+    # Transform m to km
+    data[:, 1:4] = data[:, 1:4] / 1000
+
+
     # Apply the Triple moving average filter with window = 3
     data_after_filter = triple_moving_average.generate_filtered_data(data, 3)
 
 
     ## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
-    c = golay_window.c(error_apriori)
-    window = len(data) / c
-    window = int(window)
+    window = golay_window.window(error_apriori, data_after_filter)
+
 
 
     # Apply the Savintzky - Golay filter with window = 31 and polynomail parameter = 6
@@ -126,5 +129,5 @@ def process(data_file, error_apriori):
 
 if __name__ == "__main__":
 
-    run = process("orbit.csv", 20.0)
+    run = process("orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv", 10.0)
 
