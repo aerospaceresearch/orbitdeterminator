@@ -12,7 +12,7 @@ _DESTINATION = "../filtered data"
 
 def load_data(filename):
     '''
-    Loads the data in numpy array for further processing.
+    Loads the data in numpy array for further processing in tab delimiter format
 
     Args:
         filename (string): name of the csv file to be parsed
