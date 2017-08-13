@@ -194,7 +194,7 @@ the positional data of the satellite, as an argument in the function process(dat
 </pre></div>
 </div>
 <p>Simply input the name of the .csv file in the format of (time, x, y, z) like the orbit.csv that is located
-in the example data folder inside the orbitdeterminator package and the process will run. You also need
+in the  orbitdeterminator package alongside main.py and the process will run. You also need
 to input a apriori estimation of the measurements errors which in the example case is 20km per point (points
 every 1 second). In the case you are using your own positional data set you need to estimate this value and input
 it because it is critical for the filtering process:</p>
@@ -242,9 +242,9 @@ described by the keplerian elements (via the interpolation method).</p>
 </div>
 <div class="section" id="using-certain-modules">
 <h2>Using certain modules<a class="headerlink" href="#using-certain-modules" title="Permalink to this headline">¶</a></h2>
-<p>In this example we are not going to use that main.py, but some of the main modules provided. First of all lets clear
+<p>In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
 path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
-located in the example data folder inside the orbitdeterminator package.</p>
+located inside the orbitdeterminator package.</p>
 <div class="section" id="id1">
 <h3>Process<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
@@ -254,7 +254,7 @@ located in the example data folder inside the orbitdeterminator package.</p>
 </ul>
 <p>So first we read the data using the util/read_data.load_data function. Just input the .csv file name into the
 function and it will create a numpy array with the positional data ready to be processed:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">read_data</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">data_file</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">read_data</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s2">&quot;orbit.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -271,7 +271,8 @@ the second filter to the data set which will be of a larger window size so that 
 a larger scale. The optimal window size for the Savintzky - Golay filter is being computed by the function
 golay_window.c(error_apriori) in which we only have to input the apriori error estimation for the initial data set
 (or the measurements error):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">golay_window</span><span class="o">.</span><span class="n">c</span><span class="p">(</span><span class="n">error_apriori</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">error_apriori</span> <span class="o">=</span> <span class="mf">20.0</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">golay_window</span><span class="o">.</span><span class="n">c</span><span class="p">(</span><span class="n">error_apriori</span><span class="p">)</span>
 
 <span class="n">window</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="n">c</span>
 <span class="n">window</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
@@ -294,6 +295,10 @@ Lamberts - Kalman and Spline interpolation algorithms so that the final kepleria
 The output format is (semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
 right ascension of the ascending node (Ω), true anomaly (v)). So finally, in the variables kep_final_lamb and
 kep_final_inter a numpy array 1x6 has the final computed keplerian elements.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If the orbit you want to compute is polar (i = 90) then we suggest you to use only the interpolation method.</p>
+</div>
 </div>
 </div>
 </div>

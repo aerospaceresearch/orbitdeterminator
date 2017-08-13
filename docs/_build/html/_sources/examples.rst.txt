@@ -23,7 +23,7 @@ the positional data of the satellite, as an argument in the function process(dat
         '''
 
 Simply input the name of the .csv file in the format of (time, x, y, z) like the orbit.csv that is located
-in the example data folder inside the orbitdeterminator package and the process will run. You also need
+in the  orbitdeterminator package alongside main.py and the process will run. You also need
 to input a apriori estimation of the measurements errors which in the example case is 20km per point (points
 every 1 second). In the case you are using your own positional data set you need to estimate this value and input
 it because it is critical for the filtering process::
@@ -72,9 +72,9 @@ The output should look like the following image.
 Using certain modules
 ---------------------
 
-In this example we are not going to use that main.py, but some of the main modules provided. First of all lets clear
+In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
 path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
-located in the example data folder inside the orbitdeterminator package.
+located inside the orbitdeterminator package.
 
 Process
 ~~~~~~~
@@ -85,7 +85,7 @@ Process
 So first we read the data using the util/read_data.load_data function. Just input the .csv file name into the
 function and it will create a numpy array with the positional data ready to be processed::
 
-    data = read_data.load_data(data_file)
+    data = read_data.load_data("orbit.csv")
 
 .. warning::
 
@@ -102,6 +102,7 @@ a larger scale. The optimal window size for the Savintzky - Golay filter is bein
 golay_window.c(error_apriori) in which we only have to input the apriori error estimation for the initial data set
 (or the measurements error)::
 
+    error_apriori = 20.0
     c = golay_window.c(error_apriori)
 
     window = len(data) / c
@@ -124,3 +125,7 @@ With the above 4 lines of code the final set of 6 keplerian elements is computed
 The output format is (semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
 right ascension of the ascending node (Ω), true anomaly (v)). So finally, in the variables kep_final_lamb and
 kep_final_inter a numpy array 1x6 has the final computed keplerian elements.
+
+.. warning::
+
+   If the orbit you want to compute is polar (i = 90) then we suggest you to use only the interpolation method.
