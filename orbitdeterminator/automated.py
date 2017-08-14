@@ -1,8 +1,8 @@
 '''
 Server Version of Main.py
 Runs the whole process in one file
-Input a .csv positional data file (time, x, y, z) and this script generated the final set of keplerian elements
-along with a plot and a filtered.csv data file
+Input a .csv positional data file (time, x, y, z) and this script generates the final set of keplerian elements
+along with a plot and a filtered csv data file. Both the generated results lie in a folder named dst. 
 '''
 
 import os
@@ -41,7 +41,6 @@ def untracked_files():
              for file in result if (file.endswith(".csv")
              and not (file.startswith("new file") or
              file.startswith("deleted") or file.startswith("modified")))]
-
     return files
 
 def stage(processed):
@@ -61,7 +60,7 @@ def stage(processed):
         )
         print("File %s has been staged." % (file))
 
-def process(data_file):
+def process(data_file, name):
     # First read the csv file called "orbit" with the positional data
     data = data_file
     # data = np.genfromtxt("orbit.csv")
@@ -100,7 +99,7 @@ def process(data_file):
 
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt("filtered.csv", data_after_filter, delimiter=",")
+    np.savetxt(os.getcwd() + "/dst/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
     # Apply Lambert's solution for the filtered data set
     kep_lamb = lamberts_kalman.create_kep(data_after_filter)
     # Apply the interpolation method
@@ -166,8 +165,8 @@ def main():
             for file in raw_files:
                 print("processing")
                 a = read_data.load_data(SOURCE_ABSOLUTE + "/" + file)
-                process(a)
-                print("File : %s has been processed \n \n" % a)
+                process(a, str(file)[:-4])
+                print("File : %s has been processed \n \n" % file)
             stage(raw_files)
 
 if __name__ == "__main__":
