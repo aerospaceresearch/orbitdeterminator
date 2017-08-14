@@ -1,4 +1,4 @@
-def c(error):
+def window(error, data):
     '''
     Calculates the constant c which is needed to determine the savintzky - golay filter window
     window = len(data) / c ,where c is a constant strongly related to the error contained in the data set
@@ -15,9 +15,16 @@ def c(error):
     else:
         c = (- 0.046725 * error) + 13.102
 
-    return c
+    c = int(c)
+
+    window = len(data) / c
+    window = int(window)
+    if (window % 2) == 0:
+        window = window + 1
+
+    return window
 
 
 if __name__ == "__main__":
     x_error = 10   # x_error = 10 means, 10km a-priori error estimation, for points with time difference of 1 second
-    print(c(x_error))
+    print(window(x_error))

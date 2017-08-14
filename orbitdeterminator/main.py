@@ -12,7 +12,7 @@ import matplotlib as mpl
 import matplotlib.pylab as plt
 
 
-def process(data_file):
+def process(data_file, error_apriori):
     '''
     Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
     file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
@@ -20,14 +20,16 @@ def process(data_file):
 
     Args:
         data_file (string): The name of the .csv file containing the positional data
+        error_apriori (float): apriori estimation of the measurements error in km
 
     Returns:
         Runs the whole process of the program
     '''
     # First read the csv file called "orbit" with the positional data
     data = read_data.load_data(data_file)
-    # data = np.genfromtxt("orbit.csv")
-    data = data[1:, :]
+
+
+    # Transform m to km
     data[:, 1:4] = data[:, 1:4] / 1000
 
 
@@ -36,13 +38,8 @@ def process(data_file):
 
 
     ## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
-    error_apriori = 20  # input the a-priori error estimation for the data set
-    c = golay_window.c(error_apriori)
-    c = int(c)
-    if (c % 2) == 0:
-        c = c + 1
-    window = len(data) / c
-    window = int(window)
+    window = golay_window.window(error_apriori, data_after_filter)
+
 
 
     # Apply the Savintzky - Golay filter with window = 31 and polynomail parameter = 6
@@ -132,5 +129,5 @@ def process(data_file):
 
 if __name__ == "__main__":
 
-    run = process("orbit.csv")
+    run = process("orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv", 10.0)
 

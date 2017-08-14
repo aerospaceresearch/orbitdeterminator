@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Examples &mdash; Orbit Determinator 1.0.0 documentation</title>
+  <title>Tutorials &mdash; Orbit Determinator 1.0.0 documentation</title>
   
 
   
@@ -96,10 +96,14 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Package info</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Modules documentation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#run-the-program-with-main-py">Run the program with main.py</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#process">Process</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#results">Results</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#using-certain-modules">Using certain modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Process</a></li>
 </ul>
 </li>
 </ul>
@@ -148,7 +152,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Examples</li>
+      <li>Tutorials</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -167,34 +171,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="run-the-program-with-main-py">
 <h2>Run the program with main.py<a class="headerlink" href="#run-the-program-with-main-py" title="Permalink to this headline">¶</a></h2>
 <p>For the first example we will showcase how you can use the full features of the package
 with main.py. Simply executing the main.py by giving the name of .csv file that contains
 the positional data of the satellite, as an argument in the function process(data_file):</p>
-<dl class="docutils">
-<dt>def process(data_file):</dt>
-<dd><p class="first">‘’’
-Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
-file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
-the initial, filtered data set and the final orbit.</p>
-<dl class="docutils">
-<dt>Args:</dt>
-<dd>data_file (string): The name of the .csv file containing the positional data</dd>
-<dt>Returns:</dt>
-<dd>Runs the whole process of the program</dd>
-</dl>
-<p class="last">‘’‘</p>
-</dd>
-</dl>
-<p>Simply input the name of the .csv file in the format of (time, x, y, z) like the orbit.csv that is located
-in the example data folder inside the orbitdeterminator package and the process will run:</p>
-<p>run = process(“orbit.csv”)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">error_apriori</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data</span>
+<span class="sd">    file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots</span>
+<span class="sd">    the initial, filtered data set and the final orbit.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data_file (string): The name of the .csv file containing the positional data</span>
+<span class="sd">        error_apriori (float): apriori estimation of the measurements error in km</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Runs the whole process of the program</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<p>Simply input the name of the .csv file in the format of (time, x, y, z) and <strong>tab delimiter</strong> like the orbit.csv that is
+located in the src folder and the process will run. You also need to input a apriori estimation of the measurements
+errors, which in the example case is 20km per point (points every 1 second). In the case you are using your own
+positional data set you need to estimate this value and input it because it is critical for the filtering process:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">run</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s2">&quot;orbit.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">If the format of you data is (time, azimuth, elevation, distance) you can must the input_transf function first</p>
+<p class="last">If the format of you data is (time, azimuth, elevation, distance) you can use the input_transf function first and be sure that the delimiter for the data file is tab delimiter since this is the one read_data supports.</p>
 </div>
 <p>The process that will run with the use of the process function is, first the program reads your data from the .csv file
 then, applies both filters (Triple moving average and Savintzky - Golay), generates a .csv file called filtered, that included the filtered data set,
@@ -228,6 +236,67 @@ described by the keplerian elements (via the interpolation method).</p>
 <p>The output should look like the following image.</p>
 <div class="figure">
 <img alt="_images/results.jpg" src="_images/results.jpg" />
+</div>
+</div>
+</div>
+<div class="section" id="using-certain-modules">
+<h2>Using certain modules<a class="headerlink" href="#using-certain-modules" title="Permalink to this headline">¶</a></h2>
+<p>In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
+path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
+located inside the src folder and has <strong>tab delimeter</strong> (read_data.py reads with this delimiter).</p>
+<div class="section" id="id1">
+<h3>Process<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Read the data</li>
+<li>Filter the data</li>
+<li>Compute keplerian elements for the final orbit</li>
+</ul>
+<p>So first we read the data using the util/read_data.load_data function. Just input the .csv file name into the
+function and it will create a numpy array with the positional data ready to be processed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">read_data</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s2">&quot;orbit.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If the format of you data is (time, azimuth, elevation, distance) you can use the util/input_transf.spher_to_cart
+function first. And it is critical for the x, y, z to be in kilometers.</p>
+</div>
+<p>We continue by applying the Triple moving average filter:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data_after_filter</span> <span class="o">=</span> <span class="n">triple_moving_average</span><span class="o">.</span><span class="n">generate_filtered_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We suggest using 3 as the window size of the filter. Came to this conclusion after a lot of testing. Next we apply
+the second filter to the data set which will be of a larger window size so that we can smooth the data set in
+a larger scale. The optimal window size for the Savintzky - Golay filter is being computed by the function
+golay_window.c(error_apriori) in which we only have to input the apriori error estimation for the initial data set
+(or the measurements error):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">error_apriori</span> <span class="o">=</span> <span class="mf">20.0</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">golay_window</span><span class="o">.</span><span class="n">c</span><span class="p">(</span><span class="n">error_apriori</span><span class="p">)</span>
+
+<span class="n">window</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="n">c</span>
+<span class="n">window</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The other 2 lines after the use of the golay_window.c(error_apriori) are needed to compute the window size for the
+Savintzky - Golay filter and again for the polynomial parameter of the filter we suggest using 3:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data_after_filter</span> <span class="o">=</span> <span class="n">sav_golay</span><span class="o">.</span><span class="n">golay</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At this point we have the filtered positional data set ready to be inputed into the
+Lamberts - Kalman and Spline interpolation algorithms so that the final keplerian elements can be computed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">kep_lamb</span> <span class="o">=</span> <span class="n">lamberts_kalman</span><span class="o">.</span><span class="n">create_kep</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">)</span>
+<span class="n">kep_final_lamb</span> <span class="o">=</span> <span class="n">lamberts_kalman</span><span class="o">.</span><span class="n">kalman</span><span class="p">(</span><span class="n">kep_lamb</span><span class="p">,</span> <span class="mf">0.01</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">kep_inter</span> <span class="o">=</span> <span class="n">interpolation</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">)</span>
+<span class="n">kep_final_inter</span> <span class="o">=</span> <span class="n">lamberts_kalman</span><span class="o">.</span><span class="n">kalman</span><span class="p">(</span><span class="n">kep_inter</span><span class="p">,</span> <span class="mf">0.01</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With the above 4 lines of code the final set of 6 keplerian elements is computed by the two methods.
+The output format is (semi major axis (a), eccentricity (e), inclination (i), argument of perigee (ω),
+right ascension of the ascending node (Ω), true anomaly (v)). So finally, in the variables kep_final_lamb and
+kep_final_inter a numpy array 1x6 has the final computed keplerian elements.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If the orbit you want to compute is polar (i = 90) then we suggest you to use only the interpolation method.</p>
 </div>
 </div>
 </div>
