@@ -140,20 +140,20 @@ def process(data_file, name):
         tf = tf + 1
     positions = keep_state[0:3, :]
 
-    ## Finally we plot the graph
-    # mpl.rcParams['legend.fontsize'] = 10
-    # fig = plt.figure()
-    # ax = fig.gca(projection='3d')
-    # ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-    # ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-    # 		label='Filtered data')
-    # ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after Interpolation method')
-    # ax.legend()
-    # ax.can_zoom()
-    # ax.set_xlabel('x (km)')
-    # ax.set_ylabel('y (km)')
-    # ax.set_zlabel('z (km)')
-    # plt.show()
+    mpl.rcParams['legend.fontsize'] = 10
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
+    ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
+    		label='Filtered data')
+    ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after Interpolation method')
+    ax.legend()
+    ax.can_zoom()
+    ax.set_xlabel('x (km)')
+    ax.set_ylabel('y (km)')
+    ax.set_zlabel('z (km)')
+    #plt.show()
+    plt.savefig(os.getcwd() + "/dst/" + '%s.svg' %(name), format="svg")
 
 def main():
 
