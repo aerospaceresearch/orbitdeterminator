@@ -1,8 +1,8 @@
 '''
 Server Version of Main.py
 Runs the whole process in one file
-Input a .csv positional data file (time, x, y, z) and this script generated the final set of keplerian elements
-along with a plot and a filtered.csv data file
+Input a .csv positional data file (time, x, y, z) and this script generates the final set of keplerian elements
+along with a plot and a filtered csv data file. Both the generated results lie in a folder named dst. 
 '''
 
 import os
@@ -41,7 +41,6 @@ def untracked_files():
              for file in result if (file.endswith(".csv")
              and not (file.startswith("new file") or
              file.startswith("deleted") or file.startswith("modified")))]
-
     return files
 
 def stage(processed):
@@ -61,7 +60,9 @@ def stage(processed):
         )
         print("File %s has been staged." % (file))
 
+        
 def process(data_file, error_apriori):
+  
     # First read the csv file called "orbit" with the positional data
     data = data_file
 
@@ -94,7 +95,7 @@ def process(data_file, error_apriori):
 
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt("filtered.csv", data_after_filter, delimiter=",")
+    np.savetxt(os.getcwd() + "/dst/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
     # Apply Lambert's solution for the filtered data set
     kep_lamb = lamberts_kalman.create_kep(data_after_filter)
     # Apply the interpolation method
@@ -135,20 +136,20 @@ def process(data_file, error_apriori):
         tf = tf + 1
     positions = keep_state[0:3, :]
 
-    ## Finally we plot the graph
-    # mpl.rcParams['legend.fontsize'] = 10
-    # fig = plt.figure()
-    # ax = fig.gca(projection='3d')
-    # ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-    # ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-    # 		label='Filtered data')
-    # ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after Interpolation method')
-    # ax.legend()
-    # ax.can_zoom()
-    # ax.set_xlabel('x (km)')
-    # ax.set_ylabel('y (km)')
-    # ax.set_zlabel('z (km)')
-    # plt.show()
+    mpl.rcParams['legend.fontsize'] = 10
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
+    ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
+    		label='Filtered data')
+    ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after Interpolation method')
+    ax.legend()
+    ax.can_zoom()
+    ax.set_xlabel('x (km)')
+    ax.set_ylabel('y (km)')
+    ax.set_zlabel('z (km)')
+    #plt.show()
+    plt.savefig(os.getcwd() + "/dst/" + '%s.svg' %(name), format="svg")
 
 def main():
 
@@ -160,8 +161,9 @@ def main():
             for file in raw_files:
                 print("processing")
                 a = read_data.load_data(SOURCE_ABSOLUTE + "/" + file)
-                process(a, 20.0)
-                print("File : %s has been processed \n \n" % a)
+
+                process(a, str(file)[:-4])
+                print("File : %s has been processed \n \n" % file)
             stage(raw_files)
 
 if __name__ == "__main__":
