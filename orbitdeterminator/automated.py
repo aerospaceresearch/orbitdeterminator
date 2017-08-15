@@ -61,7 +61,7 @@ def stage(processed):
         print("File %s has been staged." % (file))
 
         
-def process(data_file, error_apriori):
+def process(data_file, error_apriori, name):
   
     # First read the csv file called "orbit" with the positional data
     data = data_file
@@ -160,7 +160,7 @@ def main():
                 print("processing")
                 a = read_data.load_data(SOURCE_ABSOLUTE + "/" + file)
 
-                process(a, str(file)[:-4])
+                process(a, 10.0, str(file)[:-4])
                 print("File : %s has been processed \n \n" % file)
             stage(raw_files)
 
