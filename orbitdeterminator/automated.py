@@ -72,9 +72,7 @@ def process(data_file, error_apriori):
 
 
     ## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
-    c = golay_window.c(error_apriori)
-    window = len(data) / c
-    window = int(window)
+    window = golay_window.window(error_apriori, data_after_filter)
 
 
     # Apply the Savintzky - Golay filter with window = 31 and polynomail parameter = 6
