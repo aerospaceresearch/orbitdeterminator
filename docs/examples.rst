@@ -1,8 +1,10 @@
++++++++++
 Tutorials
-=========
++++++++++
 
-Run the program with main.py
-----------------------------
+==============================
+* Run the program with main.py
+==============================
 
 For the first example we will showcase how you can use the full features of the package
 with main.py. Simply executing the main.py by giving the name of .csv file that contains
@@ -66,9 +68,9 @@ The output should look like the following image.
 
 .. figure::  results.jpg
 
-
-Run the program with automated.py
----------------------------------
+====================================
+* Run the program with automated.py
+====================================
 
 `automated.py` is another flavour of main.py that is supposed to run on a server. It keeps listening for new files in a particular directory and processes them when they arrive.  
 
@@ -78,14 +80,12 @@ Run the program with automated.py
 For testing purpose some files have already put in a folder named src. These are raw unprocessed files. There is another folder named dst which contains processed files along with a graph saved in the form of svg.
 
 To execute this script, change the directory to the script's directory 
-.. code-block:: bash
-   cd orbitdeterminator/
+
+:code: `cd orbitdeterminator/`
 
 and run the code using python3
 
-.. code-block:: bash
-   python3 automated.py
-
+:code:  `python3 automated.py`
 
 and thats it. This will keep listening for new files and process them as they arrive.
 
@@ -101,8 +101,9 @@ Process
 - Stage the processed file in the src folder in order to avoid processing the same files multiple times.
 - Check for any untracked files in src and apply steps 2-4 again.
 
-Using certain modules
----------------------
+=======================
+* Using certain modules
+=======================
 
 In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
 path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
