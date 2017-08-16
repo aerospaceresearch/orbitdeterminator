@@ -81,11 +81,11 @@ For testing purpose some files have already put in a folder named src. These are
 
 To execute this script, change the directory to the script's directory::
 
-   `cd orbitdeterminator/`
+   cd orbitdeterminator/
 
 and run the code using python3::
 
-   `python3 automated.py`
+   python3 automated.py
 
 and thats it. This will keep listening for new files and process them as they arrive.
 
