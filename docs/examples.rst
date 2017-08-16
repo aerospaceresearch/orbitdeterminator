@@ -74,7 +74,7 @@ The output should look like the following image.
 
 `automated.py` is another flavour of main.py that is supposed to run on a server. It keeps listening for new files in a particular directory and processes them when they arrive.  
 
-.. warning::
+.. note::
    All the processing invloved in this module is identical to that of main.py.
 
 For testing purpose some files have already put in a folder named src. These are raw unprocessed files. There is another folder named dst which contains processed files along with a graph saved in the form of svg.
