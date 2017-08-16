@@ -16,14 +16,13 @@ from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation)
 
 
-
 SOURCE_ABSOLUTE = os.getcwd() + "/src"  # Absolute path of source directory
 os.system("cd %s; git init" % (SOURCE_ABSOLUTE))
 
 
 def untracked_files():
     '''
-    Parses output of `git-status` and returns untracked files.
+    Finds untracked/unprocessed files in the source directory.
 
     Returns:
         res (string): List of untracked files.
@@ -62,22 +61,26 @@ def stage(processed):
 
         
 def process(data_file, error_apriori, name):
-  
-    # First read the csv file called "orbit" with the positional data
+    ''' Perform filtering and orbit determination methods.
+    Applies filters and orbit determination techniques on the input data and saves the 
+    output in dst folder.
+    
+    Args:
+        data_file (numpy array): Raw orbit data
+        error_apriori (float): apriori estimation of the measurements error in km
+        name (str): name of the file being processed
+    '''
+    # Get positional data
     data = data_file
-
 
     # Apply the Triple moving average filter with window = 3
     data_after_filter = triple_moving_average.generate_filtered_data(data, 3)
 
-
-    ## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
+    # Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
     window = golay_window.window(error_apriori, data_after_filter)
-
 
     # Apply the Savintzky - Golay filter with window = 31 and polynomail parameter = 6
     data_after_filter = sav_golay.golay(data_after_filter, window, 3)
-
 
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
     res = data_after_filter[:, 1:4] - data[:, 1:4]
