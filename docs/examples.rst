@@ -79,13 +79,13 @@ The output should look like the following image.
 
 For testing purpose some files have already put in a folder named src. These are raw unprocessed files. There is another folder named dst which contains processed files along with a graph saved in the form of svg.
 
-To execute this script, change the directory to the script's directory 
+To execute this script, change the directory to the script's directory::
 
-:code: `cd orbitdeterminator/`
+   `cd orbitdeterminator/`
 
-and run the code using python3
+and run the code using python3::
 
-:code:  `python3 automated.py`
+   `python3 automated.py`
 
 and thats it. This will keep listening for new files and process them as they arrive.
 
