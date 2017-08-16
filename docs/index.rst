@@ -6,9 +6,6 @@
 Welcome to Orbit Determinator's documentation!
 ++++++++++++++++++++++++++++++++++++++++++++++
 
-.. toctree::
-   :maxdepth: 2
-
 ========================
 About Orbit Determinator
 ========================
@@ -37,7 +34,8 @@ Google summer of code 2017 by Nilesh Chaturvedi and Alexandros Kazantzidis.
 
 It is distributed under an open-source MIT license. Please find `LICENSE` in top level directory for details.
 
-
+.. toctree::
+   :maxdepth: 2
    :caption: Contents:
 
    modules.rst

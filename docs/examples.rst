@@ -67,6 +67,39 @@ The output should look like the following image.
 .. figure::  results.jpg
 
 
+Run the program with automated.py
+---------------------------------
+
+`automated.py` is another flavour of main.py that is supposed to run on a server. It keeps listening for new files in a particular directory and processes them when they arrive.  
+
+.. warning::
+   All the processing invloved in this module is identical to that of main.py.
+
+For testing purpose some files have already put in a folder named src. These are raw unprocessed files. There is another folder named dst which contains processed files along with a graph saved in the form of svg.
+
+To execute this script, change the directory to the script's directory 
+.. code-block:: bash
+   cd orbitdeterminator/
+
+and run the code using python3
+
+.. code-block:: bash
+   python3 automated.py
+
+
+and thats it. This will keep listening for new files and process them as they arrive.
+
+.. figure:: automated_console.jpg
+.. figure:: automated_graph.svg
+
+Process
+~~~~~~~
+
+- Initialize an empty git repository in src folder
+- Read the untracked files of that folder and put them in a list
+- Process the files in this list and save the results(processed data and graph) to dst folder
+- Stage the processed file in the src folder in order to avoid processing the same files multiple times.
+- Check for any untracked files in src and apply steps 2-4 again.
 
 Using certain modules
 ---------------------
