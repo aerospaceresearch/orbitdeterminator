@@ -5,6 +5,7 @@ def window(error, data):
 
     Args:
         error(float): the a-priori error estimation for each measurment
+        data(numpy array): the positional data set
 
     Returns:
         float: constant which describes the window that needs to be inputed to the savintzky - golay filter

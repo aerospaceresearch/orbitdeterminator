@@ -129,5 +129,5 @@ def process(data_file, error_apriori):
 
 if __name__ == "__main__":
 
-    run = process("orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv", 10.0)
+    run = process("orbit.csv", 10.0)
 
