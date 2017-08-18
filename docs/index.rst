@@ -42,7 +42,7 @@ Open up your control panel, pip install git if you do not already have it and th
 program https://github.com/aerospaceresearch/orbitdeterminator. Create a new virtual environment for python version 3.4.
 Then, all you need to do is go to the directory where the package has been cloned with cd orbitdeterminator and
 run **python setup.py install**. That should install the package into your Lib/site-packages and you will be able to
-import and use it. Other than import you can just use it from the immediately from the clone directory (preferred).
+import and use it. Other than import you can just use it immediately from the clone directory (preferred).
 
 .. toctree::
    :maxdepth: 2
