@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 from util import state_kep
 import numpy as np
 import matplotlib.pylab as plt
-import PyKEP as pkp
+import pykep as pkp
 from math import *
 
 
