@@ -27,18 +27,23 @@ def process(data_file, error_apriori):
     '''
     # First read the csv file called "orbit" with the positional data
     data = read_data.load_data(data_file)
-    data_after_filter = data
+
+
+    # Transform m to km
+    data[:, 1:4] = data[:, 1:4] / 1000
+
 
     # Apply the Triple moving average filter with window = 3
-    # data_after_filter = triple_moving_average.generate_filtered_data(data, 3)
+    data_after_filter = triple_moving_average.generate_filtered_data(data, 3)
 
 
     ## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
-    # window = golay_window.window(error_apriori, data_after_filter)
+    window = golay_window.window(error_apriori, data_after_filter)
+
 
 
     # Apply the Savintzky - Golay filter with window = 31 and polynomail parameter = 6
-    # data_after_filter = sav_golay.golay(data_after_filter, 21, 3)
+    data_after_filter = sav_golay.golay(data_after_filter, window, 3)
 
 
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
@@ -124,5 +129,5 @@ def process(data_file, error_apriori):
 
 if __name__ == "__main__":
 
-    run = process("orbit_clean.csv", 10.0)
+    run = process("orbit.csv", 10.0)
 
