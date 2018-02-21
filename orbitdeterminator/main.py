@@ -7,12 +7,13 @@ and generates the final set of keplerian elements along with a plot and a filter
 from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation)
+import sys
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pylab as plt
 
 
-def process(data_file, error_apriori):
+def process(data_file="orbit.csv", error_apriori=10.0):
     '''
     Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
     file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
@@ -25,6 +26,10 @@ def process(data_file, error_apriori):
     Returns:
         Runs the whole process of the program
     '''
+
+    # Cnvert error_apriori argument to float
+    error_apriori = float(error_apriori)
+
     # First read the csv file called "orbit" with the positional data
     data = read_data.load_data(data_file)
 
@@ -129,5 +134,5 @@ def process(data_file, error_apriori):
 
 if __name__ == "__main__":
 
-    run = process("orbit.csv", 10.0)
+    run = process(*sys.argv[1:])
 
