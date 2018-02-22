@@ -7,6 +7,7 @@ and generates the final set of keplerian elements along with a plot and a filter
 from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation)
+import argparse
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pylab as plt
@@ -127,7 +128,15 @@ def process(data_file, error_apriori):
     ax.set_zlabel('z (km)')
     plt.show()
 
+
+def read_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file_path', type=str, help="path to .csv data file", default='orbit.csv')
+    parser.add_argument('-e', '--error', type=float, help="estimation of the measurement error", default=10.0)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
 
-    run = process("orbit.csv", 10.0)
-
+    args = read_args()
+    process(args.file_path, args.error)
