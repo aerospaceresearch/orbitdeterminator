@@ -130,6 +130,14 @@ def process(data_file, error_apriori):
 
 
 def read_args():
+    """Fetches commandline arguments.
+
+    Retrieves the optional file path and error term commandline arguments. Provides 'orbit.csv' and 10.0
+    as defaults.
+
+    Returns:
+        Parsed arguments file path (str) and error term (float).
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file_path', type=str, help="path to .csv data file", default='orbit.csv')
     parser.add_argument('-e', '--error', type=float, help="estimation of the measurement error", default=10.0)
