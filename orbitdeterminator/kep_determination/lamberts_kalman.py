@@ -1,40 +1,40 @@
-'''
+"""
 Takes a positional data set and produces sets of six keplerian elements
 using Lambert's solution for preliminary orbit determination and Kalman filters
-'''
+"""
 
 
 import sys
 import os.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from util import state_kep
 import numpy as np
-import matplotlib.pylab as plt
 import pykep as pkp
-from math import *
+from util import state_kep
 
 
-def orbit_trajectory(x1_new, x2_new, time):
-    '''
-    Tool for checking if the motion of the sallite is retrogade or counter - clock wise
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
+
+def orbit_trajectory(x1, x2, time):
+    """
+    Checks if the motion of the satellite is retrogade or counter - clock wise
     
     Args:
-        x1 (numpy array): time and position for point 1 [time1,x1,y1,z1]
-        x2 (numpy array): time and position for point 2 [time2,x2,y2,z2]
+        x1 (numpy array): time and position for point 1 [x1,y1,z1]
+        x2 (numpy array): time and position for point 2 [x2,y2,z2]
         time (float): time difference between the 2 points
         
     Returns:
         bool: true if we want to keep retrogade, False if we want counter-clock wise
-    '''
+    """
 
-    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
+    l = pkp.lambert_problem(x1, x2, time, 398600.4405, False)
 
     v1 = l.get_v1()
     v1 = np.asarray(v1)
     v1 = np.reshape(v1, 3)
-    x1_new = np.asarray(x1_new)
+    x1 = np.asarray(x1)
 
-    kep1 = state_kep.state_kep(x1_new, v1)
+    kep1 = state_kep.state_kep(x1, v1)
 
     if kep1[0] < 0.0:
         traj = True

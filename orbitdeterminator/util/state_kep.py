@@ -1,11 +1,12 @@
-'''
+"""
 Takes a state vector (x, y, z, vx, vy, vz) where v is the velocity of the satellite
-and transforms it into a set of keplerian elements (a, e, i, ω, Ω, v)
+and transforms it into a set of keplerian elements (a, e, i, ω, Ω, v).
+"""
 
-'''
 
 import numpy as np
 import math
+
 
 def state_kep(r, v):
     '''

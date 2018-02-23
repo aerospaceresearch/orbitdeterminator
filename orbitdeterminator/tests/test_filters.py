@@ -1,13 +1,26 @@
 import sys
 import os
+import pytest
+import numpy as np
+from orbitdeterminator.filters import smooth_moving_average as sma
+
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from orbitdeterminator.filters import triple_moving_average as tma
-import pytest
 
 def test_weighted_average():
-	assert tma.weighted_average([1, 1, 1]) == 1
-	assert tma.weighted_average([0, 0, 0]) == 0
-	assert tma.weighted_average([10]) == 10
-	with pytest.raises(ZeroDivisionError):
-		tma.weighted_average([])
+    assert sma.distance_weighted_average(np.array([1, 1])) == 1
+    assert sma.distance_weighted_average(np.array([0, 0])) == 0
+    assert sma.distance_weighted_average(np.array([1, 2])) == 4 / 3
+    assert sma.distance_weighted_average(np.array([1, 2]), 'r') == 5 / 3
+    assert sma.distance_weighted_average(np.array([10])) == 10
+    with pytest.raises(ZeroDivisionError):
+        sma.distance_weighted_average(np.array([]))
+
+
+def main():
+    test_weighted_average()
+
+
+if __name__ == "__main__":
+    main()
