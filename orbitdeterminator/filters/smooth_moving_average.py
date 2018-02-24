@@ -62,7 +62,7 @@ def smooth_moving_average(signal_array, window_size):
     window_wing = int(np.floor(window_size / 2))
     filtered_signal = np.zeros(array_len)
 
-    for curr_index in range(len(signal_array)):
+    for curr_index in range(array_len):
         if curr_index < window_wing + 1 or curr_index > array_len - window_wing - 2:
             filtered_signal[curr_index] = signal_array[curr_index]
         else:
