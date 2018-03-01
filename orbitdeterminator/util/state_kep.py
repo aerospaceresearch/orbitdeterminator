@@ -44,17 +44,17 @@ def state_kep(r, v):
         true_anom = 2 * math.pi - true_anom
     true_anom = math.degrees(true_anom)
 
-    i = math.acos(h[2] / mag_h)
+    i = math.acos(np.clip(h[2] / mag_h, -1, 1))
     i = math.degrees(i)
 
     ecc = mag_e
 
-    raan = math.acos(n[0] / mag_n)
+    raan = math.acos(np.clip(n[0] / mag_n, -1, 1))
     if n[1] < 0:
         raan = 2 * math.pi - raan
     raan = math.degrees(raan)
 
-    per = math.acos(np.dot(n, e) / (mag_n * mag_e))
+    per = math.acos(np.clip(np.dot(n, e) / (mag_n * mag_e), -1, 1))
     if e[2] < 0:
         per = 2 * math.pi - per
     per = math.degrees(per)
