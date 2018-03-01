@@ -39,7 +39,7 @@ def state_kep(r, v):
     n = np.array([-h[1], h[0], 0])
     mag_n = np.sqrt(n.dot(n))
 
-    true_anom = math.acos(np.dot(e, r) / (mag_r * mag_e))
+    true_anom = math.acos(np.clip(np.dot(e,r)/(mag_r * mag_e), -1, 1))
     if np.dot(r, v) < 0:
         true_anom = 2 * math.pi - true_anom
     true_anom = math.degrees(true_anom)

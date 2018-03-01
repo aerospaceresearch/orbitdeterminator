@@ -13,7 +13,7 @@ import matplotlib as mpl
 import matplotlib.pylab as plt
 
 
-def process(data_file, error_apriori):
+def process(data_file, error_apriori, units):
     '''
     Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
     file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
@@ -29,9 +29,9 @@ def process(data_file, error_apriori):
     # First read the csv file called "orbit" with the positional data
     data = read_data.load_data(data_file)
 
-
-    # Transform m to km
-    data[:, 1:4] = data[:, 1:4] / 1000
+    if (units == 'm'):
+        # Transform m to km
+        data[:, 1:4] = data[:, 1:4] / 1000
 
 
     # Apply the Triple moving average filter with window = 3
@@ -61,7 +61,6 @@ def process(data_file, error_apriori):
 
     # Save the filtered data into a new csv called "filtered"
     np.savetxt("filtered.csv", data_after_filter, delimiter=",")
-
 
     # Apply Lambert's solution for the filtered data set
     kep_lamb = lamberts_kalman.create_kep(data_after_filter)
@@ -133,10 +132,11 @@ def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file_path', type=str, help="path to .csv data file", default='orbit.csv')
     parser.add_argument('-e', '--error', type=float, help="estimation of the measurement error", default=10.0)
+    parser.add_argument('-u', '--units', type=str, help="m for metres, k for kilometres", default='k')
     return parser.parse_args()
 
 
 if __name__ == "__main__":
 
     args = read_args()
-    process(args.file_path, args.error)
+    process(args.file_path, args.error, args.units)
