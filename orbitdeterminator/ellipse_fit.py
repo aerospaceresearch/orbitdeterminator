@@ -108,8 +108,8 @@ ax.axis('equal')
 ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],'red',label='Fitted Ellipse')
 ax.scatter3D(data[::8,0],data[::8,1],data[::8,2],c='black',depthshade=False,label='Initial Data')
 
-# Earth
-ax.scatter3D(0,0,0,c='blue',s=500,depthshade=False)
+# The Pale Blue Dot
+ax.scatter3D(0,0,0,c='blue',depthshade=False,label='Earth')
 
 ax.can_zoom()
 ax.legend()
