@@ -10,11 +10,12 @@ from scipy.optimize import minimize
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', type=str, help='path to .csv file', default='orbit.csv')
+    parser.add_argument('-u', '--units', type=str, help='units of distance (m or km)', default='km')
     return parser.parse_args()
 
 def plane_err(data,coeffs):
-    a,b = coeffs
-    return np.sum((data[:,2] - a*data[:,0]-b*data[:,1])**2)
+    a,b,c = coeffs
+    return np.sum((a*data[:,0]+b*data[:,1]+c*data[:,2])**2)/(a**2+b**2+c**2)
 
 def project_to_plane(coeffs,points):
     a,b,c = coeffs
@@ -47,13 +48,14 @@ def ellipse_err(polar_coords,params):
     err = np.sum((r - polar_coords[:,0])**2)
     return err
 
-data = np.loadtxt(read_args().file,skiprows=1,usecols=(1,2,3));
+args = read_args()
+data = np.loadtxt(args.file,skiprows=1,usecols=(1,2,3));
 plane_err_data = partial(plane_err,data)
 
-# z = ax+by
-p0 = [0,0]
+# ax+by+cz=0
+p0 = [0,0,1]
 p = minimize(plane_err_data,p0,method='nelder-mead').x
-p = np.append(-p,1) # ax+by+cz = 0 form
+p = p/np.linalg.norm(p) # normalize p
 
 lan_vec = np.cross([0,0,1],p)
 inc = math.acos(np.dot(p,[0,0,1])/np.linalg.norm(p))
@@ -79,14 +81,15 @@ ellipse_err_data = partial(ellipse_err,polar_coords)
 params = minimize(ellipse_err_data,params0,method='nelder-mead').x
 
 # output
-print("Semi-major axis: ",params[0])
-print("Eccentricity: ",params[1])
-print("Argument of periapsis: ",params[2])
-print("Inclination: ",inc)
-print("Longitude of Ascending Node: ",lan)
+print("Semi-major axis:            ",params[0],args.units)
+print("Eccentricity:               ",params[1])
+print("Argument of periapsis:      ",params[2],"rad")
+print("Inclination:                ",inc,"rad")
+print("Longitude of Ascending Node:",lan,"rad")
 
 # plotting
 a,e,t0 = params
+
 theta = np.linspace(0,2*math.pi,1000)
 radii = a*(1-e**2)/(1+e*np.cos(theta-t0))
 
@@ -99,11 +102,15 @@ mat = np.column_stack((p_x,p_y))
 coords_3D = np.matmul(mat,[x_s,y_s])
 
 fig = plt.figure()
-ax = fig.add_subplot(111,projection='3d')
+ax = Axes3D(fig)
 ax.axis('equal')
 
-ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],'red')
-ax.scatter3D(data[::8,0],data[::8,1],data[::8,2],c='blue',depthshade=False)
+ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],'red',label='Fitted Ellipse')
+ax.scatter3D(data[::8,0],data[::8,1],data[::8,2],c='black',depthshade=False,label='Initial Data')
 
-ax.scatter3D(0,0,0,c='green',depthshade=False)
+# Earth
+ax.scatter3D(0,0,0,c='blue',s=500,depthshade=False)
+
+ax.can_zoom()
+ax.legend()
 plt.show()
