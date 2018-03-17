@@ -9,9 +9,9 @@ from scipy.optimize import minimize
 
 def read_args():
     '''Reads command line arguments.
-       
+
        Returns: Parsed arguments.'''
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', type=str, help='path to .csv file', default='orbit.csv')
     parser.add_argument('-u', '--units', type=str, help='units of distance (m or km)', default='km')
@@ -20,7 +20,7 @@ def read_args():
 
 def plane_err(data,coeffs):
     '''Calculates the total squared error of the data wrt a plane.
-       
+
        The data should be a list of points. coeffs is an array of
        3 elements - the coefficients a,b,c in the plane equation
        ax+by+c = 0.
@@ -28,7 +28,7 @@ def plane_err(data,coeffs):
        Arguments:
        data: A numpy array of points.
        coeffs: The coefficients of the plane ax+by+c=0.
-       
+
        Returns: The total squared error wrt the plane defined by ax+by+cz = 0.'''
 
     a,b,c = coeffs
@@ -37,7 +37,7 @@ def plane_err(data,coeffs):
 
 def project_to_plane(points,coeffs):
     '''Projects points onto a plane.
-    
+
        Projects a list of points onto the plane ax+by+c=0,
        where a,b,c are elements of coeffs.
 
@@ -59,16 +59,16 @@ def project_to_plane(points,coeffs):
 
 def conv_to_2D(points,x,y):
     '''Finds coordinates of points in a plane wrt a basis.
-    
-       Given a list of points in a plane, and a basis of the plane, 
+
+       Given a list of points in a plane, and a basis of the plane,
        this function returns the coordinates of those points
        wrt this basis.
-       
+
        Arguments:
        points: A numpy array of points.
        x: One vector of the basis.
        y: Another vector of the basis.
-       
+
        Returns:
        Coordinates of the points wrt the basis [x,y].'''
 
@@ -80,10 +80,10 @@ def conv_to_2D(points,x,y):
 
 def cart_to_pol(points):
     '''Converts a list of cartesian coordinates into polar ones.
-    
+
        Arguments:
        points: The list of points in the format [x,y].
-       
+
        Returns:
        A list of polar coordinates in the format [radius,angle].'''
 
@@ -95,17 +95,17 @@ def cart_to_pol(points):
 
 def ellipse_err(polar_coords,params):
     '''Calculates the total squared error of the data wrt an ellipse.
-    
+
        params is a 3 element array used to define an ellipse.
        It contains 3 elements a,e, and t0.
-       
+
        a is the semi-major axis
        e is the eccentricity
        t0 is the angle of the major axis wrt the x-axis.
-       
+
        These 3 elements define an ellipse with one focus at origin.
        Equation of the ellipse is r = a(1-e^2)/(1+ecos(t-t0))
-       
+
        The function calculates r for every theta in the data.
        It then takes the square of the difference and sums it.
 
