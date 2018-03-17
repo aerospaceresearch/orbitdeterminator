@@ -157,10 +157,10 @@ lan = math.acos(np.dot(lan_vec,[1,0,0])/np.linalg.norm(lan_vec))
 # now we try to convert the problem into a 2D problem.
 
 # project all the points onto the plane.
-proj_data = project_to_plane(p,data)
+proj_data = project_to_plane(data,p)
 
 # p_x and p_y are 2 orthogonal unit vectors on the plane.
-p_x,p_y = lan_vec, project_to_plane(p,np.cross([0,0,1],lan_vec))
+p_x,p_y = lan_vec, project_to_plane(np.cross([0,0,1],lan_vec),p)
 p_x,p_y = p_x/np.linalg.norm(p_x), p_y/np.linalg.norm(p_y)
 
 # find coordinates of the points wrt the basis [x,y].
