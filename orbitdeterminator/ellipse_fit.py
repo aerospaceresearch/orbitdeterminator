@@ -35,7 +35,7 @@ def plane_err(data,coeffs):
     return np.sum((a*data[:,0]+b*data[:,1]+c*data[:,2])**2)/(a**2+b**2+c**2)
 
 
-def project_to_plane(coeffs,points):
+def project_to_plane(points,coeffs):
     '''Projects points onto a plane.
     
        Projects a list of points onto the plane ax+by+c=0,
