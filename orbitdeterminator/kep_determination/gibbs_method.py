@@ -99,10 +99,6 @@ class Gibbs(object):
         c23 = [v2[1]*v3[2] - v3[1]*v2[2], (-1)*(v2[0]*v3[2] - v3[0]*v2[2]), v2[0]*v3[1] - v3[0]*v2[1]]
         c31 = [v3[1]*v1[2] - v1[1]*v3[2], (-1)*(v3[0]*v1[2] - v1[0]*v3[2]), v3[0]*v1[1] - v1[0]*v3[1]]
 
-        mag_c23 = sqrt(c23[0]**2 + c23[1]**2 + c23[2]**2)
-        c23_unit = [float(c23[0]/mag_c23), float(c23[1]/mag_c23), float(c23[2]/mag_c23)]
-        u_unit = [float(v1[0]/mag_v1), float(v1[1]/mag_v1), float(v1[2]/mag_v1)]
-
         N = [float(mag_v1*c23[0] + mag_v2*c31[0] + mag_v3*c12[0]),
              float(mag_v1*c23[1] + mag_v2*c31[1] + mag_v3*c12[1]),
              float(mag_v1*c23[2] + mag_v2*c31[2] + mag_v3*c12[2])]
