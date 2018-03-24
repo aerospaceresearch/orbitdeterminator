@@ -3,14 +3,17 @@ Source: Algorithm 5.1 on Gibb's Method in book "Orbital Mechanics for Engineerin
 
 graphics.py is taken from https://github.com/Elucidation/OrbitalElements
 
+link contains the dataset which has 4 columns as: Time , x , y , z
+
 Important:
 In order to get the plot you have to first install Tkinter.
 Type the following command into your terminal.
 
 $ sudo apt-get install python-tk
+
 '''
 
-import urllib2
+import urllib
 import graphics
 import numpy as np
 
@@ -20,7 +23,7 @@ pi = np.pi
 '''
 class for Gibb's implementation
 '''
-class Gibbs:
+class Gibbs(object):
     'Implementing Gibb\'s Method to plot orbit of a satellite'
     meu = 398600.4418
 
@@ -99,7 +102,6 @@ class Gibbs:
         mag_c23 = sqrt(c23[0]**2 + c23[1]**2 + c23[2]**2)
         c23_unit = [float(c23[0]/mag_c23), float(c23[1]/mag_c23), float(c23[2]/mag_c23)]
         u_unit = [float(v1[0]/mag_v1), float(v1[1]/mag_v1), float(v1[2]/mag_v1)]
-        coplanar = float(c23_unit[0]*u_unit[0]) + float(c23_unit[1]*u_unit[1]) + float(c23_unit[2]*u_unit[2])
 
         N = [float(mag_v1*c23[0] + mag_v2*c31[0] + mag_v3*c12[0]),
              float(mag_v1*c23[1] + mag_v2*c31[1] + mag_v3*c12[1]),
@@ -231,12 +233,9 @@ class Gibbs:
         graphics.plotEarth()
         graphics.doDraw()
 
-'''
-link contains the dataset which has 4 columns as,
-Time , x , y , z
-'''
 link = "https://raw.githubusercontent.com/aakash525/Orbital-Determinator/master/gibbs_data1.csv"
-data = urllib2.urlopen(link)
+data = urllib.urlopen(link)
+
 d = data.read()
 d = d.splitlines()
 
