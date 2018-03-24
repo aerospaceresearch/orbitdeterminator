@@ -60,15 +60,15 @@ class Gibbs:
             vec1 = d[i]
             vec2 = d[i+1]
             vec3 = d[i+2]
-            self.gibbs(vec1, vec2, vec3)                                            # call gibb's method function
+            self.gibbs(vec1, vec2, vec3)                # call gibb's method function
 
-        self.average()                                                              # taking average of all the orbital elements from file
-        self.display()                                                              # function to print orbital elements
-        self.plot_figure()                                                          # plot the figure of orbit
+        self.average()                                  # taking average of all the orbital elements from file
+        self.display()                                  # function to print orbital elements
+        self.plot_figure()                              # plot the figure of orbit
 
     def gibbs(self, data1, data2, data3):
         '''
-        Gibb\'s Method
+        Gibb's Method
 
         Args:
             self : class variables
@@ -232,7 +232,7 @@ class Gibbs:
         graphics.doDraw()
 
 '''
-gibbs_data1 is the dataset contains 4 columns, as
+link contains the dataset which has 4 columns as,
 Time , x , y , z
 '''
 link = "https://raw.githubusercontent.com/aakash525/Orbital-Determinator/master/gibbs_data1.csv"
