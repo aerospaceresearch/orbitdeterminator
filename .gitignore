@@ -60,6 +60,9 @@ coverage.xml
 .media/
 local_settings.py
 
+# Pycharm:
+.idea
+
 # Flask stuff:
 instance/
 .webassets-cache
