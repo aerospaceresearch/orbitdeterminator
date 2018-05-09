@@ -27,11 +27,12 @@ def orbit_trajectory(x1_new, x2_new, time):
         bool: true if we want to keep retrogade, False if we want counter-clock wise
     '''
 
-    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False)
+    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False, 0)
 
-    v1 = l.get_v1()
+    # only one revolution is needed
+    v1 = l.get_v1()[0]
     v1 = np.asarray(v1)
-    v1 = np.reshape(v1, 3)
+    #v1 = np.reshape(v1, 3)
     x1_new = np.asarray(x1_new)
 
     kep1 = state_kep.state_kep(x1_new, v1)
@@ -67,11 +68,12 @@ def lamberts(x1, x2, traj):
 
     # traj = orbit_trajectory(x1_new, x2_new, time)
 
-    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, traj)
+    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, traj,0)
 
-    v1 = l.get_v1()
+    # only one revolution is needed
+    v1 = l.get_v1()[0]
     v1 = np.asarray(v1)
-    v1 = np.reshape(v1, 3)
+    #v1 = np.reshape(v1, 3)
 
     return v1
 
