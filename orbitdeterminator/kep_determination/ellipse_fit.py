@@ -18,6 +18,17 @@ def read_args():
     return parser.parse_args()
 
 
+def is_retro(data):
+    '''Returns whether the orbit is retrograde'''
+
+    cross_sum = 0
+    for i in range(len(data)-1):
+        v1 = data[i]
+        v2 = data[i+1]
+        cross_sum = cross_sum + np.cross(v1,v2)
+
+    return cross_sum[2] < 0
+
 def plane_err(data,coeffs):
     '''Calculates the total squared error of the data wrt a plane.
 
@@ -125,7 +136,8 @@ def ellipse_err(polar_coords,params):
 
 # Main program
 args = read_args()
-data = np.loadtxt(args.file,skiprows=1,usecols=(1,2,3));
+data = np.loadtxt(args.file,skiprows=1,usecols=(1,2,3))
+retro = is_retro(data) # check whether the orbit is retrograde
 
 # try to fit a plane to the data first.
 
@@ -184,12 +196,18 @@ ellipse_err_data = partial(ellipse_err,polar_coords)
 # minimize the error
 params = minimize(ellipse_err_data,params0,method='nelder-mead').x
 
+# handle retrograde orbits
+if retro:
+    inc = math.pi - inc
+    lan = (lan + math.pi)%(2*math.pi)
+    params[2] = (3*math.pi - params[2])%(2*math.pi)
+
 # output the parametres
 print("Semi-major axis:            ",params[0],args.units)
 print("Eccentricity:               ",params[1])
-print("Argument of periapsis:      ",params[2],"rad")
-print("Inclination:                ",inc,"rad")
-print("Longitude of Ascending Node:",lan,"rad")
+print("Argument of periapsis:      ",math.degrees(params[2]),"deg")
+print("Inclination:                ",math.degrees(inc),"deg")
+print("Longitude of Ascending Node:",math.degrees(lan),"deg")
 
 # now plot the results
 a,e,t0 = params
