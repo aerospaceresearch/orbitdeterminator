@@ -21,8 +21,8 @@ def state_kep(r, v):
         kep(1): orbital eccentricity (non-dimensional)
                  (0 <= eccentricity < 1)
         kep(2): orbital inclination (degrees)
-        kep(3): right ascension of ascending node (degrees)
-        kep(4): argument of perigee (degress)
+        kep(3): argument of perigee (degress)
+        kep(4): right ascension of ascending node (degrees)
         kep(5): true anomaly (degrees)
     '''
 
