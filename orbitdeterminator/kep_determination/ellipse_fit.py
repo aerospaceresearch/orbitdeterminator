@@ -100,7 +100,7 @@ def cart_to_pol(points):
 
     pol = np.empty(points.shape)
     pol[:,0] = np.sqrt(points[:,0]**2+points[:,1]**2)
-    pol[:,1] = np.arctan2(points[:,1],points[:,0])#*57.296
+    pol[:,1] = np.arctan2(points[:,1],points[:,0])
 
     return pol
 
@@ -196,11 +196,15 @@ ellipse_err_data = partial(ellipse_err,polar_coords)
 # minimize the error
 params = minimize(ellipse_err_data,params0,method='nelder-mead').x
 
+# calculate the true anomaly of the first entry in the dataset
+true_anom = (polar_coords[0][1]-params[2])%(2*math.pi)
+
 # handle retrograde orbits
 if retro:
     inc = math.pi - inc
     lan = (lan + math.pi)%(2*math.pi)
     params[2] = (3*math.pi - params[2])%(2*math.pi)
+    true_anom = 2*math.pi - true_anom
 
 # output the parametres
 print("Semi-major axis:            ",params[0],args.units)
@@ -208,6 +212,7 @@ print("Eccentricity:               ",params[1])
 print("Argument of periapsis:      ",math.degrees(params[2]),"deg")
 print("Inclination:                ",math.degrees(inc),"deg")
 print("Longitude of Ascending Node:",math.degrees(lan),"deg")
+print("True Anomaly                ",math.degrees(true_anom),"deg")
 
 # now plot the results
 a,e,t0 = params
