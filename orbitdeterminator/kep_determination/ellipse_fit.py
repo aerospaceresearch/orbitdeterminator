@@ -134,6 +134,49 @@ def ellipse_err(polar_coords,params):
     err = np.sum((r - polar_coords[:,0])**2)
     return err
 
+
+def residuals(data,params,polar_coords,basis):
+    '''Calculates the residuals after fitting the ellipse.
+
+       Residuals are the difference between the fitted points and
+       the actual points.
+
+       res_x = fitted_x - initial_x
+       res_y = fitted_y - initial_y
+       res_z = fitted_z - initial_z
+
+       where fitted_x,y,z is the closest point on the ellipse to initial_x,y,z.
+
+       However, it is computationally expensive to find the true nearest point.
+       So we take an approximation. We consider the point on the ellipse with
+       the same true anomaly as the initial point to be the nearest point to it.
+       Since the eccentricities of the orbits involved are small, this approximation
+       holds.
+
+       Arguments:
+       data: The list of original points.
+       params: The array [semi-major axis, eccentricity, argument of periapsis]
+       of the fitted ellipse.
+       polar_coords: The list of 2D polar coordinates of the original points after
+       projecting them onto the best-fit plane.
+       basis: The basis of the best-fit plane.'''
+
+    a,e,t0 = params
+    dem = 1+e*np.cos(polar_coords[:,1]-t0)
+    num = a*(1-e**2)
+    r = np.divide(num,dem)
+
+    # convert to cartesian
+    x_s = np.multiply(r,np.cos(polar_coords[:,1]))
+    y_s = np.multiply(r,np.sin(polar_coords[:,1]))
+
+    # convert to 3D
+    filtered_coords = np.transpose(np.matmul(basis,[x_s,y_s]))
+
+    residuals = filtered_coords - data
+
+    return residuals
+
 # Main program
 args = read_args()
 data = np.loadtxt(args.file,skiprows=1,usecols=(1,2,3))
@@ -147,7 +190,7 @@ plane_err_data = partial(plane_err,data)
 # plane is defined by ax+by+cz=0.
 p0 = [0,0,1] # make an initial guess
 # minimize the error
-p = minimize(plane_err_data,p0,method='nelder-mead').x
+p = minimize(plane_err_data,p0,method='nelder-mead',options={'maxiter':1000}).x
 p = p/np.linalg.norm(p) # normalize p
 
 # now p is the normal vector of the best-fit plane.
@@ -162,9 +205,9 @@ if (np.array_equal(lan_vec,[0,0,0])):
     lan_vec = [1,0,0]
 
 # inclination is the angle between p and the z axis.
-inc = math.acos(np.dot(p,[0,0,1])/np.linalg.norm(p))
+inc = math.acos(np.clip(np.dot(p,[0,0,1])/np.linalg.norm(p),-1,1))
 # lan is the angle between the lan_vec and the x axis.
-lan = math.acos(np.dot(lan_vec,[1,0,0])/np.linalg.norm(lan_vec))
+lan = math.acos(np.clip(np.dot(lan_vec,[1,0,0])/np.linalg.norm(lan_vec),-1,1))
 
 # now we try to convert the problem into a 2D problem.
 
@@ -199,6 +242,9 @@ params = minimize(ellipse_err_data,params0,method='nelder-mead').x
 # calculate the true anomaly of the first entry in the dataset
 true_anom = (polar_coords[0][1]-params[2])%(2*math.pi)
 
+# calculation of residuals
+residuals = residuals(data,params,polar_coords,np.column_stack((p_x,p_y)))
+
 # handle retrograde orbits
 if retro:
     inc = math.pi - inc
@@ -206,13 +252,29 @@ if retro:
     params[2] = (3*math.pi - params[2])%(2*math.pi)
     true_anom = 2*math.pi - true_anom
 
-# output the parametres
+# output the parameters
 print("Semi-major axis:            ",params[0],args.units)
 print("Eccentricity:               ",params[1])
 print("Argument of periapsis:      ",math.degrees(params[2]),"deg")
 print("Inclination:                ",math.degrees(inc),"deg")
 print("Longitude of Ascending Node:",math.degrees(lan),"deg")
 print("True Anomaly                ",math.degrees(true_anom),"deg")
+
+# print data about residuals
+print()
+
+max_res = np.max(residuals,axis=0)
+min_res = np.min(residuals,axis=0)
+sum_res = np.sum(residuals,axis=0)
+avg_res = np.average(residuals,axis=0)
+std_res = np.std(residuals,axis=0)
+
+print("Printing data about residuals in each axis:")
+print("Max:               ",max_res)
+print("Min:               ",min_res)
+print("Sum:               ",sum_res)
+print("Average:           ",avg_res)
+print("Standard Deviation:",std_res)
 
 # now plot the results
 a,e,t0 = params
@@ -234,8 +296,8 @@ ax = Axes3D(fig)
 ax.axis('equal')
 
 # plot
-ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],'red',label='Fitted Ellipse')
-ax.scatter3D(data[::8,0],data[::8,1],data[::8,2],c='black',depthshade=False,label='Initial Data')
+ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],c = 'red',label='Fitted Ellipse')
+ax.scatter3D(data[:,0],data[:,1],data[:,2],c='black',label='Initial Data')
 
 # The Pale Blue Dot
 ax.scatter3D(0,0,0,c='blue',depthshade=False,label='Earth')
