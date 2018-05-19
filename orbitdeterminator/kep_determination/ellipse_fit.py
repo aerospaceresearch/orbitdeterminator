@@ -177,131 +177,160 @@ def residuals(data,params,polar_coords,basis):
 
     return residuals
 
-# Main program
-args = read_args()
-data = np.loadtxt(args.file,skiprows=1,usecols=(1,2,3))
-retro = is_retro(data) # check whether the orbit is retrograde
+def read_file(file_name):
+    data = np.loadtxt(file_name,skiprows=1,usecols=(1,2,3))
+    
+    return data
 
-# try to fit a plane to the data first.
+def determine_kep(data):
+    retro = is_retro(data) # check whether the orbit is retrograde
+    
+    # try to fit a plane to the data first.
+    
+    # make a partial function of plane_err by supplying the data
+    plane_err_data = partial(plane_err,data)
+    
+    # plane is defined by ax+by+cz=0.
+    p0 = [0,0,1] # make an initial guess
+    # minimize the error
+    p = minimize(plane_err_data,p0,method='nelder-mead',options={'maxiter':1000}).x
+    p = p/np.linalg.norm(p) # normalize p
+    
+    # now p is the normal vector of the best-fit plane.
+    
+    # lan_vec is a vector along the line of intersection of the plane
+    # and the x-y plane.
+    lan_vec = np.cross([0,0,1],p)
+    
+    # if lan_vec is [0,0,0] it means that it is undefined and can take on
+    # any value. So we set it to [1,0,0] so that the rest of the
+    # calculation can proceed.
+    if (np.array_equal(lan_vec,[0,0,0])):
+        lan_vec = [1,0,0]
+    
+    # inclination is the angle between p and the z axis.
+    inc = math.acos(np.clip(np.dot(p,[0,0,1])/np.linalg.norm(p),-1,1))
+    # lan is the angle between the lan_vec and the x axis.
+    lan = math.acos(np.clip(np.dot(lan_vec,[1,0,0])/np.linalg.norm(lan_vec),-1,1))
+    
+    # now we try to convert the problem into a 2D problem.
+    
+    # project all the points onto the plane.
+    proj_data = project_to_plane(data,p)
+    
+    # p_x and p_y are 2 orthogonal unit vectors on the plane.
+    p_x,p_y = lan_vec, project_to_plane(np.cross([0,0,1],lan_vec),p)
+    p_x,p_y = p_x/np.linalg.norm(p_x), p_y/np.linalg.norm(p_y)
+    
+    # find coordinates of the points wrt the basis [p_x,p_y].
+    coords_2D = conv_to_2D(proj_data,p_x,p_y)
+    
+    # now try to fit an ellipse to these points.
+    
+    # convert them into polar coordinates
+    polar_coords = cart_to_pol(coords_2D)
+    
+    # make an initial guess for the parametres
+    r_m = np.min(polar_coords[:,0])
+    r_M = np.max(polar_coords[:,0])
+    a0 = (r_m+r_M)/2
+    e0 = (r_M-r_m)/(r_M+r_m)
+    t00 = polar_coords[np.argmin(polar_coords[:,0]),1]
+    
+    params0 = [a0,e0,t00] # initial guess
+    # make a partial function of ellipse_err with the data
+    ellipse_err_data = partial(ellipse_err,polar_coords)
+    # minimize the error
+    params = minimize(ellipse_err_data,params0,method='nelder-mead',options={'maxiter':1000}).x
+    
+    # calculate the true anomaly of the first entry in the dataset
+    true_anom = (polar_coords[0][1]-params[2])%(2*math.pi)
+    
+    # calculation of residuals
+    res = residuals(data,params,polar_coords,np.column_stack((p_x,p_y)))
+    
+    # handle retrograde orbits
+    if retro:
+        inc = math.pi - inc
+        lan = (lan + math.pi)%(2*math.pi)
+        params[2] = (3*math.pi - params[2])%(2*math.pi)
+        true_anom = 2*math.pi - true_anom
 
-# make a partial function of plane_err by supplying the data
-plane_err_data = partial(plane_err,data)
+    kep = np.empty((6,1))
+    kep[0] = params[0]
+    kep[1] = params[1]
+    kep[2] = math.degrees(inc)
+    kep[3] = math.degrees(params[2])
+    kep[4] = math.degrees(lan)
+    kep[5] = math.degrees(true_anom)
 
-# plane is defined by ax+by+cz=0.
-p0 = [0,0,1] # make an initial guess
-# minimize the error
-p = minimize(plane_err_data,p0,method='nelder-mead',options={'maxiter':1000}).x
-p = p/np.linalg.norm(p) # normalize p
+    return kep,res
 
-# now p is the normal vector of the best-fit plane.
+def print_kep(kep,res,unit):
+    # output the parameters
+    print("Semi-major axis:            ",kep[0][0],unit)
+    print("Eccentricity:               ",kep[1][0])
+    print("Inclination:                ",kep[2][0],"deg")
+    print("Argument of periapsis:      ",kep[3][0],"deg")
+    print("Longitude of Ascending Node:",kep[4][0],"deg")
+    print("True Anomaly                ",kep[5][0],"deg")
+    
+    # print data about residuals
+    print()
+    
+    max_res = np.max(res,axis=0)
+    min_res = np.min(res,axis=0)
+    sum_res = np.sum(res,axis=0)
+    avg_res = np.average(res,axis=0)
+    std_res = np.std(res,axis=0)
+    
+    print("Printing data about residuals in each axis:")
+    print("Max:               ",max_res)
+    print("Min:               ",min_res)
+    print("Sum:               ",sum_res)
+    print("Average:           ",avg_res)
+    print("Standard Deviation:",std_res)
 
-# lan_vec is a vector along the line of intersection of the plane
-# and the x-y plane.
-lan_vec = np.cross([0,0,1],p)
-# if lan_vec is [0,0,0] it means that it is undefined and can take on
-# any value. So we set it to [1,0,0] so that the rest of the
-# calculation can proceed.
-if (np.array_equal(lan_vec,[0,0,0])):
-    lan_vec = [1,0,0]
+def plot_kep(kep,data):
+    a = kep[0]
+    e = kep[1]
+    inc = math.radians(kep[2])
+    t0 = math.radians(kep[3])
+    lan = math.radians(kep[4])
+    
+    p_x = np.array([math.cos(lan), math.sin(lan), 0])
+    p_y = np.array([-math.sin(lan)*math.cos(inc), math.cos(lan)*math.cos(inc), math.sin(inc)])
 
-# inclination is the angle between p and the z axis.
-inc = math.acos(np.clip(np.dot(p,[0,0,1])/np.linalg.norm(p),-1,1))
-# lan is the angle between the lan_vec and the x axis.
-lan = math.acos(np.clip(np.dot(lan_vec,[1,0,0])/np.linalg.norm(lan_vec),-1,1))
+    # generate 1000 points on the ellipse
+    theta = np.linspace(0,2*math.pi,1000)
+    radii = a*(1-e**2)/(1+e*np.cos(theta-t0))
+    
+    # convert to cartesian
+    x_s = np.multiply(radii,np.cos(theta))
+    y_s = np.multiply(radii,np.sin(theta))
+    
+    # convert to 3D
+    mat = np.column_stack((p_x,p_y))
+    coords_3D = np.matmul(mat,[x_s,y_s])
+    
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    ax.axis('equal')
+    
+    # plot
+    ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],c = 'red',label='Fitted Ellipse')
+    ax.scatter3D(data[:,0],data[:,1],data[:,2],c='black',label='Initial Data')
+    
+    # The Pale Blue Dot
+    ax.scatter3D(0,0,0,c='blue',depthshade=False,label='Earth')
+    
+    ax.can_zoom()
+    ax.legend()
+    plt.show()
 
-# now we try to convert the problem into a 2D problem.
-
-# project all the points onto the plane.
-proj_data = project_to_plane(data,p)
-
-# p_x and p_y are 2 orthogonal unit vectors on the plane.
-p_x,p_y = lan_vec, project_to_plane(np.cross([0,0,1],lan_vec),p)
-p_x,p_y = p_x/np.linalg.norm(p_x), p_y/np.linalg.norm(p_y)
-
-# find coordinates of the points wrt the basis [x,y].
-coords_2D = conv_to_2D(proj_data,p_x,p_y)
-
-# now try to fit an ellipse to these points.
-
-# convert them into polar coordinates
-polar_coords = cart_to_pol(coords_2D)
-
-# make an initial guess for the parametres
-r_m = np.min(polar_coords[:,0])
-r_M = np.max(polar_coords[:,0])
-a0 = (r_m+r_M)/2
-e0 = (r_M-r_m)/(r_M+r_m)
-t00 = polar_coords[np.argmin(polar_coords[:,0]),1]
-
-params0 = [a0,e0,t00] # initial guess
-# make a partial function of ellipse_err with the data
-ellipse_err_data = partial(ellipse_err,polar_coords)
-# minimize the error
-params = minimize(ellipse_err_data,params0,method='nelder-mead').x
-
-# calculate the true anomaly of the first entry in the dataset
-true_anom = (polar_coords[0][1]-params[2])%(2*math.pi)
-
-# calculation of residuals
-residuals = residuals(data,params,polar_coords,np.column_stack((p_x,p_y)))
-
-# handle retrograde orbits
-if retro:
-    inc = math.pi - inc
-    lan = (lan + math.pi)%(2*math.pi)
-    params[2] = (3*math.pi - params[2])%(2*math.pi)
-    true_anom = 2*math.pi - true_anom
-
-# output the parameters
-print("Semi-major axis:            ",params[0],args.units)
-print("Eccentricity:               ",params[1])
-print("Argument of periapsis:      ",math.degrees(params[2]),"deg")
-print("Inclination:                ",math.degrees(inc),"deg")
-print("Longitude of Ascending Node:",math.degrees(lan),"deg")
-print("True Anomaly                ",math.degrees(true_anom),"deg")
-
-# print data about residuals
-print()
-
-max_res = np.max(residuals,axis=0)
-min_res = np.min(residuals,axis=0)
-sum_res = np.sum(residuals,axis=0)
-avg_res = np.average(residuals,axis=0)
-std_res = np.std(residuals,axis=0)
-
-print("Printing data about residuals in each axis:")
-print("Max:               ",max_res)
-print("Min:               ",min_res)
-print("Sum:               ",sum_res)
-print("Average:           ",avg_res)
-print("Standard Deviation:",std_res)
-
-# now plot the results
-a,e,t0 = params
-
-# generate 1000 points on the ellipse
-theta = np.linspace(0,2*math.pi,1000)
-radii = a*(1-e**2)/(1+e*np.cos(theta-t0))
-
-# convert to cartesian
-x_s = np.multiply(radii,np.cos(theta))
-y_s = np.multiply(radii,np.sin(theta))
-
-# convert to 3D
-mat = np.column_stack((p_x,p_y))
-coords_3D = np.matmul(mat,[x_s,y_s])
-
-fig = plt.figure()
-ax = Axes3D(fig)
-ax.axis('equal')
-
-# plot
-ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],c = 'red',label='Fitted Ellipse')
-ax.scatter3D(data[:,0],data[:,1],data[:,2],c='black',label='Initial Data')
-
-# The Pale Blue Dot
-ax.scatter3D(0,0,0,c='blue',depthshade=False,label='Earth')
-
-ax.can_zoom()
-ax.legend()
-plt.show()
+if __name__ == "__main__":
+    args = read_args()
+    data = read_file(args.file)
+    kep, res = determine_kep(data)
+    print_kep(kep,res,args.units)
+    plot_kep(kep,data)
