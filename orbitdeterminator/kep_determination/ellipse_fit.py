@@ -179,7 +179,7 @@ def residuals(data,params,polar_coords,basis):
 
 def read_file(file_name):
     data = np.loadtxt(file_name,skiprows=1,usecols=(1,2,3))
-    
+
     return data
 
 def determine_kep(data):
