@@ -56,3 +56,67 @@ def test_ellipse_fit():
     assert kep[3] == pytest.approx(298.0188, 1.0)       # argp
     assert kep[4] == pytest.approx(282.8216, 0.1)       # raan
     assert kep[5] == pytest.approx(62.0505, 0.5)        # true_anom
+
+    #noaa-15
+    kep = np.array([98.7705, 158.2195, 0.0009478, 307.8085, 52.2235, 14.25852803])
+    r = kep_to_state(kep)
+    _,vecs = rkf5(0,6120,10,r)
+    r = np.reshape(r,(1,6))
+    vecs = np.insert(vecs,0,r,axis=0)
+    vecs = vecs[:,0:3]
+
+    kep,_ = determine_kep(vecs)
+    assert kep[0] == pytest.approx(7183.76381, 0.1)     # sma
+    assert kep[1] == pytest.approx(0.0009478, 0.01)     # ecc
+    assert kep[2] == pytest.approx(98.7705, 0.1)        # inc
+    assert kep[3] == pytest.approx(307.8085, 1.0)       # argp
+    assert kep[4] == pytest.approx(158.2195, 0.1)       # raan
+    assert kep[5] == pytest.approx(52.2235, 0.5)        # true_anom
+
+    #noaa-18
+    kep = np.array([99.1472, 176.6654, 0.0014092, 197.4778, 162.5909, 14.12376102669957])
+    r = kep_to_state(kep)
+    _,vecs = rkf5(0,6120,10,r)
+    r = np.reshape(r,(1,6))
+    vecs = np.insert(vecs,0,r,axis=0)
+    vecs = vecs[:,0:3]
+
+    kep,_ = determine_kep(vecs)
+    assert kep[0] == pytest.approx(7229.38911, 0.1)     # sma
+    assert kep[1] == pytest.approx(0.0014092, 0.01)     # ecc
+    assert kep[2] == pytest.approx(99.1472, 0.1)        # inc
+    assert kep[3] == pytest.approx(197.4778, 1.0)       # argp
+    assert kep[4] == pytest.approx(176.6654, 0.1)       # raan
+    assert kep[5] == pytest.approx(162.5909, 0.5)       # true_anom
+
+    #noaa-19
+    kep = np.array([99.1401, 119.3629, 0.0014753, 44.0001, 316.2341, 14.12279464478196])
+    r = kep_to_state(kep)
+    _,vecs = rkf5(0,6120,10,r)
+    r = np.reshape(r,(1,6))
+    vecs = np.insert(vecs,0,r,axis=0)
+    vecs = vecs[:,0:3]
+
+    kep,_ = determine_kep(vecs)
+    assert kep[0] == pytest.approx(7229.71889, 0.1)    # sma
+    assert kep[1] == pytest.approx(0.0014753, 0.01)    # ecc
+    assert kep[2] == pytest.approx(99.1401, 0.1)       # inc
+    assert kep[3] == pytest.approx(44.0001, 1.0)       # argp
+    assert kep[4] == pytest.approx(119.3629, 0.1)      # raan
+    assert kep[5] == pytest.approx(316.2341, 0.5)      # true_anom
+
+    #ISS
+    kep = np.array([51.6402, 150.4026, 0.0004084, 108.2140, 238.0528, 15.54082454114406])
+    r = kep_to_state(kep)
+    _,vecs = rkf5(0,5559.55057,10,r)
+    r = np.reshape(r,(1,6))
+    vecs = np.insert(vecs,0,r,axis=0)
+    vecs = vecs[:,0:3]
+
+    kep,_ = determine_kep(vecs)
+    assert kep[0] == pytest.approx(6782.95812, 0.1)     # sma
+    assert kep[1] == pytest.approx(0.0004084, 0.01)     # ecc
+    assert kep[2] == pytest.approx(51.6402, 0.1)        # inc
+    assert kep[3] == pytest.approx(108.2140, 1.0)       # argp
+    assert kep[4] == pytest.approx(150.4026, 0.1)       # raan
+    assert kep[5] == pytest.approx(238.0528, 0.5)       # true_anom

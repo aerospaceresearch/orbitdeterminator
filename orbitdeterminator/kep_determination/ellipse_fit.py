@@ -17,9 +17,8 @@ def read_args():
     parser.add_argument('-u', '--units', type=str, help='units of distance (m or km)', default='km')
     return parser.parse_args()
 
-
-def is_retro(data):
-    '''Returns whether the orbit is retrograde'''
+def cross_sum(data):
+    '''Returns the normalized sum of thhe cross products between consecutive vectors'''
 
     cross_sum = 0
     for i in range(len(data)-1):
@@ -27,7 +26,7 @@ def is_retro(data):
         v2 = data[i+1]
         cross_sum = cross_sum + np.cross(v1,v2)
 
-    return cross_sum[2] < 0
+    return cross_sum/np.linalg.norm(cross_sum)
 
 def plane_err(data,coeffs):
     '''Calculates the total squared error of the data wrt a plane.
@@ -179,82 +178,75 @@ def residuals(data,params,polar_coords,basis):
 
 def read_file(file_name):
     data = np.loadtxt(file_name,skiprows=1,usecols=(1,2,3))
-
     return data
 
 def determine_kep(data):
-    retro = is_retro(data) # check whether the orbit is retrograde
-    
+
     # try to fit a plane to the data first.
-    
+
     # make a partial function of plane_err by supplying the data
     plane_err_data = partial(plane_err,data)
-    
+
     # plane is defined by ax+by+cz=0.
-    p0 = [0,0,1] # make an initial guess
+    p0 = cross_sum(data) # make an initial guess
+
     # minimize the error
     p = minimize(plane_err_data,p0,method='nelder-mead',options={'maxiter':1000}).x
     p = p/np.linalg.norm(p) # normalize p
-    
+
     # now p is the normal vector of the best-fit plane.
-    
+
     # lan_vec is a vector along the line of intersection of the plane
     # and the x-y plane.
     lan_vec = np.cross([0,0,1],p)
-    
+
     # if lan_vec is [0,0,0] it means that it is undefined and can take on
     # any value. So we set it to [1,0,0] so that the rest of the
     # calculation can proceed.
     if (np.array_equal(lan_vec,[0,0,0])):
         lan_vec = [1,0,0]
-    
+
     # inclination is the angle between p and the z axis.
-    inc = math.acos(np.clip(np.dot(p,[0,0,1])/np.linalg.norm(p),-1,1))
+    inc = math.acos(np.clip(p[2]/np.linalg.norm(p),-1,1))
     # lan is the angle between the lan_vec and the x axis.
-    lan = math.acos(np.clip(np.dot(lan_vec,[1,0,0])/np.linalg.norm(lan_vec),-1,1))
-    
-    # now we try to convert the problem into a 2D problem.
-    
+    lan = math.atan2(lan_vec[1],lan_vec[0])%(2*math.pi)
+
+    # now we try to convert the problem into a 2D problem
+
     # project all the points onto the plane.
     proj_data = project_to_plane(data,p)
-    
+
     # p_x and p_y are 2 orthogonal unit vectors on the plane.
-    p_x,p_y = lan_vec, project_to_plane(np.cross([0,0,1],lan_vec),p)
+    p_x,p_y = lan_vec, np.cross(p,lan_vec)
     p_x,p_y = p_x/np.linalg.norm(p_x), p_y/np.linalg.norm(p_y)
-    
+
     # find coordinates of the points wrt the basis [p_x,p_y].
     coords_2D = conv_to_2D(proj_data,p_x,p_y)
-    
+
     # now try to fit an ellipse to these points.
-    
+
     # convert them into polar coordinates
     polar_coords = cart_to_pol(coords_2D)
-    
+
     # make an initial guess for the parametres
     r_m = np.min(polar_coords[:,0])
     r_M = np.max(polar_coords[:,0])
     a0 = (r_m+r_M)/2
     e0 = (r_M-r_m)/(r_M+r_m)
     t00 = polar_coords[np.argmin(polar_coords[:,0]),1]
-    
+
     params0 = [a0,e0,t00] # initial guess
     # make a partial function of ellipse_err with the data
     ellipse_err_data = partial(ellipse_err,polar_coords)
     # minimize the error
     params = minimize(ellipse_err_data,params0,method='nelder-mead',options={'maxiter':1000}).x
-    
+    params[2] = params[2]%(2*math.pi)  # bring argp between 0-360 degrees
+
     # calculate the true anomaly of the first entry in the dataset
     true_anom = (polar_coords[0][1]-params[2])%(2*math.pi)
-    
+
     # calculation of residuals
     res = residuals(data,params,polar_coords,np.column_stack((p_x,p_y)))
-    
-    # handle retrograde orbits
-    if retro:
-        inc = math.pi - inc
-        lan = (lan + math.pi)%(2*math.pi)
-        params[2] = (3*math.pi - params[2])%(2*math.pi)
-        true_anom = 2*math.pi - true_anom
 
     kep = np.empty((6,1))
     kep[0] = params[0]
