@@ -104,11 +104,27 @@ def test_ellipse_fit():
     assert kep[3] == pytest.approx(44.0001, 1.0)       # argp
     assert kep[4] == pytest.approx(119.3629, 0.1)      # raan
     assert kep[5] == pytest.approx(316.2341, 0.5)      # true_anom
+    
+    #molniya 2-10
+    kep = np.array([63.2749, 254.2968, 0.7151443, 294.4926, 9.2905, 2.01190064320534])
+    r = kep_to_state(kep)
+    _,vecs = rkf5(0,43000,50,r)
+    r = np.reshape(r,(1,6))
+    vecs = np.insert(vecs,0,r,axis=0)
+    vecs = vecs[:,0:3]
 
+    kep,_ = determine_kep(vecs)
+    assert kep[0] == pytest.approx(26505.1836, 0.1)     # sma
+    assert kep[1] == pytest.approx(0.7151443, 0.01)     # ecc
+    assert kep[2] == pytest.approx(63.2749, 0.1)        # inc
+    assert kep[3] == pytest.approx(294.4926, 1.0)       # argp
+    assert kep[4] == pytest.approx(254.2968, 0.1)       # raan
+    assert kep[5] == pytest.approx(65.56742, 0.5)       # true_anom
+    
     #ISS
     kep = np.array([51.6402, 150.4026, 0.0004084, 108.2140, 238.0528, 15.54082454114406])
     r = kep_to_state(kep)
-    _,vecs = rkf5(0,5559.55057,10,r)
+    _,vecs = rkf5(0,5560,10,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
     vecs = vecs[:,0:3]
