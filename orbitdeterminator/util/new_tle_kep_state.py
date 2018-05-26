@@ -1,7 +1,19 @@
+"""This module computes the state vector from keplerian elements."""
+
 import math
 import numpy as np
 
 def MtoE(M,e):
+    """Calculates the eccentric anomaly from the mean anomaly.
+
+       Args:
+           M(float): the mean anomaly (in radians)
+           e(float): the eccentricity
+
+       Returns:
+           float: The eccentric anomaly (in radians)
+    """
+
     E = M
     dy = 1
     while(abs(dy) > 0.0001):
@@ -13,24 +25,22 @@ def MtoE(M,e):
     return E
 
 def kep_to_state(kep):
-    ''' # this function uses the keplerian elements to compute the position and velocity vector
+    """ This function uses the keplerian elements to compute the position and velocity vector
 
-	# input
+        Args:
+            kep(1x6 numpy array): kep contains the following variables
+            kep[0] = inclination (degrees)
+            kep[1] = right ascension of the ascending node (degrees)
+            kep[2] = eccentricity (number)
+            kep[3] = argument of perigee (degrees)
+            kep[4] = mean anomaly (degrees)
+            kep[5] = mean motion (revs per day)
 
-	# kep is a 1x6 matrix which contains the following variables
-	# kep(0)=inclination (degrees)
-	# kep(1)=right ascension of the ascending node (degrees)
-	# kep(2)=eccentricity (number)
-	# kep(3)=argument of perigee (degrees)
-	# kep(4)=mean anomaly (degrees)
-	# kep(5)=mean motion (revs per day)
-
-	# output
-
-	# r = 1x6 matrix which contains the position and velocity vector
-	# r(0),r(1),r(2) = position vector (rx,ry,rz) m
-	# r(3),r(4),r(5) = velocity vector (vx,vy,vz) m/s
-        '''
+        Returns:
+        r: 1x6 numpy array which contains the position and velocity vector
+	   r[0],r[1],r[2] = position vector [rx,ry,rz] km
+	   r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s
+    """
 
     r = np.zeros((6,1))
     mu = 398600.4405
