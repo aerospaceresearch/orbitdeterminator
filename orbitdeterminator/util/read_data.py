@@ -45,7 +45,11 @@ def load_data_iod_af2(fname):
     '''
     Loads satellite position observation data from IOD-formatted files.
     Currently, the only supported angle format is 2, as specified in IOD format.
-    TODO: add other angle formats.
+    IOD observations format is described at
+    http://www.satobs.org/position/IODformat.html
+    
+    TODO: add other angle formats; construct numpy array according to different
+    angle formats.
 
     Args:
         fname (string): name of the IOD-formatted text file to be parsed
