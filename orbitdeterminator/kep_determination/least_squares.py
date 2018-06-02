@@ -36,6 +36,13 @@ def op2if(omega,I,Omega):
     P2_mul_P3 = np.matmul(rotx(I),rotz(omega))
     return np.matmul(rotz(Omega),P2_mul_P3)
 
+# # TODO:
+# # write function to compute true anomaly as a function of time-of-fly
+# # write function to compute range as a function of orbital elements
+# # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted)
+# # compute Q as a function of unknown orbital elements (to be fitted)
+# # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
+
 omega = math.radians(31.124)
 I = math.radians(75.0)
 Omega = math.radians(60.0)
