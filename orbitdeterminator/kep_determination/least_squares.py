@@ -43,6 +43,9 @@ def op2if(omega,I,Omega):
 # # compute Q as a function of unknown orbital elements (to be fitted)
 # # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
 
+# NOTES:
+# matrix multiplication of numpy's 2-D arrays is done through `np.matmul`
+
 omega = math.radians(31.124)
 I = math.radians(75.0)
 Omega = math.radians(60.0)
