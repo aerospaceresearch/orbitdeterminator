@@ -23,7 +23,7 @@ tle = tle[0].splitlines()
 Creating database named "cubesat"
 """
 
-db = MySQLdb.connect(host="localhost", user="root", passwd="mysql")
+db = MySQLdb.connect(host="localhost", user="root", passwd="*****")
 cursor = db.cursor()
 sql = 'CREATE DATABASE cubesat;'
 cursor.execute(sql)

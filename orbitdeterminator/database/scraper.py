@@ -21,7 +21,7 @@ tle = list(soup.children)
 tle = tle[0].splitlines()
 ts = time.time()
 
-db = MySQLdb.connect(host="localhost", user="root", passwd="mysql")
+db = MySQLdb.connect(host="localhost", user="root", passwd="*****")
 cursor = db.cursor()
 cursor.execute('use cubesat;')
 print('Database selected')
