@@ -63,6 +63,9 @@ def xyz_frame_(a,e,f,omega,I,Omega):
 def xyz_frame(x):
     return np.matmul( orbplane2frame(x[3:6]) , xyz_orbplane(x[0:3]) )
 
+def meanmotion(mu,a):
+    return np.sqrt(mu/(a**3))
+
 # # TODO:
 # # write function to compute true anomaly as a function of time-of-fly
 # # write function to compute range as a function of orbital elements
@@ -160,3 +163,5 @@ print('xyz_frame_((aaa[0],aaa[1],aaa[2],bbb[0],bbb[1],bbb[2])) = ',xyz_frame((aa
 dxyz_frame = jacobian(xyz_frame)
 
 print('dxyz_frame(ccc) = ',dxyz_frame(ccc))
+
+print('meanmotion(1.0,1.1) = ', meanmotion(1.0,1.1))
