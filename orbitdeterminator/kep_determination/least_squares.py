@@ -37,19 +37,31 @@ def rotx(ang):
 #1) rotation about the z axis about an angle `omega` (argument of pericenter)
 #2) rotation about the x axis about an angle `I` (inclination)
 #3) rotation about the z axis about an angle `Omega` (longitude of ascending node)
-def orbplane2frame(omega,I,Omega):
+def orbplane2frame_(omega,I,Omega):
     P2_mul_P3 = np.matmul(rotx(I),rotz(omega))
     return np.matmul(rotz(Omega),P2_mul_P3)
 
-def kep_r__(a, e, f):
+def orbplane2frame(x):
+    return orbplane2frame_(x[0],x[1],x[2])
+
+def kep_r_(a, e, f):
     return a*(1.0-e**2)/(1.0+e*np.cos(f))
 
-def kep_r_(x):
-    return kep_r__(x[0],x[1],x[2])
+def kep_r(x):
+    return kep_r_(x[0],x[1],x[2])
 
-def xyz_frame(a, e, f):
-    r = kep_r(a, e, f)
+def xyz_orbplane_(a, e, f):
+    r = kep_r_(a, e, f)
     return np.array((r*np.cos(f),r*np.sin(f),0.0))
+
+def xyz_orbplane(x):
+    return xyz_orbplane_(x[0],x[1],x[2])
+
+def xyz_frame_(a,e,f,omega,I,Omega):
+    return np.matmul( orbplane2frame_(omega,I,Omega) , xyz_orbplane_(a, e, f) )
+
+def xyz_frame(x):
+    return np.matmul( orbplane2frame(x[3:6]) , xyz_orbplane(x[0:3]) )
 
 # # TODO:
 # # write function to compute true anomaly as a function of time-of-fly
@@ -72,7 +84,7 @@ P_2 = rotx(I) #rotation about x axis by an angle `I`
 P_3 = rotz(Omega) #rotation about z axis by an angle `Omega`
 
 Rot1 = np.matmul(P_3,np.matmul(P_2,P_1))
-Rot2 = orbplane2frame(omega,I,Omega)
+Rot2 = orbplane2frame_(omega,I,Omega)
 
 v = np.array((3.0,-2.0,1.0))
 
@@ -102,9 +114,16 @@ print(Rot2)
 
 # print(drotz(0.1))
 
-drotz = jacobian(orbplane2frame)
+drotz = jacobian(orbplane2frame_)
+drotz2 = jacobian(orbplane2frame)
 
-print(drotz(np.radians(10.0),np.radians(-31.124),np.radians(200.001)))
+print('op2f=',orbplane2frame_(np.radians(10.0),np.radians(-31.124),np.radians(200.001)))
+
+# print('drotz=',drotz(np.radians(10.0),np.radians(-31.124),np.radians(200.001)))
+
+bbb= np.array( (np.radians(10.0),np.radians(-31.124),np.radians(200.001)) )
+#bbb= np.array( (np.radians(0.0),np.radians(0.0),np.radians(0.0)) )
+print('drotz2(bbb)=',drotz2( bbb ))
 
 #print(dkep_r)
 #print(kep_r_(1.0,0.1,np.radians(-29.99)))
@@ -116,8 +135,28 @@ aaa = np.array((1.0,0.45,np.radians(1.0)))
 # printz(aaa)
 
 print('aaa = ', aaa)
-print('kep_r_(aaa) = ',kep_r_(aaa))
+print('kep_r(aaa) = ',kep_r(aaa))
 
-dkep_r = grad(kep_r_)
+dkep_r = grad(kep_r)
 
 print('dkep_r(aaa) = ',dkep_r(aaa))
+
+print('xyz_orbplane(aaa) = ',xyz_orbplane(aaa))
+
+dxyz_orbplane = jacobian(xyz_orbplane)
+
+print('dxyz_orbplane(aaa) = ',dxyz_orbplane(aaa))
+
+dxyz_orbplane_ = jacobian(xyz_orbplane_)
+
+print('dxyz_orbplane_(aaa) = ',dxyz_orbplane_(aaa[0],aaa[1],aaa[2]))
+
+ccc = np.array((aaa[0],aaa[1],aaa[2],bbb[0],bbb[1],bbb[2]))
+
+print('xyz_frame(ccc) = ',xyz_frame(ccc))
+
+print('xyz_frame_((aaa[0],aaa[1],aaa[2],bbb[0],bbb[1],bbb[2])) = ',xyz_frame((aaa[0],aaa[1],aaa[2],bbb[0],bbb[1],bbb[2])))
+
+dxyz_frame = jacobian(xyz_frame)
+
+print('dxyz_frame(ccc) = ',dxyz_frame(ccc))
