@@ -15,6 +15,7 @@ from autograd import elementwise_grad as egrad
 # a: semi-major axis
 # e: eccentricity
 # eps: mean longitude at epoch
+# taup: time of pericenter passage
 # Euler angles:
 # I: inclination
 # Omega: longitude of ascending node
@@ -67,8 +68,12 @@ def meanmotion(mu,a):
     return np.sqrt(mu/(a**3))
 
 # # TODO:
+# # write function to compute range as a function of orbital elements: DONE
 # # write function to compute true anomaly as a function of time-of-fly
-# # write function to compute range as a function of orbital elements
+# # the following transformation is needed: from time t, to mean anomaly M,
+# # to eccentric anomaly E, to true anomaly f
+# # t -> M=n*(t-taup) -> M=E-e*sin(E) (invert) ->
+# # -> f = 2*atan(  sqrt((1+e)/(1-e))*tan(E/2)  )
 # # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted)
 # # compute Q as a function of unknown orbital elements (to be fitted)
 # # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
