@@ -45,12 +45,14 @@ def orbplane2frame_(omega,I,Omega):
 def orbplane2frame(x):
     return orbplane2frame_(x[0],x[1],x[2])
 
+# get Keplerian range
 def kep_r_(a, e, f):
     return a*(1.0-e**2)/(1.0+e*np.cos(f))
 
 def kep_r(x):
     return kep_r_(x[0],x[1],x[2])
 
+# get cartesian positions wrt orbital plane
 def xyz_orbplane_(a, e, f):
     r = kep_r_(a, e, f)
     return np.array((r*np.cos(f),r*np.sin(f),0.0))
@@ -58,14 +60,38 @@ def xyz_orbplane_(a, e, f):
 def xyz_orbplane(x):
     return xyz_orbplane_(x[0],x[1],x[2])
 
+# get cartesian positions wrt inertial frame from orbital elements
 def xyz_frame_(a,e,f,omega,I,Omega):
     return np.matmul( orbplane2frame_(omega,I,Omega) , xyz_orbplane_(a, e, f) )
 
 def xyz_frame(x):
     return np.matmul( orbplane2frame(x[3:6]) , xyz_orbplane(x[0:3]) )
 
+# get mean motion from mass parameter (mu) and semimajor axis (a)
 def meanmotion(mu,a):
     return np.sqrt(mu/(a**3))
+
+# get mean anomaly from mean motion (n), time (t) and time of pericenter passage (taup)
+def meananomaly(n, t, taup):
+    return n*(t-taup)
+
+# compute eccentric anomaly (E) from eccentricity (e) and mean anomaly (M)
+def eccentricanomaly(e,M):
+    M0 = np.mod(M,2*np.pi)
+    E0 = M0 + np.sign(np.sin(M0))*0.85*e #Murray-Dermotts' initial estimate
+    # successive approximations via Newtons' method
+    for i in range(0,4):
+        #TODO: implement modified Newton's method for Kepler's equation (Murray-Dermott)
+        Eans = E0 - (E0-e*np.sin(E0)-M0)/(1.0-e*np.cos(E0))
+        E0 = Eans
+    return E0
+
+#compute true anomaly (f) from eccentricity (e) and eccentric anomaly (E)
+def trueanomaly(e,E):
+    Enew = np.mod(E,2*np.pi)
+    return 2*np.arctan(  np.sqrt((1.0+e)/(1.0-e))*np.tan(Enew/2)  )
+
+
 
 # # TODO:
 # # write function to compute range as a function of orbital elements: DONE
@@ -170,3 +196,18 @@ dxyz_frame = jacobian(xyz_frame)
 print('dxyz_frame(ccc) = ',dxyz_frame(ccc))
 
 print('meanmotion(1.0,1.1) = ', meanmotion(1.0,1.1))
+
+mye = 0.3134123
+myM = -21.98*np.pi
+myEans = eccentricanomaly(mye,myM)
+print('myEans-mye*np.sin(myEans)-np.mod(myM,2*np.pi) = ', myEans-mye*np.sin(myEans)-np.mod(myM,2*np.pi))
+
+print('eccentricanomaly(mye,myM) = ', eccentricanomaly(mye,myM))
+
+print('trueanomaly(0.1, 0.16*np.pi) = ', trueanomaly(0.1, 0.16*np.pi)/np.pi, '*pi')
+print('trueanomaly(0.1, 0.56*np.pi) = ', trueanomaly(0.1, 0.56*np.pi)/np.pi, '*pi')
+print('trueanomaly(0.1, 1.16*np.pi) = ', trueanomaly(0.1, 1.16*np.pi)/np.pi, '*pi')
+print('trueanomaly(0.1, 1.56*np.pi) = ', trueanomaly(0.1, 1.56*np.pi)/np.pi, '*pi')
+print('trueanomaly(0.1, 1.99*np.pi) = ', trueanomaly(0.1, 1.99*np.pi)/np.pi, '*pi')
+
+
