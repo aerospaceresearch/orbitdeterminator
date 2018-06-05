@@ -86,12 +86,27 @@ def eccentricanomaly(e,M):
         E0 = Eans
     return E0
 
-#compute true anomaly (f) from eccentricity (e) and eccentric anomaly (E)
+# compute true anomaly (f) from eccentricity (e) and eccentric anomaly (E)
 def trueanomaly(e,E):
     Enew = np.mod(E,2*np.pi)
     return 2*np.arctan(  np.sqrt((1.0+e)/(1.0-e))*np.tan(Enew/2)  )
 
+# compute true anomaly from eccentricity and mean anomaly
+def meanan2truean(e,M):
+    return trueanomaly(e, eccentricanomaly(e, M))
 
+# compute true anomaly from time, a, e, mu and taup
+def time2truean(a, e, mu, t, taup):
+    return meanan2truean(e, meananomaly(meanmotion(mu, a), t, taup))
+
+# compute cartesian positions (x,y,z) at time t
+# for mass parameter mu from orbital elements a, e, taup, I, omega, Omega
+def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
+
+    # compute true anomaly at time t
+    f = time2truean(a, e, mu, t, taup)
+    # get cartesian positions wrt inertial frame from orbital elements
+    return xyz_frame_(a, e, f, omega, I, Omega)
 
 # # TODO:
 # # write function to compute range as a function of orbital elements: DONE
@@ -155,7 +170,7 @@ print('op2f=',orbplane2frame_(np.radians(10.0),np.radians(-31.124),np.radians(20
 
 # print('drotz=',drotz(np.radians(10.0),np.radians(-31.124),np.radians(200.001)))
 
-bbb= np.array( (np.radians(10.0),np.radians(-31.124),np.radians(200.001)) )
+bbb = np.array( (np.radians(10.0),np.radians(-31.124),np.radians(200.001)) )
 #bbb= np.array( (np.radians(0.0),np.radians(0.0),np.radians(0.0)) )
 print('drotz2(bbb)=',drotz2( bbb ))
 
@@ -210,4 +225,8 @@ print('trueanomaly(0.1, 1.16*np.pi) = ', trueanomaly(0.1, 1.16*np.pi)/np.pi, '*p
 print('trueanomaly(0.1, 1.56*np.pi) = ', trueanomaly(0.1, 1.56*np.pi)/np.pi, '*pi')
 print('trueanomaly(0.1, 1.99*np.pi) = ', trueanomaly(0.1, 1.99*np.pi)/np.pi, '*pi')
 
+print('trueanomaly(0.1, -1.99*np.pi) = ', trueanomaly(0.1, -1.99*np.pi)/np.pi, '*pi')
 
+print('time2truean(1.0, 0.5, 1.0, 1.0+np.pi, 1.0) = ', time2truean(1.0, 0.7, 1.0, 1.0-1.9*np.pi, 1.0)/np.pi, '*pi')
+
+print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', orbel2xyz(0.0*np.pi, 1.0, 1.0, 0.1, 0.0, np.deg2rad(137.2345) , np.deg2rad(10.0), np.deg2rad(100.1)))
