@@ -110,11 +110,11 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
 
 # # TODO:
 # # write function to compute range as a function of orbital elements: DONE
-# # write function to compute true anomaly as a function of time-of-fly
+# # write function to compute true anomaly as a function of time-of-fly: DONE
 # # the following transformation is needed: from time t, to mean anomaly M,
 # # to eccentric anomaly E, to true anomaly f
 # # t -> M=n*(t-taup) -> M=E-e*sin(E) (invert) ->
-# # -> f = 2*atan(  sqrt((1+e)/(1-e))*tan(E/2)  )
+# # -> f = 2*atan(  sqrt((1+e)/(1-e))*tan(E/2)  ): DONE
 # # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted)
 # # compute Q as a function of unknown orbital elements (to be fitted)
 # # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
@@ -230,3 +230,39 @@ print('trueanomaly(0.1, -1.99*np.pi) = ', trueanomaly(0.1, -1.99*np.pi)/np.pi, '
 print('time2truean(1.0, 0.5, 1.0, 1.0+np.pi, 1.0) = ', time2truean(1.0, 0.7, 1.0, 1.0-1.9*np.pi, 1.0)/np.pi, '*pi')
 
 print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', orbel2xyz(0.0*np.pi, 1.0, 1.0, 0.1, 0.0, np.deg2rad(137.2345) , np.deg2rad(10.0), np.deg2rad(100.1)))
+
+data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
+
+print('data[0,:] = ', data[0,:])
+
+print('data.shape = ', data.shape)
+
+a_ = 6801088.421358589 # m
+e_ = 0.000994284676986928
+I_ = np.deg2rad(51.64073790913945) #deg
+omega_ = np.deg2rad(111.46902673189568) #deg
+Omega_ = np.deg2rad(112.51570524695879) #deg
+f_ = np.deg2rad(248.67209974376843) #deg
+
+mu_Earth = 398600.435436E9 # m^3/seg^2 # 398600.435436 # km^3/seg^2
+
+print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', orbel2xyz(0.0, mu_Earth, a_, e_, 0.0, omega_, I_, Omega_) )
+
+x = np.array((a_, e_, data[1719,0], omega_, I_, Omega_))
+
+print('x = ', x)
+
+y = data[0,1:4] - orbel2xyz(x[2]+3600.0, mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5])
+
+print('y = ', y)
+
+print('np.linalg.norm(y,ord=2) = ', np.linalg.norm(y,ord=2))
+
+ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
+
+print('ranges_[0:10] = ', ranges_[0:10])
+
+import matplotlib.pyplot as plt
+
+plt.plot( data[:,0], ranges_ )
+plt.show()
