@@ -225,13 +225,16 @@ class SGP4(object):
             self.pos[i] += rk*UV[i]*xkmper
             self.vel[i] += (rdotk*UV[i] + rfdotk*VV[i])*xkmper/60
 
+    @classmethod
     def magnitude(self, vec):
         mag_vec = math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
         return mag_vec
 
+    @classmethod
     def vec_multiply(self, a, b):
         return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
 
+    @classmethod
     def matrix_multiply(self, a, b):
         return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
 
