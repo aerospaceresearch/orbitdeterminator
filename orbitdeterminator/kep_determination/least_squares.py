@@ -116,7 +116,7 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
 # # t -> M=n*(t-taup) -> M=E-e*sin(E) (invert) ->
 # # -> f = 2*atan(  sqrt((1+e)/(1-e))*tan(E/2)  ): DONE
 # # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted)
-# # compute Q as a function of unknown orbital elements (to be fitted)
+# # compute Q as a function of unknown orbital elements (to be fitted): DONE
 # # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
 
 # NOTES:
@@ -227,15 +227,16 @@ print('trueanomaly(0.1, 1.99*np.pi) = ', trueanomaly(0.1, 1.99*np.pi)/np.pi, '*p
 
 print('trueanomaly(0.1, -1.99*np.pi) = ', trueanomaly(0.1, -1.99*np.pi)/np.pi, '*pi')
 
-print('time2truean(1.0, 0.5, 1.0, 1.0+np.pi, 1.0) = ', time2truean(1.0, 0.7, 1.0, 1.0-1.9*np.pi, 1.0)/np.pi, '*pi')
+# print('time2truean(1.0, 0.5, 1.0, 1.0+np.pi, 1.0) = ', time2truean(1.0, 0.7, 1.0, 1.0-1.9*np.pi, 1.0)/np.pi, '*pi')
 
-print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', orbel2xyz(0.0*np.pi, 1.0, 1.0, 0.1, 0.0, np.deg2rad(137.2345) , np.deg2rad(10.0), np.deg2rad(100.1)))
+# print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', orbel2xyz(0.0*np.pi, 1.0, 1.0, 0.1, 0.0, np.deg2rad(137.2345) , np.deg2rad(10.0), np.deg2rad(100.1)))
 
 data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
 
 print('data[0,:] = ', data[0,:])
 
 print('data.shape = ', data.shape)
+print('data.shape[0] = ', data.shape[0])
 
 a_ = 6801088.421358589 # m
 e_ = 0.000994284676986928
@@ -246,13 +247,27 @@ f_ = np.deg2rad(248.67209974376843) #deg
 
 mu_Earth = 398600.435436E9 # m^3/seg^2 # 398600.435436 # km^3/seg^2
 
-print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', orbel2xyz(0.0, mu_Earth, a_, e_, 0.0, omega_, I_, Omega_) )
+myn_ = meanmotion(mu_Earth,a_)
+print('meanmotion(mu_Earth,a_) = ', myn_)
+print('T = 2pi/n = ', 2*np.pi/myn_)
+print('n*(t0-taup) = ', myn_*(data[0,0]-data[1719,0])/np.pi, '*pi')
 
-x = np.array((a_, e_, data[1719,0], omega_, I_, Omega_))
+my_xyz_ = orbel2xyz(data[0,0], mu_Earth, a_, e_, data[1700,0], omega_, I_, Omega_)
+print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', my_xyz_ )
+print('r(x,y,z) = ',  np.linalg.norm(my_xyz_, ord=2))
 
-print('x = ', x)
+print('data[1719,0] = ', data[1719,0])
 
-y = data[0,1:4] - orbel2xyz(x[2]+3600.0, mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5])
+x0 = np.array((a_, e_, data[1719,0], omega_, I_, Omega_))
+
+print('x0 = ', x0)
+
+#the arithmetic mean will be used as the reference epoch for the elements
+t_mean = np.mean(data[:,0])
+
+print('t_mean = ', t_mean)
+
+y = data[0,1:4] - orbel2xyz(data[0,0], mu_Earth, x0[0], x0[1], x0[2], x0[3], x0[4], x0[5])
 
 print('y = ', y)
 
@@ -262,7 +277,36 @@ ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
 
 print('ranges_[0:10] = ', ranges_[0:10])
 
+def Q(x,my_data,my_mu_Earth):
+    Q0 = 0.0
+    for i in range(0,my_data.shape[0]-1):
+        #initializing residuals vector
+        #print('all_residuals = ', all_residuals)
+        #all_residuals = np.zeros(data.shape[0])
+        Q0 = Q0 + np.linalg.norm(my_data[0,1:4] - orbel2xyz(my_data[0,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5]), 2)/my_data.shape[0]
+    return Q0
+
+print('Q(x0, data, mu_Earth) = ', Q(x0, data, mu_Earth))
+
+def QQ(x):
+    return Q(x, data[0:200,:], mu_Earth)
+
+print('QQ(x0) = ', QQ(x0))
+
+from scipy.optimize import minimize
+
+Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100})
+
+print('Q_mini.x = ', Q_mini.x)
+
+print('Q_mini.x-x0 = ', Q_mini.x-x0)
+
 import matplotlib.pyplot as plt
 
 plt.plot( data[:,0], ranges_ )
+plt.plot( data[:,0], kep_r_(Q_mini.x[0], Q_mini.x[1], time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth, data[:,0], Q_mini.x[2])))
+#plt.plot( data[:,0], np.linalg.norm( orbel2xyz(data[:,0], mu_Earth, Q_mini.x[0], Q_mini.x[1], Q_mini.x[2], Q_mini.x[3], Q_mini.x[4], Q_mini.x[5]), ord=2 ))
 plt.show()
+
+#plt.plot( ranges_ )
+
