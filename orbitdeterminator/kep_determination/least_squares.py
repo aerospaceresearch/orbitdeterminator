@@ -203,7 +203,7 @@ print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg\n')
 t_mean = np.mean(data[:,0])
 
 # minimize cost function QQ, using initial guess x0
-Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':10, 'disp': True})
+Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
 
 #display least-squares solution
 print('\nOrbital elements, least-squares solution:')
