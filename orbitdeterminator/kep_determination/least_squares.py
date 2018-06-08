@@ -20,6 +20,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from scipy.optimize import least_squares
 from ellipse_fit import determine_kep, read_file
 
 # convention:
@@ -127,7 +128,7 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
 # get matrix of residuals
 def res_vec(x, my_data, my_mu_Earth):
 
-    rv = np.zeros((my_data.shape[0],3))
+    rv = np.zeros((3*my_data.shape[0]))
     
     for i in range(0,my_data.shape[0]-1):
         # observed xyz values
@@ -135,7 +136,10 @@ def res_vec(x, my_data, my_mu_Earth):
         # predicted )computed xyz values
         xyz_com = orbel2xyz(my_data[i,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5])
         # observed minus computed residual:
-        rv[i,:] = xyz_obs-xyz_com
+        rv[3*i-3] = xyz_obs[0]-xyz_com[0]
+        rv[3*i-2] = xyz_obs[1]-xyz_com[1]
+        rv[3*i-1] = xyz_obs[2]-xyz_com[2]
+        # rv[(3*i-3):(3*i-1)] = xyz_obs-xyz_com
     return rv
 
 # evaluate cost function given a set of observations
@@ -156,14 +160,18 @@ def Q(x, my_data, my_mu_Earth):
 
 # Earth's mass parameter in appropriate units:
 mu_Earth = 398600.435436E9 # m^3/seg^2
+#Earth's radius in appropriate units:
+R_Earth =  6378136.3 #m
+#minimal acceptable altitude for satellites (150 km)??
+#maximal acceptable altitude for satellites (150 km)??
 
 #write file name of data:
-fname = '/Users/Jorge/orbitdeterminator/orbitdeterminator/orbit.csv'
+fname = '../orbit.csv'
 
 # load observational data:
 data = np.loadtxt(fname,skiprows=1,usecols=(0,1,2,3))
 
-# construct cost function of only one argument, x
+# cost function of only one argument, x
 # due to optimization of processing time, only the first 2,000 data points are used
 # nevertheless, this is enough to improve the solution
 def QQ(x):
@@ -203,35 +211,36 @@ print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg\n')
 t_mean = np.mean(data[:,0])
 
 # minimize cost function QQ, using initial guess x0
-Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
+#Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
+Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
 
 #display least-squares solution
 print('\nOrbital elements, least-squares solution:')
 print('Reference epoch (t0):                ', t_mean)
-print('Semi-major axis (a):                 ', Q_mini.x[0], 'm')
-print('Eccentricity (e):                    ', Q_mini.x[1])
-print('Time of pericenter passage (tau):    ', Q_mini.x[2], 'sec')
-print('Pericenter distance (q):             ', Q_mini.x[0]*(1.0-Q_mini.x[1]), 'm')
-print('Apocenter distance (Q):              ', Q_mini.x[0]*(1.0+Q_mini.x[1]), 'm')
-print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth , t_mean, Q_mini.x[2])), 'deg')
-print('Argument of pericenter (omega):      ', np.rad2deg(Q_mini.x[3]), 'deg')
-print('Inclination (I):                     ', np.rad2deg(Q_mini.x[4]), 'deg')
-print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_mini.x[5]), 'deg\n')
+print('Semi-major axis (a):                 ', Q_ls.x[0], 'm')
+print('Eccentricity (e):                    ', Q_ls.x[1])
+print('Time of pericenter passage (tau):    ', Q_ls.x[2], 'sec')
+print('Pericenter distance (q):             ', Q_ls.x[0]*(1.0-Q_ls.x[1]), 'm')
+print('Apocenter distance (Q):              ', Q_ls.x[0]*(1.0+Q_ls.x[1]), 'm')
+print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth , t_mean, Q_ls.x[2])), 'deg')
+print('Argument of pericenter (omega):      ', np.rad2deg(Q_ls.x[3]), 'deg')
+print('Inclination (I):                     ', np.rad2deg(Q_ls.x[4]), 'deg')
+print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_ls.x[5]), 'deg\n')
 
 print('Total residual evaluated at initial guess: ', QQ(x0))
-print('Total residual evaluated at least-squares solution: ', QQ(Q_mini.x))
-print('Percentage improvement: ', (QQ(x0)-QQ(Q_mini.x))/QQ(x0)*100, ' %')
+print('Total residual evaluated at least-squares solution: ', QQ(Q_ls.x))
+print('Percentage improvement: ', (QQ(x0)-QQ(Q_ls.x))/QQ(x0)*100, ' %')
 
 # the observed range as a function of time will be used for plotting
 ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
 
-rvs = res_vec(Q_mini.x, data, mu_Earth)
+rvs = res_vec(Q_ls.x, data, mu_Earth)
 
 #generate plots:
 # plt.subplot(411)
 plt.scatter( data[:,0], ranges_ ,s=0.1, label='observed data')
 plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green", label='initial fit')
-plt.plot( data[:,0], kep_r_(Q_mini.x[0], Q_mini.x[1], time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth, data[:,0], Q_mini.x[2])), color="orange", label='LS fit')
+plt.plot( data[:,0], kep_r_(Q_ls.x[0], Q_ls.x[1], time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth, data[:,0], Q_ls.x[2])), color="orange", label='LS fit')
 plt.xlabel('time')
 plt.ylabel('range')
 plt.title('LS fit vs observations: range')
