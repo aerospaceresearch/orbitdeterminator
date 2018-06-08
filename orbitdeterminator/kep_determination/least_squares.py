@@ -140,9 +140,11 @@ mu_Earth = 398600.435436E9 # m^3/seg^2
 # load observational data:
 data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
 
-
+# construct cost function of only one argument, x
+# due to optimization of processing time, only the first 200 data points are used
+# nevertheless, this is enough to improve the solution
 def QQ(x):
-    return Q(x, data[0:200,:], mu_Earth)
+    return Q(x, data[0:800,:], mu_Earth)
 
 
 # generate vector of initial guess of orbital elements:
