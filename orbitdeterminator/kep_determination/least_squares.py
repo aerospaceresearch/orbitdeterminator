@@ -20,6 +20,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from ellipse_fit import determine_kep, read_file
 
 # convention:
 # a: semi-major axis
@@ -142,25 +143,31 @@ def Q(x,my_data,my_mu_Earth):
 # Earth's mass parameter in appropriate units:
 mu_Earth = 398600.435436E9 # m^3/seg^2
 
+#write file name of data:
+fname = '../orbit.csv'
+
 # load observational data:
-data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
+data = np.loadtxt(fname,skiprows=1,usecols=(0,1,2,3))
 
 # construct cost function of only one argument, x
 # due to optimization of processing time, only the first 800 data points are used
 # nevertheless, this is enough to improve the solution
 def QQ(x):
-    return Q(x, data[0:800,:], mu_Earth)
-
+    return Q(x, data[0:2000,:], mu_Earth)
 
 # generate vector of initial guess of orbital elements:
 # values written below correspond to solution of ellipse_fit.py for the same file
-a_ = 6801088.421358589 # m
-e_ = 0.000994284676986928
-I_ = np.deg2rad(51.64073790913945) #deg
-omega_ = np.deg2rad(111.46902673189568) #deg
-Omega_ = np.deg2rad(112.51570524695879) #deg
-f_ = np.deg2rad(248.67209974376843) #deg
+data0 = read_file('../orbit.csv')
+kep0, res0 = determine_kep(data0)
 
+a_ = kep0[0][0] # m
+e_ = kep0[1][0]
+I_ = np.deg2rad(kep0[2][0]) #deg
+omega_ = np.deg2rad(kep0[3][0]) #deg
+Omega_ = np.deg2rad(kep0[4][0]) #deg
+f_ = np.deg2rad(kep0[5][0]) #deg
+
+#estimate time of pericenter passage from true anomaly at epoch
 E_ = truean2eccan(e_, f_) #ecc. anomaly
 M_ = E_-e_*np.sin(E_) #mean anomaly
 n_ = meanmotion(mu_Earth,a_) #mean motion
@@ -184,7 +191,7 @@ t_mean = np.mean(data[:,0])
 ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
 
 # minimize cost function QQ, using initial guess x0
-Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
+Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':10, 'disp': True})
 
 #display least-squares solution
 print('Orbital elements, least-squares solution:')
