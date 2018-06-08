@@ -2,14 +2,24 @@
    cartesian position observations.
 """
 
+# # DEVELOPMENT ROADMAP:
+# # write function to compute range as a function of orbital elements: DONE
+# # write function to compute true anomaly as a function of time-of-fly: DONE
+# # the following transformation is needed: from time t, to mean anomaly M,
+# # to eccentric anomaly E, to true anomaly f, i.e.:
+# # t -> M=n*(t-taup) -> M=E-e*sin(E) (invert) ->
+# # -> f = 2*atan(  sqrt((1+e)/(1-e))*tan(E/2)  ): DONE
+# # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted): DONE
+# # compute Q as a function of unknown orbital elements (to be fitted): DONE
+# # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
+
+# NOTES to self:
+# matrix multiplication of numpy's 2-D arrays is done through `np.matmul`
+
 import math
 import numpy as np
-#Thinly-wrapped numpy
-#import autograd.numpy as np
 import matplotlib.pyplot as plt
-# from autograd import grad
-# from autograd import jacobian
-# from autograd import elementwise_grad as egrad
+from scipy.optimize import minimize
 
 # convention:
 # a: semi-major axis
@@ -113,71 +123,6 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
     # get cartesian positions wrt inertial frame from orbital elements
     return xyz_frame_(a, e, f, omega, I, Omega)
 
-# # TODO:
-# # write function to compute range as a function of orbital elements: DONE
-# # write function to compute true anomaly as a function of time-of-fly: DONE
-# # the following transformation is needed: from time t, to mean anomaly M,
-# # to eccentric anomaly E, to true anomaly f, i.e.:
-# # t -> M=n*(t-taup) -> M=E-e*sin(E) (invert) ->
-# # -> f = 2*atan(  sqrt((1+e)/(1-e))*tan(E/2)  ): DONE
-# # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted): DONE
-# # compute Q as a function of unknown orbital elements (to be fitted): DONE
-# # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
-
-# NOTES:
-# matrix multiplication of numpy's 2-D arrays is done through `np.matmul`
-
-data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
-
-print('data[0,:] = ', data[0,:])
-
-print('data.shape = ', data.shape)
-print('data.shape[0] = ', data.shape[0])
-
-#Earth's mass parameter
-mu_Earth = 398600.435436E9 # m^3/seg^2 # 398600.435436 # km^3/seg^2
-
-a_ = 6801088.421358589 # m
-e_ = 0.000994284676986928
-I_ = np.deg2rad(51.64073790913945) #deg
-omega_ = np.deg2rad(111.46902673189568) #deg
-Omega_ = np.deg2rad(112.51570524695879) #deg
-f_ = np.deg2rad(248.67209974376843) #deg
-
-E_ = truean2eccan(e_, f_)
-M_ = E_-e_*np.sin(E_)
-n_ = meanmotion(mu_Earth,a_)
-taup_ = data[0,0]-M_/n_
-
-print('taup_ = ', taup_)
-print('n_ = ', n_)
-print('T_ = 2pi/n_ = ', 2.0*np.pi/n_)
-print('n_*(t0-taup_) = ', n_*(data[0,0]-taup_)/np.pi, '*pi')
-print('M_ = ', M_)
-
-my_xyz_ = orbel2xyz(data[0,0], mu_Earth, a_, e_, taup_, omega_, I_, Omega_)
-print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', my_xyz_ )
-print('r(x,y,z) = ',  np.linalg.norm(my_xyz_, ord=2))
-
-# x0 = np.array((a_, e_, data[1719,0], omega_, I_, Omega_))
-x0 = np.array((a_, e_, taup_, omega_, I_, Omega_))
-
-print('x0 = ', x0)
-
-#the arithmetic mean will be used as the reference epoch for the elements
-# t_mean = np.mean(data[:,0])
-
-# print('t_mean = ', t_mean)
-
-# y = data[0,1:4] - orbel2xyz(data[0,0], mu_Earth, x0[0], x0[1], x0[2], x0[3], x0[4], x0[5])
-
-# print('y = ', y)
-# print('np.linalg.norm(y,ord=2) = ', np.linalg.norm(y,ord=2))
-
-ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
-
-print('ranges_[0:10] = ', ranges_[0:10])
-
 def Q(x,my_data,my_mu_Earth):
     Q0 = 0.0
     for i in range(0,my_data.shape[0]-1):
@@ -187,24 +132,66 @@ def Q(x,my_data,my_mu_Earth):
         Q0 = Q0 + np.linalg.norm(my_data[i,1:4] - orbel2xyz(my_data[i,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5]), ord=2)/my_data.shape[0]
     return Q0
 
-#print('Q(x0, data, mu_Earth) = ', Q(x0, data[0:50,:], mu_Earth))
+#########################
+
+# Earth's mass parameter in appropriate units:
+mu_Earth = 398600.435436E9 # m^3/seg^2
+
+# load observational data:
+data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
+
 
 def QQ(x):
     return Q(x, data[0:200,:], mu_Earth)
 
-print('Total residual evaluated at initial guess: ', QQ(x0))
 
-from scipy.optimize import minimize
+# generate vector of initial guess of orbital elements:
+# values written below correspond to solution of ellipse_fit.py for the same file
+a_ = 6801088.421358589 # m
+e_ = 0.000994284676986928
+I_ = np.deg2rad(51.64073790913945) #deg
+omega_ = np.deg2rad(111.46902673189568) #deg
+Omega_ = np.deg2rad(112.51570524695879) #deg
+f_ = np.deg2rad(248.67209974376843) #deg
+
+E_ = truean2eccan(e_, f_) #ecc. anomaly
+M_ = E_-e_*np.sin(E_) #mean anomaly
+n_ = meanmotion(mu_Earth,a_) #mean motion
+taup_ = data[0,0]-M_/n_ #time of pericenter passage
+
+# this is the vector of initial guess of orbital elements:
+x0 = np.array((a_, e_, taup_, omega_, I_, Omega_))
+
+#the arithmetic mean will be used as the reference epoch for the elements
+t_mean = np.mean(data[:,0])
+
+# the observed range as a function of time will be used for plotting
+ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
 
 Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':50})
 
-# print('Q_mini.x = ', Q_mini.x)
-# print('Q_mini.x-x0 = ', Q_mini.x-x0)
+print('Orbital elements, initial guess:')
+print('Semi-major axis (a):                 ',a_,'m')
+print('Eccentricity (e):                    ',e_)
+print('Time of pericenter passage (tau):    ',taup_,'sec')
+print('Argument of pericenter (omega):      ',np.rad2deg(omega_),'deg')
+print('Inclination (I):                     ',np.rad2deg(I_),'deg')
+print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg')
 
+print('Orbital elements, least-squares solution:')
+print('Reference epoch (t0):                ', t_mean)
+print('Semi-major axis (a):                 ', Q_mini.x[0], 'm')
+print('Eccentricity (e):                    ', Q_mini.x[1])
+print('Time of pericenter passage (tau):    ', Q_mini.x[2], 'sec')
+print('Argument of pericenter (omega):      ', np.rad2deg(Q_mini.x[3]), 'deg')
+print('Inclination (I):                     ', np.rad2deg(Q_mini.x[4]), 'deg')
+print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_mini.x[5]), 'deg')
+
+print('Total residual evaluated at initial guess: ', QQ(x0))
 print('Total residual evaluated at least-squares solution: ', QQ(Q_mini.x))
+print('Percentage improvement: ', (QQ(x0)-QQ(Q_mini.x))/QQ(x0)*100, ' %')
 
-import matplotlib.pyplot as plt
-
+#generate plots:
 plt.scatter( data[:,0], ranges_ ,s=0.1)
 plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green")
 plt.plot( data[:,0], kep_r_(Q_mini.x[0], Q_mini.x[1], time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth, data[:,0], Q_mini.x[2])), color="orange")
