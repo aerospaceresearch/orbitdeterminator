@@ -161,7 +161,7 @@ def Q(x, my_data, my_mu_Earth):
 # Earth's mass parameter in appropriate units:
 mu_Earth = 398600.435436E9 # m^3/seg^2
 #Earth's radius in appropriate units:
-R_Earth =  6378136.3 #m
+# R_Earth =  6378136.3 #m
 #minimal acceptable altitude for satellites (150 km)??
 #maximal acceptable altitude for satellites (150 km)??
 
@@ -213,7 +213,8 @@ t_mean = np.mean(data[:,0])
 # minimize cost function QQ, using initial guess x0
 #Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
 Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
-
+print('scipy.optimize.least_squares exited with code ', Q_ls.status)
+print(Q_ls.message,'\n')
 #display least-squares solution
 print('\nOrbital elements, least-squares solution:')
 print('Reference epoch (t0):                ', t_mean)
@@ -229,6 +230,7 @@ print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_ls.x[5]), 'deg\n')
 
 print('Total residual evaluated at initial guess: ', QQ(x0))
 print('Total residual evaluated at least-squares solution: ', QQ(Q_ls.x))
+#print('Total residual evaluated at least-squares solution 2: ', Q_ls.cost)
 print('Percentage improvement: ', (QQ(x0)-QQ(Q_ls.x))/QQ(x0)*100, ' %')
 
 # the observed range as a function of time will be used for plotting
