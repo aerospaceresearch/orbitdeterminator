@@ -123,13 +123,18 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
     # get cartesian positions wrt inertial frame from orbital elements
     return xyz_frame_(a, e, f, omega, I, Omega)
 
+# evaluate cost function given a set of observations
 def Q(x,my_data,my_mu_Earth):
     Q0 = 0.0
     for i in range(0,my_data.shape[0]-1):
-        #initializing residuals vector
-        #print('all_residuals = ', all_residuals)
-        #all_residuals = np.zeros(data.shape[0])
-        Q0 = Q0 + np.linalg.norm(my_data[i,1:4] - orbel2xyz(my_data[i,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5]), ord=2)/my_data.shape[0]
+        # observed xyz values
+        xyz_obs = my_data[i,1:4]
+        # predicted )computed xyz values
+        xyz_com = orbel2xyz(my_data[i,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5])
+        # observed minus computed residual:
+        xyz_res = xyz_obs-xyz_com
+        #square residual, add to total cost function, divide by number of observations
+        Q0 = Q0 + np.linalg.norm(xyz_res, ord=2)/my_data.shape[0]
     return Q0
 
 #########################
@@ -141,7 +146,7 @@ mu_Earth = 398600.435436E9 # m^3/seg^2
 data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
 
 # construct cost function of only one argument, x
-# due to optimization of processing time, only the first 200 data points are used
+# due to optimization of processing time, only the first 800 data points are used
 # nevertheless, this is enough to improve the solution
 def QQ(x):
     return Q(x, data[0:800,:], mu_Earth)
@@ -164,14 +169,6 @@ taup_ = data[0,0]-M_/n_ #time of pericenter passage
 # this is the vector of initial guess of orbital elements:
 x0 = np.array((a_, e_, taup_, omega_, I_, Omega_))
 
-#the arithmetic mean will be used as the reference epoch for the elements
-t_mean = np.mean(data[:,0])
-
-# the observed range as a function of time will be used for plotting
-ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
-
-Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':50})
-
 print('Orbital elements, initial guess:')
 print('Semi-major axis (a):                 ',a_,'m')
 print('Eccentricity (e):                    ',e_)
@@ -180,6 +177,16 @@ print('Argument of pericenter (omega):      ',np.rad2deg(omega_),'deg')
 print('Inclination (I):                     ',np.rad2deg(I_),'deg')
 print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg')
 
+#the arithmetic mean will be used as the reference epoch for the elements
+t_mean = np.mean(data[:,0])
+
+# the observed range as a function of time will be used for plotting
+ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
+
+# minimize cost function QQ, using initial guess x0
+Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
+
+#display least-squares solution
 print('Orbital elements, least-squares solution:')
 print('Reference epoch (t0):                ', t_mean)
 print('Semi-major axis (a):                 ', Q_mini.x[0], 'm')
