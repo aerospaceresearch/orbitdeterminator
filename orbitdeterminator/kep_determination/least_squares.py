@@ -124,8 +124,22 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
     # get cartesian positions wrt inertial frame from orbital elements
     return xyz_frame_(a, e, f, omega, I, Omega)
 
+# get matrix of residuals
+def res_vec(x, my_data, my_mu_Earth):
+
+    rv = np.zeros((my_data.shape[0],3))
+    
+    for i in range(0,my_data.shape[0]-1):
+        # observed xyz values
+        xyz_obs = my_data[i,1:4]
+        # predicted )computed xyz values
+        xyz_com = orbel2xyz(my_data[i,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5])
+        # observed minus computed residual:
+        rv[i,:] = xyz_obs-xyz_com
+    return rv
+
 # evaluate cost function given a set of observations
-def Q(x,my_data,my_mu_Earth):
+def Q(x, my_data, my_mu_Earth):
     Q0 = 0.0
     for i in range(0,my_data.shape[0]-1):
         # observed xyz values
@@ -144,20 +158,21 @@ def Q(x,my_data,my_mu_Earth):
 mu_Earth = 398600.435436E9 # m^3/seg^2
 
 #write file name of data:
-fname = '../orbit.csv'
+fname = '/Users/Jorge/orbitdeterminator/orbitdeterminator/orbit.csv'
 
 # load observational data:
 data = np.loadtxt(fname,skiprows=1,usecols=(0,1,2,3))
 
 # construct cost function of only one argument, x
-# due to optimization of processing time, only the first 800 data points are used
+# due to optimization of processing time, only the first 2,000 data points are used
 # nevertheless, this is enough to improve the solution
 def QQ(x):
     return Q(x, data[0:2000,:], mu_Earth)
 
 # generate vector of initial guess of orbital elements:
 # values written below correspond to solution of ellipse_fit.py for the same file
-data0 = read_file('../orbit.csv')
+
+data0 = read_file(fname)
 kep0, res0 = determine_kep(data0)
 
 a_ = kep0[0][0] # m
@@ -182,37 +197,59 @@ print('Eccentricity (e):                    ',e_)
 print('Time of pericenter passage (tau):    ',taup_,'sec')
 print('Argument of pericenter (omega):      ',np.rad2deg(omega_),'deg')
 print('Inclination (I):                     ',np.rad2deg(I_),'deg')
-print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg')
+print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg\n')
 
 #the arithmetic mean will be used as the reference epoch for the elements
 t_mean = np.mean(data[:,0])
-
-# the observed range as a function of time will be used for plotting
-ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
 
 # minimize cost function QQ, using initial guess x0
 Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':10, 'disp': True})
 
 #display least-squares solution
-print('Orbital elements, least-squares solution:')
+print('\nOrbital elements, least-squares solution:')
 print('Reference epoch (t0):                ', t_mean)
 print('Semi-major axis (a):                 ', Q_mini.x[0], 'm')
 print('Eccentricity (e):                    ', Q_mini.x[1])
 print('Time of pericenter passage (tau):    ', Q_mini.x[2], 'sec')
+print('Pericenter distance (q):             ', Q_mini.x[0]*(1.0-Q_mini.x[1]), 'm')
+print('Apocenter distance (Q):              ', Q_mini.x[0]*(1.0+Q_mini.x[1]), 'm')
+print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth , t_mean, Q_mini.x[2])), 'deg')
 print('Argument of pericenter (omega):      ', np.rad2deg(Q_mini.x[3]), 'deg')
 print('Inclination (I):                     ', np.rad2deg(Q_mini.x[4]), 'deg')
-print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_mini.x[5]), 'deg')
+print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_mini.x[5]), 'deg\n')
 
 print('Total residual evaluated at initial guess: ', QQ(x0))
 print('Total residual evaluated at least-squares solution: ', QQ(Q_mini.x))
 print('Percentage improvement: ', (QQ(x0)-QQ(Q_mini.x))/QQ(x0)*100, ' %')
 
+# the observed range as a function of time will be used for plotting
+ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
+
+rvs = res_vec(Q_mini.x, data, mu_Earth)
+
 #generate plots:
-plt.scatter( data[:,0], ranges_ ,s=0.1)
-plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green")
-plt.plot( data[:,0], kep_r_(Q_mini.x[0], Q_mini.x[1], time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth, data[:,0], Q_mini.x[2])), color="orange")
+# plt.subplot(411)
+plt.scatter( data[:,0], ranges_ ,s=0.1, label='observed data')
+plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green", label='initial fit')
+plt.plot( data[:,0], kep_r_(Q_mini.x[0], Q_mini.x[1], time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth, data[:,0], Q_mini.x[2])), color="orange", label='LS fit')
 plt.xlabel('time')
 plt.ylabel('range')
-plt.title('Fit vs observations: range')
+plt.title('LS fit vs observations: range')
+plt.legend()
+# plt.subplot(412)
+# plt.scatter( data[:,0], rvs[:,0] ,s=0.1, label='O-C (x)')
+# plt.xlabel('time')
+# plt.ylabel('x_obs - x_com')
+# plt.legend()
+# plt.subplot(413)
+# plt.scatter( data[:,0], rvs[:,1] ,s=0.1, label='O-C (y)')
+# plt.xlabel('time')
+# plt.ylabel('y_obs - y_com')
+# plt.legend()
+# plt.subplot(414)
+# plt.scatter( data[:,0], rvs[:,2] ,s=0.1, label='O-C (z)')
+# plt.xlabel('time')
+# plt.ylabel('z_obs - z_com')
+# plt.legend()
 plt.show()
 
