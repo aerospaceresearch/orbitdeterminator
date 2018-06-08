@@ -3,13 +3,13 @@
 """
 
 import math
-#import numpy as np
+import numpy as np
 #Thinly-wrapped numpy
-import autograd.numpy as np
+#import autograd.numpy as np
 import matplotlib.pyplot as plt
-from autograd import grad
-from autograd import jacobian
-from autograd import elementwise_grad as egrad
+# from autograd import grad
+# from autograd import jacobian
+# from autograd import elementwise_grad as egrad
 
 # convention:
 # a: semi-major axis
@@ -88,8 +88,13 @@ def eccentricanomaly(e,M):
 
 # compute true anomaly (f) from eccentricity (e) and eccentric anomaly (E)
 def trueanomaly(e,E):
-    Enew = np.mod(E,2*np.pi)
-    return 2*np.arctan(  np.sqrt((1.0+e)/(1.0-e))*np.tan(Enew/2)  )
+    Enew = np.mod(E,2.0*np.pi)
+    return 2.0*np.arctan(  np.sqrt((1.0+e)/(1.0-e))*np.tan(Enew/2)  )
+
+# compute eccentric anomaly (E) from eccentricity (e) and true anomaly (f)
+def truean2eccan(e, f):
+    fnew = np.mod(f,2.0*np.pi)
+    return 2.0*np.arctan(  np.sqrt((1.0-e)/(1.0+e))*np.tan(fnew/2)  )
 
 # compute true anomaly from eccentricity and mean anomaly
 def meanan2truean(e,M):
@@ -112,124 +117,15 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
 # # write function to compute range as a function of orbital elements: DONE
 # # write function to compute true anomaly as a function of time-of-fly: DONE
 # # the following transformation is needed: from time t, to mean anomaly M,
-# # to eccentric anomaly E, to true anomaly f
+# # to eccentric anomaly E, to true anomaly f, i.e.:
 # # t -> M=n*(t-taup) -> M=E-e*sin(E) (invert) ->
 # # -> f = 2*atan(  sqrt((1+e)/(1-e))*tan(E/2)  ): DONE
-# # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted)
+# # write function which takes observed values and computes the difference wrt expected-to-be-observed values as a function of unknown orbital elements (to be fitted): DONE
 # # compute Q as a function of unknown orbital elements (to be fitted): DONE
 # # optimize Q -> return fitted orbital elements (requires an ansatz: take input from minimalistic Gibb's?)
 
 # NOTES:
 # matrix multiplication of numpy's 2-D arrays is done through `np.matmul`
-
-omega = np.radians(31.124)
-I = np.radians(75.0)
-Omega = np.radians(60.0)
-
-# rotation matrix from orbital plane to inertial frame
-# two ways to compute it; result should be the same
-P_1 = rotz(omega) #rotation about z axis by an angle `omega`
-P_2 = rotx(I) #rotation about x axis by an angle `I`
-P_3 = rotz(Omega) #rotation about z axis by an angle `Omega`
-
-Rot1 = np.matmul(P_3,np.matmul(P_2,P_1))
-Rot2 = orbplane2frame_(omega,I,Omega)
-
-v = np.array((3.0,-2.0,1.0))
-
-print(I)
-print(omega)
-print(Omega)
-
-print(Rot1)
-
-print(np.matmul(Rot1,v))
-
-print(Rot2)
-
-# #import autograd.numpy as np  # Thinly-wrapped numpy
-# #from autograd import grad    # The only autograd function you may ever need
-# def tanh(x):                 # Define a function
-#     y = np.exp(-2.0 * x)
-#     return (1.0 - y) / (1.0 + y)
-
-# grad_tanh = grad(tanh)       # Obtain its gradient function
-# print(grad_tanh(1.0))
-
-# def mycos(x):
-#     return np.cos(x)
-
-# drotz = grad(mycos)
-
-# print(drotz(0.1))
-
-drotz = jacobian(orbplane2frame_)
-drotz2 = jacobian(orbplane2frame)
-
-print('op2f=',orbplane2frame_(np.radians(10.0),np.radians(-31.124),np.radians(200.001)))
-
-# print('drotz=',drotz(np.radians(10.0),np.radians(-31.124),np.radians(200.001)))
-
-bbb = np.array( (np.radians(10.0),np.radians(-31.124),np.radians(200.001)) )
-#bbb= np.array( (np.radians(0.0),np.radians(0.0),np.radians(0.0)) )
-print('drotz2(bbb)=',drotz2( bbb ))
-
-#print(dkep_r)
-#print(kep_r_(1.0,0.1,np.radians(-29.99)))
-#print(dkep_r(1.0,0.1,np.radians(-29.99)))
-
-aaa = np.array((1.0,0.45,np.radians(1.0)))
-# def printz(x):
-#     return print(str(x)+' = ',x)
-# printz(aaa)
-
-print('aaa = ', aaa)
-print('kep_r(aaa) = ',kep_r(aaa))
-
-dkep_r = grad(kep_r)
-
-print('dkep_r(aaa) = ',dkep_r(aaa))
-
-print('xyz_orbplane(aaa) = ',xyz_orbplane(aaa))
-
-dxyz_orbplane = jacobian(xyz_orbplane)
-
-print('dxyz_orbplane(aaa) = ',dxyz_orbplane(aaa))
-
-dxyz_orbplane_ = jacobian(xyz_orbplane_)
-
-print('dxyz_orbplane_(aaa) = ',dxyz_orbplane_(aaa[0],aaa[1],aaa[2]))
-
-ccc = np.array((aaa[0],aaa[1],aaa[2],bbb[0],bbb[1],bbb[2]))
-
-print('xyz_frame(ccc) = ',xyz_frame(ccc))
-
-print('xyz_frame_((aaa[0],aaa[1],aaa[2],bbb[0],bbb[1],bbb[2])) = ',xyz_frame((aaa[0],aaa[1],aaa[2],bbb[0],bbb[1],bbb[2])))
-
-dxyz_frame = jacobian(xyz_frame)
-
-print('dxyz_frame(ccc) = ',dxyz_frame(ccc))
-
-print('meanmotion(1.0,1.1) = ', meanmotion(1.0,1.1))
-
-mye = 0.3134123
-myM = -21.98*np.pi
-myEans = eccentricanomaly(mye,myM)
-print('myEans-mye*np.sin(myEans)-np.mod(myM,2*np.pi) = ', myEans-mye*np.sin(myEans)-np.mod(myM,2*np.pi))
-
-print('eccentricanomaly(mye,myM) = ', eccentricanomaly(mye,myM))
-
-print('trueanomaly(0.1, 0.16*np.pi) = ', trueanomaly(0.1, 0.16*np.pi)/np.pi, '*pi')
-print('trueanomaly(0.1, 0.56*np.pi) = ', trueanomaly(0.1, 0.56*np.pi)/np.pi, '*pi')
-print('trueanomaly(0.1, 1.16*np.pi) = ', trueanomaly(0.1, 1.16*np.pi)/np.pi, '*pi')
-print('trueanomaly(0.1, 1.56*np.pi) = ', trueanomaly(0.1, 1.56*np.pi)/np.pi, '*pi')
-print('trueanomaly(0.1, 1.99*np.pi) = ', trueanomaly(0.1, 1.99*np.pi)/np.pi, '*pi')
-
-print('trueanomaly(0.1, -1.99*np.pi) = ', trueanomaly(0.1, -1.99*np.pi)/np.pi, '*pi')
-
-# print('time2truean(1.0, 0.5, 1.0, 1.0+np.pi, 1.0) = ', time2truean(1.0, 0.7, 1.0, 1.0-1.9*np.pi, 1.0)/np.pi, '*pi')
-
-# print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', orbel2xyz(0.0*np.pi, 1.0, 1.0, 0.1, 0.0, np.deg2rad(137.2345) , np.deg2rad(10.0), np.deg2rad(100.1)))
 
 data = np.loadtxt('../orbit.csv',skiprows=1,usecols=(0,1,2,3))
 
@@ -238,6 +134,9 @@ print('data[0,:] = ', data[0,:])
 print('data.shape = ', data.shape)
 print('data.shape[0] = ', data.shape[0])
 
+#Earth's mass parameter
+mu_Earth = 398600.435436E9 # m^3/seg^2 # 398600.435436 # km^3/seg^2
+
 a_ = 6801088.421358589 # m
 e_ = 0.000994284676986928
 I_ = np.deg2rad(51.64073790913945) #deg
@@ -245,33 +144,35 @@ omega_ = np.deg2rad(111.46902673189568) #deg
 Omega_ = np.deg2rad(112.51570524695879) #deg
 f_ = np.deg2rad(248.67209974376843) #deg
 
-mu_Earth = 398600.435436E9 # m^3/seg^2 # 398600.435436 # km^3/seg^2
+E_ = truean2eccan(e_, f_)
+M_ = E_-e_*np.sin(E_)
+n_ = meanmotion(mu_Earth,a_)
+taup_ = data[0,0]-M_/n_
 
-myn_ = meanmotion(mu_Earth,a_)
-print('meanmotion(mu_Earth,a_) = ', myn_)
-print('T = 2pi/n = ', 2*np.pi/myn_)
-print('n*(t0-taup) = ', myn_*(data[0,0]-data[1719,0])/np.pi, '*pi')
+print('taup_ = ', taup_)
+print('n_ = ', n_)
+print('T_ = 2pi/n_ = ', 2.0*np.pi/n_)
+print('n_*(t0-taup_) = ', n_*(data[0,0]-taup_)/np.pi, '*pi')
+print('M_ = ', M_)
 
-my_xyz_ = orbel2xyz(data[0,0], mu_Earth, a_, e_, data[1700,0], omega_, I_, Omega_)
+my_xyz_ = orbel2xyz(data[0,0], mu_Earth, a_, e_, taup_, omega_, I_, Omega_)
 print('orbel2xyz(t, mu, a, e, taup, omega, I, Omega) = ', my_xyz_ )
 print('r(x,y,z) = ',  np.linalg.norm(my_xyz_, ord=2))
 
-print('data[1719,0] = ', data[1719,0])
-
-x0 = np.array((a_, e_, data[1719,0], omega_, I_, Omega_))
+# x0 = np.array((a_, e_, data[1719,0], omega_, I_, Omega_))
+x0 = np.array((a_, e_, taup_, omega_, I_, Omega_))
 
 print('x0 = ', x0)
 
 #the arithmetic mean will be used as the reference epoch for the elements
-t_mean = np.mean(data[:,0])
+# t_mean = np.mean(data[:,0])
 
-print('t_mean = ', t_mean)
+# print('t_mean = ', t_mean)
 
-y = data[0,1:4] - orbel2xyz(data[0,0], mu_Earth, x0[0], x0[1], x0[2], x0[3], x0[4], x0[5])
+# y = data[0,1:4] - orbel2xyz(data[0,0], mu_Earth, x0[0], x0[1], x0[2], x0[3], x0[4], x0[5])
 
-print('y = ', y)
-
-print('np.linalg.norm(y,ord=2) = ', np.linalg.norm(y,ord=2))
+# print('y = ', y)
+# print('np.linalg.norm(y,ord=2) = ', np.linalg.norm(y,ord=2))
 
 ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
 
@@ -283,30 +184,32 @@ def Q(x,my_data,my_mu_Earth):
         #initializing residuals vector
         #print('all_residuals = ', all_residuals)
         #all_residuals = np.zeros(data.shape[0])
-        Q0 = Q0 + np.linalg.norm(my_data[0,1:4] - orbel2xyz(my_data[0,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5]), 2)/my_data.shape[0]
+        Q0 = Q0 + np.linalg.norm(my_data[i,1:4] - orbel2xyz(my_data[i,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5]), ord=2)/my_data.shape[0]
     return Q0
 
-print('Q(x0, data, mu_Earth) = ', Q(x0, data, mu_Earth))
+#print('Q(x0, data, mu_Earth) = ', Q(x0, data[0:50,:], mu_Earth))
 
 def QQ(x):
     return Q(x, data[0:200,:], mu_Earth)
 
-print('QQ(x0) = ', QQ(x0))
+print('Total residual evaluated at initial guess: ', QQ(x0))
 
 from scipy.optimize import minimize
 
-Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100})
+Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':50})
 
-print('Q_mini.x = ', Q_mini.x)
+# print('Q_mini.x = ', Q_mini.x)
+# print('Q_mini.x-x0 = ', Q_mini.x-x0)
 
-print('Q_mini.x-x0 = ', Q_mini.x-x0)
+print('Total residual evaluated at least-squares solution: ', QQ(Q_mini.x))
 
 import matplotlib.pyplot as plt
 
-plt.plot( data[:,0], ranges_ )
-plt.plot( data[:,0], kep_r_(Q_mini.x[0], Q_mini.x[1], time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth, data[:,0], Q_mini.x[2])))
-#plt.plot( data[:,0], np.linalg.norm( orbel2xyz(data[:,0], mu_Earth, Q_mini.x[0], Q_mini.x[1], Q_mini.x[2], Q_mini.x[3], Q_mini.x[4], Q_mini.x[5]), ord=2 ))
+plt.scatter( data[:,0], ranges_ ,s=0.1)
+plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green")
+plt.plot( data[:,0], kep_r_(Q_mini.x[0], Q_mini.x[1], time2truean(Q_mini.x[0], Q_mini.x[1], mu_Earth, data[:,0], Q_mini.x[2])), color="orange")
+plt.xlabel('time')
+plt.ylabel('range')
+plt.title('Fit vs observations: range')
 plt.show()
-
-#plt.plot( ranges_ )
 
