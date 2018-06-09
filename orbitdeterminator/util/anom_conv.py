@@ -4,12 +4,12 @@ def true_to_ecc(theta,e):
     pi2=2*np.pi
     raw = np.arctan2((1-e**2)*np.sin(theta), e+np.cos(theta))
     raw = raw%pi2
-    
+
     # revolution correction code
     correct = (theta//pi2)*pi2
     raw = raw+correct
     correct = np.clip((raw-theta)//pi2,0,None)*pi2
-    
+
     return raw-correct
 
 def ecc_to_mean(E,e):
