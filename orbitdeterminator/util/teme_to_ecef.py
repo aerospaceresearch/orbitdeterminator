@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import numpy as np
 
-def conv_to_ECEF(coords):
+def conv_to_ecef(coords):
     t = coords[:,0]
     x = coords[:,1]
     y = coords[:,2]
@@ -20,13 +20,10 @@ def conv_to_ECEF(coords):
     tg0h = 24110.54841 + 8640184.812866*Tu + 0.093104*Tu**2 - 6.2e-6*Tu**3
     we = 1.00273790935
     tgt = tg0h + we*(t-t_mid)
-    #print(tgt)
-    #print(tgt%86400)
     era = (tgt%86400)*360/86400
-    #print(era)
     lng = lng-era
-    return lat,lng,alt
+    return np.column_stack((lat,lng,alt))
 
 if __name__ == "__main__":
-    lat,lng,alt = conv_to_ECEF(np.array([[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076]]))
-    print(lat,lng,alt)
+    ecef_coords = conv_to_ECEF(np.array([[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076]]))
+    print(ecef_coords)
