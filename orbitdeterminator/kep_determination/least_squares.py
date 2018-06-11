@@ -125,7 +125,7 @@ def orbel2xyz(t, mu, a, e, taup, omega, I, Omega):
     # get cartesian positions wrt inertial frame from orbital elements
     return xyz_frame_(a, e, f, omega, I, Omega)
 
-# get matrix of residuals
+# compute residuals vector
 def res_vec(x, my_data, my_mu_Earth):
 
     rv = np.zeros((3*my_data.shape[0]))
@@ -139,7 +139,6 @@ def res_vec(x, my_data, my_mu_Earth):
         rv[3*i-3] = xyz_obs[0]-xyz_com[0]
         rv[3*i-2] = xyz_obs[1]-xyz_com[1]
         rv[3*i-1] = xyz_obs[2]-xyz_com[2]
-        # rv[(3*i-3):(3*i-1)] = xyz_obs-xyz_com
     return rv
 
 # evaluate cost function given a set of observations
@@ -148,7 +147,7 @@ def Q(x, my_data, my_mu_Earth):
     for i in range(0,my_data.shape[0]-1):
         # observed xyz values
         xyz_obs = my_data[i,1:4]
-        # predicted )computed xyz values
+        # predicted (computed) xyz values
         xyz_com = orbel2xyz(my_data[i,0], my_mu_Earth, x[0], x[1], x[2], x[3], x[4], x[5])
         # observed minus computed residual:
         xyz_res = xyz_obs-xyz_com
@@ -212,7 +211,8 @@ t_mean = np.mean(data[:,0])
 
 # minimize cost function QQ, using initial guess x0
 #Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
-Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
+#Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
+Q_ls = least_squares(res_vec, x0, args=(data, mu_Earth), method='lm')
 print('scipy.optimize.least_squares exited with code ', Q_ls.status)
 print(Q_ls.message,'\n')
 #display least-squares solution
