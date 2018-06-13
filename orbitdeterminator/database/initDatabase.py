@@ -1,23 +1,22 @@
 """
-This code populates the database with tle entries.
+This code creates database and tables to each satellite with their md5 hash as table name.
 
 There are 2 codes for database: init_database.py and scraper.py
 
 Important: Run init_database.py before scraper.py
 
-Note: Password filed is empty during database connection. Insert password for
+Note: Password field is empty during database connection. Insert password for
       mysql authentication.
 """
 
-import time
 import hashlib
 import MySQLdb
 import requests
 from bs4 import BeautifulSoup
 
-def database_connect():
+def create_database():
     """
-    Initializes database connection and selects corresponding database
+    Creating database named "cubesat"
 
     Args:
         NIL
@@ -29,8 +28,12 @@ def database_connect():
 
     db = MySQLdb.connect(host="localhost", user="root", passwd="mysql")
     cursor = db.cursor()
+    sql = 'CREATE DATABASE cubesat;'
+    cursor.execute(sql)
+    # print('Database created')
     d = cursor.execute('use cubesat')
     # print('Database selected')
+    # print(d)
     return db, d
 
 def string_to_hash(tle):
@@ -48,11 +51,9 @@ def string_to_hash(tle):
     sat_hash = md5_hash.hexdigest()
     return sat_hash
 
-def update_tables(db):
+def create_tables(db):
     """
-    Updating tables with new TLE values.
-
-    There are 3 attributes in the tables are: time, line1, line2
+    Creating tables in the database
 
     Args:
         db : database object
@@ -64,29 +65,35 @@ def update_tables(db):
     soup = BeautifulSoup(page.content, 'html.parser')
     tle = list(soup.children)
     tle = tle[0].splitlines()
+    cursor = db.cursor()
+
+    sql = 'CREATE TABLE mapping ' + '\
+    (sat_name varchar(50), md5_hash varchar(50));'
+    cursor.execute(sql)
 
     success = 0
     error = 0
-    ts = time.time()
-    cursor = db.cursor()
     for i in range(0, len(tle), 3):
         sat_hash = string_to_hash(tle[i])
 
         try:
-            sql = 'INSERT INTO %s values(\'%s,\', \'%s,\', \'%s,\');\
-            ' %(str(sat_hash), str(ts), tle[i+1], tle[i+2])
+            sql = 'CREATE TABLE ' + str(sat_hash) + '\
+            (time varchar(30), line1 varchar(70), line2 varchar(70));'
             cursor.execute(sql)
-            d = db.commit()
         except Exception:
             error = error + 1
-            # print(tle[i] + ' - Error: Table not found')
+            print(tle[i] + ' - ' + sat_hash)
         else:
+            sql = 'INSERT INTO mapping values(\'%s,\', \'%s\');\
+            ' %(str(tle[i]), str(sat_hash))
+            cursor.execute(sql)
+            db.commit()
             success = success + 1
 
-    print('Tables updated : ' + str(success))
+    print('Tables created : ' + str(success))
     # print('Error/Total : ' + str(error) + '/' + str(error+success))
     db.close()
 
 if __name__ == "__main__":
-    db,_ = database_connect()
-    update_tables(db)
+    db,_ = create_database()
+    create_tables(db)
