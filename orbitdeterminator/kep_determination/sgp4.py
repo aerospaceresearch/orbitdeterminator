@@ -1,44 +1,176 @@
-import urllib.request
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
 import numpy as np
 import math
+import csv
+import time
+import requests
+from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
 
 pi = np.pi
 meu = 398600.4418
-tsince = 1440
 two_pi = 2*pi;
 min_per_day = 1440
 
 class SGP4(object):
 
-    def __init__(self):
-        self.file_len = 0
-        self.pos = [0, 0, 0]
-        self.vel = [0, 0, 0]
+    def find_year(self, year):
+        """
+        Returns year of launch of the satellite.
 
-    def read_data(self, data):
-        self.file_len = len(data)
-        for i in range(1,self.file_len):
-            line = str(data[i]).split(',\\t')
-            # print(line)
-            line1 = line[1]
-            line2 = line[2]
-            # print(line1)
-            # print(line2)
+        Values in the range 00-56 are assumed to correspond to years in the range 2000 to 2056 while
+        values in the range 57-99 are assumed to correspond to years in the range 1957 to 1999.
 
-            self.xmo = float(''.join(line2[43:51])) * (pi/180)
-            self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
-            self.omegao = float(''.join(line2[34:42])) * (pi/180)
-            self.xincl = float(''.join(line2[8:16])) * (pi/180)
-            self.eo = float('0.'+str(''.join(line2[26:33])))
-            self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
-            self.bstar = int(''.join(line1[53:59]))*(1e-5)*10**int(''.join(line1[59:61]))
-            # self.display()
-            self.propagation_model()
+        Args:
+            year : last 2 digits of the year
 
-        self.average()
-        self.orbital_elements()
+        Returns:
+            whole year number
+        """
 
-    def propagation_model(self):
+        if(year >=0 and year <=56):
+            return year + 2000;
+        else:
+            return year + 1900;
+
+    def find_date(self, date):
+        """
+        Finds date of the year from the input (in number of days)
+
+        Args:
+            date : Number of days
+
+        Returns:
+            date in format DD/MM/YYYY
+        """
+
+        year = self.find_year(int(''.join(date[0:2])))
+        day = int(''.join(date[2:5]))
+
+        daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+
+        """ If the year is Leap year or not """
+
+        if(year % 4 == 0):
+            daysInMonth[1] = 29
+
+        i = 0
+        month = 0
+        while(day > 0):
+            day -= daysInMonth[i]
+            month = i
+            i += 1
+
+        day += daysInMonth[month]
+        month += 1
+
+        return year, month, day
+
+    def find_time(self, time):
+        """
+        Finds date of the year from the input (in milliseconds)
+
+        Args:
+            time : Time in milliseconds
+
+        Returns:
+            time in format HH:MM:SS
+        """
+
+        second = timedelta(float(time)/1000)
+        time = datetime(1,1,1) + second
+
+        hour = int(time.hour)
+        minute = int(time.minute)
+        second = int(time.second)
+
+        return hour, minute, second
+
+    def julian_day(self, year, mon, day, hr, minute, sec):
+        return (367.0*year-7.0*(year + ((mon + 9.0) // 12.0)) * 0.25 // 1.0 +
+          275.0 * mon // 9.0 + day + 1721013.5 +
+          ((sec / 60.0 + minute) / 60.0 + hr) / 24.0)
+
+    def assure_path_exists(self, loc):
+        # dir = os.path.dirname(path)
+        if(os.path.exists(loc) == False):
+            os.makedirs(loc)
+
+    def maintain_data(self, line0, line1, line2):
+        year, month, day = self.find_date(''.join(line1[18:23]))
+        hour, minute, second = self.find_time(''.join(line1[24:32]))
+        self.jd = self.julian_day(year, month, day, hour, minute, second)
+
+        self.xmo = float(''.join(line2[43:51])) * (pi/180)
+        self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
+        self.omegao = float(''.join(line2[34:42])) * (pi/180)
+        self.xincl = float(''.join(line2[8:16])) * (pi/180)
+        self.eo = float('0.'+str(''.join(line2[26:33])))
+        self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
+        self.bstar = int(''.join(line1[53:59]))*(1e-5)*10**int(''.join(line1[59:61]))
+
+        ts = time.localtime(time.time())
+        yr = ts.tm_year
+        mth = ts.tm_mon
+        day = ts.tm_mday
+        hr = ts.tm_hour
+        mts = ts.tm_min
+        sec = ts.tm_sec
+
+        suffix_date = str(ts.tm_year) + "-" + str(ts.tm_mon) + "-" + str(ts.tm_mday)
+        suffix_time = str(ts.tm_hour) + ":" + str(ts.tm_min) + ":" + str(ts.tm_sec)
+        filename = line0 + "_" + suffix_date + "_" + suffix_time
+
+        self.assure_path_exists("../output/")
+        path = "../output/" + filename + ".csv"
+        with open(path,'a') as myfile:
+            writer = csv.writer(myfile)
+            for i in range(28800):              # 28800
+                # print(i)
+                j = self.julian_day(yr, mth, day, hr, mts, sec)
+                tsince = (j - self.jd)*min_per_day
+                pos, vel = self.propagation_model(tsince)
+                # print(pos)
+                # print(vel)
+                timestamp = suffix_date + "-" + suffix_time
+                data = [timestamp, pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
+                writer.writerows([data])
+                yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
+
+
+    def update_epoch(self, yr, mth, day, hr, mts, sec):
+        sec += 1
+
+        if(sec >= 60):
+            sec -= 0
+            mts += 1
+
+        if(mts >= 60):
+            mts -= 0
+            hr += 1
+
+        if(hr >= 24):
+            hr -= 0
+            day += 1
+
+        daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+        if(yr % 4 == 0):
+            daysInMonth[1] = 29
+
+        if(day > daysInMonth[mth-1]):
+            day = 1
+            mth += 1
+
+        if(mth > 12):
+            mth = 1
+            yr += 1
+
+        return yr, mth, day, hr, mts, sec
+
+    def propagation_model(self, tsince):
         ae = 1
         tothrd = 2/3
         XJ3 = -2.53881e-6
@@ -221,9 +353,13 @@ class SGP4(object):
             UV[i] = MV[i]*math.sin(uk) + NV[i]*math.cos(uk)
             VV[i] = MV[i]*math.cos(uk) - NV[i]*math.sin(uk)
 
+        pos = [0, 0, 0]
+        vel = [0, 0, 0]
         for i in range(3):
-            self.pos[i] += rk*UV[i]*xkmper
-            self.vel[i] += (rdotk*UV[i] + rfdotk*VV[i])*xkmper/60
+            pos[i] = rk*UV[i]*xkmper
+            vel[i] = (rdotk*UV[i] + rfdotk*VV[i])*xkmper/60
+
+        return pos, vel
 
     @classmethod
     def magnitude(self, vec):
@@ -291,13 +427,6 @@ class SGP4(object):
         self.anom = true_anomaly
         self.print_elements()
 
-    def average(self):
-        self.pos = [i/(self.file_len-1) for i in self.pos]
-        self.vel = [i/(self.file_len-1) for i in self.vel]
-        # print(self.pos)
-        # print(self.vel)
-        # print(self.file_len)
-
     # def display(self):
     #     print(self.xmo)
     #     print(self.xnodeo)
@@ -316,10 +445,19 @@ class SGP4(object):
     #     print ("Argument of perigee (degrees)                    : ", self.per)
     #     print ("True Anomaly                                     : ", self.anom)
 
-link = "https://raw.githubusercontent.com/aakash525/Orbital-Determinator/master/sgp4_test.txt"          # Just a random test file
-with urllib.request.urlopen(link) as url:
-    data = url.read()
+if __name__ == "__main__":
+    page = requests.get("https://www.celestrak.com/NORAD/elements/cubesat.txt")
+    soup = BeautifulSoup(page.content, 'html.parser')
+    tle = list(soup.children)
+    tle = tle[0].splitlines()
 
-data = data.splitlines()
-obj = SGP4()
-obj.read_data(data)
+    count = len(tle)
+    for i in range(0,count,3):
+        print(i/3)
+        obj = SGP4()
+        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
+        del(obj)
+
+    # obj = SGP4()
+    # obj.maintain_data(tle[0].replace(" ", ""), tle[1], tle[2])
+    # del(obj)
