@@ -1,3 +1,7 @@
+"""
+The code takes a TLE and computes state vectors for 8 hrs at every second
+"""
+
 import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
@@ -15,6 +19,9 @@ meu = 398600.4418
 two_pi = 2*pi;
 min_per_day = 1440
 
+"""
+class for SGP4 implementation
+"""
 class SGP4(object):
 
     def find_year(self, year):
@@ -25,6 +32,7 @@ class SGP4(object):
         values in the range 57-99 are assumed to correspond to years in the range 1957 to 1999.
 
         Args:
+            self : class variables
             year : last 2 digits of the year
 
         Returns:
@@ -41,6 +49,7 @@ class SGP4(object):
         Finds date of the year from the input (in number of days)
 
         Args:
+            self : class variables
             date : Number of days
 
         Returns:
@@ -69,11 +78,13 @@ class SGP4(object):
 
         return year, month, day
 
+    @classmethod
     def find_time(self, time):
         """
         Finds date of the year from the input (in milliseconds)
 
         Args:
+            self : class variables
             time : Time in milliseconds
 
         Returns:
@@ -89,17 +100,55 @@ class SGP4(object):
 
         return hour, minute, second
 
-    def julian_day(self, year, mon, day, hr, minute, sec):
+    @classmethod
+    def julian_day(self, year, mon, day, hr, mts, sec):
+        """
+        Converts given timestamp into Julian form
+
+        Args:
+            self : class variables
+            year : year number
+            mon : month in year
+            day : date in the month
+            hr : hour
+            mts : minutes in the hour
+            sec : seconds in minute
+
+        Returns:
+            time in Julian form
+        """
         return (367.0*year-7.0*(year + ((mon + 9.0) // 12.0)) * 0.25 // 1.0 +
           275.0 * mon // 9.0 + day + 1721013.5 +
-          ((sec / 60.0 + minute) / 60.0 + hr) / 24.0)
+          ((sec / 60.0 + mts) / 60.0 + hr) / 24.0)
 
     def assure_path_exists(self, loc):
+        """
+        Creates a folder for output files if it does not exists
+
+        Args:
+            self : class variables
+            loc : path to the folder
+
+        Returns:
+            NIL
+        """
         # dir = os.path.dirname(path)
         if(os.path.exists(loc) == False):
             os.makedirs(loc)
 
     def maintain_data(self, line0, line1, line2):
+        """
+        Reads data, call propagation model and generates output files
+
+        Args:
+            self : class variables
+            line0 : satellite name
+            line1 : line 1 in TLE
+            line2 : line 2 in TLE
+
+        Returns:
+            NIL
+        """
         year, month, day = self.find_date(''.join(line1[18:23]))
         hour, minute, second = self.find_time(''.join(line1[24:32]))
         self.jd = self.julian_day(year, month, day, hour, minute, second)
@@ -128,7 +177,8 @@ class SGP4(object):
         path = "../output/" + filename + ".csv"
         with open(path,'a') as myfile:
             writer = csv.writer(myfile)
-            for i in range(28800):              # 28800
+            i = 0
+            while(i < 28800):               # 28800
                 # print(i)
                 j = self.julian_day(yr, mth, day, hr, mts, sec)
                 tsince = (j - self.jd)*min_per_day
@@ -139,9 +189,30 @@ class SGP4(object):
                 data = [timestamp, pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
                 writer.writerows([data])
                 yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
+                i = i + 1
 
-
+    @classmethod
     def update_epoch(self, yr, mth, day, hr, mts, sec):
+        """
+        Adds one second to the given time
+
+        Args:
+            self : class variables
+            yr : year
+            mth : month
+            day : date
+            hr : hour
+            mts : minutes
+            sec : seconds
+
+        Returns:
+            yr : year
+            mth : month
+            day : date
+            hr : hour
+            mts : minutes
+            sec : seconds
+        """
         sec += 1
 
         if(sec >= 60):
@@ -171,6 +242,17 @@ class SGP4(object):
         return yr, mth, day, hr, mts, sec
 
     def propagation_model(self, tsince):
+        """
+        Computes state vectors at given time epoch
+
+        Args:
+            self : class variables
+            tsince : time epoch
+
+        Returns:
+            pos : position vector
+            vel : velocity vector
+        """
         ae = 1
         tothrd = 2/3
         XJ3 = -2.53881e-6
@@ -363,19 +445,51 @@ class SGP4(object):
 
     @classmethod
     def magnitude(self, vec):
+        """
+        Computes magnitude of a given vector
+
+        Args:
+            self : class variables
+            vec : vector
+
+        Returns:
+            magnitude of vector
+        """
         mag_vec = math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
         return mag_vec
 
     @classmethod
     def vec_multiply(self, a, b):
+        """
+        Dot product of two vectors
+
+        Args:
+            self : class variables
+            a : first vector
+            b : second vector
+
+        Returns:
+            dot product
+        """
         return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
 
     @classmethod
     def matrix_multiply(self, a, b):
+        """
+        Cross product of two vectors
+
+        Args:
+            self : class variables
+            a : first vector
+            b : second vector
+
+        Returns:
+            cross product
+        """
         return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
 
     def orbital_elements(self):
-        '''
+        """
         Finding orbital elements from the position and velocity vectors
 
         Args:
@@ -385,7 +499,7 @@ class SGP4(object):
 
         Returns:
             NIL
-        '''
+        """
 
         mag_pos = self.magnitude(self.pos)
         mag_vel = self.magnitude(self.vel)
