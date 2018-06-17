@@ -15,12 +15,12 @@ import MySQLdb
 import requests
 from bs4 import BeautifulSoup
 
-def database_connect():
+def database_connect(name):
     """
     Initializes database connection and selects corresponding database
 
     Args:
-        NIL
+        name : database name
 
     Return:
         db : database object
@@ -29,7 +29,7 @@ def database_connect():
 
     db = MySQLdb.connect(host="localhost", user="root", passwd="mysql")
     cursor = db.cursor()
-    d = cursor.execute('use cubesat')
+    d = cursor.execute('use ' + name)
     # print('Database selected')
     return db, d
 
@@ -48,7 +48,7 @@ def string_to_hash(tle):
     sat_hash = md5_hash.hexdigest()
     return sat_hash
 
-def update_tables(db):
+def update_table(db, line0, line1, line2):
     """
     Updating tables with new TLE values.
 
@@ -56,10 +56,42 @@ def update_tables(db):
 
     Args:
         db : database object
+        line0 : satellite name
+        line1 : line 1 of TLE
+        line2 : line2 of TLE
 
     Return:
+        d : flag variable for table update (None : success)
+    """
+
+    ts = time.time()
+    cursor = db.cursor()
+
+    sat_hash = string_to_hash(line0)
+    try:
+        sql = 'INSERT INTO %s values(\'%s,\', \'%s,\', \'%s,\');\
+        ' %(str(sat_hash), str(ts), line1, line2)
+        cursor.execute(sql)
+        d = db.commit()
+    except Exception:
+        d = 1
+        # print(line0 + ' - Error: Table not found')
+    # else:
+    #     print(d)
+
+    return d
+
+def scrap_data(db):
+    """
+    Scrapes data from celestrak site and calls update_table() to update the respective tables in the database.
+
+    Args:
+        db : database object
+
+    Returns:
         NIL
     """
+
     page = requests.get("https://www.celestrak.com/NORAD/elements/cubesat.txt")
     soup = BeautifulSoup(page.content, 'html.parser')
     tle = list(soup.children)
@@ -67,26 +99,17 @@ def update_tables(db):
 
     success = 0
     error = 0
-    ts = time.time()
-    cursor = db.cursor()
     for i in range(0, len(tle), 3):
-        sat_hash = string_to_hash(tle[i])
-
-        try:
-            sql = 'INSERT INTO %s values(\'%s,\', \'%s,\', \'%s,\');\
-            ' %(str(sat_hash), str(ts), tle[i+1], tle[i+2])
-            cursor.execute(sql)
-            d = db.commit()
-        except Exception:
-            error = error + 1
-            # print(tle[i] + ' - Error: Table not found')
+        d = update_table(db, tle[i], tle[i+1], tle[i+2])
+        if(d == None):
+            success += 1
         else:
-            success = success + 1
+            error += 1
 
-    print('Tables updated : ' + str(success))
+    # print('Tables updated : ' + str(success))
     # print('Error/Total : ' + str(error) + '/' + str(error+success))
     db.close()
 
 if __name__ == "__main__":
-    db,_ = database_connect()
-    update_tables(db)
+    db,_ = database_connect("cubesat")
+    scrap_data(db)

@@ -24,6 +24,7 @@ class for SGP4 implementation
 """
 class SGP4(object):
 
+    @classmethod
     def find_year(self, year):
         """
         Returns year of launch of the satellite.
@@ -44,6 +45,7 @@ class SGP4(object):
         else:
             return year + 1900;
 
+    @classmethod
     def find_date(self, date):
         """
         Finds date of the year from the input (in number of days)
@@ -61,8 +63,7 @@ class SGP4(object):
 
         daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
 
-        """ If the year is Leap year or not """
-
+        # If the year is Leap year or not
         if(year % 4 == 0):
             daysInMonth[1] = 29
 
@@ -121,6 +122,7 @@ class SGP4(object):
           275.0 * mon // 9.0 + day + 1721013.5 +
           ((sec / 60.0 + mts) / 60.0 + hr) / 24.0)
 
+    @classmethod
     def assure_path_exists(self, loc):
         """
         Creates a folder for output files if it does not exists
@@ -241,6 +243,7 @@ class SGP4(object):
 
         return yr, mth, day, hr, mts, sec
 
+    @classmethod
     def propagation_model(self, tsince):
         """
         Computes state vectors at given time epoch
