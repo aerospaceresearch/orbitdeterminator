@@ -7,7 +7,7 @@ from sgp4.io import twoline2rv
 
 avg_bstar = 0.21109E-4
 
-def propagate_kep(kep,init_time,final_time,bstar=avg_bstar):
+def propagate(kep,init_time,final_time,bstar=avg_bstar):
     t0 = time.gmtime(init_time)
 
     t0 = ((t0.tm_year%100)*1000 +
@@ -54,6 +54,6 @@ if __name__ == "__main__":
     
     kep = np.array([6782.96, 0.0004084, 51.6402, 108.2140, 150.4026, 238.0528])
     
-    pos, vel = propagate_kep(kep,t0,tf)
+    pos, vel = propagate(kep,t0,tf)
     print(pos)
     print(vel)
