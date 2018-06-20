@@ -3,7 +3,7 @@
 """
 
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # from scipy.optimize import minimize
 # from scipy.optimize import least_squares
 
@@ -28,7 +28,7 @@ def load_data_mpc(fname):
     # dt is the dtype for MPC-formatted text files
     dt = 'i8,S7,S1,S1,S1,i8,i8,i8,f8,i8,i8,f8,i8,i8,f8,S9,S6,S6,S3'
     # mpc_names correspond to the dtype names of each field
-    mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','ra_hr','ra_min','ra_sec','dec_deg','dec_min','dec_seg','9xblank','magband','6xblank','observatory']
+    mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','ra_hr','ra_min','ra_sec','dec_deg','dec_min','dec_sec','9xblank','magband','6xblank','observatory']
     # mpc_delims are the fixed-width column delimiter following MPC format description
     mpc_delims = [5,7,1,1,1,4,3,3,7,2,3,7,3,3,6,9,6,6,3]
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
@@ -162,4 +162,24 @@ print('radius_ = ', radius_)
 
 x = load_data_mpc('../example_data/mpc_data.txt')
 
-print('x[15] = ', x[15])
+# print('x[15] = ', x[15])
+# print('x[\'ra_hr\'] = ', x['ra_hr'][0:10])
+# print('x[\'ra_min\'] = ', x['ra_min'][0:10]/60.0)
+# print('x[\'ra_sec\'] = ', x['ra_sec'][0:10]/3600.0)
+print('ra  (hrs) = ', x['ra_hr'][6:18]+x['ra_min'][6:18]/60.0+x['ra_sec'][6:18]/3600.0)
+print('dec (deg) = ', x['dec_deg'][6:18]+x['dec_min'][6:18]/60.0+x['dec_sec'][6:18]/3600.0)
+
+ind_0 = 0
+ind_end = 1409
+
+ra_hrs = x['ra_hr'][ind_0:ind_end]+x['ra_min'][ind_0:ind_end]/60.0+x['ra_sec'][ind_0:ind_end]/3600.0
+dec_deg = x['dec_deg'][ind_0:ind_end]+x['dec_min'][ind_0:ind_end]/60.0+x['dec_sec'][ind_0:ind_end]/3600.0
+
+plt.plot( ra_hrs, dec_deg ) #, label='...')
+plt.scatter( ra_hrs, dec_deg ) #, label='...')
+plt.xlabel('ra')
+plt.ylabel('dec')
+plt.title('ra,dec')
+# plt.legend()
+plt.show()
+
