@@ -36,17 +36,19 @@ def observerpos(long, parallax_s, parallax_c, jd0, ut):
 
     # compute geocentric latitude from parallax constants S and C
     phi_gc = np.arctan2(parallax_s, parallax_c)
+    # compute geocentric radius
+    rho_gc = np.sqrt(parallax_s**2+parallax_c**2)
     # compute Greenwich mean sidereal time (in hours) at UT instant of JD0 date:
     gmst_hrs = gmst(jd0, ut)
     # compute local sidereal time from GMST and longitude EAST of Greenwich:
     lst_hrs = localsidtime(gmst_hrs, long)
-    # Earth's mean radius in kilometers
+    # Earth's equatorial radius in kilometers
     Re = 6378.0
 
     # compute cartesian components of geocentric observer position
-    x_gc = Re*np.cos(phi_gc)*np.cos(15.0*lst_hrs)
-    y_gc = Re*np.cos(phi_gc)*np.sin(15.0*lst_hrs)
-    z_gc = Re*np.sin(phi_gc)
+    x_gc = Re*rho_gc*np.cos(phi_gc)*np.cos(15.0*lst_hrs)
+    y_gc = Re*rho_gc*np.cos(phi_gc)*np.sin(15.0*lst_hrs)
+    z_gc = Re*rho_gc*np.sin(phi_gc)
 
     return np.array((x_gc,y_gc,z_gc))
 
@@ -125,4 +127,5 @@ print('pos_691 = ', pos_691)
 # cross-check:
 radius_ = np.sqrt(pos_691[0]**2+pos_691[1]**2+pos_691[2]**2)
 print('radius_ = ', radius_)
+
 
