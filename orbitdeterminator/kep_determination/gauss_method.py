@@ -52,6 +52,11 @@ def observerpos(long, parallax_s, parallax_c, jd0, ut):
 
     return np.array((x_gc,y_gc,z_gc))
 
+# TODO: implement Gauss' method, from algorithm 5.5, chapter 5, page 285, Orbital Mechanics book
+# input: three pairs of topocentric (ra_i, dec_i), three geocentric observer vectors R_i,
+#        and three observations times t_i, i= 1,2,3
+# output: cartesian state [x0,y0,z0,u0,v0,w0] at reference epoch t0
+
 #########################
 
 # an example of computation of sidereal times, which will be added as unit testing:
