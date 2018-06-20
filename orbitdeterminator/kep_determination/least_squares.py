@@ -16,7 +16,6 @@
 # NOTES to self:
 # matrix multiplication of numpy's 2-D arrays is done through `np.matmul`
 
-import math
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
