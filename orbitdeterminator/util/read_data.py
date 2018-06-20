@@ -68,32 +68,6 @@ def load_data_iod_af2(fname):
     iod_delims = [15,5,2,9,9,3,2,1,8,1,6,3,2,2]
     return np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
 
-def load_data_mpc(fname):
-    '''
-    Loads minor planet position observation data from MPC-formatted files.
-    MPC format for minor planet observations is described at
-    https://www.minorplanetcenter.net/iau/info/OpticalObs.html
-    TODO: Add support for comets and natural satellites.
-    Add support for radar observations:
-    https://www.minorplanetcenter.net/iau/info/RadarObs.html
-    See also NOTE 2 in:
-    https://www.minorplanetcenter.net/iau/info/OpticalObs.html
-
-    Args:
-        fname (string): name of the MPC-formatted text file to be parsed
-
-    Returns:
-        x (numpy array): array of minor planet position observations following the
-        MPC format.
-    '''
-    # dt is the dtype for MPC-formatted text files
-    dt = 'i8,S7,S1,S1,S1,S17,S12,S12,S9,S6,S6,S3' #None #'S15,i8,S1,i8,i8,i8,i8,i8,i8,S1,i8,i8,S1'
-    # mpc_names correspond to the dtype names of each field
-    mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','dateutctime','ra','dec','9xblank','magband','6xblank','observatory']
-    # mpc_delims are the fixed-width column delimiter following MPC format description
-    mpc_delims = [5,7,1,1,1,17,12,12,9,6,6,3]
-    return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
-
 if __name__ == "__main__":
 
     save_orbits(_SOURCE, _DESTINATION)

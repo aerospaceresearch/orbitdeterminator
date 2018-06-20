@@ -7,12 +7,39 @@ import numpy as np
 # from scipy.optimize import minimize
 # from scipy.optimize import least_squares
 
+def load_data_mpc(fname):
+    '''
+    Loads minor planet position observation data from MPC-formatted files.
+    MPC format for minor planet observations is described at
+    https://www.minorplanetcenter.net/iau/info/OpticalObs.html
+    TODO: Add support for comets and natural satellites.
+    Add support for radar observations:
+    https://www.minorplanetcenter.net/iau/info/RadarObs.html
+    See also NOTE 2 in:
+    https://www.minorplanetcenter.net/iau/info/OpticalObs.html
+
+    Args:
+        fname (string): name of the MPC-formatted text file to be parsed
+
+    Returns:
+        x (numpy array): array of minor planet position observations following the
+        MPC format.
+    '''
+    # dt is the dtype for MPC-formatted text files
+    dt = 'i8,S7,S1,S1,S1,i8,i8,i8,f8,i8,i8,f8,i8,i8,f8,S9,S6,S6,S3'
+    # mpc_names correspond to the dtype names of each field
+    mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','ra_hr','ra_min','ra_sec','dec_deg','dec_min','dec_seg','9xblank','magband','6xblank','observatory']
+    # mpc_delims are the fixed-width column delimiter following MPC format description
+    mpc_delims = [5,7,1,1,1,4,3,3,7,2,3,7,3,3,6,9,6,6,3]
+    return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
+
 # the parallax constants S and C are defined by
 # S=rho cos phi' C=rho sin phi'
 # rho: slant range
 # phi': geocentric latitude
 # We have the following:
 # phi' = atan(S/C)
+# rho = sqrt(S**2+C**2)
 
 # compute Greenwich mean sidereal time (in hours) at UT instant of Julian date JD0:
 def gmst(jd0, ut):
@@ -133,4 +160,6 @@ print('pos_691 = ', pos_691)
 radius_ = np.sqrt(pos_691[0]**2+pos_691[1]**2+pos_691[2]**2)
 print('radius_ = ', radius_)
 
+x = load_data_mpc('../example_data/mpc_data.txt')
 
+print('x[15] = ', x[15])
