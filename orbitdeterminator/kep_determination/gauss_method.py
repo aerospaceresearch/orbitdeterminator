@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 # from scipy.optimize import minimize
 # from scipy.optimize import least_squares
@@ -139,6 +140,9 @@ print('mu_last_hrs = ', mu_last_hrs)
 print('mu_last_min = ', mu_last_min)
 print('mu_last_sec = ', mu_last_sec)
 
+# load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
+kernel = SPK.open('de430t.bsp')
+
 # Julian date of Apophis discovery observations:
 jd = 2453079.5 # 2004 Mar 15
 ut = 24.0*0.10789 # UT time of 1st observation
@@ -160,14 +164,15 @@ print('pos_691 = ', pos_691)
 radius_ = np.sqrt(pos_691[0]**2+pos_691[1]**2+pos_691[2]**2)
 print('radius_ = ', radius_)
 
+# load MPC data for Apophis
 x = load_data_mpc('../example_data/mpc_data.txt')
 
 # print('x[15] = ', x[15])
 # print('x[\'ra_hr\'] = ', x['ra_hr'][0:10])
 # print('x[\'ra_min\'] = ', x['ra_min'][0:10]/60.0)
 # print('x[\'ra_sec\'] = ', x['ra_sec'][0:10]/3600.0)
-print('ra  (hrs) = ', x['ra_hr'][6:18]+x['ra_min'][6:18]/60.0+x['ra_sec'][6:18]/3600.0)
-print('dec (deg) = ', x['dec_deg'][6:18]+x['dec_min'][6:18]/60.0+x['dec_sec'][6:18]/3600.0)
+# print('ra  (hrs) = ', x['ra_hr'][6:18]+x['ra_min'][6:18]/60.0+x['ra_sec'][6:18]/3600.0)
+# print('dec (deg) = ', x['dec_deg'][6:18]+x['dec_min'][6:18]/60.0+x['dec_sec'][6:18]/3600.0)
 
 ind_0 = 0
 ind_end = 1409
