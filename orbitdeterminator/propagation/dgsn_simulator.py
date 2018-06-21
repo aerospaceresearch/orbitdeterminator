@@ -77,11 +77,15 @@ def print_r(t,r,v):
     print(t,*r)
 
 def print_lat_lon(t,r,v):
-    print(conv_to_ecef(np.array([[t,r[0],r[1],r[2]]])))
+    print(t,conv_to_ecef(np.array([[t,r[0],r[1],r[2]]])))
+
+def print_ra_dec(t,r,v):
+    print(t,np.degrees(np.arctan2(r[1],r[0])),
+            np.degrees(np.arctan2(r[2],(r[0]**2+r[1]**2)**0.5)))
 
 if __name__ == "__main__":
     epoch = 1529410874
     iss_kep = np.array([6775,0.0002893,51.6382,211.1340,7.1114,148.9642])
-    s = Simulator(iss_kep,epoch,1,speed=1,op_func=print_lat_lon)
+    s = Simulator(iss_kep,epoch,1,t0=1529433741,speed=1,op_func=print_lat_lon)
     signal.signal(signal.SIGINT, partial(sig_handler,s))
     s.simulate()
