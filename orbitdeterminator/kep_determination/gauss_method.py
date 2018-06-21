@@ -246,7 +246,7 @@ def eccentricity(x, y, z, u, v, w, mu):
 # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
 kernel = SPK.open('de430t.bsp')
 
-print(kernel)
+# print(kernel)
 
 # Julian date of Apophis discovery observations:
 jd = 2453079.5 # 2004 Mar 15
@@ -287,7 +287,7 @@ x = load_data_mpc('../example_data/mpc_data.txt')
 # ind_delta = 10
 # ind_end = ind_0+31 #1409
 
-myinds = [1409,1440,1477]
+myinds = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
 
 print('INPUT DATA FROM MPC:\n', x[ myinds ], '\n')
 
@@ -370,6 +370,9 @@ tau = (tau3-tau1)
 # print('tau1 = ', tau1)
 # print('tau3 = ', tau3)
 # print('tau = ', tau)
+print('tau1 = ', tau1)
+print('tau3 = ', tau3)
+print('tau = ', tau)
 
 p = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
@@ -419,14 +422,14 @@ def mygaussfun(x):
     return (x**8)+a*(x**6)+b*(x**3)+c
 
 # plot Gauss function in order to obtain a first estimate of a feasible root
-x_vals = np.arange(0.0, 2.0*au, 0.05*au)
-f_vals = mygaussfun(x_vals)
-plt.plot(x_vals/au, f_vals/1e60)
-plt.show()
+# x_vals = np.arange(0.0, 2.0*au, 0.05*au)
+# f_vals = mygaussfun(x_vals)
+# plt.plot(x_vals/au, f_vals/1e60)
+# plt.show()
 
 # print('f(0) = ', f_vals[0])
 
-r2_star = newton(mygaussfun, 1.06*au)
+r2_star = newton(mygaussfun, 0.75*au) #1.06*au)
 #r2_star = 1.06*au
 
 # print('r2_star = ', r2_star/au)
@@ -524,18 +527,18 @@ zline8 = np.array((0.0, r3[2]))
 xline9 = np.array((R[2][0], R[2][0]+rho_3_*rho3[0]))
 yline9 = np.array((R[2][1], R[2][1]+rho_3_*rho3[1]))
 zline9 = np.array((R[2][2], R[2][2]+rho_3_*rho3[2]))
-ax.plot3D(xline1, yline1, zline1, 'gray', label='Observer 1')
-ax.plot3D(xline2, yline2, zline2, 'blue', label='Observer 2')
-ax.plot3D(xline3, yline3, zline3, 'green', label='Observer 3')
-ax.plot3D(xline4, yline4, zline4, 'orange')
-ax.plot3D(xline5, yline5, zline5, 'red', label='LOS 1')
-ax.plot3D(xline6, yline6, zline6, 'black')
-ax.plot3D(xline7, yline7, zline7, 'cyan', label='LOS 2')
-ax.plot3D(xline8, yline8, zline8, 'brown')
-ax.plot3D(xline9, yline9, zline9, 'yellow', label='LOS 3')
+ax.plot3D(xline1/au, yline1/au, zline1/au, 'gray', label='Observer 1')
+ax.plot3D(xline2/au, yline2/au, zline2/au, 'blue', label='Observer 2')
+ax.plot3D(xline3/au, yline3/au, zline3/au, 'green', label='Observer 3')
+ax.plot3D(xline4/au, yline4/au, zline4/au, 'orange')
+ax.plot3D(xline5/au, yline5/au, zline5/au, 'red', label='LOS 1')
+ax.plot3D(xline6/au, yline6/au, zline6/au, 'black')
+ax.plot3D(xline7/au, yline7/au, zline7/au, 'cyan', label='LOS 2')
+ax.plot3D(xline8/au, yline8/au, zline8/au, 'brown')
+ax.plot3D(xline9/au, yline9/au, zline9/au, 'yellow', label='LOS 3')
 ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
 plt.legend()
-plt.xlabel('x')
-plt.ylabel('y')
+plt.xlabel('x (au)')
+plt.ylabel('y (au)')
 plt.title('Heliocentric orbit determination by Gauss method: Apophis')
 plt.show()
