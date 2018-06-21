@@ -155,11 +155,11 @@ def date_to_jd(year,month,day):
     
     return jd
 
+def lagrangef(mu, r2, tau):
+    return 1.0-0.5*(mu/(r2**3))*(tau**2)
 
-# TODO: implement Gauss' method, from algorithm 5.5, chapter 5, page 285, Orbital Mechanics book
-# input: three pairs of topocentric (ra_i, dec_i), three geocentric observer vectors R_i,
-#        and three observations times t_i, i= 1,2,3
-# output: cartesian state [x0,y0,z0,u0,v0,w0] at reference epoch t0
+def lagrangeg(mu, r2, tau):
+    return tau-(1.0/6.0)*(mu/(r2**3))*(tau**3)
 
 #########################
 
@@ -167,54 +167,61 @@ def date_to_jd(year,month,day):
 # Determine the true and mean sidereal time on 01 January 1982 at 1h CET for
 # Munich (lambda = -11deg36.5', delta_lambda = -15''.476, epsilon = 23deg26'27'')
 
-jd0_ = 2444970.5 #Julian day of 1982, January 1st
-ut = 0.0
-munich_long = (11.0+36.5/60.0) #degrees
-my_d_lamb = -(15.476)/15.0/3600.0 # hours
-epsilon_ = np.deg2rad( 23.0+26.0/60.0+27.0/3600.0 ) #radians
+# jd0_ = 2444970.5 #Julian day of 1982, January 1st
+# ut = 0.0
+# munich_long = (11.0+36.5/60.0) #degrees
+# my_d_lamb = -(15.476)/15.0/3600.0 # hours
+# epsilon_ = np.deg2rad( 23.0+26.0/60.0+27.0/3600.0 ) #radians
 
-print('JD = ', 2444970.5)
-print('dl*cos(e) = ', my_d_lamb*np.cos(epsilon_), 's')
+# print('JD = ', 2444970.5)
+# print('dl*cos(e) = ', my_d_lamb*np.cos(epsilon_), 's')
 
-mu_gmst = gmst(jd0_,ut)
-mu_gmst_hrs = np.floor(mu_gmst)
-mu_gmst_min = np.floor((mu_gmst-mu_gmst_hrs)*60.0)
-mu_gmst_sec = ((mu_gmst-mu_gmst_hrs)*60.0-mu_gmst_min)*60.0
+# mu_gmst = gmst(jd0_,ut)
+# mu_gmst_hrs = np.floor(mu_gmst)
+# mu_gmst_min = np.floor((mu_gmst-mu_gmst_hrs)*60.0)
+# mu_gmst_sec = ((mu_gmst-mu_gmst_hrs)*60.0-mu_gmst_min)*60.0
 
-mu_gast = gast(jd0_, ut, my_d_lamb, epsilon_)
-mu_gast_hrs = np.floor(mu_gast)
-mu_gast_min = np.floor((mu_gast-mu_gast_hrs)*60.0)
-mu_gast_sec = ((mu_gast-mu_gast_hrs)*60.0-mu_gast_min)*60.0
+# mu_gast = gast(jd0_, ut, my_d_lamb, epsilon_)
+# mu_gast_hrs = np.floor(mu_gast)
+# mu_gast_min = np.floor((mu_gast-mu_gast_hrs)*60.0)
+# mu_gast_sec = ((mu_gast-mu_gast_hrs)*60.0-mu_gast_min)*60.0
 
-mu_lmst = localsidtime(mu_gmst, munich_long)
-mu_lmst_hrs = np.floor(mu_lmst)
-mu_lmst_min = np.floor((mu_lmst-mu_lmst_hrs)*60.0)
-mu_lmst_sec = ((mu_lmst-mu_lmst_hrs)*60.0-mu_lmst_min)*60.0
+# mu_lmst = localsidtime(mu_gmst, munich_long)
+# mu_lmst_hrs = np.floor(mu_lmst)
+# mu_lmst_min = np.floor((mu_lmst-mu_lmst_hrs)*60.0)
+# mu_lmst_sec = ((mu_lmst-mu_lmst_hrs)*60.0-mu_lmst_min)*60.0
 
-mu_last = localsidtime(mu_gast, munich_long)
-mu_last_hrs = np.floor(mu_last)
-mu_last_min = np.floor((mu_last-mu_last_hrs)*60.0)
-mu_last_sec = ((mu_last-mu_last_hrs)*60.0-mu_last_min)*60.0
+# mu_last = localsidtime(mu_gast, munich_long)
+# mu_last_hrs = np.floor(mu_last)
+# mu_last_min = np.floor((mu_last-mu_last_hrs)*60.0)
+# mu_last_sec = ((mu_last-mu_last_hrs)*60.0-mu_last_min)*60.0
 
-print('GMST = ', mu_gmst )
-print('mu_gmst_hrs = ', mu_gmst_hrs)
-print('mu_gmst_min = ', mu_gmst_min)
-print('mu_gmst_sec = ', mu_gmst_sec)
+# print('GMST = ', mu_gmst )
+# print('mu_gmst_hrs = ', mu_gmst_hrs)
+# print('mu_gmst_min = ', mu_gmst_min)
+# print('mu_gmst_sec = ', mu_gmst_sec)
 
-print('GAST = ', mu_gast )
-print('mu_gast_hrs = ', mu_gast_hrs)
-print('mu_gast_min = ', mu_gast_min)
-print('mu_gast_sec = ', mu_gast_sec)
+# print('GAST = ', mu_gast )
+# print('mu_gast_hrs = ', mu_gast_hrs)
+# print('mu_gast_min = ', mu_gast_min)
+# print('mu_gast_sec = ', mu_gast_sec)
 
-print('LMST = ', mu_lmst )
-print('mu_lmst_hrs = ', mu_lmst_hrs)
-print('mu_lmst_min = ', mu_lmst_min)
-print('mu_lmst_sec = ', mu_lmst_sec)
+# print('LMST = ', mu_lmst )
+# print('mu_lmst_hrs = ', mu_lmst_hrs)
+# print('mu_lmst_min = ', mu_lmst_min)
+# print('mu_lmst_sec = ', mu_lmst_sec)
 
-print('LAST = ', mu_last )
-print('mu_last_hrs = ', mu_last_hrs)
-print('mu_last_min = ', mu_last_min)
-print('mu_last_sec = ', mu_last_sec)
+# print('LAST = ', mu_last )
+# print('mu_last_hrs = ', mu_last_hrs)
+# print('mu_last_min = ', mu_last_min)
+# print('mu_last_sec = ', mu_last_sec)
+
+#########################
+
+# TODO: implement Gauss' method, from algorithm 5.5, chapter 5, page 285, Orbital Mechanics book
+# input: three pairs of topocentric (ra_i, dec_i), three geocentric observer vectors R_i,
+#        and three observations times t_i, i= 1,2,3
+# output: cartesian state [x0,y0,z0,u0,v0,w0] at reference epoch t0
 
 # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
 kernel = SPK.open('de430t.bsp')
@@ -234,24 +241,25 @@ S_691 = +0.52642
 
 #geocentric observer position at time of 1st Apophis observation:
 pos_691 = observerpos(long_691, S_691, C_691, jd, ut)
-print('pos_691 = ', pos_691)
+# print('pos_691 = ', pos_691)
 
 # cross-check:
-radius_ = np.sqrt(pos_691[0]**2+pos_691[1]**2+pos_691[2]**2)
-print('radius_ = ', radius_)
+# radius_ = np.sqrt(pos_691[0]**2+pos_691[1]**2+pos_691[2]**2)
+# print('radius_ = ', radius_)
 
 # load MPC data for Apophis
 x = load_data_mpc('../example_data/mpc_data.txt')
 
-print('x[15] = ', x[15])
 # print('x[\'ra_hr\'] = ', x['ra_hr'][0:10])
 # print('x[\'ra_min\'] = ', x['ra_min'][0:10]/60.0)
 # print('x[\'ra_sec\'] = ', x['ra_sec'][0:10]/3600.0)
 # print('ra  (hrs) = ', x['ra_hr'][6:18]+x['ra_min'][6:18]/60.0+x['ra_sec'][6:18]/3600.0)
 # print('dec (deg) = ', x['dec_deg'][6:18]+x['dec_min'][6:18]/60.0+x['dec_sec'][6:18]/3600.0)
 
-ind_0 = 0
-ind_end = 3 #1409
+ind_0 = 3
+ind_end = ind_0+3 #1409
+
+print('x[',ind_0,':',ind_end,'] = ', x[ind_0:ind_end])
 
 ra_hrs = x['ra_hr'][ind_0:ind_end]+x['ra_min'][ind_0:ind_end]/60.0+x['ra_sec'][ind_0:ind_end]/3600.0
 dec_deg = x['dec_deg'][ind_0:ind_end]+x['dec_min'][ind_0:ind_end]/60.0+x['dec_sec'][ind_0:ind_end]/3600.0
@@ -260,43 +268,43 @@ dec_deg = x['dec_deg'][ind_0:ind_end]+x['dec_min'][ind_0:ind_end]/60.0+x['dec_se
 # sinacosd
 # sind
 
-ra_rad = np.deg2rad(ra_hrs*15.0)
-dec_rad = np.deg2rad(dec_deg)
+# ra_rad = np.deg2rad(ra_hrs*15.0)
+# dec_rad = np.deg2rad(dec_deg)
 
-print('ra_rad = ', ra_rad)
-print('dec_rad = ', dec_rad)
+# print('ra_rad = ', ra_rad)
+# print('dec_rad = ', dec_rad)
 
-cosa_cosd = np.cos(ra_rad)*np.cos(dec_rad)
-sina_cosd = np.sin(ra_rad)*np.cos(dec_rad)
-sind = np.sin(dec_rad)
+# cosa_cosd = np.cos(ra_rad)*np.cos(dec_rad)
+# sina_cosd = np.sin(ra_rad)*np.cos(dec_rad)
+# sind = np.sin(dec_rad)
 
-print('cosa_cosd = ', cosa_cosd)
-print('sina_cosd = ', sina_cosd)
-print('sind = ', sind)
+# print('cosa_cosd = ', cosa_cosd)
+# print('sina_cosd = ', sina_cosd)
+# print('sind = ', sind)
 
 rho1 = cosinedirectors(ra_hrs[0], dec_deg[0])
 rho2 = cosinedirectors(ra_hrs[1], dec_deg[1])
 rho3 = cosinedirectors(ra_hrs[2], dec_deg[2])
 
-print('rho1 = ', rho1)
-print('rho2 = ', rho2)
-print('rho3 = ', rho3)
+# print('rho1 = ', rho1)
+# print('rho2 = ', rho2)
+# print('rho3 = ', rho3)
 
-jd01 = date_to_jd(x['yr'][0], x['month'][0], x['day'][0])
-jd02 = date_to_jd(x['yr'][1], x['month'][1], x['day'][1])
-jd03 = date_to_jd(x['yr'][2], x['month'][2], x['day'][2])
+jd01 = date_to_jd(x['yr'][ind_0], x['month'][ind_0], x['day'][ind_0])
+jd02 = date_to_jd(x['yr'][ind_0+1], x['month'][ind_0+1], x['day'][ind_0+1])
+jd03 = date_to_jd(x['yr'][ind_0+2], x['month'][ind_0+2], x['day'][ind_0+2])
 
-ut1 = x['utc'][0]
-ut2 = x['utc'][1]
-ut3 = x['utc'][2]
+ut1 = x['utc'][ind_0]
+ut2 = x['utc'][ind_0+1]
+ut3 = x['utc'][ind_0+2]
 
-print(' jd01 = ', jd01)
-print(' jd02 = ', jd02)
-print(' jd03 = ', jd03)
+# print(' jd01 = ', jd01)
+# print(' jd02 = ', jd02)
+# print(' jd03 = ', jd03)
 
-print(' ut1 = ', ut1)
-print(' ut2 = ', ut2)
-print(' ut3 = ', ut3)
+# print(' ut1 = ', ut1)
+# print(' ut2 = ', ut2)
+# print(' ut3 = ', ut3)
 
 earth_pos_jd1 = kernel[0,4].compute(jd01)
 earth_pos_jd1 -= kernel[0,10].compute(jd01)
@@ -305,9 +313,9 @@ earth_pos_jd2 -= kernel[0,10].compute(jd02)
 earth_pos_jd3 = kernel[0,4].compute(jd03)
 earth_pos_jd3 -= kernel[0,10].compute(jd03)
 
-print('earth_pos_jd1 = ', earth_pos_jd1)
-print('earth_pos_jd2 = ', earth_pos_jd2)
-print('earth_pos_jd3 = ', earth_pos_jd3)
+# print('earth_pos_jd1 = ', earth_pos_jd1)
+# print('earth_pos_jd2 = ', earth_pos_jd2)
+# print('earth_pos_jd3 = ', earth_pos_jd3)
 
 R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
@@ -315,17 +323,18 @@ R[0] = earth_pos_jd1 + observerpos(long_691, C_691, S_691, jd01, ut1)
 R[1] = earth_pos_jd2 + observerpos(long_691, C_691, S_691, jd02, ut2)
 R[2] = earth_pos_jd3 + observerpos(long_691, C_691, S_691, jd03, ut3)
 
-print('R[0] = ', R[0])
-print('R[1] = ', R[1])
-print('R[2] = ', R[2])
+# print('R[0] = ', R[0])
+# print('R[1] = ', R[1])
+# print('R[2] = ', R[2])
 
-tau1 = (jd01+ut1)-(jd02+ut2)
-tau3 = (jd03+ut3)-(jd02+ut2)
-tau = tau3-tau1
+# make sure time units are consistent!
+tau1 = ((jd01+ut1)-(jd02+ut2))*86400.0
+tau3 = ((jd03+ut3)-(jd02+ut2))*86400.0
+tau = (tau3-tau1)
 
-print('tau1 = ', tau1)
-print('tau3 = ', tau3)
-print('tau = ', tau)
+# print('tau1 = ', tau1)
+# print('tau3 = ', tau3)
+# print('tau = ', tau)
 
 p = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
@@ -333,34 +342,34 @@ p[0] = np.cross(rho2, rho3)
 p[1] = np.cross(rho1, rho3)
 p[2] = np.cross(rho1, rho2)
 
-print('p[0] = ', p[0])
-print('p[1] = ', p[1])
-print('p[2] = ', p[2])
+# print('p[0] = ', p[0])
+# print('p[1] = ', p[1])
+# print('p[2] = ', p[2])
 
 D0  = np.dot(rho1, p[0])
 
-print('D0 = ', D0)
+# print('D0 = ', D0)
 
 D = np.zeros((3,3))
 
 for i in range(0,3):
     for j in range(0,3):
-        print('i,j=', i, j)
+        # print('i,j=', i, j)
         D[i,j] = np.dot(R[i], p[j])
 
-print('D = ', D)
+# print('D = ', D)
 
 A = (-D[0,1]*(tau3/tau)+D[1,1]+D[2,1]*(tau1/tau))/D0
 B = (D[0,1]*(tau3**2-tau**2)*(tau3/tau)+D[2,1]*(tau**2-tau1**2)*(tau1/tau))/(6*D0)
 
-print('A = ', A)
-print('B = ', B)
+# print('A = ', A)
+# print('B = ', B)
 
 E = np.dot(R[1], rho2)
 Rsub2p2 = np.dot(R[1], R[1])
 
-print('E = ', E)
-print('Rsub2p2 = ', Rsub2p2)
+# print('E = ', E)
+# print('Rsub2p2 = ', Rsub2p2)
 
 mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
 mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
@@ -373,16 +382,15 @@ c = -(mu**2)*(B**2)
 def mygaussfun(x):
     return (x**8)+a*(x**6)+b*(x**3)+c
 
-#print(' = ', )
-
 au = 1.495978707e8
 
 # plot Gauss function in order to obtain a first estimate of a feasible root
-x_vals = np.arange(0.0, 2.0*au, 0.05*au)
-f_vals = mygaussfun(x_vals)
+# x_vals = np.arange(0.0, 2.0*au, 0.05*au)
+# f_vals = mygaussfun(x_vals)
+# plt.plot(x_vals/au, f_vals/1e60)
+# plt.show()
+
 # print('f(0) = ', f_vals[0])
-plt.plot(x_vals/au, f_vals/1e60)
-plt.show()
 
 r2_star = newton(mygaussfun, 1.6*au)
 
@@ -400,9 +408,44 @@ den3 = 6.0*(r2_star**3)+mu*(tau**2-tau1**2)
 
 rho_3_ = ((num3/den3)-D[2,2])/D0
 
-print('rho_1_ = ', rho_1_/au)
-print('rho_2_ = ', rho_2_/au)
-print('rho_3_ = ', rho_3_/au)
+# print('rho_1_ = ', rho_1_/au,'au')
+# print('rho_2_ = ', rho_2_/au,'au')
+# print('rho_3_ = ', rho_3_/au,'au')
+
+r1 = R[0]+rho_1_*rho1
+r2 = R[1]+rho_2_*rho2
+r3 = R[2]+rho_3_*rho3
+
+# print('r1 = ', r1)
+# print('r2 = ', r2)
+# print('r3 = ', r3)
+
+# print('|r1| = ', np.linalg.norm(r1, ord=2)/au, 'au')
+# print('|r2| = ', np.linalg.norm(r2, ord=2)/au, 'au')
+# print('|r3| = ', np.linalg.norm(r3, ord=2)/au, 'au')
+
+f1 = lagrangef(mu, r2_star, tau1)
+f3 = lagrangef(mu, r2_star, tau3)
+
+g1 = lagrangeg(mu, r2_star, tau1)
+g3 = lagrangeg(mu, r2_star, tau3)
+
+# print('f1 = ', f1)
+# print('f3 = ', f3)
+# print('g1 = ', g1)
+# print('g3 = ', g3)
+
+v2 = (-f3*r1+f1*r3)/(f1*g3-f3*g1)
+
+print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
+print('r2 = ', r2/au, 'au')
+print('v2 = ', v2*86400/au, 'au/day')
+print('JD2 = ', jd02+ut2)
+
+
+
+#print(' = ', )
+
 
 
 # plt.plot( ra_hrs, dec_deg ) #, label='...')
