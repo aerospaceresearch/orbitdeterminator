@@ -9,7 +9,7 @@ from orbitdeterminator.propagation.sgp4_prop import propagate
 from orbitdeterminator.util.teme_to_ecef import conv_to_ecef
 
 class Simulator():
-    
+
     def __init__(self,params):
 
         self.kep       = params.kep
@@ -24,7 +24,7 @@ class Simulator():
 
         self.calc_thr = None
         self.is_running = False
-        
+
     def simulate(self):
         self.is_running = True
 
@@ -61,19 +61,22 @@ class OpWriter():
     def open(self):
         pass
 
-    def write(self,t,r,v):
+    @staticmethod
+    def write(t,r,v):
         print(t,*r,*v)
 
     def close(self):
         pass
 
 class print_r(OpWriter):
-    def write(self,t,r,v):
+    @staticmethod
+    def write(t,r,v):
         print(t,*r)
 
 class print_lat_lon(OpWriter):
-    def write(self,t,r,v):
-        print(t,conv_to_ecef(np.array([[t,*r]])))
+    @staticmethod
+    def write(t,r,v):
+        print(conv_to_ecef(np.array([[t,*r]])))
 
 class save_r(OpWriter):
     def __init__(self, name):
@@ -106,6 +109,7 @@ if __name__ == "__main__":
     params = SimParams()
     params.kep = iss_kep
     params.epoch = epoch
+    params.op_writer = print_lat_lon()
 
     s = Simulator(params)
     signal.signal(signal.SIGINT, partial(sig_handler,s))

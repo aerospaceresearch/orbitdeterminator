@@ -22,7 +22,7 @@ def conv_to_ecef(coords):
     tgt = tg0h + we*(t-t_mid)
     era = (tgt%86400)*360/86400
     lng = lng-era
-    return np.column_stack((lat,lng,alt))
+    return np.column_stack((t,lat,lng,alt))
 
 if __name__ == "__main__":
     ecef_coords = conv_to_ECEF(np.array([[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076]]))

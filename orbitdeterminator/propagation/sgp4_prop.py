@@ -30,7 +30,7 @@ def propagate(kep,init_time,final_time,bstar=avg_bstar):
     inc  = "{:8.4f}".format(kep[2])
     raan = "{:8.4f}".format(kep[4])
     e = "{:.7f}".format(e)[2:]
-    argp = "{:8.4f}".format(kep[3])        
+    argp = "{:8.4f}".format(kep[3])
     mean = "{:8.4f}".format(mean)
     n = "{:11.8f}".format(n)
 
@@ -41,19 +41,19 @@ def propagate(kep,init_time,final_time,bstar=avg_bstar):
              '.00000000  00000-0 '+bstar+' 0  0000')
     line2 = ('2 00000 '+inc+' '+raan+' '+e+' '+argp+
              ' '+mean+' '+n+'000000')
-    
+
     satellite = twoline2rv(line1, line2, wgs72)
     position, velocity = satellite.propagate(
         tf.tm_year, tf.tm_mon, tf.tm_mday, tf.tm_hour, tf.tm_min, tf.tm_sec)
-    
+
     return position,velocity
 
 if __name__ == "__main__":
     t0 = 1526927274
     tf = 1526932833
-    
+
     kep = np.array([6782.96, 0.0004084, 51.6402, 108.2140, 150.4026, 238.0528])
-    
+
     pos, vel = propagate(kep,t0,tf)
     print(pos)
     print(vel)
