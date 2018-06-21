@@ -287,7 +287,7 @@ x = load_data_mpc('../example_data/mpc_data.txt')
 
 myinds = [1409,1440,1477]
 
-print('x[',myinds,'] = ', x[ myinds ])
+print('INPUT DATA FROM MPC:\n', x[ myinds ], '\n')
 
 ra_hrs = x['ra_hr'][myinds]+x['ra_min'][myinds]/60.0+x['ra_sec'][myinds]/3600.0
 dec_deg = x['dec_deg'][myinds]+x['dec_min'][myinds]/60.0+x['dec_sec'][myinds]/3600.0
@@ -417,16 +417,16 @@ def mygaussfun(x):
 au = 1.495978707e8
 
 # plot Gauss function in order to obtain a first estimate of a feasible root
-# x_vals = np.arange(0.0, 2.0*au, 0.05*au)
+# x_vals = np.arange(0.0, 3.0*au, 0.05*au)
 # f_vals = mygaussfun(x_vals)
 # plt.plot(x_vals/au, f_vals/1e60)
 # plt.show()
 
 # print('f(0) = ', f_vals[0])
 
-r2_star = newton(mygaussfun, 1.5*au)
+r2_star = newton(mygaussfun, 2.5*au)
 
-print('r2_star = ', r2_star/au)
+# print('r2_star = ', r2_star/au)
 
 num1 = 6.0*(D[2,0]*(tau1/tau3)+D[1,0]*(tau/tau3))*(r2_star**3)+mu*D[2,0]*(tau**2-tau1**2)*(tau1/tau3)
 den1 = 6.0*(r2_star**3)+mu*(tau**2-tau3**2)
@@ -470,9 +470,11 @@ g3 = lagrangeg(mu, r2_star, tau3)
 v2 = (-f3*r1+f1*r3)/(f1*g3-f3*g1)
 
 print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
+print('r2 = ', r2, 'km')
+print('v2 = ', v2, 'km/s')
 print('r2 = ', r2/au, 'au')
 print('v2 = ', v2*86400/au, 'au/day')
-print('JD2 = ', jd02+ut2)
+print('JD2 = ', jd02+ut2, '\n')
 
 r2_au = r2/au
 v2_au_day = v2*86400/au
@@ -480,8 +482,9 @@ v2_au_day = v2*86400/au
 a_ = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 e_ =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 
-print('a_ = ', a_)
-print('e_ = ', e_)
+print('*** ORBITAL ELEMENTS ***')
+print('Semimajor axis, a: ', a_)
+print('Eccentricity, e: ', e_)
 
 #print(' = ', )
 
@@ -517,17 +520,18 @@ zline8 = np.array((0.0, r3[2]))
 xline9 = np.array((R[2][0], R[2][0]+rho_3_*rho3[0]))
 yline9 = np.array((R[2][1], R[2][1]+rho_3_*rho3[1]))
 zline9 = np.array((R[2][2], R[2][2]+rho_3_*rho3[2]))
-ax.plot3D(xline1, yline1, zline1, 'gray', label='observer pos 1')
-ax.plot3D(xline2, yline2, zline2, 'blue', label='observer pos 2')
-ax.plot3D(xline3, yline3, zline3, 'green', label='observer pos 3')
+ax.plot3D(xline1, yline1, zline1, 'gray', label='Observer 1')
+ax.plot3D(xline2, yline2, zline2, 'blue', label='Observer 2')
+ax.plot3D(xline3, yline3, zline3, 'green', label='Observer 3')
 ax.plot3D(xline4, yline4, zline4, 'orange')
-ax.plot3D(xline5, yline5, zline5, 'red', label='cos director 1')
+ax.plot3D(xline5, yline5, zline5, 'red', label='LOS 1')
 ax.plot3D(xline6, yline6, zline6, 'black')
-ax.plot3D(xline7, yline7, zline7, 'cyan', label='cos director 2')
+ax.plot3D(xline7, yline7, zline7, 'cyan', label='LOS 2')
 ax.plot3D(xline8, yline8, zline8, 'brown')
-ax.plot3D(xline9, yline9, zline9, 'yellow', label='cos director 3')
+ax.plot3D(xline9, yline9, zline9, 'yellow', label='LOS 3')
+ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
 plt.legend()
 plt.xlabel('x')
 plt.ylabel('y')
-plt.title('Heliocentric orb determ by Gauss method: Apophis')
+plt.title('Heliocentric orbit determination by Gauss method: Apophis')
 plt.show()
