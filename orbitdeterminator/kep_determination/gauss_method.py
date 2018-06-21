@@ -161,6 +161,26 @@ def lagrangef(mu, r2, tau):
 def lagrangeg(mu, r2, tau):
     return tau-(1.0/6.0)*(mu/(r2**3))*(tau**3)
 
+# Set of functions for cartesian states -> Keplerian elements
+
+def kep_h_norm(x, y, z, u, v, w):
+    return np.sqrt( (y*w-z*v)**2 + (z*u-x*w)**2 + (x*v-y*u)**2 )
+
+def kep_h_vec(x, y, z, u, v, w):
+    return np.array((y*w-z*v, z*u-x*w, x*v-y*u))
+
+def semimajoraxis(x, y, z, u, v, w, mu):
+    myRadius=np.sqrt((x**2)+(y**2)+(z**2))
+    myVelSqr=(u**2)+(v**2)+(w**2)
+    return 1.0/( (2.0/myRadius)-(myVelSqr/mu) )
+
+def eccentricity(x, y, z, u, v, w, mu):
+    h2 = ((y*w-z*v)**2) + ((z*u-x*w)**2) + ((x*v-y*u)**2)
+    a = semimajoraxis(x,y,z,u,v,w,mu)
+    quotient = h2/( mu*a )
+    return np.sqrt(1.0 - quotient)
+
+
 #########################
 
 # an example of computation of sidereal times, which will be added as unit testing:
@@ -239,8 +259,13 @@ long_691 = 248.4010 # degrees
 C_691 = 0.84951
 S_691 = +0.52642
 
+# 586   0.1423  0.73358  +0.67799  Pic du Midi
+long_586 = 0.1423 # degrees
+C_586 = 0.73358
+S_586 = +0.67799
+
 #geocentric observer position at time of 1st Apophis observation:
-pos_691 = observerpos(long_691, S_691, C_691, jd, ut)
+# pos_691 = observerpos(long_691, S_691, C_691, jd, ut)
 # print('pos_691 = ', pos_691)
 
 # cross-check:
@@ -256,13 +281,16 @@ x = load_data_mpc('../example_data/mpc_data.txt')
 # print('ra  (hrs) = ', x['ra_hr'][6:18]+x['ra_min'][6:18]/60.0+x['ra_sec'][6:18]/3600.0)
 # print('dec (deg) = ', x['dec_deg'][6:18]+x['dec_min'][6:18]/60.0+x['dec_sec'][6:18]/3600.0)
 
-ind_0 = 3
-ind_end = ind_0+3 #1409
+# ind_0 = 1409 #0
+# ind_delta = 10
+# ind_end = ind_0+31 #1409
 
-print('x[',ind_0,':',ind_end,'] = ', x[ind_0:ind_end])
+myinds = [1409,1440,1477]
 
-ra_hrs = x['ra_hr'][ind_0:ind_end]+x['ra_min'][ind_0:ind_end]/60.0+x['ra_sec'][ind_0:ind_end]/3600.0
-dec_deg = x['dec_deg'][ind_0:ind_end]+x['dec_min'][ind_0:ind_end]/60.0+x['dec_sec'][ind_0:ind_end]/3600.0
+print('x[',myinds,'] = ', x[ myinds ])
+
+ra_hrs = x['ra_hr'][myinds]+x['ra_min'][myinds]/60.0+x['ra_sec'][myinds]/3600.0
+dec_deg = x['dec_deg'][myinds]+x['dec_min'][myinds]/60.0+x['dec_sec'][myinds]/3600.0
 
 # cosacosd
 # sinacosd
@@ -290,13 +318,13 @@ rho3 = cosinedirectors(ra_hrs[2], dec_deg[2])
 # print('rho2 = ', rho2)
 # print('rho3 = ', rho3)
 
-jd01 = date_to_jd(x['yr'][ind_0], x['month'][ind_0], x['day'][ind_0])
-jd02 = date_to_jd(x['yr'][ind_0+1], x['month'][ind_0+1], x['day'][ind_0+1])
-jd03 = date_to_jd(x['yr'][ind_0+2], x['month'][ind_0+2], x['day'][ind_0+2])
+jd01 = date_to_jd(x['yr'][myinds[0]], x['month'][myinds[0]], x['day'][myinds[0]])
+jd02 = date_to_jd(x['yr'][myinds[1]], x['month'][myinds[1]], x['day'][myinds[1]])
+jd03 = date_to_jd(x['yr'][myinds[2]], x['month'][myinds[2]], x['day'][myinds[2]])
 
-ut1 = x['utc'][ind_0]
-ut2 = x['utc'][ind_0+1]
-ut3 = x['utc'][ind_0+2]
+ut1 = x['utc'][myinds[0]]
+ut2 = x['utc'][myinds[1]]
+ut3 = x['utc'][myinds[2]]
 
 # print(' jd01 = ', jd01)
 # print(' jd02 = ', jd02)
@@ -306,12 +334,12 @@ ut3 = x['utc'][ind_0+2]
 # print(' ut2 = ', ut2)
 # print(' ut3 = ', ut3)
 
-earth_pos_jd1 = kernel[0,4].compute(jd01)
-earth_pos_jd1 -= kernel[0,10].compute(jd01)
-earth_pos_jd2 = kernel[0,4].compute(jd02)
-earth_pos_jd2 -= kernel[0,10].compute(jd02)
-earth_pos_jd3 = kernel[0,4].compute(jd03)
-earth_pos_jd3 -= kernel[0,10].compute(jd03)
+earth_pos_jd1 = kernel[0,4].compute(jd01+ut1)
+earth_pos_jd1 -= kernel[0,10].compute(jd01+ut1)
+earth_pos_jd2 = kernel[0,4].compute(jd02+ut2)
+earth_pos_jd2 -= kernel[0,10].compute(jd02+ut2)
+earth_pos_jd3 = kernel[0,4].compute(jd03+ut3)
+earth_pos_jd3 -= kernel[0,10].compute(jd03+ut3)
 
 # print('earth_pos_jd1 = ', earth_pos_jd1)
 # print('earth_pos_jd2 = ', earth_pos_jd2)
@@ -319,9 +347,13 @@ earth_pos_jd3 -= kernel[0,10].compute(jd03)
 
 R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
-R[0] = earth_pos_jd1 + observerpos(long_691, C_691, S_691, jd01, ut1)
-R[1] = earth_pos_jd2 + observerpos(long_691, C_691, S_691, jd02, ut2)
-R[2] = earth_pos_jd3 + observerpos(long_691, C_691, S_691, jd03, ut3)
+# R[0] = earth_pos_jd1 + observerpos(long_691, C_691, S_691, jd01, ut1)
+# R[1] = earth_pos_jd2 + observerpos(long_691, C_691, S_691, jd02, ut2)
+# R[2] = earth_pos_jd3 + observerpos(long_691, C_691, S_691, jd03, ut3)
+
+R[0] = earth_pos_jd1 + observerpos(long_586, C_586, S_586, jd01, ut1)
+R[1] = earth_pos_jd2 + observerpos(long_586, C_586, S_586, jd02, ut2)
+R[2] = earth_pos_jd3 + observerpos(long_586, C_586, S_586, jd03, ut3)
 
 # print('R[0] = ', R[0])
 # print('R[1] = ', R[1])
@@ -392,7 +424,7 @@ au = 1.495978707e8
 
 # print('f(0) = ', f_vals[0])
 
-r2_star = newton(mygaussfun, 1.6*au)
+r2_star = newton(mygaussfun, 1.5*au)
 
 print('r2_star = ', r2_star/au)
 
@@ -442,17 +474,60 @@ print('r2 = ', r2/au, 'au')
 print('v2 = ', v2*86400/au, 'au/day')
 print('JD2 = ', jd02+ut2)
 
+r2_au = r2/au
+v2_au_day = v2*86400/au
 
+a_ = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+e_ =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+
+print('a_ = ', a_)
+print('e_ = ', e_)
 
 #print(' = ', )
 
+from mpl_toolkits import mplot3d
+fig = plt.figure()
+ax = plt.axes(projection='3d')
 
 
-# plt.plot( ra_hrs, dec_deg ) #, label='...')
-# plt.scatter( ra_hrs, dec_deg ) #, label='...')
-# plt.xlabel('ra')
-# plt.ylabel('dec')
-# plt.title('ra,dec')
-# # plt.legend()
-# plt.show()
-
+xline1 = np.array((0.0, R[0][0]))
+yline1 = np.array((0.0, R[0][1]))
+zline1 = np.array((0.0, R[0][2]))
+xline2 = np.array((0.0, R[1][0]))
+yline2 = np.array((0.0, R[1][1]))
+zline2 = np.array((0.0, R[1][2]))
+xline3 = np.array((0.0, R[2][0]))
+yline3 = np.array((0.0, R[2][1]))
+zline3 = np.array((0.0, R[2][2]))
+xline4 = np.array((0.0, r1[0]))
+yline4 = np.array((0.0, r1[1]))
+zline4 = np.array((0.0, r1[2]))
+xline5 = np.array((R[0][0], R[0][0]+rho_1_*rho1[0]))
+yline5 = np.array((R[0][1], R[0][1]+rho_1_*rho1[1]))
+zline5 = np.array((R[0][2], R[0][2]+rho_1_*rho1[2]))
+xline6 = np.array((0.0, r2[0]))
+yline6 = np.array((0.0, r2[1]))
+zline6 = np.array((0.0, r2[2]))
+xline7 = np.array((R[1][0], R[1][0]+rho_2_*rho2[0]))
+yline7 = np.array((R[1][1], R[1][1]+rho_2_*rho2[1]))
+zline7 = np.array((R[1][2], R[1][2]+rho_2_*rho2[2]))
+xline8 = np.array((0.0, r3[0]))
+yline8 = np.array((0.0, r3[1]))
+zline8 = np.array((0.0, r3[2]))
+xline9 = np.array((R[2][0], R[2][0]+rho_3_*rho3[0]))
+yline9 = np.array((R[2][1], R[2][1]+rho_3_*rho3[1]))
+zline9 = np.array((R[2][2], R[2][2]+rho_3_*rho3[2]))
+ax.plot3D(xline1, yline1, zline1, 'gray', label='observer pos 1')
+ax.plot3D(xline2, yline2, zline2, 'blue', label='observer pos 2')
+ax.plot3D(xline3, yline3, zline3, 'green', label='observer pos 3')
+ax.plot3D(xline4, yline4, zline4, 'orange')
+ax.plot3D(xline5, yline5, zline5, 'red', label='cos director 1')
+ax.plot3D(xline6, yline6, zline6, 'black')
+ax.plot3D(xline7, yline7, zline7, 'cyan', label='cos director 2')
+ax.plot3D(xline8, yline8, zline8, 'brown')
+ax.plot3D(xline9, yline9, zline9, 'yellow', label='cos director 3')
+plt.legend()
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Heliocentric orb determ by Gauss method: Apophis')
+plt.show()
