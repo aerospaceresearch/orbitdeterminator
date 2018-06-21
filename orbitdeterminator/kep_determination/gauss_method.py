@@ -75,8 +75,8 @@ def observerpos(long, parallax_s, parallax_c, jd0, ut):
     Re = 6378.0
 
     # compute cartesian components of geocentric observer position
-    x_gc = Re*rho_gc*np.cos(phi_gc)*np.cos(15.0*lst_hrs)
-    y_gc = Re*rho_gc*np.cos(phi_gc)*np.sin(15.0*lst_hrs)
+    x_gc = Re*rho_gc*np.cos(phi_gc)*np.cos(np.deg2rad(15.0*lst_hrs))
+    y_gc = Re*rho_gc*np.cos(phi_gc)*np.sin(np.deg2rad(15.0*lst_hrs))
     z_gc = Re*rho_gc*np.sin(phi_gc)
 
     return np.array((x_gc,y_gc,z_gc))
@@ -246,6 +246,8 @@ def eccentricity(x, y, z, u, v, w, mu):
 # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
 kernel = SPK.open('de430t.bsp')
 
+print(kernel)
+
 # Julian date of Apophis discovery observations:
 jd = 2453079.5 # 2004 Mar 15
 ut = 24.0*0.10789 # UT time of 1st observation
@@ -326,24 +328,25 @@ ut1 = x['utc'][myinds[0]]
 ut2 = x['utc'][myinds[1]]
 ut3 = x['utc'][myinds[2]]
 
-# print(' jd01 = ', jd01)
-# print(' jd02 = ', jd02)
-# print(' jd03 = ', jd03)
+# print(' jd1 = ', jd01+ut1)
+# print(' jd2 = ', jd02+ut2)
+# print(' jd3 = ', jd03+ut3)
 
 # print(' ut1 = ', ut1)
 # print(' ut2 = ', ut2)
 # print(' ut3 = ', ut3)
 
-earth_pos_jd1 = kernel[0,4].compute(jd01+ut1)
-earth_pos_jd1 -= kernel[0,10].compute(jd01+ut1)
-earth_pos_jd2 = kernel[0,4].compute(jd02+ut2)
-earth_pos_jd2 -= kernel[0,10].compute(jd02+ut2)
-earth_pos_jd3 = kernel[0,4].compute(jd03+ut3)
-earth_pos_jd3 -= kernel[0,10].compute(jd03+ut3)
+au = 1.495978707e8
+
+earth_pos_jd1 = kernel[3,399].compute(jd01+ut1) + kernel[0,3].compute(jd01+ut1) - kernel[0,10].compute(jd01+ut1)
+earth_pos_jd2 = kernel[3,399].compute(jd02+ut2) + kernel[0,3].compute(jd02+ut2) - kernel[0,10].compute(jd02+ut2)
+earth_pos_jd3 = kernel[3,399].compute(jd03+ut3) + kernel[0,3].compute(jd03+ut3) - kernel[0,10].compute(jd03+ut3)
 
 # print('earth_pos_jd1 = ', earth_pos_jd1)
 # print('earth_pos_jd2 = ', earth_pos_jd2)
 # print('earth_pos_jd3 = ', earth_pos_jd3)
+
+# print('range_ea = ', np.linalg.norm(earth_pos_jd1, ord=2)/au)
 
 R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
@@ -374,6 +377,7 @@ p[0] = np.cross(rho2, rho3)
 p[1] = np.cross(rho1, rho3)
 p[2] = np.cross(rho1, rho2)
 
+#print('p = ', p)
 # print('p[0] = ', p[0])
 # print('p[1] = ', p[1])
 # print('p[2] = ', p[2])
@@ -414,17 +418,16 @@ c = -(mu**2)*(B**2)
 def mygaussfun(x):
     return (x**8)+a*(x**6)+b*(x**3)+c
 
-au = 1.495978707e8
-
 # plot Gauss function in order to obtain a first estimate of a feasible root
-# x_vals = np.arange(0.0, 3.0*au, 0.05*au)
-# f_vals = mygaussfun(x_vals)
-# plt.plot(x_vals/au, f_vals/1e60)
-# plt.show()
+x_vals = np.arange(0.0, 2.0*au, 0.05*au)
+f_vals = mygaussfun(x_vals)
+plt.plot(x_vals/au, f_vals/1e60)
+plt.show()
 
 # print('f(0) = ', f_vals[0])
 
-r2_star = newton(mygaussfun, 2.5*au)
+r2_star = newton(mygaussfun, 1.06*au)
+#r2_star = 1.06*au
 
 # print('r2_star = ', r2_star/au)
 
@@ -483,7 +486,8 @@ a_ = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 e_ =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 
 print('*** ORBITAL ELEMENTS ***')
-print('Semimajor axis, a: ', a_)
+print('Semimajor axis, a: ', a_, 'km')
+print('Semimajor axis, a: ', a_/au, 'au')
 print('Eccentricity, e: ', e_)
 
 #print(' = ', )
