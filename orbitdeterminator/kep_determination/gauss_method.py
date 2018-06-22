@@ -180,6 +180,64 @@ def eccentricity(x, y, z, u, v, w, mu):
     quotient = h2/( mu*a )
     return np.sqrt(1.0 - quotient)
 
+# alpha = 1/a
+def alpha(x, y, z, u, v, w, mu):
+    myRadius=np.sqrt((x**2)+(y**2)+(z**2))
+    myVelSqr=(u**2)+(v**2)+(w**2)
+    return (2.0/myRadius)-(myVelSqr/mu)
+
+def stumpffS(z):
+    if z>0:
+        sqrtz = np.sqrt(z)
+        return (sqrtz-np.sin(sqrtz))/(sqrtz**3)
+    elif z<0:
+        sqrtz = np.sqrt(-z)
+        return (np.sinh(sqrtz)-sqrtz)/(sqrtz**3)
+    elif z==0:
+        return 1.0/6.0
+
+def stumpffC(z):
+    if z>0:
+        sqrtz = np.sqrt(z)
+        return (1.0-np.cos(sqrtz))/z
+    elif z<0:
+        sqrtz = np.sqrt(-z)
+        return (np.cosh(sqrtz)-1.0)/(-z)
+    elif z==0:
+        return 1.0/2.0
+
+#vr0 is the radial velocity $vr0 = \vec r_0 \cdot \vec r_0$
+def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
+    # compute preliminaries
+    r0 = np.sqrt((x**2)+(y**2)+(z**2))
+    v20 = (u**2)+(v**2)+(w**2)
+    vr0 = (x*u+y*v+z*w)/r0
+    alpha0 = (2.0/r0)-(v20/mu)
+    # compute initial estimate for xi
+    xi = np.sqrt(mu)*np.abs(alpha0)*dt
+    i = 0
+    ratio_i = 1.0
+    while np.abs(ratio_i)>atol and i<iters:
+        xi2 = xi**2
+        z_i = alpha0*(xi2)
+        a_i = (r0*vr0)/np.sqrt(mu)
+        b_i = 1.0-alpha0*r0
+        C_z_i = stumpffC(z_i)
+        S_z_i = stumpffS(z_i)
+        f_i = a_i*xi2*C_z_i+b_i*(xi**3)*S_z_i+r0*xi-np.sqrt(mu)*dt
+        g_i = a_i*xi*(1.0-z_i*S_z_i)+b_i*xi2*C_z_i+r0
+        ratio_i = f_i/g_i
+        xi = xi - ratio_i
+        i += 1
+        # print('i = ', i)
+        # print('ratio_i = ', ratio_i)
+    return xi
+
+def lagrangef_(xi, z, r):
+    return 1.0-(xi**2)*stumpffC(z)/r
+
+def lagrangeg_(tau, xi, z, mu):
+    return tau-(xi**3)*stumpffS(z)/np.sqrt(mu)
 
 #########################
 
@@ -492,6 +550,75 @@ print('*** ORBITAL ELEMENTS ***')
 print('Semimajor axis, a: ', a_, 'km')
 print('Semimajor axis, a: ', a_/au, 'au')
 print('Eccentricity, e: ', e_)
+
+# refinement
+# INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
+# OUTPUT: updated r1, r2, v3, v2
+
+xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, atol=3e-14)
+xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, atol=3e-14)
+
+# print('xi1 = ', xi1)
+# print('xi3 = ', xi3)
+
+r0_ = np.sqrt((r2[0]**2)+(r2[1]**2)+(r2[2]**2))
+v20_ = (v2[0]**2)+(v2[1]**2)+(v2[2]**2)
+alpha0_ = (2.0/r0_)-(v20_/mu)
+
+z1_ = alpha0_*xi1**2
+f1_ = lagrangef_(xi1, z1_, r0_)
+g1_ = lagrangeg_(tau1, xi1, z1_, mu)
+
+z3_ = alpha0_*xi3**2
+f3_ = lagrangef_(xi3, z3_, r0_)
+g3_ = lagrangeg_(tau3, xi3, z3_, mu)
+
+# print('f1 = ', f1)
+# print('f1_ = ', f1_)
+# print('g1 = ', g1)
+# print('g1_ = ', g1_)
+
+# print('f3 = ', f3)
+# print('f3_ = ', f3_)
+# print('g3 = ', g3)
+# print('g3_ = ', g3_)
+
+c1_ = g3_/(f1_*g3_-f3_*g1_)
+c3_ = -g1_/(f1_*g3_-f3_*g1_)
+
+rho_1__ = (-D[0,0]+D[1,0]/c1_-D[2,0]*(c3_/c1_))/D0
+rho_2__ = (-c1_*D[0,1]+D[1,1]-c3_*D[2,1])/D0
+rho_3__ = (-D[0,2]*(c1_/c3_)+D[1,2]/c3_-D[2,2])/D0
+
+# print('rho_1_ = ', rho_1_)
+# print('rho_2_ = ', rho_2_)
+# print('rho_3_ = ', rho_3_)
+# print('rho_1__ = ', rho_1__)
+# print('rho_2__ = ', rho_2__)
+# print('rho_3__ = ', rho_3__)
+
+r1_ = R[0]+rho_1__*rho1
+r2_ = R[1]+rho_2__*rho2
+r3_ = R[2]+rho_3__*rho3
+
+v2_ = (-f3_*r1_+f1_*r3_)/(f1_*g3_-f3_*g1_)
+
+print("*** REFINED CARTESIAN STATES AND REFERENCE EPOCH ***")
+print('r2 = ', r2_, 'km')
+print('v2 = ', v2_, 'km/s')
+print('r2 = ', r2_/au, 'au')
+print('v2 = ', v2_*86400/au, 'au/day')
+print('JD2 = ', jd02+ut2, '\n')
+
+a__ = semimajoraxis(r2_[0], r2_[1], r2_[2], v2_[0], v2_[1], v2_[2], mu)
+e__ =  eccentricity(r2_[0], r2_[1], r2_[2], v2_[0], v2_[1], v2_[2], mu)
+
+print('*** ORBITAL ELEMENTS ***')
+print('Semimajor axis, a: ', a__, 'km')
+print('Semimajor axis, a: ', a__/au, 'au')
+print('Eccentricity, e: ', e__)
+
+
 
 #print(' = ', )
 
