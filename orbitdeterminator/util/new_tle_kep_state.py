@@ -47,7 +47,7 @@ def kep_to_state(kep):
 
     # unload orbital elements array
 
-    sma_pre = (398600.4405 * (86400 ** 2)) / ((kep[5] ** 2) * 4 * (math.pi ** 2));
+    sma_pre = (398600.4405 * (86400 ** 2)) / ((kep[5] ** 2) * 4 * (math.pi ** 2))
     sma = sma_pre ** (1.0 / 3.0)  # sma is semi major axis, we use mean motion (kep(6)) to compute this
     ecc = kep[2]  # eccentricity
     inc = math.radians(kep[0])  # inclination
