@@ -312,7 +312,7 @@ def lagrangeg_(tau, xi, z, mu):
 #        and three observations times t_i, i= 1,2,3
 # output: cartesian state [x0,y0,z0,u0,v0,w0] at reference epoch t0
 
-def mygaussfun(x, a, b, c):
+def gauss_polynomial(x, a, b, c):
     return (x**8)+a*(x**6)+b*(x**3)+c
 
 def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
@@ -346,7 +346,7 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     # ind_delta = 10
     # ind_end = ind_0+31 #1409
 
-    # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
+    print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
     ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
     dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
@@ -387,9 +387,9 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     ut2 = x['utc'][inds[1]]
     ut3 = x['utc'][inds[2]]
 
-    # print(' jd1 = ', jd01+ut1)
-    # print(' jd2 = ', jd02+ut2)
-    # print(' jd3 = ', jd03+ut3)
+    print(' jd1 = ', jd01+ut1)
+    print(' jd2 = ', jd02+ut2)
+    print(' jd3 = ', jd03+ut3)
 
     # print(' ut1 = ', ut1)
     # print(' ut2 = ', ut2)
@@ -430,9 +430,9 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     # R[1] = np.array((3460.1, 3460.1, 4078.5))
     # R[2] = np.array((3429.9, 3490.1, 4078.5))
 
-    # print('R[0] = ', R[0])
-    # print('R[1] = ', R[1])
-    # print('R[2] = ', R[2])
+    print('R[0] = ', R[0])
+    print('R[1] = ', R[1])
+    print('R[2] = ', R[2])
 
     # make sure time units are consistent!
     tau1 = ((jd01+ut1)-(jd02+ut2))*86400.0
@@ -442,9 +442,9 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     # tau3 = 237.58-118.10
     # tau = (tau3-tau1)
 
-    # print('tau1 = ', tau1)
-    # print('tau3 = ', tau3)
-    # print('tau = ', tau)
+    print('tau1 = ', tau1)
+    print('tau3 = ', tau3)
+    print('tau = ', tau)
 
     p = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
@@ -497,15 +497,35 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     # print('c = ', c)
 
     # plot Gauss function in order to obtain a first estimate of a feasible root
-    x_vals = np.arange(0.0, 2.0*au, 0.05*au)
-    f_vals = mygaussfun(x_vals, a, b, c)
-    plt.plot(x_vals/au, f_vals/1e60)
-    plt.show()
+    # x_vals = np.arange(0.0, 2.0*au, 0.001*au)
+    # f_vals = gauss_polynomial(x_vals, a, b, c)
+    # plt.plot(x_vals/au, f_vals/1e60)
+    # plt.show()
 
     # print('f(0) = ', f_vals[0])
 
-    r2_star = newton(mygaussfun, r2_guess, args=(a, b, c)) #1.06*au)
-    # r2_star = newton(mygaussfun, 9000.0, args=(a, b, c)) #1.06*au)
+    #get all real, positive solutions to the Gauss polynomial
+    gauss_poly_coeffs = np.zeros((9,))
+    gauss_poly_coeffs[0] = 1.0
+    gauss_poly_coeffs[2] = a
+    gauss_poly_coeffs[5] = b
+    gauss_poly_coeffs[8] = c
+    # 1 2 3 4 5 6 7 8 9
+    # 0 1 2 3 4 5 6 7 8
+    # 8 7 6 5 4 3 2 1 0
+    gauss_poly_roots = np.roots(gauss_poly_coeffs)
+    rt_indx = np.where( np.isreal(gauss_poly_roots) & (gauss_poly_roots >= 0.0) )
+    # print('np.real(gauss_poly_roots[rt_indx])[0] = ', np.real(gauss_poly_roots[rt_indx])[0])
+    if len(rt_indx) > 1: #-1:#
+        print('WARNING: Gauss polynomial has more than 1 real, positive solution')
+        print('gauss_poly_coeffs = ', gauss_poly_coeffs)
+        print('gauss_poly_roots = ', gauss_poly_roots)
+        print('len(rt_indx) = ', len(rt_indx))
+        print('np.real(gauss_poly_roots[rt_indx]) = ', np.real(gauss_poly_roots[rt_indx]))
+    r2_star = np.real(gauss_poly_roots[rt_indx])[0]
+
+    # r2_star = newton(gauss_polynomial, np.real(gauss_poly_roots[rt_indx])[0], args=(a, b, c)) #1.06*au)
+    # r2_star = newton(gauss_polynomial, 9000.0, args=(a, b, c)) #1.06*au)
     #r2_star = 1.06*au
 
     print('r2_star = ', r2_star/au)
@@ -649,19 +669,27 @@ def gauss_refinement_hc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, g
 
 au = 1.495978707e8
 
-nobs = 20 #50
+obs_arr = list(range(0,4))+list(range(7,88))+list(range(93,110))+list(range(985,1102)) # [0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
+print('obs_arr = ', obs_arr)
+nobs = len(obs_arr) #2520-2417 #50 #2 #19
+
+x_vec = np.zeros((nobs-2,))
+y_vec = np.zeros((nobs-2,))
+z_vec = np.zeros((nobs-2,))
+
 a_vec = np.zeros((nobs,))
 e_vec = np.zeros((nobs,))
 
 mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
 ###########################
-for j in range (0,nobs):
+for j in range (0,nobs-2):
     # Apply Gauss method to three elements of data
     # inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
-    ind0 = 0 #1409
-    inds_ = [ind0+j, ind0+j+1, ind0+j+2]
-    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_method_hc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt', 0.99*au)
+    ind0 = obs_arr[j] #0 #2417 #2538 #2475 #55 #7 #0 #1409
+    #inds_ = [obs_arr[j], obs_arr[j+1], obs_arr[j+2]]
+    inds_ = [obs_arr[j], obs_arr[j]+1, obs_arr[j]+2]
+    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_method_hc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt', 0.98*au)
     # Apply refinement to Gauss' method, 100 iterations
     for i in range(0,10):
         r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_hc(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
@@ -683,14 +711,24 @@ for j in range (0,nobs):
     mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
     mu = mu_Sun
 
-    a_vec[j] = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-    e_vec[j] =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-    print(a_vec[j]/au, 'au', ', ', e_vec[j])
-    print('j = ', j)
+    a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+
+    if 0.0<=e_num<=1.0 and a_num>=0.0:
+        a_vec[j] = a_num
+        e_vec[j] = e_num
+        x_vec[j] = r2[0]
+        y_vec[j] = r2[1]
+        z_vec[j] = r2[2]
+
+    print(a_num/au, 'au', ', ', e_num)
+    print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
+
+print('x_vec = ', x_vec)
 
 print('*** ORBITAL ELEMENTS: a (au), e (adim) ***')
 # print('Semimajor axis, a: ', a_, 'km')
-print(np.mean(a_vec)/au, 'au', ', ', np.mean(e_vec))
+print(np.mean(a_vec[a_vec>0.0])/au, 'au', ', ', np.mean(e_vec[e_vec<1.0]))
 
 ###########################
 # Plot
@@ -699,46 +737,53 @@ from mpl_toolkits import mplot3d
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-
-xline1 = np.array((0.0, R[0][0]))
-yline1 = np.array((0.0, R[0][1]))
-zline1 = np.array((0.0, R[0][2]))
-xline2 = np.array((0.0, R[1][0]))
-yline2 = np.array((0.0, R[1][1]))
-zline2 = np.array((0.0, R[1][2]))
-xline3 = np.array((0.0, R[2][0]))
-yline3 = np.array((0.0, R[2][1]))
-zline3 = np.array((0.0, R[2][2]))
-xline4 = np.array((0.0, r1[0]))
-yline4 = np.array((0.0, r1[1]))
-zline4 = np.array((0.0, r1[2]))
-xline5 = np.array((R[0][0], R[0][0]+rho_1_*rho1[0]))
-yline5 = np.array((R[0][1], R[0][1]+rho_1_*rho1[1]))
-zline5 = np.array((R[0][2], R[0][2]+rho_1_*rho1[2]))
-xline6 = np.array((0.0, r2[0]))
-yline6 = np.array((0.0, r2[1]))
-zline6 = np.array((0.0, r2[2]))
-xline7 = np.array((R[1][0], R[1][0]+rho_2_*rho2[0]))
-yline7 = np.array((R[1][1], R[1][1]+rho_2_*rho2[1]))
-zline7 = np.array((R[1][2], R[1][2]+rho_2_*rho2[2]))
-xline8 = np.array((0.0, r3[0]))
-yline8 = np.array((0.0, r3[1]))
-zline8 = np.array((0.0, r3[2]))
-xline9 = np.array((R[2][0], R[2][0]+rho_3_*rho3[0]))
-yline9 = np.array((R[2][1], R[2][1]+rho_3_*rho3[1]))
-zline9 = np.array((R[2][2], R[2][2]+rho_3_*rho3[2]))
-ax.plot3D(xline1/au, yline1/au, zline1/au, 'gray', label='Observer 1')
-ax.plot3D(xline2/au, yline2/au, zline2/au, 'blue', label='Observer 2')
-ax.plot3D(xline3/au, yline3/au, zline3/au, 'green', label='Observer 3')
-ax.plot3D(xline4/au, yline4/au, zline4/au, 'orange')
-ax.plot3D(xline5/au, yline5/au, zline5/au, 'red', label='LOS 1')
-ax.plot3D(xline6/au, yline6/au, zline6/au, 'black')
-ax.plot3D(xline7/au, yline7/au, zline7/au, 'cyan', label='LOS 2')
-ax.plot3D(xline8/au, yline8/au, zline8/au, 'brown')
-ax.plot3D(xline9/au, yline9/au, zline9/au, 'yellow', label='LOS 3')
+ax.scatter3D(x_vec[x_vec!=0.0]/au, y_vec[x_vec!=0.0]/au, z_vec[x_vec!=0.0]/au, color='red', label='Apophis orbit')
 ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
 plt.legend()
 plt.xlabel('x (au)')
 plt.ylabel('y (au)')
 plt.title('Heliocentric orbit determination by Gauss method: Apophis')
 plt.show()
+
+# xline1 = np.array((0.0, R[0][0]))
+# yline1 = np.array((0.0, R[0][1]))
+# zline1 = np.array((0.0, R[0][2]))
+# xline2 = np.array((0.0, R[1][0]))
+# yline2 = np.array((0.0, R[1][1]))
+# zline2 = np.array((0.0, R[1][2]))
+# xline3 = np.array((0.0, R[2][0]))
+# yline3 = np.array((0.0, R[2][1]))
+# zline3 = np.array((0.0, R[2][2]))
+# xline4 = np.array((0.0, r1[0]))
+# yline4 = np.array((0.0, r1[1]))
+# zline4 = np.array((0.0, r1[2]))
+# xline5 = np.array((R[0][0], R[0][0]+rho_1_*rho1[0]))
+# yline5 = np.array((R[0][1], R[0][1]+rho_1_*rho1[1]))
+# zline5 = np.array((R[0][2], R[0][2]+rho_1_*rho1[2]))
+# xline6 = np.array((0.0, r2[0]))
+# yline6 = np.array((0.0, r2[1]))
+# zline6 = np.array((0.0, r2[2]))
+# xline7 = np.array((R[1][0], R[1][0]+rho_2_*rho2[0]))
+# yline7 = np.array((R[1][1], R[1][1]+rho_2_*rho2[1]))
+# zline7 = np.array((R[1][2], R[1][2]+rho_2_*rho2[2]))
+# xline8 = np.array((0.0, r3[0]))
+# yline8 = np.array((0.0, r3[1]))
+# zline8 = np.array((0.0, r3[2]))
+# xline9 = np.array((R[2][0], R[2][0]+rho_3_*rho3[0]))
+# yline9 = np.array((R[2][1], R[2][1]+rho_3_*rho3[1]))
+# zline9 = np.array((R[2][2], R[2][2]+rho_3_*rho3[2]))
+# ax.plot3D(xline1/au, yline1/au, zline1/au, 'gray', label='Observer 1')
+# ax.plot3D(xline2/au, yline2/au, zline2/au, 'blue', label='Observer 2')
+# ax.plot3D(xline3/au, yline3/au, zline3/au, 'green', label='Observer 3')
+# ax.plot3D(xline4/au, yline4/au, zline4/au, 'orange')
+# ax.plot3D(xline5/au, yline5/au, zline5/au, 'red', label='LOS 1')
+# ax.plot3D(xline6/au, yline6/au, zline6/au, 'black')
+# ax.plot3D(xline7/au, yline7/au, zline7/au, 'cyan', label='LOS 2')
+# ax.plot3D(xline8/au, yline8/au, zline8/au, 'brown')
+# ax.plot3D(xline9/au, yline9/au, zline9/au, 'yellow', label='LOS 3')
+# ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+# plt.legend()
+# plt.xlabel('x (au)')
+# plt.ylabel('y (au)')
+# plt.title('Heliocentric orbit determination by Gauss method: Apophis')
+# plt.show()
