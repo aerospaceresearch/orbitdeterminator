@@ -9,6 +9,19 @@ import matplotlib.pyplot as plt
 from scipy.optimize import newton
 # from scipy.optimize import least_squares
 
+def load_mpc_observatories_data(mpc_observatories_fname):
+    obs_dt = 'S3, f8, f8, f8, S48'
+    obs_delims = [4,10,9,10,48]
+    return np.genfromtxt(mpc_observatories_fname, dtype=obs_dt, names=True, delimiter=obs_delims, autostrip=True, encoding=None)
+
+def get_observatory_data(observatory_code, mpc_observatories_data):
+    # print('observatory_code = ', observatory_code)
+    # print('mpc_observatories_data[\'Code\'] = ', mpc_observatories_data['Code'])
+    arr_index = np.where(mpc_observatories_data['Code'] == observatory_code)
+    # print('arr_index = ', arr_index)
+    # print('mpc_observatories_data[arr_index] = ', mpc_observatories_data[arr_index])
+    return arr_index, mpc_observatories_data[arr_index]
+
 def load_data_mpc(fname):
     '''
     Loads minor planet position observation data from MPC-formatted files.
@@ -302,7 +315,7 @@ def lagrangeg_(tau, xi, z, mu):
 def mygaussfun(x, a, b, c):
     return (x**8)+a*(x**6)+b*(x**3)+c
 
-def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
+def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
     kernel = SPK.open('de430t.bsp')
 
@@ -333,7 +346,7 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     # ind_delta = 10
     # ind_end = ind_0+31 #1409
 
-    print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
+    # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
     ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
     dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
@@ -400,9 +413,18 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     # R[1] = earth_pos_jd2 + observerpos(long_691, C_691, S_691, jd02, ut2)
     # R[2] = earth_pos_jd3 + observerpos(long_691, C_691, S_691, jd03, ut3)
 
-    R[0] = earth_pos_jd1 + observerpos(long_OBS, C_OBS, S_OBS, jd01, ut1)
-    R[1] = earth_pos_jd2 + observerpos(long_OBS, C_OBS, S_OBS, jd02, ut2)
-    R[2] = earth_pos_jd3 + observerpos(long_OBS, C_OBS, S_OBS, jd03, ut3)
+    # print('x[\'observatory\'][inds[0]] = ', x['observatory'][inds[0]])
+    # print('mpc_observatories_data = ', mpc_observatories_data)
+    data_OBS_1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)
+    print('data_OBS_1 = ', data_OBS_1[1])
+    data_OBS_2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)
+    print('data_OBS_2 = ', data_OBS_2[1])
+    data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
+    print('data_OBS_3 = ', data_OBS_3[1])
+
+    R[0] = earth_pos_jd1 + observerpos(data_OBS_1[1]['Long'][0], data_OBS_1[1]['cos'][0], data_OBS_1[1]['sin'][0], jd01, ut1)
+    R[1] = earth_pos_jd2 + observerpos(data_OBS_2[1]['Long'][0], data_OBS_2[1]['cos'][0], data_OBS_2[1]['sin'][0], jd02, ut2)
+    R[2] = earth_pos_jd3 + observerpos(data_OBS_3[1]['Long'][0], data_OBS_3[1]['cos'][0], data_OBS_3[1]['sin'][0], jd03, ut3)
 
     # R[0] = np.array((3489.8, 3430.2, 4078.5))
     # R[1] = np.array((3460.1, 3460.1, 4078.5))
@@ -447,7 +469,7 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
             # print('i,j=', i, j)
             D[i,j] = np.dot(R[i], p[j])
 
-    print('D = ', D)
+    # print('D = ', D)
 
     A = (-D[0,1]*(tau3/tau)+D[1,1]+D[2,1]*(tau1/tau))/D0
     B = (D[0,1]*(tau3**2-tau**2)*(tau3/tau)+D[2,1]*(tau**2-tau1**2)*(tau1/tau))/(6*D0)
@@ -475,14 +497,14 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     # print('c = ', c)
 
     # plot Gauss function in order to obtain a first estimate of a feasible root
-    # x_vals = np.arange(0.0, 2.0*au, 0.05*au)
-    # f_vals = mygaussfun(x_vals)
-    # plt.plot(x_vals/au, f_vals/1e60)
-    # plt.show()
+    x_vals = np.arange(0.0, 2.0*au, 0.05*au)
+    f_vals = mygaussfun(x_vals, a, b, c)
+    plt.plot(x_vals/au, f_vals/1e60)
+    plt.show()
 
     # print('f(0) = ', f_vals[0])
 
-    r2_star = newton(mygaussfun, 0.75*au, args=(a, b, c)) #1.06*au)
+    r2_star = newton(mygaussfun, r2_guess, args=(a, b, c)) #1.06*au)
     # r2_star = newton(mygaussfun, 9000.0, args=(a, b, c)) #1.06*au)
     #r2_star = 1.06*au
 
@@ -540,7 +562,11 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
 # refinement
 # INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
 # OUTPUT: updated r1, r2, v3, v2
-def gauss_refinement_hc(tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3):
+def gauss_refinement_hc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3):
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    # mu = mu_Earth
+    mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    mu = mu_Sun
     xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
     xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
 
@@ -612,66 +638,62 @@ def gauss_refinement_hc(tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3, f_
 # taken from https://www.minorplanetcenter.net/iau/lists/ObsCodesF.html
 # retrieved on: 19 Jun 2018
 
-long_691 = 248.4010 # degrees
-C_691 = 0.84951
-S_691 = +0.52642
+# long_691 = 248.4010 # degrees
+# C_691 = 0.84951
+# S_691 = +0.52642
 
-# 586   0.1423  0.73358  +0.67799  Pic du Midi
-long_586 = 0.1423 # degrees
-C_586 = 0.73358
-S_586 = +0.67799
-
-inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
-
-r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_method_hc(long_586, C_586, S_586, inds_, '../example_data/mpc_data.txt')
+# # 586   0.1423  0.73358  +0.67799  Pic du Midi
+# long_586 = 0.1423 # degrees
+# C_586 = 0.73358
+# S_586 = +0.67799
 
 au = 1.495978707e8
 
-print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
-print('r2 = ', r2, 'km')
-print('v2 = ', v2, 'km/s')
-print('r2 = ', r2/au, 'au')
-print('v2 = ', v2*86400/au, 'au/day')
-print('JD2 = ', jd2, '\n')
+nobs = 20 #50
+a_vec = np.zeros((nobs,))
+e_vec = np.zeros((nobs,))
 
-r2_au = r2/au
-v2_au_day = v2*86400/au
-mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
-mu = mu_Sun
-# mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-# mu = mu_Earth
-
-a_ = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-e_ =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-
-print('*** ORBITAL ELEMENTS ***')
-print('Semimajor axis, a: ', a_, 'km')
-print('Semimajor axis, a: ', a_/au, 'au')
-print('Eccentricity, e: ', e_)
+mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
 ###########################
+for j in range (0,nobs):
+    # Apply Gauss method to three elements of data
+    # inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
+    ind0 = 0 #1409
+    inds_ = [ind0+j, ind0+j+1, ind0+j+2]
+    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_method_hc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt', 0.99*au)
+    # Apply refinement to Gauss' method, 100 iterations
+    for i in range(0,10):
+        r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_hc(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+        # print(f1, g1, f3, g3)
 
-for i in range(0,100):
-    r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_hc(tau1, tau3, r2, v2, mu, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+    # print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
 
-a_ = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-e_ =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    # print('r2 = ', r2, 'km')
+    # print('v2 = ', v2, 'km/s')
 
-print("*** REFINED CARTESIAN STATES AND REFERENCE EPOCH ***")
-print('r2 = ', r2, 'km')
-print('v2 = ', v2, 'km/s')
-print('r2 = ', r2/au, 'au')
-print('v2 = ', v2*86400/au, 'au/day')
-print('JD2 = ', jd2, '\n')
+    # print('r2 = ', r2/au, 'au')
+    # print('v2 = ', v2*86400/au, 'au/day')
+    # print('JD2 = ', jd2, '\n')
 
-print('*** ORBITAL ELEMENTS ***')
-print('Semimajor axis, a: ', a_, 'km')
-print('Semimajor axis, a: ', a_/au, 'au')
-print('Eccentricity, e: ', e_)
+    r2_au = r2/au
+    v2_au_day = v2*86400/au
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    # mu = mu_Earth
+    mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    mu = mu_Sun
 
+    a_vec[j] = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    e_vec[j] =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    print(a_vec[j]/au, 'au', ', ', e_vec[j])
+    print('j = ', j)
 
+print('*** ORBITAL ELEMENTS: a (au), e (adim) ***')
+# print('Semimajor axis, a: ', a_, 'km')
+print(np.mean(a_vec)/au, 'au', ', ', np.mean(e_vec))
 
-#print(' = ', )
+###########################
+# Plot
 
 from mpl_toolkits import mplot3d
 fig = plt.figure()
