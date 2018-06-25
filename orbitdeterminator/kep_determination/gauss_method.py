@@ -229,7 +229,7 @@ def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
         ratio_i = f_i/g_i
         xi = xi - ratio_i
         i += 1
-        print('i = ', i, ', ratio_i = ', ratio_i)
+        # print('i = ', i, ', ratio_i = ', ratio_i)
     return xi
 
 def lagrangef_(xi, z, r):
@@ -335,8 +335,10 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
 
     print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
-    ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
-    dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
+    # ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
+    # dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
+    ra_hrs = np.array((43.537,54.420,64.318))/15.0
+    dec_deg = np.array((-8.7833,-12.074,-15.105))
 
     # cosacosd
     # sinacosd
@@ -360,9 +362,9 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     rho2 = cosinedirectors(ra_hrs[1], dec_deg[1])
     rho3 = cosinedirectors(ra_hrs[2], dec_deg[2])
 
-    # print('rho1 = ', rho1)
-    # print('rho2 = ', rho2)
-    # print('rho3 = ', rho3)
+    print('rho1 = ', rho1)
+    print('rho2 = ', rho2)
+    print('rho3 = ', rho3)
 
     jd01 = date_to_jd(x['yr'][inds[0]], x['month'][inds[0]], x['day'][inds[0]])
     jd02 = date_to_jd(x['yr'][inds[1]], x['month'][inds[1]], x['day'][inds[1]])
@@ -398,17 +400,24 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     # R[1] = earth_pos_jd2 + observerpos(long_691, C_691, S_691, jd02, ut2)
     # R[2] = earth_pos_jd3 + observerpos(long_691, C_691, S_691, jd03, ut3)
 
-    R[0] = earth_pos_jd1 + observerpos(long_586, C_586, S_586, jd01, ut1)
-    R[1] = earth_pos_jd2 + observerpos(long_586, C_586, S_586, jd02, ut2)
-    R[2] = earth_pos_jd3 + observerpos(long_586, C_586, S_586, jd03, ut3)
+    # R[0] = earth_pos_jd1 + observerpos(long_586, C_586, S_586, jd01, ut1)
+    # R[1] = earth_pos_jd2 + observerpos(long_586, C_586, S_586, jd02, ut2)
+    # R[2] = earth_pos_jd3 + observerpos(long_586, C_586, S_586, jd03, ut3)
 
-    # print('R[0] = ', R[0])
-    # print('R[1] = ', R[1])
-    # print('R[2] = ', R[2])
+    R[0] = np.array((3489.8, 3430.2, 4078.5))
+    R[1] = np.array((3460.1, 3460.1, 4078.5))
+    R[2] = np.array((3429.9, 3490.1, 4078.5))
+
+    print('R[0] = ', R[0])
+    print('R[1] = ', R[1])
+    print('R[2] = ', R[2])
 
     # make sure time units are consistent!
-    tau1 = ((jd01+ut1)-(jd02+ut2))*86400.0
-    tau3 = ((jd03+ut3)-(jd02+ut2))*86400.0
+    # tau1 = ((jd01+ut1)-(jd02+ut2))*86400.0
+    # tau3 = ((jd03+ut3)-(jd02+ut2))*86400.0
+    # tau = (tau3-tau1)
+    tau1 = 0-118.10
+    tau3 = 237.58-118.10
     tau = (tau3-tau1)
 
     # print('tau1 = ', tau1)
@@ -425,13 +434,13 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     p[2] = np.cross(rho1, rho2)
 
     #print('p = ', p)
-    # print('p[0] = ', p[0])
-    # print('p[1] = ', p[1])
-    # print('p[2] = ', p[2])
+    print('p[0] = ', p[0])
+    print('p[1] = ', p[1])
+    print('p[2] = ', p[2])
 
     D0  = np.dot(rho1, p[0])
 
-    # print('D0 = ', D0)
+    print('D0 = ', D0)
 
     D = np.zeros((3,3))
 
@@ -440,27 +449,32 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
             # print('i,j=', i, j)
             D[i,j] = np.dot(R[i], p[j])
 
-    # print('D = ', D)
+    print('D = ', D)
 
     A = (-D[0,1]*(tau3/tau)+D[1,1]+D[2,1]*(tau1/tau))/D0
     B = (D[0,1]*(tau3**2-tau**2)*(tau3/tau)+D[2,1]*(tau**2-tau1**2)*(tau1/tau))/(6*D0)
 
-    # print('A = ', A)
-    # print('B = ', B)
+    print('A = ', A)
+    print('B = ', B)
 
     E = np.dot(R[1], rho2)
     Rsub2p2 = np.dot(R[1], R[1])
 
-    # print('E = ', E)
-    # print('Rsub2p2 = ', Rsub2p2)
+    print('E = ', E)
+    print('Rsub2p2 = ', Rsub2p2)
 
-    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
-    mu = mu_Sun
+    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    # mu = mu_Sun
+    mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    mu = mu_Earth
 
     a = -(A**2+2.0*A*E+Rsub2p2)
     b = -2.0*mu*B*(A+E)
     c = -(mu**2)*(B**2)
+
+    print('a = ', a)
+    print('b = ', b)
+    print('c = ', c)
 
     # plot Gauss function in order to obtain a first estimate of a feasible root
     # x_vals = np.arange(0.0, 2.0*au, 0.05*au)
@@ -470,10 +484,12 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
 
     # print('f(0) = ', f_vals[0])
 
-    r2_star = newton(mygaussfun, 0.75*au, args=(a, b, c)) #1.06*au)
+    #r2_star = newton(mygaussfun, 0.75*au, args=(a, b, c)) #1.06*au)
+    r2_star = newton(mygaussfun, 9000.0, args=(a, b, c)) #1.06*au)
     #r2_star = 1.06*au
 
-    # print('r2_star = ', r2_star/au)
+    #print('r2_star = ', r2_star/au)
+    print('r2_star = ', r2_star)
 
     num1 = 6.0*(D[2,0]*(tau1/tau3)+D[1,0]*(tau/tau3))*(r2_star**3)+mu*D[2,0]*(tau**2-tau1**2)*(tau1/tau3)
     den1 = 6.0*(r2_star**3)+mu*(tau**2-tau3**2)
@@ -490,14 +506,17 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     # print('rho_1_ = ', rho_1_/au,'au')
     # print('rho_2_ = ', rho_2_/au,'au')
     # print('rho_3_ = ', rho_3_/au,'au')
+    print('rho_1_ = ', rho_1_)
+    print('rho_2_ = ', rho_2_)
+    print('rho_3_ = ', rho_3_)
 
     r1 = R[0]+rho_1_*rho1
     r2 = R[1]+rho_2_*rho2
     r3 = R[2]+rho_3_*rho3
 
-    # print('r1 = ', r1)
-    # print('r2 = ', r2)
-    # print('r3 = ', r3)
+    print('r1 = ', r1)
+    print('r2 = ', r2)
+    print('r3 = ', r3)
 
     # print('|r1| = ', np.linalg.norm(r1, ord=2)/au, 'au')
     # print('|r2| = ', np.linalg.norm(r2, ord=2)/au, 'au')
@@ -509,39 +528,41 @@ def gauss_method_hc(long_OBS, C_OBS, S_OBS, inds, mpc_data_fname):
     g1 = lagrangeg(mu, r2_star, tau1)
     g3 = lagrangeg(mu, r2_star, tau3)
 
-    # print('f1 = ', f1)
-    # print('f3 = ', f3)
-    # print('g1 = ', g1)
-    # print('g3 = ', g3)
+    print('f1 = ', f1)
+    print('f3 = ', f3)
+    print('g1 = ', g1)
+    print('g3 = ', g3)
 
     v2 = (-f3*r1+f1*r3)/(f1*g3-f3*g1)
 
-    return r1, r2, r3, v2, jd02+ut2, D, R, rho1, rho2, rho3, tau1, tau3
+    print('v2 = ', v2)
+
+    return r1, r2, r3, v2, jd02+ut2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3
 
 # refinement
 # INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
 # OUTPUT: updated r1, r2, v3, v2
-def gauss_refinement_hc(tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3):
+def gauss_refinement_hc(tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3):
     xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
     xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
 
+    # print('xi1 = ', xi1)
+    # print('xi3 = ', xi3)
 
     r0_ = np.sqrt((r2[0]**2)+(r2[1]**2)+(r2[2]**2))
     v20_ = (v2[0]**2)+(v2[1]**2)+(v2[2]**2)
     alpha0_ = (2.0/r0_)-(v20_/mu)
 
     z1_ = alpha0_*(xi1**2)
-    f1_ = lagrangef_(xi1, z1_, r0_)
-    g1_ = lagrangeg_(tau1, xi1, z1_, mu)
+    f1_ = (f_1+lagrangef_(xi1, z1_, r0_))/2
+    g1_ = (g_1+lagrangeg_(tau1, xi1, z1_, mu))/2
 
     z3_ = alpha0_*(xi3**2)
-    f3_ = lagrangef_(xi3, z3_, r0_)
-    g3_ = lagrangeg_(tau3, xi3, z3_, mu)
+    f3_ = (f_3+lagrangef_(xi3, z3_, r0_))/2
+    g3_ = (g_3+lagrangeg_(tau3, xi3, z3_, mu))/2
 
-    print('xi1 xi3 f1 g1 f3 g3')
-    print(xi1, ' ', xi3, ' ', f1_, ' ', g1_, f3_, ' ', g3_)
-
-    # print('f1 = ', f1)
+    # print('f_1 = ', f_1)
+    # print('lagrangef_(xi1, z1_, r0_) = ', lagrangef_(xi1, z1_, r0_))
     # print('f1_ = ', f1_)
     # print('g1 = ', g1)
     # print('g1_ = ', g1_)
@@ -556,31 +577,35 @@ def gauss_refinement_hc(tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3):
     c1_ = g3_/denum
     c3_ = -g1_/denum
 
-    #print('p = ', p)
-    # print('p[0] = ', p[0])
-    # print('p[1] = ', p[1])
-    # print('p[2] = ', p[2])
+    # print('c1_ = ', c1_)
+    # print('c3_ = ', c3_)
 
     D0  = np.dot(rho1, np.cross(rho2, rho3))
 
-    rho_1__ = (-D[0,0]+D[1,0]/c1_-D[2,0]*(c3_/c1_))/D0
-    rho_2__ = (-c1_*D[0,1]+D[1,1]-c3_*D[2,1])/D0
-    rho_3__ = (-D[0,2]*(c1_/c3_)+D[1,2]/c3_-D[2,2])/D0
+    rho_1_ = (-D[0,0]+D[1,0]/c1_-D[2,0]*(c3_/c1_))/D0
+    rho_2_ = (-c1_*D[0,1]+D[1,1]-c3_*D[2,1])/D0
+    rho_3_ = (-D[0,2]*(c1_/c3_)+D[1,2]/c3_-D[2,2])/D0
 
     # print('rho_1_ = ', rho_1_)
     # print('rho_2_ = ', rho_2_)
     # print('rho_3_ = ', rho_3_)
-    # print('rho_1__ = ', rho_1__)
-    # print('rho_2__ = ', rho_2__)
-    # print('rho_3__ = ', rho_3__)
 
-    r1_ = R[0]+rho_1__*rho1
-    r2_ = R[1]+rho_2__*rho2
-    r3_ = R[2]+rho_3__*rho3
+    # print('xi1 xi3 f1 g1 f3 g3 rho1 rho2 rho3')
+    print(xi1, ' ', xi3, ' ', f1_, ' ', g1_, ' ', f3_, ' ', g3_, ' ', rho_1_, ' ', rho_2_, ' ', rho_3_)
 
-    v2_ = (-f3_*r1_+f1_*r3_)/denum
+    r1 = R[0]+rho_1_*rho1
+    r2 = R[1]+rho_2_*rho2
+    r3 = R[2]+rho_3_*rho3
 
-    return r1_, r2_, r3_, v2_, rho_1__, rho_2__, rho_3__
+    # print('r1 = ', r1)
+    # print('r2 = ', r2)
+    # print('r3 = ', r3)
+
+    v2 = (-f3_*r1+f1_*r3)/denum
+
+    # print('v2 = ', v2)
+
+    return r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1_, g1_, f3_, g3_
 
 ##############################
 
@@ -600,7 +625,7 @@ S_586 = +0.67799
 
 inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
 
-r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3 = gauss_method_hc(long_586, C_586, S_586, inds_, '../example_data/mpc_data.txt')
+r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_method_hc(long_586, C_586, S_586, inds_, '../example_data/mpc_data.txt')
 
 au = 1.495978707e8
 
@@ -613,8 +638,10 @@ print('JD2 = ', jd2, '\n')
 
 r2_au = r2/au
 v2_au_day = v2*86400/au
-mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
-mu = mu_Sun
+# mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+# mu = mu_Sun
+mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+mu = mu_Earth
 
 a_ = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 e_ =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
@@ -628,7 +655,9 @@ print('Eccentricity, e: ', e_)
 # tau1 =  -172280.73598891497
 # tau3 =  88133.18400084972
 
-r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_ = gauss_refinement_hc(tau1, tau3, r2, v2, mu, 3e-14, D, R, rho1, rho2, rho3)
+for i in range(0,30):
+    r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_hc(tau1, tau3, r2, v2, mu, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+
 a_ = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 e_ =  eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 
