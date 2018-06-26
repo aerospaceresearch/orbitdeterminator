@@ -178,91 +178,74 @@ def QQ(x):
 # generate vector of initial guess of orbital elements:
 # values written below correspond to solution of ellipse_fit.py for the same file
 
-data0 = read_file(fname)
-kep0, res0 = determine_kep(data0)
+if __name__ == "__main__":
 
-a_ = kep0[0][0] # m
-e_ = kep0[1][0]
-I_ = np.deg2rad(kep0[2][0]) #deg
-omega_ = np.deg2rad(kep0[3][0]) #deg
-Omega_ = np.deg2rad(kep0[4][0]) #deg
-f_ = np.deg2rad(kep0[5][0]) #deg
+    data0 = read_file(fname)
+    kep0, res0 = determine_kep(data0)
 
-#estimate time of pericenter passage from true anomaly at epoch
-E_ = truean2eccan(e_, f_) #ecc. anomaly
-M_ = E_-e_*np.sin(E_) #mean anomaly
-n_ = meanmotion(mu_Earth,a_) #mean motion
-taup_ = data[0,0]-M_/n_ #time of pericenter passage
+    a_ = kep0[0][0] # m
+    e_ = kep0[1][0]
+    I_ = np.deg2rad(kep0[2][0]) #deg
+    omega_ = np.deg2rad(kep0[3][0]) #deg
+    Omega_ = np.deg2rad(kep0[4][0]) #deg
+    f_ = np.deg2rad(kep0[5][0]) #deg
 
-# this is the vector of initial guess of orbital elements:
-x0 = np.array((a_, e_, taup_, omega_, I_, Omega_, mu_Earth))
+    #estimate time of pericenter passage from true anomaly at epoch
+    E_ = truean2eccan(e_, f_) #ecc. anomaly
+    M_ = E_-e_*np.sin(E_) #mean anomaly
+    n_ = meanmotion(mu_Earth,a_) #mean motion
+    taup_ = data[0,0]-M_/n_ #time of pericenter passage
 
-print('Orbital elements, initial guess:')
-print('Semi-major axis (a):                 ',a_,'m')
-print('Eccentricity (e):                    ',e_)
-print('Time of pericenter passage (tau):    ',taup_,'sec')
-print('Argument of pericenter (omega):      ',np.rad2deg(omega_),'deg')
-print('Inclination (I):                     ',np.rad2deg(I_),'deg')
-print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg')
-print('Earth\'s G*mass                     : ',mu_Earth,'m^3 s^-2\n')
+    # this is the vector of initial guess of orbital elements:
+    x0 = np.array((a_, e_, taup_, omega_, I_, Omega_, mu_Earth))
 
-#the arithmetic mean will be used as the reference epoch for the elements
-t_mean = np.mean(data[:,0])
+    print('Orbital elements, initial guess:')
+    print('Semi-major axis (a):                 ',a_,'m')
+    print('Eccentricity (e):                    ',e_)
+    print('Time of pericenter passage (tau):    ',taup_,'sec')
+    print('Argument of pericenter (omega):      ',np.rad2deg(omega_),'deg')
+    print('Inclination (I):                     ',np.rad2deg(I_),'deg')
+    print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg')
+    print('Earth\'s G*mass                     : ',mu_Earth,'m^3 s^-2\n')
 
-# minimize cost function QQ, using initial guess x0
-#Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
-#Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
-#Q_ls = least_squares(res_vec, x0, args=(data, mu_Earth), method='lm')
-Q_ls = least_squares(res_vec, x0, args=(data,), method='lm')
-print('scipy.optimize.least_squares exited with code ', Q_ls.status)
-print(Q_ls.message,'\n')
-#display least-squares solution
-print('\nOrbital elements, least-squares solution:')
-print('Reference epoch (t0):                ', t_mean)
-print('Semi-major axis (a):                 ', Q_ls.x[0], 'm')
-print('Eccentricity (e):                    ', Q_ls.x[1])
-print('Time of pericenter passage (tau):    ', Q_ls.x[2], 'sec')
-print('Pericenter distance (q):             ', Q_ls.x[0]*(1.0-Q_ls.x[1]), 'm')
-print('Apocenter distance (Q):              ', Q_ls.x[0]*(1.0+Q_ls.x[1]), 'm')
-print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth , t_mean, Q_ls.x[2])), 'deg')
-print('Argument of pericenter (omega):      ', np.rad2deg(Q_ls.x[3]), 'deg')
-print('Inclination (I):                     ', np.rad2deg(Q_ls.x[4]), 'deg')
-print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_ls.x[5]), 'deg')
-print('Earth\'s G*mass                     : ',Q_ls.x[6],' m^3 s^-2\n')
+    #the arithmetic mean will be used as the reference epoch for the elements
+    t_mean = np.mean(data[:,0])
 
-print('Total residual evaluated at initial guess: ', QQ(x0))
-print('Total residual evaluated at least-squares solution: ', QQ(Q_ls.x))
-#print('Total residual evaluated at least-squares solution 2: ', Q_ls.cost)
-print('Percentage improvement: ', (QQ(x0)-QQ(Q_ls.x))/QQ(x0)*100, ' %')
+    # minimize cost function QQ, using initial guess x0
+    #Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
+    #Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
+    #Q_ls = least_squares(res_vec, x0, args=(data, mu_Earth), method='lm')
+    Q_ls = least_squares(res_vec, x0, args=(data,), method='lm')
+    print('scipy.optimize.least_squares exited with code ', Q_ls.status)
+    print(Q_ls.message,'\n')
+    #display least-squares solution
+    print('\nOrbital elements, least-squares solution:')
+    print('Reference epoch (t0):                ', t_mean)
+    print('Semi-major axis (a):                 ', Q_ls.x[0], 'm')
+    print('Eccentricity (e):                    ', Q_ls.x[1])
+    print('Time of pericenter passage (tau):    ', Q_ls.x[2], 'sec')
+    print('Pericenter distance (q):             ', Q_ls.x[0]*(1.0-Q_ls.x[1]), 'm')
+    print('Apocenter distance (Q):              ', Q_ls.x[0]*(1.0+Q_ls.x[1]), 'm')
+    print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth , t_mean, Q_ls.x[2])), 'deg')
+    print('Argument of pericenter (omega):      ', np.rad2deg(Q_ls.x[3]), 'deg')
+    print('Inclination (I):                     ', np.rad2deg(Q_ls.x[4]), 'deg')
+    print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_ls.x[5]), 'deg')
+    print('Earth\'s G*mass                     : ',Q_ls.x[6],' m^3 s^-2\n')
 
-# the observed range as a function of time will be used for plotting
-ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
+    print('Total residual evaluated at initial guess: ', QQ(x0))
+    print('Total residual evaluated at least-squares solution: ', QQ(Q_ls.x))
+    print('Percentage improvement: ', (QQ(x0)-QQ(Q_ls.x))/QQ(x0)*100, ' %')
 
-#rvs = res_vec(Q_ls.x, data, mu_Earth)
+    # the observed range as a function of time will be used for plotting
+    ranges_ = np.sqrt(data[:,1]**2+data[:,2]**2+data[:,3]**2)
 
-#generate plots:
-# plt.subplot(411)
-plt.scatter( data[:,0], ranges_ ,s=0.1, label='observed data')
-plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green", label='initial fit')
-plt.plot( data[:,0], kep_r_(Q_ls.x[0], Q_ls.x[1], time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth, data[:,0], Q_ls.x[2])), color="orange", label='LS fit')
-plt.xlabel('time')
-plt.ylabel('range')
-plt.title('LS fit vs observations: range')
-plt.legend()
-# plt.subplot(412)
-# plt.scatter( data[:,0], rvs[:,0] ,s=0.1, label='O-C (x)')
-# plt.xlabel('time')
-# plt.ylabel('x_obs - x_com')
-# plt.legend()
-# plt.subplot(413)
-# plt.scatter( data[:,0], rvs[:,1] ,s=0.1, label='O-C (y)')
-# plt.xlabel('time')
-# plt.ylabel('y_obs - y_com')
-# plt.legend()
-# plt.subplot(414)
-# plt.scatter( data[:,0], rvs[:,2] ,s=0.1, label='O-C (z)')
-# plt.xlabel('time')
-# plt.ylabel('z_obs - z_com')
-# plt.legend()
-plt.show()
+    #generate plots:
+    plt.scatter( data[:,0], ranges_ ,s=0.1, label='observed data')
+    plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green", label='initial fit')
+    plt.plot( data[:,0], kep_r_(Q_ls.x[0], Q_ls.x[1], time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth, data[:,0], Q_ls.x[2])), color="orange", label='LS fit')
+    plt.xlabel('time')
+    plt.ylabel('range')
+    plt.title('LS fit vs observations: range')
+    plt.legend()
+    plt.show()
 
