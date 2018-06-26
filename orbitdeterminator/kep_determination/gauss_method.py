@@ -816,7 +816,7 @@ def gauss_refinement_mpc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
     # print('rho_3_ = ', rho_3_)
 
     # print('xi1 xi3 f1 g1 f3 g3 rho1 rho2 rho3')
-    # print(xi1, ' ', xi3, ' ', f1_, ' ', g1_, ' ', f3_, ' ', g3_, ' ', rho_1_, ' ', rho_2_, ' ', rho_3_)
+    print(xi1, ' ', xi3, ' ', f1_, ' ', g1_, ' ', f3_, ' ', g3_, ' ', rho_1_, ' ', rho_2_, ' ', rho_3_)
 
     r1 = R[0]+rho_1_*rho1
     r2 = R[1]+rho_2_*rho2
@@ -921,7 +921,7 @@ r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_metho
 print('r2 = ', r2)
 print('v2 = ', v2)
 
-for i in range(0,10):
+for i in range(0,6):
     # print('i = ', i)
     r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_sat(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
 
