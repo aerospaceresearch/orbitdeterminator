@@ -205,6 +205,7 @@ def stumpffS(z):
         return (sqrtz-np.sin(sqrtz))/(sqrtz**3)
     elif z<0:
         sqrtz = np.sqrt(-z)
+        # print('sqrtz = ', sqrtz)
         return (np.sinh(sqrtz)-sqrtz)/(sqrtz**3)
     elif z==0:
         return 1.0/6.0
@@ -215,6 +216,8 @@ def stumpffC(z):
         return (1.0-np.cos(sqrtz))/z
     elif z<0:
         sqrtz = np.sqrt(-z)
+        # print('z = ', z)
+        # print('sqrtz = ', sqrtz)
         return (np.cosh(sqrtz)-1.0)/(-z)
     elif z==0:
         return 1.0/2.0
@@ -231,10 +234,14 @@ def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
     i = 0
     ratio_i = 1.0
     while np.abs(ratio_i)>atol and i<iters:
+        # print('* i = ', i)
+        # print(' * xi = ', xi)
+        # print(' * alpha0 = ', alpha0)
         xi2 = xi**2
         z_i = alpha0*(xi2)
         a_i = (r0*vr0)/np.sqrt(mu)
         b_i = 1.0-alpha0*r0
+        # print(' * z_i = ', z_i)
         C_z_i = stumpffC(z_i)
         S_z_i = stumpffS(z_i)
         f_i = a_i*xi2*C_z_i + b_i*(xi**3)*S_z_i + r0*xi - np.sqrt(mu)*dt
@@ -246,6 +253,9 @@ def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
     return xi
 
 def lagrangef_(xi, z, r):
+    # print('xi = ', xi)
+    # print('z = ', z)
+    # print('r = ', r)
     return 1.0-(xi**2)*stumpffC(z)/r
 
 def lagrangeg_(tau, xi, z, mu):
@@ -315,7 +325,7 @@ def lagrangeg_(tau, xi, z, mu):
 def gauss_polynomial(x, a, b, c):
     return (x**8)+a*(x**6)+b*(x**3)+c
 
-def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
+def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname):
     # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
     kernel = SPK.open('de430t.bsp')
 
@@ -397,21 +407,27 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
 
     au = 1.495978707e8
 
-    earth_pos_jd1 = kernel[3,399].compute(jd01+ut1) + kernel[0,3].compute(jd01+ut1) - kernel[0,10].compute(jd01+ut1)
-    earth_pos_jd2 = kernel[3,399].compute(jd02+ut2) + kernel[0,3].compute(jd02+ut2) - kernel[0,10].compute(jd02+ut2)
-    earth_pos_jd3 = kernel[3,399].compute(jd03+ut3) + kernel[0,3].compute(jd03+ut3) - kernel[0,10].compute(jd03+ut3)
+    Ea_hc_pos = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
-    # print('earth_pos_jd1 = ', earth_pos_jd1)
-    # print('earth_pos_jd2 = ', earth_pos_jd2)
-    # print('earth_pos_jd3 = ', earth_pos_jd3)
+    Ea_jd1 = kernel[3,399].compute(jd01+ut1) + kernel[0,3].compute(jd01+ut1) - kernel[0,10].compute(jd01+ut1)
+    Ea_jd2 = kernel[3,399].compute(jd02+ut2) + kernel[0,3].compute(jd02+ut2) - kernel[0,10].compute(jd02+ut2)
+    Ea_jd3 = kernel[3,399].compute(jd03+ut3) + kernel[0,3].compute(jd03+ut3) - kernel[0,10].compute(jd03+ut3)
 
-    # print('range_ea = ', np.linalg.norm(earth_pos_jd1, ord=2)/au)
+    Ea_hc_pos[0] = Ea_jd1/au
+    Ea_hc_pos[1] = Ea_jd2/au
+    Ea_hc_pos[2] = Ea_jd3/au
+
+    # print('Ea_jd1 = ', Ea_jd1)
+    # print('Ea_jd2 = ', Ea_jd2)
+    # print('Ea_jd3 = ', Ea_jd3)
+
+    # print('range_ea = ', np.linalg.norm(Ea_jd1, ord=2)/au)
 
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
-    # R[0] = earth_pos_jd1 + observerpos(long_691, C_691, S_691, jd01, ut1)
-    # R[1] = earth_pos_jd2 + observerpos(long_691, C_691, S_691, jd02, ut2)
-    # R[2] = earth_pos_jd3 + observerpos(long_691, C_691, S_691, jd03, ut3)
+    # R[0] = Ea_jd1 + observerpos(long_691, C_691, S_691, jd01, ut1)
+    # R[1] = Ea_jd2 + observerpos(long_691, C_691, S_691, jd02, ut2)
+    # R[2] = Ea_jd3 + observerpos(long_691, C_691, S_691, jd03, ut3)
 
     # print('x[\'observatory\'][inds[0]] = ', x['observatory'][inds[0]])
     # print('mpc_observatories_data = ', mpc_observatories_data)
@@ -422,21 +438,21 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
     print('data_OBS_3 = ', data_OBS_3[1])
 
-    R[0] = earth_pos_jd1 + observerpos(data_OBS_1[1]['Long'][0], data_OBS_1[1]['cos'][0], data_OBS_1[1]['sin'][0], jd01, ut1)
-    R[1] = earth_pos_jd2 + observerpos(data_OBS_2[1]['Long'][0], data_OBS_2[1]['cos'][0], data_OBS_2[1]['sin'][0], jd02, ut2)
-    R[2] = earth_pos_jd3 + observerpos(data_OBS_3[1]['Long'][0], data_OBS_3[1]['cos'][0], data_OBS_3[1]['sin'][0], jd03, ut3)
+    R[0] = (  Ea_jd1 + observerpos(data_OBS_1[1]['Long'][0], data_OBS_1[1]['cos'][0], data_OBS_1[1]['sin'][0], jd01, ut1)  )/au
+    R[1] = (  Ea_jd2 + observerpos(data_OBS_2[1]['Long'][0], data_OBS_2[1]['cos'][0], data_OBS_2[1]['sin'][0], jd02, ut2)  )/au
+    R[2] = (  Ea_jd3 + observerpos(data_OBS_3[1]['Long'][0], data_OBS_3[1]['cos'][0], data_OBS_3[1]['sin'][0], jd03, ut3)  )/au
 
     # R[0] = np.array((3489.8, 3430.2, 4078.5))
     # R[1] = np.array((3460.1, 3460.1, 4078.5))
     # R[2] = np.array((3429.9, 3490.1, 4078.5))
 
-    print('R[0] = ', R[0])
-    print('R[1] = ', R[1])
-    print('R[2] = ', R[2])
+    # print('R[0] = ', R[0])
+    # print('R[1] = ', R[1])
+    # print('R[2] = ', R[2])
 
     # make sure time units are consistent!
-    tau1 = ((jd01+ut1)-(jd02+ut2))*86400.0
-    tau3 = ((jd03+ut3)-(jd02+ut2))*86400.0
+    tau1 = ((jd01+ut1)-(jd02+ut2)) #*86400.0
+    tau3 = ((jd03+ut3)-(jd02+ut2)) #*86400.0
     tau = (tau3-tau1)
     # tau1 = 0-118.10
     # tau3 = 237.58-118.10
@@ -483,7 +499,8 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     # print('E = ', E)
     # print('Rsub2p2 = ', Rsub2p2)
 
-    mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     # mu = mu_Earth
@@ -515,21 +532,22 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
     # 8 7 6 5 4 3 2 1 0
     gauss_poly_roots = np.roots(gauss_poly_coeffs)
     rt_indx = np.where( np.isreal(gauss_poly_roots) & (gauss_poly_roots >= 0.0) )
+    print('rt_indx[0] = ', rt_indx[0])
     # print('np.real(gauss_poly_roots[rt_indx])[0] = ', np.real(gauss_poly_roots[rt_indx])[0])
-    if len(rt_indx) > 1: #-1:#
+    if len(rt_indx[0]) > 1: #-1:#
         print('WARNING: Gauss polynomial has more than 1 real, positive solution')
         print('gauss_poly_coeffs = ', gauss_poly_coeffs)
         print('gauss_poly_roots = ', gauss_poly_roots)
-        print('len(rt_indx) = ', len(rt_indx))
-        print('np.real(gauss_poly_roots[rt_indx]) = ', np.real(gauss_poly_roots[rt_indx]))
-    r2_star = np.real(gauss_poly_roots[rt_indx])[0]
+        print('len(rt_indx[0]) = ', len(rt_indx[0]))
+        print('np.real(gauss_poly_roots[rt_indx[0]]) = ', np.real(gauss_poly_roots[rt_indx[0]]))
+    r2_star = np.real(gauss_poly_roots[rt_indx[0][0]])
 
     # r2_star = newton(gauss_polynomial, np.real(gauss_poly_roots[rt_indx])[0], args=(a, b, c)) #1.06*au)
     # r2_star = newton(gauss_polynomial, 9000.0, args=(a, b, c)) #1.06*au)
     #r2_star = 1.06*au
 
-    print('r2_star = ', r2_star/au)
-    # print('r2_star = ', r2_star)
+    # print('r2_star = ', r2_star/au)
+    print('r2_star = ', r2_star)
 
     num1 = 6.0*(D[2,0]*(tau1/tau3)+D[1,0]*(tau/tau3))*(r2_star**3)+mu*D[2,0]*(tau**2-tau1**2)*(tau1/tau3)
     den1 = 6.0*(r2_star**3)+mu*(tau**2-tau3**2)
@@ -577,7 +595,7 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
 
     # print('v2 = ', v2)
 
-    return r1, r2, r3, v2, jd02+ut2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3
+    return r1, r2, r3, v2, jd02+ut2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos
 
 # refinement
 # INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
@@ -585,19 +603,22 @@ def gauss_method_hc(mpc_observatories_data, inds, mpc_data_fname, r2_guess):
 def gauss_refinement_hc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3):
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     # mu = mu_Earth
-    mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun
     xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
     xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
-
-    # print('xi1 = ', xi1)
-    # print('xi3 = ', xi3)
 
     r0_ = np.sqrt((r2[0]**2)+(r2[1]**2)+(r2[2]**2))
     v20_ = (v2[0]**2)+(v2[1]**2)+(v2[2]**2)
     alpha0_ = (2.0/r0_)-(v20_/mu)
 
     z1_ = alpha0_*(xi1**2)
+    # print('xi1 = ', xi1)
+    # print('xi3 = ', xi3)
+    # print('alpha0_ = ', alpha0_)
+    # print('z1_ = ', z1_)
+    # print('np.cosh(z1_) = ', np.cosh(z1_))
     f1_ = (f_1+lagrangef_(xi1, z1_, r0_))/2
     g1_ = (g_1+lagrangeg_(tau1, xi1, z1_, mu))/2
 
@@ -669,13 +690,20 @@ def gauss_refinement_hc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, g
 
 au = 1.495978707e8
 
-obs_arr = list(range(0,4))+list(range(7,88))+list(range(93,110))+list(range(985,1102)) # [0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
-print('obs_arr = ', obs_arr)
+# obs_arr = list(range(0,4))+list(range(7,88))+list(range(93,310))+list(range(335,976))+list(range(985,1102))+list(range(1252,1260))
+# obs_arr = list(range(0,4))+list(range(7,110))
+obs_arr = list(range(860,978))
 nobs = len(obs_arr) #2520-2417 #50 #2 #19
+print('nobs = ', nobs)
+print('obs_arr = ', obs_arr)
 
 x_vec = np.zeros((nobs-2,))
 y_vec = np.zeros((nobs-2,))
 z_vec = np.zeros((nobs-2,))
+
+x_Ea_vec = np.zeros((nobs-2,))
+y_Ea_vec = np.zeros((nobs-2,))
+z_Ea_vec = np.zeros((nobs-2,))
 
 a_vec = np.zeros((nobs,))
 e_vec = np.zeros((nobs,))
@@ -689,9 +717,14 @@ for j in range (0,nobs-2):
     ind0 = obs_arr[j] #0 #2417 #2538 #2475 #55 #7 #0 #1409
     #inds_ = [obs_arr[j], obs_arr[j+1], obs_arr[j+2]]
     inds_ = [obs_arr[j], obs_arr[j]+1, obs_arr[j]+2]
-    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_method_hc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt', 0.98*au)
+    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos = gauss_method_hc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt')
     # Apply refinement to Gauss' method, 100 iterations
     for i in range(0,10):
+        # print('i = ', i)
+        a_local = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
+        e_local = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
+        if a_local < 0.0 or e_local > 1.0:
+            continue
         r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_hc(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
         # print(f1, g1, f3, g3)
 
@@ -704,11 +737,12 @@ for j in range (0,nobs-2):
     # print('v2 = ', v2*86400/au, 'au/day')
     # print('JD2 = ', jd2, '\n')
 
-    r2_au = r2/au
-    v2_au_day = v2*86400/au
+    # r2_au = r2/au
+    # v2_au_day = v2*86400/au
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     # mu = mu_Earth
-    mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun
 
     a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
@@ -720,15 +754,20 @@ for j in range (0,nobs-2):
         x_vec[j] = r2[0]
         y_vec[j] = r2[1]
         z_vec[j] = r2[2]
+        x_Ea_vec[j] = Ea_hc_pos[1][0]
+        y_Ea_vec[j] = Ea_hc_pos[1][1]
+        z_Ea_vec[j] = Ea_hc_pos[1][2]
 
-    print(a_num/au, 'au', ', ', e_num)
+    # print(a_num/au, 'au', ', ', e_num)
+    print(a_num, 'au', ', ', e_num)
     print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
 
 print('x_vec = ', x_vec)
 
 print('*** ORBITAL ELEMENTS: a (au), e (adim) ***')
 # print('Semimajor axis, a: ', a_, 'km')
-print(np.mean(a_vec[a_vec>0.0])/au, 'au', ', ', np.mean(e_vec[e_vec<1.0]))
+# print(np.mean(a_vec[a_vec>0.0])/au, 'au', ', ', np.mean(e_vec[e_vec<1.0]))
+print(np.mean(a_vec[a_vec>0.0]), 'au', ', ', np.mean(e_vec[e_vec<1.0]))
 
 ###########################
 # Plot
@@ -737,7 +776,9 @@ from mpl_toolkits import mplot3d
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
-ax.scatter3D(x_vec[x_vec!=0.0]/au, y_vec[x_vec!=0.0]/au, z_vec[x_vec!=0.0]/au, color='red', label='Apophis orbit')
+# ax.scatter3D(x_vec[x_vec!=0.0]/au, y_vec[x_vec!=0.0]/au, z_vec[x_vec!=0.0]/au, color='red', label='Apophis orbit')
+ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label='Apophis orbit')
+ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker=',', label='Earth orbit')
 ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
 plt.legend()
 plt.xlabel('x (au)')
