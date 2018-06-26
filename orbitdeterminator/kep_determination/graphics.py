@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Code is taken from https://github.com/Elucidation/OrbitalElements
-'''
+"""
 
 from __future__ import division
 import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ max_radius = 0
 
 def plotEarth():
     "Draw Earth as a globe at the origin"
-    Earth_radius = 6371 # 6371 km
+    Earth_radius = 6371 # km
     global max_radius
     max_radius = max(max_radius, Earth_radius)
 
@@ -110,7 +110,7 @@ def plotOrbit(semi_major_axis, eccentricity=0, inclination=0,
 
     # Write satellite name next to it
     if label:
-        ax.text(satx, saty, satz, label, fontsize=10)
+        ax.text(satx, saty, satz, label, fontsize=12)
 
 def doDraw():
     # Adjustment of the axes, so that they all have the same span:
@@ -118,4 +118,4 @@ def doDraw():
         getattr(ax, 'set_{}lim'.format(axis))((-max_radius, max_radius))
 
     # Draw figure
-    plt.show()
+plt.show()

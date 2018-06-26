@@ -58,7 +58,7 @@ class SGP4(object):
             date in format DD/MM/YYYY
         """
 
-        year = self.find_year(int(''.join(date[0:2])))
+        year = int(self.find_year(int(''.join(date[0:2]))))
         day = int(''.join(date[2:5]))
 
         daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
@@ -68,14 +68,13 @@ class SGP4(object):
             daysInMonth[1] = 29
 
         i = 0
-        month = 0
-        while(day > 0):
+        while(day > daysInMonth[i]):
             day -= daysInMonth[i]
-            month = i
             i += 1
 
-        day += daysInMonth[month]
-        month += 1
+        day += 1
+        month = i+1
+        print(str(year) + "/" + str(month) + "/" + str(day))
 
         return year, month, day
 
@@ -98,6 +97,7 @@ class SGP4(object):
         hour = int(time.hour)
         minute = int(time.minute)
         second = int(time.second)
+        print(str(hour) + ":" + str(minute) + ":" + str(second))
 
         return hour, minute, second
 
@@ -154,6 +154,7 @@ class SGP4(object):
         year, month, day = self.find_date(''.join(line1[18:23]))
         hour, minute, second = self.find_time(''.join(line1[24:32]))
         self.jd = self.julian_day(year, month, day, hour, minute, second)
+        print(self.jd)
 
         self.xmo = float(''.join(line2[43:51])) * (pi/180)
         self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
@@ -161,7 +162,7 @@ class SGP4(object):
         self.xincl = float(''.join(line2[8:16])) * (pi/180)
         self.eo = float('0.'+str(''.join(line2[26:33])))
         self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
-        self.bstar = int(''.join(line1[53:59]))*(1e-5)*10**int(''.join(line1[59:61]))
+        self.bstar = int(''.join(line1[53:59]))*(1e-5)*(10**int(''.join(line1[59:61])))
 
         ts = time.localtime(time.time())
         yr = ts.tm_year
@@ -171,8 +172,8 @@ class SGP4(object):
         mts = ts.tm_min
         sec = ts.tm_sec
 
-        suffix_date = str(ts.tm_year) + "-" + str(ts.tm_mon) + "-" + str(ts.tm_mday)
-        suffix_time = str(ts.tm_hour) + ":" + str(ts.tm_min) + ":" + str(ts.tm_sec)
+        suffix_date = str(yr) + "-" + str(mth) + "-" + str(day)
+        suffix_time = str(hr) + ":" + str(mts) + ":" + str(sec)
         filename = line0 + "_" + suffix_date + "_" + suffix_time
 
         self.assure_path_exists("../output/")
@@ -184,11 +185,16 @@ class SGP4(object):
                 # print(i)
                 j = self.julian_day(yr, mth, day, hr, mts, sec)
                 tsince = (j - self.jd)*min_per_day
+                # print(i, j, tsince)
                 pos, vel = self.propagation_model(tsince)
-                # print(pos)
+                pos = [1.54287467e+03,-2.54573872e+03,6.43448255e+03]
+                # self.orbital_elements(pos, vel)
+                # self.print_elements()
+                # print(i, pos, vel)
                 # print(vel)
-                timestamp = suffix_date + "-" + suffix_time
-                data = [timestamp, pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
+                # timestamp = suffix_date + "-" + suffix_time
+                data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
+                print(i, data)
                 writer.writerows([data])
                 yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
                 i = i + 1
@@ -218,15 +224,15 @@ class SGP4(object):
         sec += 1
 
         if(sec >= 60):
-            sec -= 0
+            sec = 0
             mts += 1
 
         if(mts >= 60):
-            mts -= 0
+            mts = 0
             hr += 1
 
         if(hr >= 24):
-            hr -= 0
+            hr = 0
             day += 1
 
         daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
@@ -243,7 +249,6 @@ class SGP4(object):
 
         return yr, mth, day, hr, mts, sec
 
-    @classmethod
     def propagation_model(self, tsince):
         """
         Computes state vectors at given time epoch
@@ -257,13 +262,13 @@ class SGP4(object):
             vel : velocity vector
         """
         ae = 1
-        tothrd = 2/3
+        tothrd = 2.0/3.0
         XJ3 = -2.53881e-6
         e6a = 1.0E-6
         xkmper = 6378.135
-        ge = 398600.8;  # Earth gravitational constant
-        CK2 = (1.0826158e-3/2.0)
-        CK4 = (-3.0 * -1.65597e-6 / 8.0)
+        ge = 398600.8           # Earth gravitational constant
+        CK2 = 1.0826158e-3/2.0
+        CK4 = -3.0*-1.65597e-6/8.0
 
         # Constants
         s = ae + 78 / xkmper
@@ -274,19 +279,19 @@ class SGP4(object):
         a1 = temp2**tothrd
         cosio = math.cos(self.xincl)
         theta2 = cosio**2
-        x3thm1 = 3*theta2 - 1
+        x3thm1 = 3*theta2-1
         eosq = self.eo**2
         betao2 = 1-eosq
         betao = math.sqrt(betao2)
         del1 = (1.5*CK2*x3thm1)/((a1**2)*betao*betao2)
-        ao = a1*(1-del1*((1/3)+del1*(1+(134/81)*del1)))
+        ao = a1*(1-del1*((1.0/3.0)+del1*(1+(134.0/81.0)*del1)))
         delo = 1.5*CK2*x3thm1/((ao**2)*betao*betao2)
         xnodp = (self.xno)/(1+delo)
         aodp = ao/(1-delo)
 
         # Initialization
         isimp = 0
-        if((aodp*(1-self.eo)/ae) < (220/xkmper+ae)):
+        if((aodp*(1-self.eo)/ae) < (220.0/xkmper+ae)):
             isimp = 1
 
         s4 = s
@@ -294,7 +299,7 @@ class SGP4(object):
         perigee = (aodp*(1-self.eo)-ae)*xkmper
         if(perigee < 156):
             s4 = perigee - 78
-            if(perigee <=98):
+            if(perigee <= 98):
                 s4 = 20
             qoms24 = ((120-s4)*ae/xkmper)**4
             s4 = s4/xkmper+ae
@@ -323,7 +328,7 @@ class SGP4(object):
         x1m5th = 1-5*theta2
         omgdot = -0.5*temp1*x1m5th+0.0625*temp2*(7-114*theta2+395*theta4)+temp3*(3-36*theta2+49*theta4)
         xhdot1 = -temp1*cosio
-        xnodot = xhdot1+(0.5*temp2*(4-19*theta2)+2*temp3*(3 -7*theta2))*cosio
+        xnodot = xhdot1+(0.5*temp2*(4-19*theta2)+2*temp3*(3-7*theta2))*cosio
         omgcof = self.bstar*c3*math.cos(self.omegao)
         xmcof = -(2/3)*coef*(self.bstar)*ae/eeta
         xnodcf = 3.5*betao2*xhdot1*c1
@@ -491,7 +496,7 @@ class SGP4(object):
         """
         return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
 
-    def orbital_elements(self):
+    def orbital_elements(self, pos, vel):
         """
         Finding orbital elements from the position and velocity vectors
 
@@ -504,10 +509,10 @@ class SGP4(object):
             NIL
         """
 
-        mag_pos = self.magnitude(self.pos)
-        mag_vel = self.magnitude(self.vel)
-        radial_vel = self.vec_multiply(self.pos, self.vel)/mag_pos
-        ang_momentum = self.matrix_multiply(self.pos, self.vel)
+        mag_pos = self.magnitude(pos)
+        mag_vel = self.magnitude(vel)
+        radial_vel = self.vec_multiply(pos, vel)/mag_pos
+        ang_momentum = self.matrix_multiply(pos, vel)
         mag_ang_momentum = self.magnitude(ang_momentum)
         inclination = np.arccos(ang_momentum[2]/mag_ang_momentum)*(180/pi)
 
@@ -518,9 +523,9 @@ class SGP4(object):
             ascension = 360 - ascension
 
         var1 = mag_vel**2 - meu/mag_pos
-        var2 = [self.pos[0]*var1, self.pos[1]*var1, self.pos[2]*var1]
+        var2 = [pos[0]*var1, pos[1]*var1, pos[2]*var1]
         var3 = mag_pos*radial_vel
-        var4 = [self.vel[0]*var3, self.vel[1]*var3, self.vel[2]*var3]
+        var4 = [vel[0]*var3, vel[1]*var3, vel[2]*var3]
         e = [(var2[0]-var4[0])/meu, (var2[1]-var4[1])/meu, (var2[2]-var4[2])/meu]
         eccentricity = self.magnitude(e)
 
@@ -528,7 +533,7 @@ class SGP4(object):
         if(e[2] < 0):
             orbital_perigee = 360 - orbital_perigee
 
-        true_anomaly = np.arccos(self.vec_multiply(e,self.pos)/(eccentricity*mag_pos))*(180/pi)
+        true_anomaly = np.arccos(self.vec_multiply(e,pos)/(eccentricity*mag_pos))*(180/pi)
         if(radial_vel < 0):
             true_anomaly = 360 - true_anomaly
 
@@ -553,14 +558,14 @@ class SGP4(object):
     #     print(self.xno)
     #     print(self.bstar)
 
-    # def print_elements(self):
-    #     print ("\n=== Orbital Elements ===")
-    #     print ("Semi-major Axis                                  : ", self.axis)
-    #     print ("Inclination (degrees)                            : ", self.inc)
-    #     print ("Right ascension of the ascending node (degrees)  : ", self.asc)
-    #     print ("Eccentricity                                     : ", self.ecc)
-    #     print ("Argument of perigee (degrees)                    : ", self.per)
-    #     print ("True Anomaly                                     : ", self.anom)
+    def print_elements(self):
+        print ("\n=== Orbital Elements ===")
+        print ("Semi-major Axis                                  : ", self.axis)
+        print ("Inclination (degrees)                            : ", self.inc)
+        print ("Right ascension of the ascending node (degrees)  : ", self.asc)
+        print ("Eccentricity                                     : ", self.ecc)
+        print ("Argument of perigee (degrees)                    : ", self.per)
+        print ("True Anomaly                                     : ", self.anom)
 
 if __name__ == "__main__":
     page = requests.get("https://www.celestrak.com/NORAD/elements/cubesat.txt")
@@ -568,13 +573,29 @@ if __name__ == "__main__":
     tle = list(soup.children)
     tle = tle[0].splitlines()
 
-    count = len(tle)
-    for i in range(0,count,3):
-        print(i/3)
-        obj = SGP4()
-        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
-        del(obj)
+    # count = len(tle)
+    # for i in range(0,count,3):
+    #     print(str(i/3) + " - " + tle[i])
+    #     obj = SGP4()
+    #     obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
+    #     del(obj)
 
-    # obj = SGP4()
-    # obj.maintain_data(tle[0].replace(" ", ""), tle[1], tle[2])
-    # del(obj)
+    line1 = tle[1]
+    line2 = tle[2]
+    line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
+    line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
+
+    obj = SGP4()
+    obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
+    # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
+    # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
+    # obj.orbital_elements(pos,vel)
+    print(line1)
+    print(line2)
+    del(obj)
+
+    # [1542.87467, -2545.73872, 6434.48255]
+    # [3.328721982844391, 0.98770565136204946, 6.5935970441656533]
+
+    # [1542.87467, -2545.73872, 6434.48255]
+    # [4.4692636257169811, -0.88389096855806137, -5.8817723039953069]
