@@ -609,8 +609,83 @@ def gauss_method_mpc(mpc_observatories_data, inds, mpc_data_fname):
 
     return r1, r2, r3, v2, jd02+ut2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos
 
+# Refinement stage of Gauss method for MPC ra-dec observations
+# INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
+# OUTPUT: updated r1, r2, v3, v2
+def gauss_refinement_mpc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3):
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    # mu = mu_Earth
+    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
+    mu = mu_Sun
+    xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
+    xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
+
+    r0_ = np.sqrt((r2[0]**2)+(r2[1]**2)+(r2[2]**2))
+    v20_ = (v2[0]**2)+(v2[1]**2)+(v2[2]**2)
+    alpha0_ = (2.0/r0_)-(v20_/mu)
+
+    z1_ = alpha0_*(xi1**2)
+    # print('xi1 = ', xi1)
+    # print('xi3 = ', xi3)
+    # print('alpha0_ = ', alpha0_)
+    # print('z1_ = ', z1_)
+    # print('np.cosh(z1_) = ', np.cosh(z1_))
+    f1_ = (f_1+lagrangef_(xi1, z1_, r0_))/2
+    g1_ = (g_1+lagrangeg_(tau1, xi1, z1_, mu))/2
+
+    z3_ = alpha0_*(xi3**2)
+    f3_ = (f_3+lagrangef_(xi3, z3_, r0_))/2
+    g3_ = (g_3+lagrangeg_(tau3, xi3, z3_, mu))/2
+
+    # print('f_1 = ', f_1)
+    # print('lagrangef_(xi1, z1_, r0_) = ', lagrangef_(xi1, z1_, r0_))
+    # print('f1_ = ', f1_)
+    # print('g1 = ', g1)
+    # print('g1_ = ', g1_)
+
+    # print('f3 = ', f3)
+    # print('f3_ = ', f3_)
+    # print('g3 = ', g3)
+    # print('g3_ = ', g3_)
+
+    denum = f1_*g3_-f3_*g1_
+
+    c1_ = g3_/denum
+    c3_ = -g1_/denum
+
+    # print('c1_ = ', c1_)
+    # print('c3_ = ', c3_)
+
+    D0  = np.dot(rho1, np.cross(rho2, rho3))
+
+    rho_1_ = (-D[0,0]+D[1,0]/c1_-D[2,0]*(c3_/c1_))/D0
+    rho_2_ = (-c1_*D[0,1]+D[1,1]-c3_*D[2,1])/D0
+    rho_3_ = (-D[0,2]*(c1_/c3_)+D[1,2]/c3_-D[2,2])/D0
+
+    # print('rho_1_ = ', rho_1_)
+    # print('rho_2_ = ', rho_2_)
+    # print('rho_3_ = ', rho_3_)
+
+    # print('xi1 xi3 f1 g1 f3 g3 rho1 rho2 rho3')
+    print(xi1, ' ', xi3, ' ', f1_, ' ', g1_, ' ', f3_, ' ', g3_, ' ', rho_1_, ' ', rho_2_, ' ', rho_3_)
+
+    r1 = R[0]+rho_1_*rho1
+    r2 = R[1]+rho_2_*rho2
+    r3 = R[2]+rho_3_*rho3
+
+    # print('r1 = ', r1)
+    # print('r2 = ', r2)
+    # print('r3 = ', r3)
+
+    v2 = (-f3_*r1+f1_*r3)/denum
+
+    # print('v2 = ', v2)
+
+    return r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1_, g1_, f3_, g3_
+
 # Implementation of Gauss method for ra-dec observations of Earth satellites
-def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec):
+def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec):
 
     rho1 = cosinedirectors(ra_hrs[0], dec_deg[0])
     rho2 = cosinedirectors(ra_hrs[1], dec_deg[1])
@@ -755,82 +830,7 @@ def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec):
 
     # print('v2 = ', v2)
 
-    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3
-
-# Refinement stage of Gauss method for MPC ra-dec observations
-# INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
-# OUTPUT: updated r1, r2, v3, v2
-def gauss_refinement_mpc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3):
-    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    # mu = mu_Earth
-    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
-    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = mu_Sun
-    xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
-    xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
-
-    r0_ = np.sqrt((r2[0]**2)+(r2[1]**2)+(r2[2]**2))
-    v20_ = (v2[0]**2)+(v2[1]**2)+(v2[2]**2)
-    alpha0_ = (2.0/r0_)-(v20_/mu)
-
-    z1_ = alpha0_*(xi1**2)
-    # print('xi1 = ', xi1)
-    # print('xi3 = ', xi3)
-    # print('alpha0_ = ', alpha0_)
-    # print('z1_ = ', z1_)
-    # print('np.cosh(z1_) = ', np.cosh(z1_))
-    f1_ = (f_1+lagrangef_(xi1, z1_, r0_))/2
-    g1_ = (g_1+lagrangeg_(tau1, xi1, z1_, mu))/2
-
-    z3_ = alpha0_*(xi3**2)
-    f3_ = (f_3+lagrangef_(xi3, z3_, r0_))/2
-    g3_ = (g_3+lagrangeg_(tau3, xi3, z3_, mu))/2
-
-    # print('f_1 = ', f_1)
-    # print('lagrangef_(xi1, z1_, r0_) = ', lagrangef_(xi1, z1_, r0_))
-    # print('f1_ = ', f1_)
-    # print('g1 = ', g1)
-    # print('g1_ = ', g1_)
-
-    # print('f3 = ', f3)
-    # print('f3_ = ', f3_)
-    # print('g3 = ', g3)
-    # print('g3_ = ', g3_)
-
-    denum = f1_*g3_-f3_*g1_
-
-    c1_ = g3_/denum
-    c3_ = -g1_/denum
-
-    # print('c1_ = ', c1_)
-    # print('c3_ = ', c3_)
-
-    D0  = np.dot(rho1, np.cross(rho2, rho3))
-
-    rho_1_ = (-D[0,0]+D[1,0]/c1_-D[2,0]*(c3_/c1_))/D0
-    rho_2_ = (-c1_*D[0,1]+D[1,1]-c3_*D[2,1])/D0
-    rho_3_ = (-D[0,2]*(c1_/c3_)+D[1,2]/c3_-D[2,2])/D0
-
-    # print('rho_1_ = ', rho_1_)
-    # print('rho_2_ = ', rho_2_)
-    # print('rho_3_ = ', rho_3_)
-
-    # print('xi1 xi3 f1 g1 f3 g3 rho1 rho2 rho3')
-    print(xi1, ' ', xi3, ' ', f1_, ' ', g1_, ' ', f3_, ' ', g3_, ' ', rho_1_, ' ', rho_2_, ' ', rho_3_)
-
-    r1 = R[0]+rho_1_*rho1
-    r2 = R[1]+rho_2_*rho2
-    r3 = R[2]+rho_3_*rho3
-
-    # print('r1 = ', r1)
-    # print('r2 = ', r2)
-    # print('r3 = ', r3)
-
-    v2 = (-f3_*r1+f1_*r3)/denum
-
-    # print('v2 = ', v2)
-
-    return r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1_, g1_, f3_, g3_
+    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_
 
 # Refinement stage of Gauss method for Earth satellites rad-dec observations
 # INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
@@ -904,6 +904,12 @@ def gauss_refinement_sat(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
 
     return r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1_, g1_, f3_, g3_
 
+def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0):
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec)
+    for i in range(0, refiters):
+        r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_sat(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+    return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_
+
 ##############################
 # Examples 5.11 and 5.12 from book
 
@@ -916,14 +922,14 @@ dec_deg = np.array((-8.7833, -12.074, -15.105))
 lst_deg = np.array((44.506, 45.000, 45.499))
 t_sec = np.array((0.0, 118.10, 237.58))
 
-r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3 = gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec)
+# print('r2 = ', r2)
+# print('v2 = ', v2)
 
-print('r2 = ', r2)
-print('v2 = ', v2)
+# for i in range(0,6):
+#     # print('i = ', i)
+    
 
-for i in range(0,6):
-    # print('i = ', i)
-    r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_sat(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_ = gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0)
 
 print('r2 = ', r2)
 print('v2 = ', v2)
