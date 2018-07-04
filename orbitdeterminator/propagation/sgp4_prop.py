@@ -72,7 +72,7 @@ def propagate_kep(kep,t0,tf,bstar=0.21109E-4):
     pos, vel = sat.propagate(
         tf.tm_year, tf.tm_mon, tf.tm_mday, tf.tm_hour, tf.tm_min, tf.tm_sec)
 
-    return pos,vel
+    return np.array(list(pos)),np.array(list(vel))
 
 def propagate_state(r,v,t0,tf,bstar=0.21109E-4):
     kep = state_kep(r,v)
@@ -83,12 +83,12 @@ if __name__ == "__main__":
     t0 = 1526927274
     tf = 1526932833
     
-    kep = np.array([6782.96, 0.0004084, 51.6402, 108.2140, 150.4026, 238.0528])
+    #kep = np.array([6782.96, 0.0004084, 51.6402, 108.2140, 150.4026, 238.0528])
  
     r = np.array([-5.23684633e+03, 4.12417773e+03, -1.26294137e+03])
     v = np.array([-3.86204515e+00, -3.12048032e+00, 5.83839029e+00])
     
-    pos,vel = propagate_kep(kep,t0,tf)
-    #pos,vel = propagate_state(r,v,t0,tf)
+    #pos,vel = propagate_kep(kep,t0,tf)
+    pos,vel = propagate_state(r,v,t0,tf)
 
     print(pos,vel)
