@@ -13,3 +13,4 @@ pytz==2018.3
 scipy==1.0.0
 six==1.11.0
 beautifulsoup4==4.6
+mysql==14.14
