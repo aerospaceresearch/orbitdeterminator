@@ -33,22 +33,60 @@ class Gibbs(object):
         """
         return [float(vec[1]), float(vec[2]), float(vec[3])]
 
+    @classmethod
+    def find_length(self, path):
+        """
+        Finds length of input file
+
+        Args:
+            self : class variables
+            path : file path
+
+        Returns:
+            size : length of file
+        """
+        length = open(path, 'r')
+        length.readline()       # it is used to remove the header line
+
+        size = 0
+        for i in length:
+            size = size + 1
+
+        return size
+
     def read_file(self, path):
         """
+        Reads file and generates output
 
+        Args:
+            self : class variables
+            path : path to input file
+
+        Returns:
+            final : list of all pair of position and velocity vector
         """
         myfile = open(path, 'r')
-        myfile.readline()
+        myfile.readline()           # it is used to remove the header line
+
+        size = self.find_length(path)
+        final = np.zeros((size-2, 6))
 
         r1 = self.convert_list(re.split('\t|\n', myfile.readline()))
         r2 = self.convert_list(re.split('\t|\n', myfile.readline()))
-        r3 = self.convert_list(re.split('\t|\n', myfile.readline()))
 
-        for i in range(7997):
+        i = 0
+        while(i < size-2):
+            r3 = self.convert_list(re.split('\t|\n', myfile.readline()))
             v2 = self.gibbs(r1, r2, r3)
+
+            data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
+            final[i, :] = data
+
             r1 = r2
             r2 = r3
-            r3 = self.convert_list(re.split('\t|\n', myfile.readline()))
+            i = i + 1
+
+        return final
 
     @classmethod
     def magnitude(self, vec):
@@ -179,9 +217,12 @@ class Gibbs(object):
         ra = mag_h**2/(meu*(1-mag_e))
         axis = (rp+ra)/2
 
+        return inclination, ascension, eccentricity, perigee, anomaly, axis
+
 if __name__ == "__main__":
     filename = "orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv"
     path = "../example_data/" + filename
 
     obj = Gibbs()
-    obj.read_file(path)
+    vector = obj.read_file(path)
+    print(vector)
