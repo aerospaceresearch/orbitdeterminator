@@ -74,7 +74,7 @@ class SGP4(object):
 
         day += 1
         month = i+1
-        print(str(year) + "/" + str(month) + "/" + str(day))
+        # print(str(year) + "/" + str(month) + "/" + str(day))
 
         return year, month, day
 
@@ -97,7 +97,7 @@ class SGP4(object):
         hour = int(time.hour)
         minute = int(time.minute)
         second = int(time.second)
-        print(str(hour) + ":" + str(minute) + ":" + str(second))
+        # print(str(hour) + ":" + str(minute) + ":" + str(second))
 
         return hour, minute, second
 
@@ -154,7 +154,7 @@ class SGP4(object):
         year, month, day = self.find_date(''.join(line1[18:23]))
         hour, minute, second = self.find_time(''.join(line1[24:32]))
         self.jd = self.julian_day(year, month, day, hour, minute, second)
-        print(self.jd)
+        # print(self.jd)
 
         self.xmo = float(''.join(line2[43:51])) * (pi/180)
         self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
@@ -182,19 +182,11 @@ class SGP4(object):
             writer = csv.writer(myfile)
             i = 0
             while(i < 28800):               # 28800
-                # print(i)
                 j = self.julian_day(yr, mth, day, hr, mts, sec)
                 tsince = (j - self.jd)*min_per_day
-                # print(i, j, tsince)
                 pos, vel = self.propagation_model(tsince)
-                pos = [1.54287467e+03,-2.54573872e+03,6.43448255e+03]
-                # self.orbital_elements(pos, vel)
-                # self.print_elements()
-                # print(i, pos, vel)
-                # print(vel)
-                # timestamp = suffix_date + "-" + suffix_time
                 data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
-                print(i, data)
+                # print(i, data)
                 writer.writerows([data])
                 yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
                 i = i + 1
@@ -463,8 +455,7 @@ class SGP4(object):
         Returns:
             magnitude of vector
         """
-        mag_vec = math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
-        return mag_vec
+        return math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
 
     @classmethod
     def vec_multiply(self, a, b):
@@ -573,29 +564,23 @@ if __name__ == "__main__":
     tle = list(soup.children)
     tle = tle[0].splitlines()
 
-    # count = len(tle)
-    # for i in range(0,count,3):
-    #     print(str(i/3) + " - " + tle[i])
-    #     obj = SGP4()
-    #     obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
-    #     del(obj)
+    count = len(tle)
+    for i in range(0,count,3):
+        print(str(i/3) + " - " + tle[i])
+        obj = SGP4()
+        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
+        del(obj)
 
-    line1 = tle[1]
-    line2 = tle[2]
-    line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
-    line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
-
-    obj = SGP4()
-    obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
-    # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
-    # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
-    # obj.orbital_elements(pos,vel)
-    print(line1)
-    print(line2)
-    del(obj)
-
-    # [1542.87467, -2545.73872, 6434.48255]
-    # [3.328721982844391, 0.98770565136204946, 6.5935970441656533]
-
-    # [1542.87467, -2545.73872, 6434.48255]
-    # [4.4692636257169811, -0.88389096855806137, -5.8817723039953069]
+    # line1 = tle[1]
+    # line2 = tle[2]
+    # line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
+    # line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
+    #
+    # obj = SGP4()
+    # obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
+    # # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
+    # # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
+    # # obj.orbital_elements(pos,vel)
+    # print(line1)
+    # print(line2)
+    # del(obj)
