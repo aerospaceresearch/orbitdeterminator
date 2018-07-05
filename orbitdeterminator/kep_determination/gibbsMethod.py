@@ -49,7 +49,7 @@ class Gibbs(object):
         length.readline()       # it is used to remove the header line
 
         size = 0
-        for i in length:
+        while(length.readline()):
             size = size + 1
 
         return size
