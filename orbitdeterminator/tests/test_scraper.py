@@ -3,7 +3,7 @@ import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 import pytest
-import MySQLdb
+import mysql.connector as mc
 from numpy.testing import assert_array_equal
 from database.scraper import database_connect, string_to_hash, update_table
 
