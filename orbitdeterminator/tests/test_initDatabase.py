@@ -11,8 +11,6 @@ def test_create_database():
     db, flag = create_database("test_database0")
     assert(flag == 0)
 
-    return db
-
 """
 The satellite name in the TLE is max 24 character in length. Hence, the below
 function is taking it with the rest whitespaces
@@ -72,7 +70,12 @@ def test_string_to_hash():
     assert(md5 == "8c08b27d843ae3831fbd62e35a656df9")
     # print("12 " + str(md5))
 
-def test_create_table(db):
+def test_create_table():
+    db = mc.connect(user='root', password='mysql', host='localhost')
+    cursor = db.cursor()
+    sql = 'use test_database0'
+    cursor.execute(sql)
+
     flag = create_table(db, "BRAC ONNESHA            ")
     # print(flag)
     assert(flag == 1)
@@ -122,6 +125,6 @@ def test_create_table(db):
     assert(flag == 0)
 
 if __name__ == "__main__":
-    db = test_create_database()
+    test_create_database()
     test_string_to_hash()
-    test_create_table(db)
+    test_create_table()

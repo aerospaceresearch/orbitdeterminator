@@ -11,8 +11,6 @@ def test_database_connect():
     db, connect = database_connect("test_database0")
     assert(connect == 0)
 
-    return db
-
 """
 The satellite name in the TLE is max 24 character in length. Hence, the below
 function is taking it with the rest whitespaces
@@ -72,7 +70,12 @@ def test_string_to_hash():
     assert(md5 == "8c08b27d843ae3831fbd62e35a656df9")
     # print("12 " + str(md5))
 
-def test_update_table(db):
+def test_update_table():
+    db = mc.connect(user='root', password='mysql', host='localhost')
+    cursor = db.cursor()
+    sql = 'use test_database0'
+    cursor.execute(sql)
+
     line0 = "table123"
     line1 = "1 27844U 03031E   18166.90295127  .00000028  00000-0  32248-4 0  9992"
     line2 = "2 27844  98.6862 175.5784 0010222  22.5500 337.6125 14.22117719775971"
@@ -80,6 +83,6 @@ def test_update_table(db):
     assert(flag == None)
 
 if __name__ == "__main__":
-    db = test_database_connect()
+    test_database_connect()
     test_string_to_hash()
-    test_update_table(db)
+    test_update_table()
