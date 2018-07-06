@@ -14,3 +14,4 @@ scipy==1.0.0
 six==1.11.0
 beautifulsoup4==4.6
 https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-1.0.12.tar.gz
+requests
