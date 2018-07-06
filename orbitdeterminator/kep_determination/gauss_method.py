@@ -912,222 +912,223 @@ def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r
 
 ##############################
 # Examples 5.11 and 5.12 from book
+if __name__ == "__main__":
 
-phi_deg = 40.0 # deg
-altitude_km = 1.0 # km
-f = 0.003353
-ra_deg = np.array((43.537, 54.420, 64.318))
-ra_hrs = ra_deg/15.0
-dec_deg = np.array((-8.7833, -12.074, -15.105))
-lst_deg = np.array((44.506, 45.000, 45.499))
-t_sec = np.array((0.0, 118.10, 237.58))
+    phi_deg = 40.0 # deg
+    altitude_km = 1.0 # km
+    f = 0.003353
+    ra_deg = np.array((43.537, 54.420, 64.318))
+    ra_hrs = ra_deg/15.0
+    dec_deg = np.array((-8.7833, -12.074, -15.105))
+    lst_deg = np.array((44.506, 45.000, 45.499))
+    t_sec = np.array((0.0, 118.10, 237.58))
 
-# print('r2 = ', r2)
-# print('v2 = ', v2)
+    # print('r2 = ', r2)
+    # print('v2 = ', v2)
 
-# for i in range(0,6):
-#     # print('i = ', i)
-    
+    # for i in range(0,6):
+    #     # print('i = ', i)
+        
 
-r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_ = gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0)
+    r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_ = gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0)
 
-print('r2 = ', r2)
-print('v2 = ', v2)
+    print('r2 = ', r2)
+    print('v2 = ', v2)
 
-mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-mu = mu_Earth
+    mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    mu = mu_Earth
 
-a = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-e = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-I = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-W = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-w = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
-theta = np.rad2deg( trueanomaly(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
+    a = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    e = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    I = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+    W = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+    w = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
+    theta = np.rad2deg( trueanomaly(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
 
-print('a = ', a)
-print('e = ', e)
-print('I = ', I, 'deg')
-print('W = ', W, 'deg')
-print('w = ', w, 'deg')
-print('theta = ', theta, 'deg')
+    print('a = ', a)
+    print('e = ', e)
+    print('I = ', I, 'deg')
+    print('W = ', W, 'deg')
+    print('w = ', w, 'deg')
+    print('theta = ', theta, 'deg')
 
-npoints = 1000
-theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
-x_orb_vec = np.zeros((npoints,))
-y_orb_vec = np.zeros((npoints,))
-z_orb_vec = np.zeros((npoints,))
+    npoints = 1000
+    theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
+    x_orb_vec = np.zeros((npoints,))
+    y_orb_vec = np.zeros((npoints,))
+    z_orb_vec = np.zeros((npoints,))
 
-for i in range(0,npoints):
-    recovered_xyz = xyz_frame_(a, e, theta_vec[i], np.deg2rad(w), np.deg2rad(I), np.deg2rad(W))
-    x_orb_vec[i] = recovered_xyz[0]
-    y_orb_vec[i] = recovered_xyz[1]
-    z_orb_vec[i] = recovered_xyz[2]
+    for i in range(0,npoints):
+        recovered_xyz = xyz_frame_(a, e, theta_vec[i], np.deg2rad(w), np.deg2rad(I), np.deg2rad(W))
+        x_orb_vec[i] = recovered_xyz[0]
+        y_orb_vec[i] = recovered_xyz[1]
+        z_orb_vec[i] = recovered_xyz[2]
 
-# ##############################
+    # ##############################
 
-# au = 1.495978707e8
+    # au = 1.495978707e8
 
-# # obs_arr = list(range(0,4))+list(range(7,88))+list(range(93,310))+list(range(335,976))+list(range(985,1102))+list(range(1252,1260))
-# # obs_arr = list(range(0,4))+list(range(7,110))
-# obs_arr = list(range(860,978))
-# # obs_arr = [1114, 1136, 1251]
-# nobs = len(obs_arr) #2520-2417 #50 #2 #19
-# print('nobs = ', nobs)
-# print('obs_arr = ', obs_arr)
+    # # obs_arr = list(range(0,4))+list(range(7,88))+list(range(93,310))+list(range(335,976))+list(range(985,1102))+list(range(1252,1260))
+    # # obs_arr = list(range(0,4))+list(range(7,110))
+    # obs_arr = list(range(860,978))
+    # # obs_arr = [1114, 1136, 1251]
+    # nobs = len(obs_arr) #2520-2417 #50 #2 #19
+    # print('nobs = ', nobs)
+    # print('obs_arr = ', obs_arr)
 
-# x_vec = np.zeros((nobs-2,))
-# y_vec = np.zeros((nobs-2,))
-# z_vec = np.zeros((nobs-2,))
+    # x_vec = np.zeros((nobs-2,))
+    # y_vec = np.zeros((nobs-2,))
+    # z_vec = np.zeros((nobs-2,))
 
-# x_Ea_vec = np.zeros((nobs-2,))
-# y_Ea_vec = np.zeros((nobs-2,))
-# z_Ea_vec = np.zeros((nobs-2,))
+    # x_Ea_vec = np.zeros((nobs-2,))
+    # y_Ea_vec = np.zeros((nobs-2,))
+    # z_Ea_vec = np.zeros((nobs-2,))
 
-# a_vec = np.zeros((nobs,))
-# e_vec = np.zeros((nobs,))
-# I_vec = np.zeros((nobs,))
-# W_vec = np.zeros((nobs,))
-# w_vec = np.zeros((nobs,))
+    # a_vec = np.zeros((nobs,))
+    # e_vec = np.zeros((nobs,))
+    # I_vec = np.zeros((nobs,))
+    # W_vec = np.zeros((nobs,))
+    # w_vec = np.zeros((nobs,))
 
-# mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
+    # mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
-# ###########################
-# for j in range (0,nobs-2):
-#     # Apply Gauss method to three elements of data
-#     # inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
-#     ind0 = obs_arr[j]
-#     # inds_ = [obs_arr[j], obs_arr[j+1], obs_arr[j+2]]
-#     inds_ = [ind0, ind0+1, ind0+2]
-#     r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt')
-#     # Apply refinement to Gauss' method, 100 iterations
-#     for i in range(0,5):
-#         # print('i = ', i)
-#         a_local = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
-#         e_local = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
-#         if a_local < 0.0 or e_local > 1.0:
-#             continue
-#         r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_mpc(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
-#         # print(f1, g1, f3, g3)
+    # ###########################
+    # for j in range (0,nobs-2):
+    #     # Apply Gauss method to three elements of data
+    #     # inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
+    #     ind0 = obs_arr[j]
+    #     # inds_ = [obs_arr[j], obs_arr[j+1], obs_arr[j+2]]
+    #     inds_ = [ind0, ind0+1, ind0+2]
+    #     r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt')
+    #     # Apply refinement to Gauss' method, 100 iterations
+    #     for i in range(0,5):
+    #         # print('i = ', i)
+    #         a_local = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
+    #         e_local = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
+    #         if a_local < 0.0 or e_local > 1.0:
+    #             continue
+    #         r1_, r2, r3_, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_mpc(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+    #         # print(f1, g1, f3, g3)
 
-#     # print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
+    #     # print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
 
-#     # print('r2 = ', r2, 'km')
-#     # print('v2 = ', v2, 'km/s')
+    #     # print('r2 = ', r2, 'km')
+    #     # print('v2 = ', v2, 'km/s')
 
-#     # print('r2 = ', r2/au, 'au')
-#     # print('v2 = ', v2*86400/au, 'au/day')
-#     # print('JD2 = ', jd2, '\n')
+    #     # print('r2 = ', r2/au, 'au')
+    #     # print('v2 = ', v2*86400/au, 'au/day')
+    #     # print('JD2 = ', jd2, '\n')
 
-#     # r2_au = r2/au
-#     # v2_au_day = v2*86400/au
-#     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-#     # mu = mu_Earth
-#     # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
-#     mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-#     mu = mu_Sun
+    #     # r2_au = r2/au
+    #     # v2_au_day = v2*86400/au
+    #     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    #     # mu = mu_Earth
+    #     # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    #     mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
+    #     mu = mu_Sun
 
-#     a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-#     e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    #     a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+    #     e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 
-#     if 0.0<=e_num<=1.0 and a_num>=0.0:
-#         a_vec[j] = a_num
-#         e_vec[j] = e_num
-#         I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-#         W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-#         w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
-#         print(a_vec[j], e_vec[j], I_vec[j], W_vec[j], w_vec[j])
-#         x_vec[j] = r2[0]
-#         y_vec[j] = r2[1]
-#         z_vec[j] = r2[2]
-#         x_Ea_vec[j] = Ea_hc_pos[1][0]
-#         y_Ea_vec[j] = Ea_hc_pos[1][1]
-#         z_Ea_vec[j] = Ea_hc_pos[1][2]
+    #     if 0.0<=e_num<=1.0 and a_num>=0.0:
+    #         a_vec[j] = a_num
+    #         e_vec[j] = e_num
+    #         I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+    #         W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+    #         w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
+    #         print(a_vec[j], e_vec[j], I_vec[j], W_vec[j], w_vec[j])
+    #         x_vec[j] = r2[0]
+    #         y_vec[j] = r2[1]
+    #         z_vec[j] = r2[2]
+    #         x_Ea_vec[j] = Ea_hc_pos[1][0]
+    #         y_Ea_vec[j] = Ea_hc_pos[1][1]
+    #         z_Ea_vec[j] = Ea_hc_pos[1][2]
 
-#     # print(a_num/au, 'au', ', ', e_num)
-#     # print(a_num, 'au', ', ', e_num)
-#     # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
+    #     # print(a_num/au, 'au', ', ', e_num)
+    #     # print(a_num, 'au', ', ', e_num)
+    #     # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
 
-# # print('x_vec = ', x_vec)
-# # print('a_vec = ', a_vec)
-# # print('e_vec = ', e_vec)
+    # # print('x_vec = ', x_vec)
+    # # print('a_vec = ', a_vec)
+    # # print('e_vec = ', e_vec)
 
-# print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
-# # print('Semimajor axis, a: ', a_, 'km')
-# # print(np.mean(a_vec[a_vec>0.0])/au, 'au', ', ', np.mean(e_vec[e_vec<1.0]))
-# print(np.mean(a_vec[a_vec>0.0]), 'au', ', ', np.mean(e_vec[a_vec>0.0]), ', ', np.mean(I_vec[a_vec>0.0]), 'deg', ', ', np.mean(W_vec[a_vec>0.0]), 'deg', ', ', np.mean(w_vec[a_vec>0.0]), 'deg')
+    # print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
+    # # print('Semimajor axis, a: ', a_, 'km')
+    # # print(np.mean(a_vec[a_vec>0.0])/au, 'au', ', ', np.mean(e_vec[e_vec<1.0]))
+    # print(np.mean(a_vec[a_vec>0.0]), 'au', ', ', np.mean(e_vec[a_vec>0.0]), ', ', np.mean(I_vec[a_vec>0.0]), 'deg', ', ', np.mean(W_vec[a_vec>0.0]), 'deg', ', ', np.mean(w_vec[a_vec>0.0]), 'deg')
 
-###########################
-# Plot
+    ###########################
+    # Plot
 
-from mpl_toolkits import mplot3d
-fig = plt.figure()
-ax = plt.axes(projection='3d')
+    from mpl_toolkits import mplot3d
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
 
-# # Apophis plot
-# ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label='Apophis orbit')
-# ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker=',', label='Earth orbit')
-# ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
-# plt.legend()
-# plt.xlabel('x (au)')
-# plt.ylabel('y (au)')
-# plt.title('Angles-only orbit determ. (Gauss): Apophis')
-# plt.show()
-# # end, Apophis plot
+    # # Apophis plot
+    # ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label='Apophis orbit')
+    # ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker=',', label='Earth orbit')
+    # ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+    # plt.legend()
+    # plt.xlabel('x (au)')
+    # plt.ylabel('y (au)')
+    # plt.title('Angles-only orbit determ. (Gauss): Apophis')
+    # plt.show()
+    # # end, Apophis plot
 
-# Make data
-# Re = 6378.0 # km
-# u_ea_surf = np.linspace(0, 2 * np.pi, 100)
-# v_ea_surf = np.linspace(0, np.pi, 100)
-# x_ea_surf = Re * np.outer(np.cos(u_ea_surf), np.sin(v_ea_surf))
-# y_ea_surf = Re * np.outer(np.sin(u_ea_surf), np.sin(v_ea_surf))
-# z_ea_surf = Re * np.outer(np.ones(np.size(u_ea_surf)), np.cos(v_ea_surf))
+    # Make data
+    # Re = 6378.0 # km
+    # u_ea_surf = np.linspace(0, 2 * np.pi, 100)
+    # v_ea_surf = np.linspace(0, np.pi, 100)
+    # x_ea_surf = Re * np.outer(np.cos(u_ea_surf), np.sin(v_ea_surf))
+    # y_ea_surf = Re * np.outer(np.sin(u_ea_surf), np.sin(v_ea_surf))
+    # z_ea_surf = Re * np.outer(np.ones(np.size(u_ea_surf)), np.cos(v_ea_surf))
 
-xline1 = np.array((0.0, R[0][0]))
-yline1 = np.array((0.0, R[0][1]))
-zline1 = np.array((0.0, R[0][2]))
-xline2 = np.array((0.0, R[1][0]))
-yline2 = np.array((0.0, R[1][1]))
-zline2 = np.array((0.0, R[1][2]))
-xline3 = np.array((0.0, R[2][0]))
-yline3 = np.array((0.0, R[2][1]))
-zline3 = np.array((0.0, R[2][2]))
-xline4 = np.array((0.0, r1[0]))
-yline4 = np.array((0.0, r1[1]))
-zline4 = np.array((0.0, r1[2]))
-xline5 = np.array((R[0][0], R[0][0]+rho_1_*rho1[0]))
-yline5 = np.array((R[0][1], R[0][1]+rho_1_*rho1[1]))
-zline5 = np.array((R[0][2], R[0][2]+rho_1_*rho1[2]))
-xline6 = np.array((0.0, r2[0]))
-yline6 = np.array((0.0, r2[1]))
-zline6 = np.array((0.0, r2[2]))
-xline7 = np.array((R[1][0], R[1][0]+rho_2_*rho2[0]))
-yline7 = np.array((R[1][1], R[1][1]+rho_2_*rho2[1]))
-zline7 = np.array((R[1][2], R[1][2]+rho_2_*rho2[2]))
-xline8 = np.array((0.0, r3[0]))
-yline8 = np.array((0.0, r3[1]))
-zline8 = np.array((0.0, r3[2]))
-xline9 = np.array((R[2][0], R[2][0]+rho_3_*rho3[0]))
-yline9 = np.array((R[2][1], R[2][1]+rho_3_*rho3[1]))
-zline9 = np.array((R[2][2], R[2][2]+rho_3_*rho3[2]))
-ax.plot3D(xline1, yline1, zline1, 'gray', label='Observer 1')
-ax.plot3D(xline2, yline2, zline2, 'blue', label='Observer 2')
-ax.plot3D(xline3, yline3, zline3, 'green', label='Observer 3')
-ax.plot3D(xline4, yline4, zline4, 'orange')
-ax.plot3D(xline5, yline5, zline5, 'red', label='LOS 1')
-ax.plot3D(xline6, yline6, zline6, 'black')
-ax.plot3D(xline7, yline7, zline7, 'cyan', label='LOS 2')
-ax.plot3D(xline8, yline8, zline8, 'brown')
-ax.plot3D(xline9, yline9, zline9, 'yellow', label='LOS 3')
-ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Geocenter')
-ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'black', label='Satellite orbit')
-# ax.plot_surface(x_ea_surf, y_ea_surf, z_ea_surf, color='b')
-# ax.set_aspect('equal')
-plt.legend()
-ax.set_xlim(-10000.0, 10000.0)
-ax.set_ylim(-10000.0, 10000.0)
-ax.set_zlim(-10000.0, 10000.0)
-ax.set_xlabel('x (km)')
-ax.set_ylabel('y (km)')
-ax.set_zlabel('z (km)')
-plt.title('Satellite orbit determination: Gauss method')
-plt.show()
+    xline1 = np.array((0.0, R[0][0]))
+    yline1 = np.array((0.0, R[0][1]))
+    zline1 = np.array((0.0, R[0][2]))
+    xline2 = np.array((0.0, R[1][0]))
+    yline2 = np.array((0.0, R[1][1]))
+    zline2 = np.array((0.0, R[1][2]))
+    xline3 = np.array((0.0, R[2][0]))
+    yline3 = np.array((0.0, R[2][1]))
+    zline3 = np.array((0.0, R[2][2]))
+    xline4 = np.array((0.0, r1[0]))
+    yline4 = np.array((0.0, r1[1]))
+    zline4 = np.array((0.0, r1[2]))
+    xline5 = np.array((R[0][0], R[0][0]+rho_1_*rho1[0]))
+    yline5 = np.array((R[0][1], R[0][1]+rho_1_*rho1[1]))
+    zline5 = np.array((R[0][2], R[0][2]+rho_1_*rho1[2]))
+    xline6 = np.array((0.0, r2[0]))
+    yline6 = np.array((0.0, r2[1]))
+    zline6 = np.array((0.0, r2[2]))
+    xline7 = np.array((R[1][0], R[1][0]+rho_2_*rho2[0]))
+    yline7 = np.array((R[1][1], R[1][1]+rho_2_*rho2[1]))
+    zline7 = np.array((R[1][2], R[1][2]+rho_2_*rho2[2]))
+    xline8 = np.array((0.0, r3[0]))
+    yline8 = np.array((0.0, r3[1]))
+    zline8 = np.array((0.0, r3[2]))
+    xline9 = np.array((R[2][0], R[2][0]+rho_3_*rho3[0]))
+    yline9 = np.array((R[2][1], R[2][1]+rho_3_*rho3[1]))
+    zline9 = np.array((R[2][2], R[2][2]+rho_3_*rho3[2]))
+    ax.plot3D(xline1, yline1, zline1, 'gray', label='Observer 1')
+    ax.plot3D(xline2, yline2, zline2, 'blue', label='Observer 2')
+    ax.plot3D(xline3, yline3, zline3, 'green', label='Observer 3')
+    ax.plot3D(xline4, yline4, zline4, 'orange')
+    ax.plot3D(xline5, yline5, zline5, 'red', label='LOS 1')
+    ax.plot3D(xline6, yline6, zline6, 'black')
+    ax.plot3D(xline7, yline7, zline7, 'cyan', label='LOS 2')
+    ax.plot3D(xline8, yline8, zline8, 'brown')
+    ax.plot3D(xline9, yline9, zline9, 'yellow', label='LOS 3')
+    ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Geocenter')
+    ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'black', label='Satellite orbit')
+    # ax.plot_surface(x_ea_surf, y_ea_surf, z_ea_surf, color='b')
+    # ax.set_aspect('equal')
+    plt.legend()
+    ax.set_xlim(-10000.0, 10000.0)
+    ax.set_ylim(-10000.0, 10000.0)
+    ax.set_zlim(-10000.0, 10000.0)
+    ax.set_xlabel('x (km)')
+    ax.set_ylabel('y (km)')
+    ax.set_zlabel('z (km)')
+    plt.title('Satellite orbit determination: Gauss method')
+    plt.show()
