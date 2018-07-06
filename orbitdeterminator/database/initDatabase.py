@@ -10,7 +10,7 @@ Note: Password field is empty during database connection. Insert password for
 """
 
 import hashlib
-import MySQLdb
+import mysql.connector as mc
 import requests
 from bs4 import BeautifulSoup
 
@@ -26,7 +26,7 @@ def create_database(name):
         d : connection flag (0: success)
     """
 
-    db = MySQLdb.connect(host="localhost", user="root", passwd="mysql")
+    db = mc.connect(user='root', password='mysql', host='localhost')
     cursor = db.cursor()
     sql = 'CREATE DATABASE ' + name + ';'
     cursor.execute(sql)
@@ -116,5 +116,5 @@ def scrap_data(db):
     db.close()
 
 if __name__ == "__main__":
-    db,_ = create_database("sample")
+    db,_ = create_database("d1")
     scrap_data(db)

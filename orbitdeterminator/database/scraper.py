@@ -11,7 +11,7 @@ Note: Password filed is empty during database connection. Insert password for
 
 import time
 import hashlib
-import MySQLdb
+import mysql.connector as mc
 import requests
 from bs4 import BeautifulSoup
 
@@ -27,7 +27,7 @@ def database_connect(name):
         d : connection flag (0: success)
     """
 
-    db = MySQLdb.connect(host="localhost", user="root", passwd="mysql")
+    db = mc.connect(user='root', password='mysql', host='localhost')
     cursor = db.cursor()
     d = cursor.execute('use ' + name)
     # print('Database selected')
