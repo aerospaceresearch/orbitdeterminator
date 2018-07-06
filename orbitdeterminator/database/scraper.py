@@ -69,8 +69,7 @@ def update_table(db, line0, line1, line2):
 
     sat_hash = string_to_hash(line0)
     try:
-        sql = 'INSERT INTO %s values(\'%s,\', \'%s,\', \'%s,\');\
-        ' %(str(sat_hash), str(ts), line1, line2)
+        sql = 'INSERT INTO %s values(\'%s,\', \'%s,\', \'%s,\');' %(str(sat_hash), str(ts), line1, line2)
         cursor.execute(sql)
         d = db.commit()
     except Exception:

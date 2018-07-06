@@ -103,8 +103,7 @@ def scrap_data(db):
     for i in range(0, len(tle), 3):
         d = create_table(db, tle[i])
         if(d == 0):
-            sql = 'INSERT INTO mapping values(\'%s,\', \'%s\');\
-            ' %(str(name), str(sat_hash))
+            sql = 'INSERT INTO mapping values(\'%s,\', \'%s\');' %(str(name), str(sat_hash))
             cursor.execute(sql)
             db.commit()
             success += 1
