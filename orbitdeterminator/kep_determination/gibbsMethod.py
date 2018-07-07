@@ -135,6 +135,19 @@ class Gibbs(object):
 
     @classmethod
     def vector_sum(self, a, b, flag):
+        """
+        If flag is 1 then add both vectors else if flag is 0 (zeros)
+        then subtract two vectors
+
+        Args:
+            self : class variables
+            a : first vector
+            b : second vector
+            flag : checks for operation
+
+        Returns:
+            sum/difference of vector based on flag value
+        """
         if(flag == 1):
             return [a[0]+b[0], a[1]+b[1], a[2]+b[2]]
         elif(flag == 0):
@@ -142,10 +155,32 @@ class Gibbs(object):
 
     @classmethod
     def unit(self, vec):
+        """
+        Finds unit vector of the given vector
+
+        Args:
+            self : class variables
+            vec : input vector
+
+        Returns:
+            unit vector
+        """
         mag = self.magnitude(vec)
         return [i/mag for i in vec]
 
     def gibbs(self, r1, r2, r3):
+        """
+        Computes state vectors using Gibb's Method
+
+        Args:
+            self : class variables
+            r1 : first position vector
+            r2 : second position vector
+            r3 : third position vector
+
+        Returns:
+            v2 : velocity vector
+        """
         mag_r1 = self.magnitude(r1)
         mag_r2 = self.magnitude(r2)
         mag_r3 = self.magnitude(r3)
@@ -182,6 +217,17 @@ class Gibbs(object):
         return v2
 
     def orbital_elements(self, r, v):
+        """
+        Computes orbital elements from state vectors
+
+        Args:
+            self : class variables
+            r : position vector
+            v : velocity vector
+
+        Returns:
+            set of six orbital elements
+        """
         r = [-6045, -3490, 2500]
         v = [-3.457, 6.618, 2.533]
 
