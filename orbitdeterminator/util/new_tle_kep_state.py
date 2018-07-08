@@ -102,11 +102,11 @@ def kep_to_state(kep):
 	   r[0],r[1],r[2] = position vector [rx,ry,rz] km
 	   r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s
     """
-    
+
     r = np.zeros((6,1))
 
     # unload orbital elements array
-    
+
     sma = kep[0]  # sma is semi major axis
     ecc = kep[1]  # eccentricity
     inc = math.radians(kep[2])  # inclination
@@ -145,6 +145,7 @@ def kep_to_state(kep):
 if __name__ == "__main__":
 
 	#tle = np.array([51.6382,7.1114,0.0002893,211.1340,148.9642,15.568214688])
-        tle = np.array([51.6428, 291.0075, 0.0003411, 263.9950, 245.8448, 15.54009155])
+        #tle = np.array([51.6428, 291.0075, 0.0003411, 263.9950, 245.8448, 15.54009155])
+        tle = np.array([51.6418, 266.6543, 0.0003456, 290.0933, 212.4518, 15.54021918])
         r = tle_to_state(tle)
         print(r)

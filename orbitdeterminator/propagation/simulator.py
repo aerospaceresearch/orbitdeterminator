@@ -22,7 +22,7 @@ class Simulator():
 
         self.s = propagate_state(self.s,self.t0,self.t)
         self.t0 = self.t
-        
+
         self.calc_thr = None
         self.is_running = False
 
@@ -114,10 +114,11 @@ class SimParams():
     op_writer = OpWriter()
 
 if __name__ == "__main__":
-    epoch = 1530729961
-    #epoch = 1529410874
+    epoch = 1531152114
+    #epoch = 1530729961
     #iss_kep = np.array([6775,0.0002893,51.6382,211.1340,7.1114,148.9642])
-    iss_kep = np.array([6786.6787,0.0003411,51.6428,263.9950,291.0075,245.8091])
+    #iss_kep = np.array([6786.6787,0.0003411,51.6428,263.9950,291.0075,245.8091])
+    iss_kep = np.array([6786.6420,0.0003456,51.6418,290.0933,266.6543,212.4306])
     #6783.1714
     #6786.5714
 
