@@ -265,7 +265,7 @@ class Gibbs(object):
         ra = mag_h**2/(meu*(1-mag_e))
         axis = (rp+ra)/2
 
-        return inclination, ascension, eccentricity, perigee, anomaly, axis
+        return [axis, inclination, ascension, mag_e, perigee, anomaly]
 
 if __name__ == "__main__":
     filename = "orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv"

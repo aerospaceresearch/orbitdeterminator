@@ -115,9 +115,55 @@ def test_vector_sum():
 
     del(obj)
 
+
+def test_unit():
+    obj = Gibbs()
+
+    vec = [8.1473, -9.7095, 7.3179]
+    unit = obj.unit(vec)
+    unit = [float("{0:.5f}".format(i)) for i in unit]
+    ans = [0.55667, -0.66341, 0.5]
+    assert_array_equal(unit, ans)
+
+    vec = [-294.32, 4265.1, 5986.7]
+    unit = obj.unit(vec)
+    unit = [float("{0:.5f}".format(i)) for i in unit]
+    ans = [-0.04001, 0.57977, 0.8138]
+    assert_array_equal(unit, ans)
+
+    del(obj)
+
+def test_gibbs():
+    obj = Gibbs()
+
+    r1 = [-294.32, 4265.1, 5986.7]
+    r2 = [-1365.5, 3637.6, 6346.8]
+    r3 = [-2940.3, 2473.7, 6555.8]
+    v = obj.gibbs(r1, r2, r3)
+    v = [float("{0:.4f}".format(i)) for i in v]
+    ans = [-6.2174, -4.0122, 1.599]
+    assert_array_equal(v, ans)
+
+    del(obj)
+
+def test_orbital_elements():
+    obj = Gibbs()
+
+    r = [-1365.5, 3637.6, 6346.8]
+    v = [-6.2174, -4.0122, 1.599]
+    ele = obj.orbital_elements(r, v)
+    ele = [float("{0:.2f}".format(i)) for i in ele]
+    ans = [8788.08, 153.25, 255.28, 0.17, 20.07, 28.45]
+    assert_array_equal(ele, ans)
+
+    del(obj)
+
 if __name__ == "__main__":
     test_convert_list()
     test_magnitude()
     test_dot_product()
     test_cross_product()
     test_vector_sum()
+    test_unit()
+    test_gibbs()
+    test_orbital_elements()
