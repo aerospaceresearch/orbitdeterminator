@@ -36,7 +36,7 @@ class Gibbs(object):
     @classmethod
     def find_length(self, path):
         """
-        Finds length of input file
+        Finds length of input file. File should contain a header line.
 
         Args:
             self : class variables
@@ -168,6 +168,7 @@ class Gibbs(object):
         mag = self.magnitude(vec)
         return [i/mag for i in vec]
 
+    @classmethod
     def gibbs(self, r1, r2, r3):
         """
         Computes state vectors using Gibb's Method
@@ -216,6 +217,7 @@ class Gibbs(object):
 
         return v2
 
+    @classmethod
     def orbital_elements(self, r, v):
         """
         Computes orbital elements from state vectors
@@ -271,4 +273,5 @@ if __name__ == "__main__":
 
     obj = Gibbs()
     vector = obj.read_file(path)
+    del(obj)
     print(vector)
