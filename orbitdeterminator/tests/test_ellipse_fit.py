@@ -6,7 +6,7 @@ import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
-from util.new_tle_kep_state import kep_to_state
+from util.new_tle_kep_state import tle_to_state
 from util.rkf5 import rkf5
 from kep_determination.ellipse_fit import determine_kep
 
@@ -33,8 +33,8 @@ def test_ellipse_fit():
     """
 
     #noaa-1
-    kep = np.array([101.7540, 195.7370, 0.0031531, 352.8640, 117.2610, 12.53984625169364])
-    r = kep_to_state(kep)
+    tle = np.array([101.7540, 195.7370, 0.0031531, 352.8640, 117.2610, 12.53984625169364])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,7200,10,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
@@ -49,8 +49,8 @@ def test_ellipse_fit():
     assert kep[5] == pytest.approx(117.2610, 0.5)       # true_anom
 
     #gps-23
-    kep = np.array([54.4058, 84.8417, 0.0142955, 74.4543, 193.5934, 2.00565117179872])
-    r = kep_to_state(kep)
+    tle = np.array([54.4058, 84.8417, 0.0142955, 74.4543, 193.5934, 2.00565117179872])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,43080,50,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
@@ -65,8 +65,8 @@ def test_ellipse_fit():
     assert kep[5] == pytest.approx(193.5934, 0.5)       # true_anom
 
     #cryosat-2
-    kep = np.array([92.0287, 282.8216, 0.0005088, 298.0188, 62.0505, 14.52172969429489])
-    r = kep_to_state(kep)
+    tle = np.array([92.0287, 282.8216, 0.0005088, 298.0188, 62.0505, 14.52172969429489])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,5950,10,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
@@ -81,8 +81,8 @@ def test_ellipse_fit():
     assert kep[5] == pytest.approx(62.0505, 0.5)        # true_anom
 
     #noaa-15
-    kep = np.array([98.7705, 158.2195, 0.0009478, 307.8085, 52.2235, 14.25852803])
-    r = kep_to_state(kep)
+    tle = np.array([98.7705, 158.2195, 0.0009478, 307.8085, 52.2235, 14.25852803])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,6120,10,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
@@ -97,8 +97,8 @@ def test_ellipse_fit():
     assert kep[5] == pytest.approx(52.2235, 0.5)        # true_anom
 
     #noaa-18
-    kep = np.array([99.1472, 176.6654, 0.0014092, 197.4778, 162.5909, 14.12376102669957])
-    r = kep_to_state(kep)
+    tle = np.array([99.1472, 176.6654, 0.0014092, 197.4778, 162.5909, 14.12376102669957])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,6120,10,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
@@ -113,8 +113,8 @@ def test_ellipse_fit():
     assert kep[5] == pytest.approx(162.5909, 0.5)       # true_anom
 
     #noaa-19
-    kep = np.array([99.1401, 119.3629, 0.0014753, 44.0001, 316.2341, 14.12279464478196])
-    r = kep_to_state(kep)
+    tle = np.array([99.1401, 119.3629, 0.0014753, 44.0001, 316.2341, 14.12279464478196])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,6120,10,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
@@ -129,8 +129,8 @@ def test_ellipse_fit():
     assert kep[5] == pytest.approx(316.2341, 0.5)      # true_anom
 
     #molniya 2-10
-    kep = np.array([63.2749, 254.2968, 0.7151443, 294.4926, 9.2905, 2.01190064320534])
-    r = kep_to_state(kep)
+    tle = np.array([63.2749, 254.2968, 0.7151443, 294.4926, 9.2905, 2.01190064320534])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,43000,50,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)
@@ -145,8 +145,8 @@ def test_ellipse_fit():
     assert kep[5] == pytest.approx(65.56742, 0.5)       # true_anom
 
     #ISS
-    kep = np.array([51.6402, 150.4026, 0.0004084, 108.2140, 238.0528, 15.54082454114406])
-    r = kep_to_state(kep)
+    tle = np.array([51.6402, 150.4026, 0.0004084, 108.2140, 238.0528, 15.54082454114406])
+    r = tle_to_state(tle)
     _,vecs = rkf5(0,5560,10,r)
     r = np.reshape(r,(1,6))
     vecs = np.insert(vecs,0,r,axis=0)

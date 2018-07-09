@@ -1,59 +1,94 @@
-import time
-
+from datetime import datetime
 import numpy as np
-
+from sgp4.model import Satellite
 from sgp4.earth_gravity import wgs72
-from sgp4.io import twoline2rv
+from sgp4.propagation import sgp4init
+from orbitdeterminator.util.state_kep import state_kep
 
-avg_bstar = 0.21109E-4
+def true_to_mean(T,e):
+    T = np.radians(T)
+    E = np.arctan2((1-e**2)*np.sin(T),e+np.cos(T))
+    M = E - e*np.sin(E)
+    M = np.degrees(M)
+    M = M%360
+    return M
 
-def propagate(kep,init_time,final_time,bstar=avg_bstar):
-    t0 = time.gmtime(init_time)
+# Parts of this method have been copied from:
+# https://github.com/brandon-rhodes/python-sgp4/blob/master/sgp4/io.py
+def kep_to_sat(kep,epoch,bstar=0.21109E-4,whichconst=wgs72,afspc_mode=False):
+    deg2rad  =  np.pi / 180.0;         #    0.0174532925199433
+    xpdotp   =  1440.0 / (2.0 * np.pi);  #  229.1831180523293
 
-    t0 = ((t0.tm_year%100)*1000 +
-           t0.tm_yday+
-           t0.tm_hour/24 + t0.tm_min/1440 + t0.tm_sec/86400)
+    tumin = whichconst.tumin
 
-    t0 = "{:14.8f}".format(t0)
-    tf = time.gmtime(final_time)
+    satrec = Satellite()
+    satrec.error = 0;
+    satrec.whichconst = whichconst # Python extension: remembers its consts
 
-    mu = 398600.4405
-    n = 86400/2/np.pi * (mu/kep[0]**3)**0.5
+    satrec.satnum = 0
+    dt_obj = datetime.utcfromtimestamp(epoch)
+    t_obj = dt_obj.timetuple()
+    satrec.epochdays = (t_obj.tm_yday +
+                        t_obj.tm_hour/24 +
+                        t_obj.tm_min/1440 +
+                        t_obj.tm_sec/86400)
+    satrec.ndot = 0
+    satrec.nddot = 0
+    satrec.bstar = bstar
 
-    tanom = np.radians(kep[5])
-    e = kep[1]
-    ecc = np.arctan2((1-e**2)**0.5*np.sin(tanom),e+np.cos(tanom))
-    ecc = ecc%(2*np.pi)
-    mean = ecc - e*np.sin(ecc)
-    mean = np.degrees(mean)
+    satrec.inclo = kep[2]
+    satrec.nodeo = kep[4]
+    satrec.ecco = kep[1]
+    satrec.argpo = kep[3]
+    satrec.mo = true_to_mean(kep[5],kep[1])
+    satrec.no = 86400/(2*np.pi*(kep[0]**3/398600.4405)**0.5)
 
-    inc  = "{:8.4f}".format(kep[2])
-    raan = "{:8.4f}".format(kep[4])
-    e = "{:.7f}".format(e)[2:]
-    argp = "{:8.4f}".format(kep[3])
-    mean = "{:8.4f}".format(mean)
-    n = "{:11.8f}".format(n)
+    satrec.no   = satrec.no / xpdotp; #   rad/min
+    satrec.a    = pow( satrec.no*tumin , (-2.0/3.0) );
 
-    bexp = np.floor(np.log10(abs(bstar)))+1
-    bstar = "{:+5}{:+.0f}".format(int(bstar*10**(-bexp+5)),bexp)
+    #  ---- find standard orbital elements ----
+    satrec.inclo = satrec.inclo  * deg2rad;
+    satrec.nodeo = satrec.nodeo  * deg2rad;
+    satrec.argpo = satrec.argpo  * deg2rad;
+    satrec.mo    = satrec.mo     * deg2rad;
 
-    line1 = ('1 00000U 000000   '+t0+'  '
-             '.00000000  00000-0 '+bstar+' 0  0000')
-    line2 = ('2 00000 '+inc+' '+raan+' '+e+' '+argp+
-             ' '+mean+' '+n+'000000')
+    satrec.alta = satrec.a*(1.0 + satrec.ecco) - 1.0;
+    satrec.altp = satrec.a*(1.0 - satrec.ecco) - 1.0;
 
-    satellite = twoline2rv(line1, line2, wgs72)
-    position, velocity = satellite.propagate(
+    satrec.epochyr = dt_obj.year
+    satrec.jdsatepoch = epoch/86400.0 + 2440587.5
+    satrec.epoch = dt_obj
+
+    #  ---------------- initialize the orbit at sgp4epoch -------------------
+    sgp4init(whichconst, afspc_mode, satrec.satnum, satrec.jdsatepoch-2433281.5, satrec.bstar,
+             satrec.ecco, satrec.argpo, satrec.inclo, satrec.mo, satrec.no,
+             satrec.nodeo, satrec)
+
+    return satrec
+
+def propagate_kep(kep,t0,tf,bstar=0.21109E-4):
+    sat = kep_to_sat(kep,t0,bstar=bstar)
+    tf = datetime.utcfromtimestamp(tf).timetuple()
+    pos, vel = sat.propagate(
         tf.tm_year, tf.tm_mon, tf.tm_mday, tf.tm_hour, tf.tm_min, tf.tm_sec)
 
-    return position,velocity
+    return np.array(list(pos)),np.array(list(vel))
+
+def propagate_state(r,v,t0,tf,bstar=0.21109E-4):
+    kep = state_kep(r,v)
+    return propagate_kep(kep,t0,tf,bstar)
 
 if __name__ == "__main__":
+
     t0 = 1526927274
     tf = 1526932833
 
-    kep = np.array([6782.96, 0.0004084, 51.6402, 108.2140, 150.4026, 238.0528])
+    #kep = np.array([6782.96, 0.0004084, 51.6402, 108.2140, 150.4026, 238.0528])
 
-    pos, vel = propagate(kep,t0,tf)
-    print(pos)
-    print(vel)
+    r = np.array([-5.23684633e+03, 4.12417773e+03, -1.26294137e+03])
+    v = np.array([-3.86204515e+00, -3.12048032e+00, 5.83839029e+00])
+
+    #pos,vel = propagate_kep(kep,t0,tf)
+    pos,vel = propagate_state(r,v,t0,tf)
+
+    print(pos,vel)
