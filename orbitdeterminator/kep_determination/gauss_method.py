@@ -7,8 +7,9 @@ import numpy as np
 from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from least_squares import xyz_frame_
-# from scipy.optimize import newton
-# from scipy.optimize import least_squares
+import astropy.coordinates
+import astropy.units as uts
+from astropy.time import Time
 
 def load_mpc_observatories_data(mpc_observatories_fname):
     obs_dt = 'S3, f8, f8, f8, S48'
@@ -77,21 +78,31 @@ def localsidtime(gmst_hrs, long):
 # formula taken from top of page 266, chapter 5, Orbital Mechanics book
 def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
 
-    # compute geocentric latitude from parallax constants S and C
-    phi_gc = np.arctan2(parallax_s, parallax_c)
-    # compute geocentric radius
-    rho_gc = np.sqrt(parallax_s**2+parallax_c**2)
     # compute Greenwich mean sidereal time (in hours) at UT instant of JD0 date:
     gmst_hrs = gmst(jd0, ut)
     # compute local sidereal time from GMST and longitude EAST of Greenwich:
-    lst_hrs = localsidtime(gmst_hrs, long)
+    lmst_hrs = localsidtime(gmst_hrs, long)
     # Earth's equatorial radius in kilometers
     Re = 6378.0 # km
 
-    # compute cartesian components of geocentric observer position
-    x_gc = Re*rho_gc*np.cos(phi_gc)*np.cos(np.deg2rad(15.0*lst_hrs))
-    y_gc = Re*rho_gc*np.cos(phi_gc)*np.sin(np.deg2rad(15.0*lst_hrs))
-    z_gc = Re*rho_gc*np.sin(phi_gc)
+    # compute geocentric, Earth-fixed, position of observing site
+    x_site = Re*parallax_c*np.cos(long)
+    y_site = Re*parallax_c*np.sin(long)
+    z_site = Re*parallax_s
+
+    # construct EarthLocation object associated to observing site
+    el_site = astropy.coordinates.EarthLocation.from_geocentric(x_site*uts.km, y_site*uts.km, z_site*uts.km)
+    # construct Time object associated to Julian date jd0+ut at observing site
+    t_site = Time(jd0+ut, format='jd', location=el_site)
+    # get local mean sidereal time
+    t_site_lmst = t_site.sidereal_time('mean')
+    lmst_hrs = t_site_lmst.value # hours
+    lmst_rad = np.deg2rad(lmst_hrs*15) # radians
+
+    # compute cartesian components of geocentric (non rotating) observer position
+    x_gc = Re*parallax_c*np.cos(lmst_rad)
+    y_gc = Re*parallax_c*np.sin(lmst_rad)
+    z_gc = Re*parallax_s
 
     return np.array((x_gc,y_gc,z_gc))
 
@@ -344,18 +355,6 @@ def gauss_method_mpc(mpc_observatories_data, inds, mpc_data_fname):
     kernel = SPK.open('de430t.bsp')
 
     # print(kernel)
-
-    # Julian date of Apophis discovery observations:
-    # jd = 2453079.5 # 2004 Mar 15
-    # ut = 24.0*0.10789 # UT time of 1st observation
-
-    #geocentric observer position at time of 1st Apophis observation:
-    # pos_691 = observerpos_mpc(long_691, S_691, C_691, jd, ut)
-    # print('pos_691 = ', pos_691)
-
-    # cross-check:
-    # radius_ = np.sqrt(pos_691[0]**2+pos_691[1]**2+pos_691[2]**2)
-    # print('radius_ = ', radius_)
 
     # load MPC data for Apophis
     x = load_data_mpc(mpc_data_fname)
