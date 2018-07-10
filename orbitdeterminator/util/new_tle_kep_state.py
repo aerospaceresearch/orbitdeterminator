@@ -2,6 +2,9 @@
 
 import math
 import numpy as np
+from scipy.optimize import fsolve
+
+mu = 398600.4405
 
 def MtoE(M,e):
     """Calculates the eccentric anomaly from the mean anomaly.
@@ -24,17 +27,75 @@ def MtoE(M,e):
 
     return E
 
-def kep_to_state(kep):
-    """ This function uses the keplerian elements to compute the position and velocity vector
+def TtoE(T,e):
+    E = math.atan2((1-e**2)**0.5*math.sin(T),e+math.cos(T))
+    E = E%(2*math.pi)
+    return E
+
+def EtoT(E,e):
+    T = math.atan2((1-e**2)**0.5*math.sin(E),math.cos(E)-e)
+    T = T%(2*math.pi)
+    return T
+
+def MtoT(M,e):
+    return EtoT(MtoE(M,e),e)
+
+def ntoa(n,i):
+    T = 86400/n
+    i = math.radians(i)
+
+    Re = 6378.137
+    J2 = 1.08262668e-3
+
+    B = 3*J2*Re**2*(8*math.sin(i)**2-6)/4
+    t = lambda a: T - 2*math.pi*(a**3/mu)**0.5*(1+B/a**2)
+    a0 = (mu*(T/2/math.pi)**2)**(1/3)
+    a = fsolve(t,a0)[0]
+
+    return a
+
+def tle_to_state(tle):
+    """ This function converts from TLE elements to the position and velocity vector
 
         Args:
             kep(1x6 numpy array): kep contains the following variables
-            kep[0] = inclination (degrees)
-            kep[1] = right ascension of the ascending node (degrees)
-            kep[2] = eccentricity (number)
+            tle[0] = inclination (degrees)
+            tle[1] = right ascension of the ascending node (degrees)
+            tle[2] = eccentricity (number)
+            tle[3] = argument of perigee (degrees)
+            tle[4] = mean anomaly (degrees)
+            tle[5] = mean motion (revs per day)
+
+        Returns:
+        r: 1x6 numpy array which contains the position and velocity vector
+	   r[0],r[1],r[2] = position vector [rx,ry,rz] km
+	   r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s
+    """
+
+    # unload orbital elements array
+
+    sma = ntoa(tle[5],tle[0])
+    ecc = tle[2]  # eccentricity
+    inc = tle[0]  # inclination
+    argp = tle[3]  # argument of perigee
+    raan = tle[1]  # right ascension of the ascending node
+    tanom = MtoT(math.radians(tle[4]), ecc)  # we use mean anomaly(kep(5)) and the function MtoT to compute true anomaly (tanom)
+    tanom = math.degrees(tanom)%360
+
+    print("SMA:",sma)
+    return kep_to_state(np.array([sma,ecc,inc,argp,raan,tanom]))
+
+def kep_to_state(kep):
+    """ This function converts from keplerian elements to the position and velocity vector
+
+        Args:
+            kep(1x6 numpy array): kep contains the following variables
+            kep[0] = semi-major axis (kms)
+            kep[1] = eccentricity (number)
+            kep[2] = inclination (degrees)
             kep[3] = argument of perigee (degrees)
-            kep[4] = mean anomaly (degrees)
-            kep[5] = mean motion (revs per day)
+            kep[4] = right ascension of ascending node (degrees)
+            kep[5] = true anomaly (degrees)
 
         Returns:
         r: 1x6 numpy array which contains the position and velocity vector
@@ -43,17 +104,15 @@ def kep_to_state(kep):
     """
 
     r = np.zeros((6,1))
-    mu = 398600.4405
 
     # unload orbital elements array
 
-    sma_pre = (398600.4405 * (86400 ** 2)) / ((kep[5] ** 2) * 4 * (math.pi ** 2))
-    sma = sma_pre ** (1.0 / 3.0)  # sma is semi major axis, we use mean motion (kep(6)) to compute this
-    ecc = kep[2]  # eccentricity
-    inc = math.radians(kep[0])  # inclination
+    sma = kep[0]  # sma is semi major axis
+    ecc = kep[1]  # eccentricity
+    inc = math.radians(kep[2])  # inclination
     argp = math.radians(kep[3])  # argument of perigee
-    raan = math.radians(kep[1])  # right ascension of the ascending node
-    eanom = MtoE(math.radians(kep[4]), ecc)  # we use mean anomaly(kep(5)) and the function MtoE to compute eccentric anomaly (eanom)
+    raan = math.radians(kep[4])  # right ascension of the ascending node
+    eanom = TtoE(math.radians(kep[5]), ecc)  # we use mean anomaly(kep(5)) and the function MtoE to compute eccentric anomaly (eanom)
 
     smb = sma * math.sqrt(1-ecc**2)
 
@@ -85,7 +144,8 @@ def kep_to_state(kep):
 
 if __name__ == "__main__":
 
-	kep = np.array([101.7540, 195.7370, 0.0031531, 352.8640, 117.2610, 12.53984625169364])
-
-	r = kep_to_state(kep)
-	print(r)
+	#tle = np.array([51.6382,7.1114,0.0002893,211.1340,148.9642,15.568214688])
+        #tle = np.array([51.6428, 291.0075, 0.0003411, 263.9950, 245.8448, 15.54009155])
+        tle = np.array([51.6418, 266.6543, 0.0003456, 290.0933, 212.4518, 15.54021918])
+        r = tle_to_state(tle)
+        print(r)
