@@ -230,9 +230,6 @@ class Gibbs(object):
         Returns:
             set of six orbital elements
         """
-        r = [-6045, -3490, 2500]
-        v = [-3.457, 6.618, 2.533]
-
         mag_r = self.magnitude(r)
         mag_v = self.magnitude(v)
         vr = self.dot_product(r, v)/mag_r

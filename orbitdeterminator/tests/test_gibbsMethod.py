@@ -153,7 +153,21 @@ def test_orbital_elements():
     v = [-6.2174, -4.0122, 1.599]
     ele = obj.orbital_elements(r, v)
     ele = [float("{0:.2f}".format(i)) for i in ele]
+    ans = [8001.48, 60.0, 40.0, 0.1, 30.08, 49.92]
+    assert_array_equal(ele, ans)
+
+    r = [-6045, -3490, 2500]
+    v = [-3.457, 6.618, 2.533]
+    ele = obj.orbital_elements(r, v)
+    ele = [float("{0:.2f}".format(i)) for i in ele]
     ans = [8788.08, 153.25, 255.28, 0.17, 20.07, 28.45]
+    assert_array_equal(ele, ans)
+
+    r = [5.0756899358316559e+03, -4.5590381308371752e+03, 1.9322228177731663e+03]
+    v = [1.3360847905126974e+00, -1.5698574946888049e+00, -7.2117328822023676e+00]
+    ele = obj.orbital_elements(r, v)
+    ele = [float("{0:.2f}".format(i)) for i in ele]
+    ans = [7096.68, 92.02, 137.5, 0.0, 159.0, 5.17]
     assert_array_equal(ele, ans)
 
     del(obj)
