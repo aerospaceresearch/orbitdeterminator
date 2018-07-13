@@ -444,144 +444,28 @@ class SGP4(object):
 
         return pos, vel
 
-    @classmethod
-    def magnitude(self, vec):
-        """
-        Computes magnitude of a given vector
-
-        Args:
-            self : class variables
-            vec : vector
-
-        Returns:
-            magnitude of vector
-        """
-        return math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
-
-    @classmethod
-    def vec_multiply(self, a, b):
-        """
-        Dot product of two vectors
-
-        Args:
-            self : class variables
-            a : first vector
-            b : second vector
-
-        Returns:
-            dot product
-        """
-        return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
-
-    @classmethod
-    def matrix_multiply(self, a, b):
-        """
-        Cross product of two vectors
-
-        Args:
-            self : class variables
-            a : first vector
-            b : second vector
-
-        Returns:
-            cross product
-        """
-        return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
-
-    def orbital_elements(self, pos, vel):
-        """
-        Finding orbital elements from the position and velocity vectors
-
-        Args:
-            self : class variables
-            r : position vector
-            v : velocity vector
-
-        Returns:
-            NIL
-        """
-
-        mag_pos = self.magnitude(pos)
-        mag_vel = self.magnitude(vel)
-        radial_vel = self.vec_multiply(pos, vel)/mag_pos
-        ang_momentum = self.matrix_multiply(pos, vel)
-        mag_ang_momentum = self.magnitude(ang_momentum)
-        inclination = np.arccos(ang_momentum[2]/mag_ang_momentum)*(180/pi)
-
-        N = self.matrix_multiply([0,0,1], ang_momentum)
-        mag_N = self.magnitude(N)
-        ascension = np.arccos(N[0]/mag_N)*(180/pi)
-        if(N[1] < 0):
-            ascension = 360 - ascension
-
-        var1 = mag_vel**2 - meu/mag_pos
-        var2 = [pos[0]*var1, pos[1]*var1, pos[2]*var1]
-        var3 = mag_pos*radial_vel
-        var4 = [vel[0]*var3, vel[1]*var3, vel[2]*var3]
-        e = [(var2[0]-var4[0])/meu, (var2[1]-var4[1])/meu, (var2[2]-var4[2])/meu]
-        eccentricity = self.magnitude(e)
-
-        orbital_perigee = np.arccos(self.vec_multiply(N,e)/(mag_N*eccentricity))*(180/pi)
-        if(e[2] < 0):
-            orbital_perigee = 360 - orbital_perigee
-
-        true_anomaly = np.arccos(self.vec_multiply(e,pos)/(eccentricity*mag_pos))*(180/pi)
-        if(radial_vel < 0):
-            true_anomaly = 360 - true_anomaly
-
-        r_p = float(mag_ang_momentum**2/(meu*(1+eccentricity)))
-        r_a = float(mag_ang_momentum**2/(meu*(1-eccentricity)))
-        semi_major_axis = (r_p+r_a)/2
-
-        self.axis = semi_major_axis
-        self.inc = inclination
-        self.asc = ascension
-        self.ecc = eccentricity
-        self.per = orbital_perigee
-        self.anom = true_anomaly
-        self.print_elements()
-
-    # def display(self):
-    #     print(self.xmo)
-    #     print(self.xnodeo)
-    #     print(self.omegao)
-    #     print(self.xincl)
-    #     print(self.eo)
-    #     print(self.xno)
-    #     print(self.bstar)
-
-    def print_elements(self):
-        print ("\n=== Orbital Elements ===")
-        print ("Semi-major Axis                                  : ", self.axis)
-        print ("Inclination (degrees)                            : ", self.inc)
-        print ("Right ascension of the ascending node (degrees)  : ", self.asc)
-        print ("Eccentricity                                     : ", self.ecc)
-        print ("Argument of perigee (degrees)                    : ", self.per)
-        print ("True Anomaly                                     : ", self.anom)
-
 if __name__ == "__main__":
     page = requests.get("https://www.celestrak.com/NORAD/elements/cubesat.txt")
     soup = BeautifulSoup(page.content, 'html.parser')
     tle = list(soup.children)
     tle = tle[0].splitlines()
 
-    # count = len(tle)
-    # for i in range(0,count,3):
-    #     print(str(i/3) + " - " + tle[i])
-    #     obj = SGP4()
-    #     obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
-    #     del(obj)
+    count = len(tle)
+    for i in range(0,count,3):
+        print(str(i/3) + " - " + tle[i])
+        obj = SGP4()
+        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
+        del(obj)
 
-    line1 = tle[1]
-    line2 = tle[2]
+    # line1 = tle[1]
+    # line2 = tle[2]
     # line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
     # line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
 
-    obj = SGP4()
-    obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
-    # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
-    # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
-    # obj.orbital_elements(pos,vel)
-    # print(line1)
-    # print(line2)
-    del(obj)
+    # obj = SGP4()
+    # obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
+    # # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
+    # # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
+    # # print(line1)
+    # # print(line2)
+    # del(obj)

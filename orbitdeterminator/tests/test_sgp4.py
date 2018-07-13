@@ -13,13 +13,11 @@ def test_find_year():
     year = obj.find_year(year)
     ans = 2018
     assert(year == ans)
-    # print(year)
 
     year = 72
     year = obj.find_year(year)
     ans = 1972
     assert(year == ans)
-    # print(year)
 
     del(obj)
 
@@ -30,13 +28,11 @@ def test_find_date():
     date = obj.find_date(date)
     ans = (2018, 7, 14)
     assert(date == ans)
-    # print(date)
 
     date = '72193'
     date = obj.find_date(date)
     ans = (1972, 7, 12)
     assert(date == ans)
-    # print(date)
 
     del(obj)
 
@@ -47,13 +43,11 @@ def test_find_time():
     time = obj.find_time(time)
     ans = (7, 52, 19)
     assert(time == ans)
-    # print(time)
 
     time = 78026175
     time = obj.find_time(time)
     ans = (4, 12, 0)
     assert(time == ans)
-    # print(time)
 
     del(obj)
 
@@ -65,21 +59,18 @@ def test_julian_day():
     jd = float("{0:.5f}".format(jd))
     ans = 2458313.20041
     assert_almost_equal(jd, ans)
-    # print(jd)
 
     year, mon, day, hr, mts, sec = 2017, 12, 31, 23, 59, 59
     jd = obj.julian_day(year, mon, day, hr, mts, sec)
     jd = float("{0:.5f}".format(jd))
     ans = 2458119.49999
     assert_almost_equal(jd, ans)
-    # print(jd)
 
     year, mon, day, hr, mts, sec = 2018, 1, 1, 00, 00, 00
     jd = obj.julian_day(year, mon, day, hr, mts, sec)
     jd = float("{0:.5f}".format(jd))
     ans = 2458119.50000
     assert_almost_equal(jd, ans)
-    # print(jd)
 
     del(obj)
 
@@ -90,19 +81,16 @@ def test_update_epoch():
     epoch = obj.update_epoch(year, mon, day, hr, mts, sec)
     ans = (2018, 7, 13, 17, 0, 0)
     assert(epoch == ans)
-    # print(epoch)
 
     year, mon, day, hr, mts, sec = 2017, 12, 31, 23, 59, 59
     epoch = obj.update_epoch(year, mon, day, hr, mts, sec)
     ans = (2018, 1, 1, 0, 0, 0)
     assert(epoch == ans)
-    # print(epoch)
 
     year, mon, day, hr, mts, sec = 2018, 1, 1, 00, 00, 00
     epoch = obj.update_epoch(year, mon, day, hr, mts, sec)
     ans = (2018, 1, 1, 0, 0, 1)
     assert(epoch == ans)
-    # print(epoch)
 
     del(obj)
 
