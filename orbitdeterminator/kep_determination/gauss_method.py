@@ -988,7 +988,7 @@ if __name__ == "__main__":
 
     # obs_arr = list(range(0,4))+list(range(7,88))+list(range(93,310))+list(range(335,976))+list(range(985,1102))+list(range(1252,1260))
     # obs_arr = list(range(0,4))+list(range(7,110))
-    obs_arr = list(range(860,978))
+    obs_arr = list(range(986,1249))
     # obs_arr = [1114, 1136, 1251]
     nobs = len(obs_arr) #2520-2417 #50 #2 #19
     print('nobs = ', nobs)
@@ -1065,6 +1065,9 @@ if __name__ == "__main__":
     # print('x_vec = ', x_vec)
     # print('a_vec = ', a_vec)
     # print('e_vec = ', e_vec)
+    print('a_vec = ', a_vec)
+    print('len(a_vec) = ', len(a_vec))
+    print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
 
     print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
     # print('Semimajor axis, a: ', a_, 'km')
