@@ -4,7 +4,9 @@ import math
 import numpy as np
 from scipy.optimize import fsolve
 
-mu = 398600.4405
+from orbitdeterminator.propagation.cowell import time_period
+
+mu = 398600.4418
 
 def MtoE(M,e):
     """Calculates the eccentric anomaly from the mean anomaly.
@@ -40,19 +42,16 @@ def EtoT(E,e):
 def MtoT(M,e):
     return EtoT(MtoE(M,e),e)
 
-def ntoa(n,i):
-    T = 86400/n
-    i = math.radians(i)
+def scale(s,T):
+    s = np.ravel(s)
+    tmp = np.empty(6)
 
-    Re = 6378.137
-    J2 = 1.08262668e-3
+    def f(x):
+        tmp[0:3] = np.multiply(x,s[0:3])
+        tmp[3:6] = np.multiply(1/(x**0.5),s[3:6])
+        return T - time_period(tmp)
 
-    B = 3*J2*Re**2*(8*math.sin(i)**2-6)/4
-    t = lambda a: T - 2*math.pi*(a**3/mu)**0.5*(1+B/a**2)
-    a0 = (mu*(T/2/math.pi)**2)**(1/3)
-    a = fsolve(t,a0)[0]
-
-    return a
+    return fsolve(f,1)[0]
 
 def tle_to_state(tle):
     """ This function converts from TLE elements to the position and velocity vector
@@ -73,8 +72,8 @@ def tle_to_state(tle):
     """
 
     # unload orbital elements array
-
-    sma = ntoa(tle[5],tle[0])
+    T = 86400/tle[5]
+    sma = (mu*(T/2/math.pi)**2)**(1/3)
     ecc = tle[2]  # eccentricity
     inc = tle[0]  # inclination
     argp = tle[3]  # argument of perigee
@@ -82,8 +81,17 @@ def tle_to_state(tle):
     tanom = MtoT(math.radians(tle[4]), ecc)  # we use mean anomaly(kep(5)) and the function MtoT to compute true anomaly (tanom)
     tanom = math.degrees(tanom)%360
 
-    print("SMA:",sma)
-    return kep_to_state(np.array([sma,ecc,inc,argp,raan,tanom]))
+    kep = np.array([sma,ecc,inc,argp,raan,tanom])
+    s = kep_to_state(kep)
+    x = scale(s,T)   # scales sma so that time period = T
+
+    kep[0] = kep[0]*x
+    print("Keplerian Elements:")
+    print(kep)
+    s[0:3] = np.multiply(x,s[0:3])
+    s[3:6] = np.multiply(1/(x**0.5),s[3:6])
+
+    return s
 
 def kep_to_state(kep):
     """ This function converts from keplerian elements to the position and velocity vector

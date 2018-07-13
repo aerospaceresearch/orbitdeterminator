@@ -1,7 +1,6 @@
 import numpy as np
-from orbitdeterminator.util.new_tle_kep_state import kep_to_state
 
-mu = 398600.4405
+mu = 398600.4418
 J2 = 1.08262668e-3
 Re = 6378.137
 we = 7.292115e-5
@@ -83,18 +82,42 @@ def rk4(s,t0,tf,h=30):
         s = s+(k1+2*k2+2*k3+k4)/6
         t = t+h
 
+ #       if (s[2]<0 and s[2]>-200 and s[5]>0):
+ #           dt = -s[2]/s[5]
+ #           print(t+dt)
+
     return s
+
+def time_period(s,h=30):
+    t = 0
+
+    old_z, pass_1 = 0, None
+
+    while(True):
+        k1 = h*sdot(s)
+        k2 = h*sdot(s+k1/2)
+        k3 = h*sdot(s+k2/2)
+        k4 = h*sdot(s+k3)
+
+        s = s+(k1+2*k2+2*k3+k4)/6
+        t = t+h
+
+        if (s[2]>=0 and old_z<0):
+            dt = -s[2]/s[5]
+            t2 = t+dt
+
+            if pass_1 is None:
+                pass_1 = t2
+            else:
+                return t2-pass_1
+
+        old_z = s[2]
 
 def propagate_state(s,t0,tf):
     return rk4(s,t0,tf)
 
-def propagate_kep(kep,t0,tf):
-    s = kep_to_state(kep)
-    return rk4(s,t0,tf)
-
 if __name__ == "__main__":
-    #s = np.array([-1.25407719e+02,6.23615970e+03,2.67702463e+03,-5.21833653e+00,2.12226865e+00,-5.19435315e+00])
-    s = np.array([2.87327861e+03,5.22872234e+03,3.23884457e+03,-3.49536799e+00,4.87267295e+00,-4.76846910e+00])
+    s = np.array([2.87393871e+03,5.22992358e+03,3.23958865e+03,-3.49496655e+00,4.87211332e+00,-4.76792145e+00])
     t0, tf = 0, 88796.3088704
     final = propagate_state(s,t0,tf)
     print(final)
