@@ -22,9 +22,22 @@ Lamberts-Kalman Method
 .. automodule:: orbitdeterminator.kep_determination.lamberts_kalman
    :members:
 
+Gibb's Method
+~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.kep_determination.gibbsMethod
+   :members:
+
 Spline Interpolation
 ~~~~~~~~~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.kep_determination.interpolation
+   :members:
+
+Propagation:
+------------
+
+Propagation Model
+~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.kep_determination.sgp4
    :members:
 
 Utils:
@@ -59,5 +72,3 @@ golay_window
 ~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.util.golay_window
    :members:
-
-

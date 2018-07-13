@@ -186,7 +186,8 @@ class SGP4(object):
                 tsince = (j - self.jd)*min_per_day
                 pos, vel = self.propagation_model(tsince)
                 data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
-                # print(i, data)
+                data = [float("{0:.5f}".format(i)) for i in data]
+                print(i, data)
                 writer.writerows([data])
                 yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
                 i = i + 1
@@ -564,23 +565,23 @@ if __name__ == "__main__":
     tle = list(soup.children)
     tle = tle[0].splitlines()
 
-    count = len(tle)
-    for i in range(0,count,3):
-        print(str(i/3) + " - " + tle[i])
-        obj = SGP4()
-        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
-        del(obj)
+    # count = len(tle)
+    # for i in range(0,count,3):
+    #     print(str(i/3) + " - " + tle[i])
+    #     obj = SGP4()
+    #     obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
+    #     del(obj)
 
-    # line1 = tle[1]
-    # line2 = tle[2]
+    line1 = tle[1]
+    line2 = tle[2]
     # line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
     # line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
-    #
-    # obj = SGP4()
-    # obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
-    # # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
-    # # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
-    # # obj.orbital_elements(pos,vel)
+
+    obj = SGP4()
+    obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
+    # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
+    # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
+    # obj.orbital_elements(pos,vel)
     # print(line1)
     # print(line2)
-    # del(obj)
+    del(obj)
