@@ -1,6 +1,6 @@
-"""
+'''
 The code takes a TLE and computes state vectors for next 8 hrs at every second.
-"""
+'''
 
 import numpy as np
 import math
@@ -12,14 +12,11 @@ meu = 398600.4418
 two_pi = 2*pi;
 min_per_day = 1440
 
-"""
-class for SGP4 implementation and it's supporting functions
-"""
 class SGP4(object):
 
     @classmethod
     def find_year(self, year):
-        """
+        '''
         Returns year of launch of the satellite.
 
         Values in the range 00-56 are assumed to correspond to years in the
@@ -32,7 +29,7 @@ class SGP4(object):
 
         Returns:
             whole year number
-        """
+        '''
 
         if(year >=0 and year <=56):
             return year + 2000;
@@ -41,7 +38,7 @@ class SGP4(object):
 
     @classmethod
     def find_date(self, date):
-        """
+        '''
         Finds date of the year from number of days.
 
         Args:
@@ -50,7 +47,7 @@ class SGP4(object):
 
         Returns:
             date in a tuple with value as (year, month, day)
-        """
+        '''
 
         year = int(self.find_year(int(''.join(date[0:2]))))
         day = int(''.join(date[2:5]))
@@ -73,7 +70,7 @@ class SGP4(object):
 
     @classmethod
     def find_time(self, time):
-        """
+        '''
         Finds the time of the day from the input in milliseconds.
 
         Args:
@@ -82,7 +79,7 @@ class SGP4(object):
 
         Returns:
             time in a tuple with value as (hour, minute, second)
-        """
+        '''
 
         second = timedelta(float(time)/1000)
         time = datetime(1,1,1) + second
@@ -95,7 +92,7 @@ class SGP4(object):
 
     @classmethod
     def julian_day(self, year, mon, day, hr, mts, sec):
-        """
+        '''
         Converts given timestamp into Julian format.
 
         Args:
@@ -109,13 +106,13 @@ class SGP4(object):
 
         Returns:
             time in Julian format
-        """
+        '''
         return (367.0*year-7.0*(year + ((mon + 9.0) // 12.0)) * 0.25 // 1.0 +
           275.0 * mon // 9.0 + day + 1721013.5 +
           ((sec / 60.0 + mts) / 60.0 + hr) / 24.0)
 
     def propagate(self, line1, line2):
-        """
+        '''
         Computes state vectors at every second for 8 hours and stores them into
         a vector and returns the final vector.
 
@@ -126,7 +123,7 @@ class SGP4(object):
 
         Returns:
             final : vector containing all state vectors for 8 hours
-        """
+        '''
         year, month, day = self.find_date(''.join(line1[18:23]))
         hour, minute, second = self.find_time(''.join(line1[24:32]))
         self.jd = self.julian_day(year, month, day, hour, minute, second)
@@ -163,7 +160,7 @@ class SGP4(object):
 
     @classmethod
     def update_epoch(self, yr, mth, day, hr, mts, sec):
-        """
+        '''
         Adds one second to the given time
 
         Args:
@@ -178,7 +175,7 @@ class SGP4(object):
         Returns:
             updated timestamp epoch in a tuple with value as (year, month, day,
             hour, minute, second)
-        """
+        '''
         sec += 1
 
         if(sec >= 60):
@@ -208,7 +205,7 @@ class SGP4(object):
         return yr, mth, day, hr, mts, sec
 
     def propagation_model(self, tsince):
-        """
+        '''
         Computes state vectors at a given time epoch.
 
         Args:
@@ -218,7 +215,7 @@ class SGP4(object):
         Returns:
             pos : position vector
             vel : velocity vector
-        """
+        '''
         ae = 1
         tothrd = 2.0/3.0
         XJ3 = -2.53881e-6

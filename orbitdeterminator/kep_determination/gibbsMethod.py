@@ -1,7 +1,7 @@
-"""
+'''
 Gibbs method converts a set of three position vectors into state vectors (a pair
 of position and velocity vector)
-"""
+'''
 
 import sys
 import os.path
@@ -15,14 +15,11 @@ sqrt = np.sqrt
 pi = np.pi
 meu = 398600.4418
 
-"""
-class for Gibb's implementation and it's supporting functions
-"""
 class Gibbs(object):
 
     @classmethod
     def convert_list(self, vec):
-        """
+        '''
         Converts the values of a vector of datatype str into float
 
         Args:
@@ -31,12 +28,12 @@ class Gibbs(object):
 
         Returns:
             vector converted to float values
-        """
+        '''
         return [float(vec[1]), float(vec[2]), float(vec[3])]
 
     @classmethod
     def find_length(self, path):
-        """
+        '''
         Finds the length of the input file. File should contain a header line
         describing all it attributes. This function removes the header line. If
         the file does not contains the header line then the first line of data
@@ -48,7 +45,7 @@ class Gibbs(object):
 
         Returns:
             size : length of file
-        """
+        '''
         length = open(path, 'r')
         length.readline()       # it is used to remove the header line
 
@@ -59,7 +56,7 @@ class Gibbs(object):
         return size
 
     def read_file(self, path):
-        """
+        '''
         Read the data of the file in a set of three position vectors and
         then applies gibbsMethod on it and stores it to a final vector
 
@@ -69,7 +66,7 @@ class Gibbs(object):
 
         Returns:
             final : list of all pair of position and velocity vector
-        """
+        '''
         myfile = open(path, 'r')
         myfile.readline()           # it is used to remove the header line
 
@@ -95,7 +92,7 @@ class Gibbs(object):
 
     @classmethod
     def magnitude(self, vec):
-        """
+        '''
         Computes magnitude of the vector
 
         Args:
@@ -104,13 +101,13 @@ class Gibbs(object):
 
         Returns:
             magnitude of vector
-        """
+        '''
         mag_vec = math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
         return mag_vec
 
     @classmethod
     def dot_product(self, a, b):
-        """
+        '''
         Dot product of two vectors. Multiplies corresponding axis with each
         other and then add them. Returns a single value.
 
@@ -121,12 +118,12 @@ class Gibbs(object):
 
         Returns:
             dot product
-        """
+        '''
         return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
 
     @classmethod
     def cross_product(self, a, b):
-        """
+        '''
         Cross product of two vectors. Returns a vector.
 
         Args:
@@ -136,12 +133,12 @@ class Gibbs(object):
 
         Returns:
             cross product
-        """
+        '''
         return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
 
     @classmethod
     def vector_sum(self, a, b, flag):
-        """
+        '''
         If flag is 1 then add both vectors with corresponding values else if
         flag is 0 (zeros) then subtract two vectors with corresponding values.
         Returns a vector.
@@ -154,7 +151,7 @@ class Gibbs(object):
 
         Returns:
             sum/difference of vector based on flag value
-        """
+        '''
         if(flag == 1):
             return [a[0]+b[0], a[1]+b[1], a[2]+b[2]]
         elif(flag == 0):
@@ -162,7 +159,7 @@ class Gibbs(object):
 
     @classmethod
     def unit(self, vec):
-        """
+        '''
         Finds unit vector of the given vector. Divides each value of vector by
         its magnitude. Returns a vector.
 
@@ -172,13 +169,13 @@ class Gibbs(object):
 
         Returns:
             unit vector
-        """
+        '''
         mag = self.magnitude(vec)
         return [i/mag for i in vec]
 
     @classmethod
     def gibbs(self, r1, r2, r3):
-        """
+        '''
         Computes veclocity vector (part of state vector) using Gibb's Method
         and takes r2 (input) as its position vector (part of state vector).
         Both combined forms state vector.
@@ -191,7 +188,7 @@ class Gibbs(object):
 
         Returns:
             v2 : velocity vector
-        """
+        '''
         mag_r1 = self.magnitude(r1)
         mag_r2 = self.magnitude(r2)
         mag_r3 = self.magnitude(r3)
@@ -200,7 +197,7 @@ class Gibbs(object):
         c23 = self.cross_product(r2, r3)
         c31 = self.cross_product(r3, r1)
 
-        # """For checking colplanarity"""
+        # '''For checking colplanarity'''
         # unit_c23 = self.unit(c23)
         # unit_r1 = self.unit(r1)
         # check = self.dot_product(unit_r1, unit_c23)
@@ -229,7 +226,7 @@ class Gibbs(object):
 
     @classmethod
     def orbital_elements(self, r, v):
-        """
+        '''
         Computes orbital elements from state vectors (pair of position and
         veclocity vector).
 
@@ -240,7 +237,7 @@ class Gibbs(object):
 
         Returns:
             set of six orbital elements
-        """
+        '''
         mag_r = self.magnitude(r)
         mag_v = self.magnitude(v)
         vr = self.dot_product(r, v)/mag_r
