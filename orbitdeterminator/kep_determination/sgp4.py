@@ -1,18 +1,11 @@
 """
-The code takes a TLE and computes state vectors for 8 hrs at every second
+The code takes a TLE and computes state vectors for next 8 hrs at every second.
 """
-
-import sys
-import os.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 import numpy as np
 import math
-import csv
 import time
-import requests
 from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
 
 pi = np.pi
 meu = 398600.4418
@@ -20,7 +13,7 @@ two_pi = 2*pi;
 min_per_day = 1440
 
 """
-class for SGP4 implementation
+class for SGP4 implementation and it's supporting functions
 """
 class SGP4(object):
 
@@ -29,8 +22,9 @@ class SGP4(object):
         """
         Returns year of launch of the satellite.
 
-        Values in the range 00-56 are assumed to correspond to years in the range 2000 to 2056 while
-        values in the range 57-99 are assumed to correspond to years in the range 1957 to 1999.
+        Values in the range 00-56 are assumed to correspond to years in the
+        range 2000 to 2056 while values in the range 57-99 are assumed to
+        correspond to years in the range 1957 to 1999.
 
         Args:
             self : class variables
@@ -48,14 +42,14 @@ class SGP4(object):
     @classmethod
     def find_date(self, date):
         """
-        Finds date of the year from the input (in number of days)
+        Finds date of the year from number of days.
 
         Args:
             self : class variables
             date : Number of days
 
         Returns:
-            date in format DD/MM/YYYY
+            date in a tuple with value as (year, month, day)
         """
 
         year = int(self.find_year(int(''.join(date[0:2]))))
@@ -74,21 +68,20 @@ class SGP4(object):
 
         day += 1
         month = i+1
-        # print(str(year) + "/" + str(month) + "/" + str(day))
 
         return year, month, day
 
     @classmethod
     def find_time(self, time):
         """
-        Finds date of the year from the input (in milliseconds)
+        Finds the time of the day from the input in milliseconds.
 
         Args:
             self : class variables
             time : Time in milliseconds
 
         Returns:
-            time in format HH:MM:SS
+            time in a tuple with value as (hour, minute, second)
         """
 
         second = timedelta(float(time)/1000)
@@ -97,14 +90,13 @@ class SGP4(object):
         hour = int(time.hour)
         minute = int(time.minute)
         second = int(time.second)
-        # print(str(hour) + ":" + str(minute) + ":" + str(second))
 
         return hour, minute, second
 
     @classmethod
     def julian_day(self, year, mon, day, hr, mts, sec):
         """
-        Converts given timestamp into Julian form
+        Converts given timestamp into Julian format.
 
         Args:
             self : class variables
@@ -116,45 +108,28 @@ class SGP4(object):
             sec : seconds in minute
 
         Returns:
-            time in Julian form
+            time in Julian format
         """
         return (367.0*year-7.0*(year + ((mon + 9.0) // 12.0)) * 0.25 // 1.0 +
           275.0 * mon // 9.0 + day + 1721013.5 +
           ((sec / 60.0 + mts) / 60.0 + hr) / 24.0)
 
-    @classmethod
-    def assure_path_exists(self, loc):
+    def propagate(self, line1, line2):
         """
-        Creates a folder for output files if it does not exists
+        Computes state vectors at every second for 8 hours and stores them into
+        a vector and returns the final vector.
 
         Args:
             self : class variables
-            loc : path to the folder
-
-        Returns:
-            NIL
-        """
-        # dir = os.path.dirname(path)
-        if(os.path.exists(loc) == False):
-            os.makedirs(loc)
-
-    def maintain_data(self, line0, line1, line2):
-        """
-        Reads data, call propagation model and generates output files
-
-        Args:
-            self : class variables
-            line0 : satellite name
             line1 : line 1 in TLE
             line2 : line 2 in TLE
 
         Returns:
-            NIL
+            final : vector containing all state vectors for 8 hours
         """
         year, month, day = self.find_date(''.join(line1[18:23]))
         hour, minute, second = self.find_time(''.join(line1[24:32]))
         self.jd = self.julian_day(year, month, day, hour, minute, second)
-        # print(self.jd)
 
         self.xmo = float(''.join(line2[43:51])) * (pi/180)
         self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
@@ -172,25 +147,19 @@ class SGP4(object):
         mts = ts.tm_min
         sec = ts.tm_sec
 
-        suffix_date = str(yr) + "-" + str(mth) + "-" + str(day)
-        suffix_time = str(hr) + ":" + str(mts) + ":" + str(sec)
-        filename = line0 + "_" + suffix_date + "_" + suffix_time
+        final = np.zeros((28800,6))
+        i = 0
+        while(i < 28800):               # 28800 secs in 8 hours
+            j = self.julian_day(yr, mth, day, hr, mts, sec)
+            tsince = (j - self.jd)*min_per_day
+            pos, vel = self.propagation_model(tsince)
+            data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
+            data = [float("{0:.5f}".format(i)) for i in data]
+            final[i, :] = data
+            yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
+            i = i + 1
 
-        self.assure_path_exists("../output/")
-        path = "../output/" + filename + ".csv"
-        with open(path,'a') as myfile:
-            writer = csv.writer(myfile)
-            i = 0
-            while(i < 28800):               # 28800
-                j = self.julian_day(yr, mth, day, hr, mts, sec)
-                tsince = (j - self.jd)*min_per_day
-                pos, vel = self.propagation_model(tsince)
-                data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
-                data = [float("{0:.5f}".format(i)) for i in data]
-                print(i, data)
-                writer.writerows([data])
-                yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
-                i = i + 1
+        return final
 
     @classmethod
     def update_epoch(self, yr, mth, day, hr, mts, sec):
@@ -207,12 +176,8 @@ class SGP4(object):
             sec : seconds
 
         Returns:
-            yr : year
-            mth : month
-            day : date
-            hr : hour
-            mts : minutes
-            sec : seconds
+            updated timestamp epoch in a tuple with value as (year, month, day,
+            hour, minute, second)
         """
         sec += 1
 
@@ -244,7 +209,7 @@ class SGP4(object):
 
     def propagation_model(self, tsince):
         """
-        Computes state vectors at given time epoch
+        Computes state vectors at a given time epoch.
 
         Args:
             self : class variables
@@ -445,27 +410,10 @@ class SGP4(object):
         return pos, vel
 
 if __name__ == "__main__":
-    page = requests.get("https://www.celestrak.com/NORAD/elements/cubesat.txt")
-    soup = BeautifulSoup(page.content, 'html.parser')
-    tle = list(soup.children)
-    tle = tle[0].splitlines()
+    line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
+    line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
 
-    count = len(tle)
-    for i in range(0,count,3):
-        print(str(i/3) + " - " + tle[i])
-        obj = SGP4()
-        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
-        del(obj)
-
-    # line1 = tle[1]
-    # line2 = tle[2]
-    # line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
-    # line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
-
-    # obj = SGP4()
-    # obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
-    # # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
-    # # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
-    # # print(line1)
-    # # print(line2)
-    # del(obj)
+    obj = SGP4()
+    state_vec = obj.propagate(line1, line2)
+    print(state_vec)
+    del(obj)
