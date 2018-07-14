@@ -145,7 +145,7 @@ if __name__ == "__main__":
     #epoch = 1529410874
     #iss_kep = np.array([6775,0.0002893,51.6382,211.1340,7.1114,148.9642])
 
-    iss_kep = np.array([6786.6420,0.0003456,51.6418,290.0933,266.6543,212.4306])
+    iss_kep = np.array([6785.6420,0.0003456,51.6418,290.0933,266.6543,212.4306])
     params = SimParams()
     params.kep = iss_kep
     params.epoch = epoch
