@@ -1,52 +1,267 @@
-import urllib.request
+"""
+The code takes a TLE and computes state vectors for 8 hrs at every second
+"""
+
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
 import numpy as np
 import math
+import csv
+import time
+import requests
+from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
 
 pi = np.pi
 meu = 398600.4418
-tsince = 1440
 two_pi = 2*pi;
 min_per_day = 1440
 
+"""
+class for SGP4 implementation
+"""
 class SGP4(object):
 
-    def __init__(self):
-        self.file_len = 0
-        self.pos = [0, 0, 0]
-        self.vel = [0, 0, 0]
+    @classmethod
+    def find_year(self, year):
+        """
+        Returns year of launch of the satellite.
 
-    def read_data(self, data):
-        self.file_len = len(data)
-        for i in range(1,self.file_len):
-            line = str(data[i]).split(',\\t')
-            # print(line)
-            line1 = line[1]
-            line2 = line[2]
-            # print(line1)
-            # print(line2)
+        Values in the range 00-56 are assumed to correspond to years in the range 2000 to 2056 while
+        values in the range 57-99 are assumed to correspond to years in the range 1957 to 1999.
 
-            self.xmo = float(''.join(line2[43:51])) * (pi/180)
-            self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
-            self.omegao = float(''.join(line2[34:42])) * (pi/180)
-            self.xincl = float(''.join(line2[8:16])) * (pi/180)
-            self.eo = float('0.'+str(''.join(line2[26:33])))
-            self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
-            self.bstar = int(''.join(line1[53:59]))*(1e-5)*10**int(''.join(line1[59:61]))
-            # self.display()
-            self.propagation_model()
+        Args:
+            self : class variables
+            year : last 2 digits of the year
 
-        self.average()
-        self.orbital_elements()
+        Returns:
+            whole year number
+        """
 
-    def propagation_model(self):
+        if(year >=0 and year <=56):
+            return year + 2000;
+        else:
+            return year + 1900;
+
+    @classmethod
+    def find_date(self, date):
+        """
+        Finds date of the year from the input (in number of days)
+
+        Args:
+            self : class variables
+            date : Number of days
+
+        Returns:
+            date in format DD/MM/YYYY
+        """
+
+        year = int(self.find_year(int(''.join(date[0:2]))))
+        day = int(''.join(date[2:5]))
+
+        daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+
+        # If the year is Leap year or not
+        if(year % 4 == 0):
+            daysInMonth[1] = 29
+
+        i = 0
+        while(day > daysInMonth[i]):
+            day -= daysInMonth[i]
+            i += 1
+
+        day += 1
+        month = i+1
+        # print(str(year) + "/" + str(month) + "/" + str(day))
+
+        return year, month, day
+
+    @classmethod
+    def find_time(self, time):
+        """
+        Finds date of the year from the input (in milliseconds)
+
+        Args:
+            self : class variables
+            time : Time in milliseconds
+
+        Returns:
+            time in format HH:MM:SS
+        """
+
+        second = timedelta(float(time)/1000)
+        time = datetime(1,1,1) + second
+
+        hour = int(time.hour)
+        minute = int(time.minute)
+        second = int(time.second)
+        # print(str(hour) + ":" + str(minute) + ":" + str(second))
+
+        return hour, minute, second
+
+    @classmethod
+    def julian_day(self, year, mon, day, hr, mts, sec):
+        """
+        Converts given timestamp into Julian form
+
+        Args:
+            self : class variables
+            year : year number
+            mon : month in year
+            day : date in the month
+            hr : hour
+            mts : minutes in the hour
+            sec : seconds in minute
+
+        Returns:
+            time in Julian form
+        """
+        return (367.0*year-7.0*(year + ((mon + 9.0) // 12.0)) * 0.25 // 1.0 +
+          275.0 * mon // 9.0 + day + 1721013.5 +
+          ((sec / 60.0 + mts) / 60.0 + hr) / 24.0)
+
+    @classmethod
+    def assure_path_exists(self, loc):
+        """
+        Creates a folder for output files if it does not exists
+
+        Args:
+            self : class variables
+            loc : path to the folder
+
+        Returns:
+            NIL
+        """
+        # dir = os.path.dirname(path)
+        if(os.path.exists(loc) == False):
+            os.makedirs(loc)
+
+    def maintain_data(self, line0, line1, line2):
+        """
+        Reads data, call propagation model and generates output files
+
+        Args:
+            self : class variables
+            line0 : satellite name
+            line1 : line 1 in TLE
+            line2 : line 2 in TLE
+
+        Returns:
+            NIL
+        """
+        year, month, day = self.find_date(''.join(line1[18:23]))
+        hour, minute, second = self.find_time(''.join(line1[24:32]))
+        self.jd = self.julian_day(year, month, day, hour, minute, second)
+        # print(self.jd)
+
+        self.xmo = float(''.join(line2[43:51])) * (pi/180)
+        self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
+        self.omegao = float(''.join(line2[34:42])) * (pi/180)
+        self.xincl = float(''.join(line2[8:16])) * (pi/180)
+        self.eo = float('0.'+str(''.join(line2[26:33])))
+        self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
+        self.bstar = int(''.join(line1[53:59]))*(1e-5)*(10**int(''.join(line1[59:61])))
+
+        ts = time.localtime(time.time())
+        yr = ts.tm_year
+        mth = ts.tm_mon
+        day = ts.tm_mday
+        hr = ts.tm_hour
+        mts = ts.tm_min
+        sec = ts.tm_sec
+
+        suffix_date = str(yr) + "-" + str(mth) + "-" + str(day)
+        suffix_time = str(hr) + ":" + str(mts) + ":" + str(sec)
+        filename = line0 + "_" + suffix_date + "_" + suffix_time
+
+        self.assure_path_exists("../output/")
+        path = "../output/" + filename + ".csv"
+        with open(path,'a') as myfile:
+            writer = csv.writer(myfile)
+            i = 0
+            while(i < 28800):               # 28800
+                j = self.julian_day(yr, mth, day, hr, mts, sec)
+                tsince = (j - self.jd)*min_per_day
+                pos, vel = self.propagation_model(tsince)
+                data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
+                data = [float("{0:.5f}".format(i)) for i in data]
+                print(i, data)
+                writer.writerows([data])
+                yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
+                i = i + 1
+
+    @classmethod
+    def update_epoch(self, yr, mth, day, hr, mts, sec):
+        """
+        Adds one second to the given time
+
+        Args:
+            self : class variables
+            yr : year
+            mth : month
+            day : date
+            hr : hour
+            mts : minutes
+            sec : seconds
+
+        Returns:
+            yr : year
+            mth : month
+            day : date
+            hr : hour
+            mts : minutes
+            sec : seconds
+        """
+        sec += 1
+
+        if(sec >= 60):
+            sec = 0
+            mts += 1
+
+        if(mts >= 60):
+            mts = 0
+            hr += 1
+
+        if(hr >= 24):
+            hr = 0
+            day += 1
+
+        daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+        if(yr % 4 == 0):
+            daysInMonth[1] = 29
+
+        if(day > daysInMonth[mth-1]):
+            day = 1
+            mth += 1
+
+        if(mth > 12):
+            mth = 1
+            yr += 1
+
+        return yr, mth, day, hr, mts, sec
+
+    def propagation_model(self, tsince):
+        """
+        Computes state vectors at given time epoch
+
+        Args:
+            self : class variables
+            tsince : time epoch
+
+        Returns:
+            pos : position vector
+            vel : velocity vector
+        """
         ae = 1
-        tothrd = 2/3
+        tothrd = 2.0/3.0
         XJ3 = -2.53881e-6
         e6a = 1.0E-6
         xkmper = 6378.135
-        ge = 398600.8;  # Earth gravitational constant
-        CK2 = (1.0826158e-3/2.0)
-        CK4 = (-3.0 * -1.65597e-6 / 8.0)
+        ge = 398600.8           # Earth gravitational constant
+        CK2 = 1.0826158e-3/2.0
+        CK4 = -3.0*-1.65597e-6/8.0
 
         # Constants
         s = ae + 78 / xkmper
@@ -57,19 +272,19 @@ class SGP4(object):
         a1 = temp2**tothrd
         cosio = math.cos(self.xincl)
         theta2 = cosio**2
-        x3thm1 = 3*theta2 - 1
+        x3thm1 = 3*theta2-1
         eosq = self.eo**2
         betao2 = 1-eosq
         betao = math.sqrt(betao2)
         del1 = (1.5*CK2*x3thm1)/((a1**2)*betao*betao2)
-        ao = a1*(1-del1*((1/3)+del1*(1+(134/81)*del1)))
+        ao = a1*(1-del1*((1.0/3.0)+del1*(1+(134.0/81.0)*del1)))
         delo = 1.5*CK2*x3thm1/((ao**2)*betao*betao2)
         xnodp = (self.xno)/(1+delo)
         aodp = ao/(1-delo)
 
         # Initialization
         isimp = 0
-        if((aodp*(1-self.eo)/ae) < (220/xkmper+ae)):
+        if((aodp*(1-self.eo)/ae) < (220.0/xkmper+ae)):
             isimp = 1
 
         s4 = s
@@ -77,7 +292,7 @@ class SGP4(object):
         perigee = (aodp*(1-self.eo)-ae)*xkmper
         if(perigee < 156):
             s4 = perigee - 78
-            if(perigee <=98):
+            if(perigee <= 98):
                 s4 = 20
             qoms24 = ((120-s4)*ae/xkmper)**4
             s4 = s4/xkmper+ae
@@ -106,7 +321,7 @@ class SGP4(object):
         x1m5th = 1-5*theta2
         omgdot = -0.5*temp1*x1m5th+0.0625*temp2*(7-114*theta2+395*theta4)+temp3*(3-36*theta2+49*theta4)
         xhdot1 = -temp1*cosio
-        xnodot = xhdot1+(0.5*temp2*(4-19*theta2)+2*temp3*(3 -7*theta2))*cosio
+        xnodot = xhdot1+(0.5*temp2*(4-19*theta2)+2*temp3*(3-7*theta2))*cosio
         omgcof = self.bstar*c3*math.cos(self.omegao)
         xmcof = -(2/3)*coef*(self.bstar)*ae/eeta
         xnodcf = 3.5*betao2*xhdot1*c1
@@ -221,105 +436,36 @@ class SGP4(object):
             UV[i] = MV[i]*math.sin(uk) + NV[i]*math.cos(uk)
             VV[i] = MV[i]*math.cos(uk) - NV[i]*math.sin(uk)
 
+        pos = [0, 0, 0]
+        vel = [0, 0, 0]
         for i in range(3):
-            self.pos[i] += rk*UV[i]*xkmper
-            self.vel[i] += (rdotk*UV[i] + rfdotk*VV[i])*xkmper/60
+            pos[i] = rk*UV[i]*xkmper
+            vel[i] = (rdotk*UV[i] + rfdotk*VV[i])*xkmper/60
 
-    @classmethod
-    def magnitude(self, vec):
-        mag_vec = math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
-        return mag_vec
+        return pos, vel
 
-    @classmethod
-    def vec_multiply(self, a, b):
-        return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
+if __name__ == "__main__":
+    page = requests.get("https://www.celestrak.com/NORAD/elements/cubesat.txt")
+    soup = BeautifulSoup(page.content, 'html.parser')
+    tle = list(soup.children)
+    tle = tle[0].splitlines()
 
-    @classmethod
-    def matrix_multiply(self, a, b):
-        return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
+    count = len(tle)
+    for i in range(0,count,3):
+        print(str(i/3) + " - " + tle[i])
+        obj = SGP4()
+        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
+        del(obj)
 
-    def orbital_elements(self):
-        '''
-        Finding orbital elements from the position and velocity vectors
+    # line1 = tle[1]
+    # line2 = tle[2]
+    # line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
+    # line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
 
-        Args:
-            self : class variables
-            r : position vector
-            v : velocity vector
-
-        Returns:
-            NIL
-        '''
-
-        mag_pos = self.magnitude(self.pos)
-        mag_vel = self.magnitude(self.vel)
-        radial_vel = self.vec_multiply(self.pos, self.vel)/mag_pos
-        ang_momentum = self.matrix_multiply(self.pos, self.vel)
-        mag_ang_momentum = self.magnitude(ang_momentum)
-        inclination = np.arccos(ang_momentum[2]/mag_ang_momentum)*(180/pi)
-
-        N = self.matrix_multiply([0,0,1], ang_momentum)
-        mag_N = self.magnitude(N)
-        ascension = np.arccos(N[0]/mag_N)*(180/pi)
-        if(N[1] < 0):
-            ascension = 360 - ascension
-
-        var1 = mag_vel**2 - meu/mag_pos
-        var2 = [self.pos[0]*var1, self.pos[1]*var1, self.pos[2]*var1]
-        var3 = mag_pos*radial_vel
-        var4 = [self.vel[0]*var3, self.vel[1]*var3, self.vel[2]*var3]
-        e = [(var2[0]-var4[0])/meu, (var2[1]-var4[1])/meu, (var2[2]-var4[2])/meu]
-        eccentricity = self.magnitude(e)
-
-        orbital_perigee = np.arccos(self.vec_multiply(N,e)/(mag_N*eccentricity))*(180/pi)
-        if(e[2] < 0):
-            orbital_perigee = 360 - orbital_perigee
-
-        true_anomaly = np.arccos(self.vec_multiply(e,self.pos)/(eccentricity*mag_pos))*(180/pi)
-        if(radial_vel < 0):
-            true_anomaly = 360 - true_anomaly
-
-        r_p = float(mag_ang_momentum**2/(meu*(1+eccentricity)))
-        r_a = float(mag_ang_momentum**2/(meu*(1-eccentricity)))
-        semi_major_axis = (r_p+r_a)/2
-
-        self.axis = semi_major_axis
-        self.inc = inclination
-        self.asc = ascension
-        self.ecc = eccentricity
-        self.per = orbital_perigee
-        self.anom = true_anomaly
-        self.print_elements()
-
-    def average(self):
-        self.pos = [i/(self.file_len-1) for i in self.pos]
-        self.vel = [i/(self.file_len-1) for i in self.vel]
-        # print(self.pos)
-        # print(self.vel)
-        # print(self.file_len)
-
-    # def display(self):
-    #     print(self.xmo)
-    #     print(self.xnodeo)
-    #     print(self.omegao)
-    #     print(self.xincl)
-    #     print(self.eo)
-    #     print(self.xno)
-    #     print(self.bstar)
-
-    # def print_elements(self):
-    #     print ("\n=== Orbital Elements ===")
-    #     print ("Semi-major Axis                                  : ", self.axis)
-    #     print ("Inclination (degrees)                            : ", self.inc)
-    #     print ("Right ascension of the ascending node (degrees)  : ", self.asc)
-    #     print ("Eccentricity                                     : ", self.ecc)
-    #     print ("Argument of perigee (degrees)                    : ", self.per)
-    #     print ("True Anomaly                                     : ", self.anom)
-
-link = "https://raw.githubusercontent.com/aakash525/Orbital-Determinator/master/sgp4_test.txt"          # Just a random test file
-with urllib.request.urlopen(link) as url:
-    data = url.read()
-
-data = data.splitlines()
-obj = SGP4()
-obj.read_data(data)
+    # obj = SGP4()
+    # obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
+    # # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
+    # # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
+    # # print(line1)
+    # # print(line2)
+    # del(obj)
