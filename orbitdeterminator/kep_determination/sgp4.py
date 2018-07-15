@@ -24,8 +24,8 @@ class SGP4(object):
         correspond to years in the range 1957 to 1999.
 
         Args:
-            self : class variables
-            year : last 2 digits of the year
+            self: class variables
+            year: last 2 digits of the year
 
         Returns:
             whole year number
@@ -42,8 +42,8 @@ class SGP4(object):
         Finds date of the year from number of days.
 
         Args:
-            self : class variables
-            date : Number of days
+            self: class variables
+            date: Number of days
 
         Returns:
             date in a tuple with value as (year, month, day)
@@ -74,8 +74,8 @@ class SGP4(object):
         Finds the time of the day from the input in milliseconds.
 
         Args:
-            self : class variables
-            time : Time in milliseconds
+            self: class variables
+            time: Time in milliseconds
 
         Returns:
             time in a tuple with value as (hour, minute, second)
@@ -96,13 +96,13 @@ class SGP4(object):
         Converts given timestamp into Julian format.
 
         Args:
-            self : class variables
-            year : year number
-            mon : month in year
-            day : date in the month
-            hr : hour
-            mts : minutes in the hour
-            sec : seconds in minute
+            self: class variables
+            year: year number
+            mon: month in year
+            day: date in the month
+            hr: hour
+            mts: minutes in the hour
+            sec: seconds in minute
 
         Returns:
             time in Julian format
@@ -117,12 +117,12 @@ class SGP4(object):
         a vector and returns the final vector.
 
         Args:
-            self : class variables
-            line1 : line 1 in TLE
-            line2 : line 2 in TLE
+            self: class variables
+            line1: line 1 in TLE
+            line2: line 2 in TLE
 
         Returns:
-            final : vector containing all state vectors for 8 hours
+            final: vector containing all state vectors for 8 hours
         '''
         year, month, day = self.find_date(''.join(line1[18:23]))
         hour, minute, second = self.find_time(''.join(line1[24:32]))
@@ -152,7 +152,7 @@ class SGP4(object):
             pos, vel = self.propagation_model(tsince)
             data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
             data = [float("{0:.5f}".format(i)) for i in data]
-            final[i, :] = data
+            final[i,:] = data
             yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
             i = i + 1
 
@@ -161,16 +161,16 @@ class SGP4(object):
     @classmethod
     def update_epoch(self, yr, mth, day, hr, mts, sec):
         '''
-        Adds one second to the given time
+        Adds one second to the given time.
 
         Args:
-            self : class variables
-            yr : year
-            mth : month
-            day : date
-            hr : hour
-            mts : minutes
-            sec : seconds
+            self: class variables
+            yr: year
+            mth: month
+            day: date
+            hr: hour
+            mts: minutes
+            sec: seconds
 
         Returns:
             updated timestamp epoch in a tuple with value as (year, month, day,
@@ -209,12 +209,12 @@ class SGP4(object):
         Computes state vectors at a given time epoch.
 
         Args:
-            self : class variables
-            tsince : time epoch
+            self: class variables
+            tsince: time epoch
 
         Returns:
-            pos : position vector
-            vel : velocity vector
+            pos: position vector
+            vel: velocity vector
         '''
         ae = 1
         tothrd = 2.0/3.0

@@ -20,11 +20,11 @@ class Gibbs(object):
     @classmethod
     def convert_list(self, vec):
         '''
-        Converts the values of a vector of datatype str into float
+        Converts the values of a vector of datatype str into float.
 
         Args:
-            self : class variables
-            vec : input vector
+            self: class variables
+            vec: input vector
 
         Returns:
             vector converted to float values
@@ -40,11 +40,11 @@ class Gibbs(object):
         will get removed.
 
         Args:
-            self : class variables
-            path : file path
+            self: class variables
+            path: file path
 
         Returns:
-            size : length of file
+            size: length of file
         '''
         length = open(path, 'r')
         length.readline()       # it is used to remove the header line
@@ -58,14 +58,14 @@ class Gibbs(object):
     def read_file(self, path):
         '''
         Read the data of the file in a set of three position vectors and
-        then applies gibbsMethod on it and stores it to a final vector
+        then applies gibbsMethod on it and stores it to a final vector.
 
         Args:
-            self : class variables
-            path : path to input file
+            self: class variables
+            path: path to input file
 
         Returns:
-            final : list of all pair of position and velocity vector
+            final: list of all pair of position and velocity vector
         '''
         myfile = open(path, 'r')
         myfile.readline()           # it is used to remove the header line
@@ -82,7 +82,7 @@ class Gibbs(object):
             v2 = self.gibbs(r1, r2, r3)
 
             data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
-            final[i, :] = data
+            final[i,:] = data
 
             r1 = r2
             r2 = r3
@@ -93,11 +93,11 @@ class Gibbs(object):
     @classmethod
     def magnitude(self, vec):
         '''
-        Computes magnitude of the vector
+        Computes magnitude of the vector.
 
         Args:
-            self : class variables
-            vec : vector
+            self: class variables
+            vec: vector
 
         Returns:
             magnitude of vector
@@ -112,9 +112,9 @@ class Gibbs(object):
         other and then add them. Returns a single value.
 
         Args:
-            self : class variables
-            a : first vector
-            b : second vector
+            self: class variables
+            a: first vector
+            b: second vector
 
         Returns:
             dot product
@@ -127,9 +127,9 @@ class Gibbs(object):
         Cross product of two vectors. Returns a vector.
 
         Args:
-            self : class variables
-            a : first vector
-            b : second vector
+            self: class variables
+            a: first vector
+            b: second vector
 
         Returns:
             cross product
@@ -137,17 +137,17 @@ class Gibbs(object):
         return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
 
     @classmethod
-    def vector_sum(self, a, b, flag):
+    def operate_vector(self, a, b, flag):
         '''
         If flag is 1 then add both vectors with corresponding values else if
         flag is 0 (zeros) then subtract two vectors with corresponding values.
         Returns a vector.
 
         Args:
-            self : class variables
-            a : first vector
-            b : second vector
-            flag : checks for operation
+            self: class variables
+            a: first vector
+            b: second vector
+            flag: checks for operation (addition/subtraction)
 
         Returns:
             sum/difference of vector based on flag value
@@ -164,8 +164,8 @@ class Gibbs(object):
         its magnitude. Returns a vector.
 
         Args:
-            self : class variables
-            vec : input vector
+            self: class variables
+            vec: input vector
 
         Returns:
             unit vector
@@ -181,13 +181,13 @@ class Gibbs(object):
         Both combined forms state vector.
 
         Args:
-            self : class variables
-            r1 : first position vector
-            r2 : second position vector
-            r3 : third position vector
+            self: class variables
+            r1: first position vector
+            r2: second position vector
+            r3: third position vector
 
         Returns:
-            v2 : velocity vector
+            v2: velocity vector
         '''
         mag_r1 = self.magnitude(r1)
         mag_r2 = self.magnitude(r2)
@@ -208,18 +208,18 @@ class Gibbs(object):
         N = [r1c23[0]+r2c31[0]+r3c12[0], r1c23[1]+r2c31[1]+r3c12[1], r1c23[2]+r2c31[2]+r3c12[2]]
         mag_N = self.magnitude(N)
 
-        D = self.vector_sum(c12, self.vector_sum(c23, c31, 1), 1)
+        D = self.operate_vector(c12, self.operate_vector(c23, c31, 1), 1)
         mag_D = self.magnitude(D)
 
         vec1 = [(mag_r2-mag_r3)*i for i in r1]
         vec2 = [(mag_r3-mag_r1)*i for i in r2]
         vec3 = [(mag_r1-mag_r2)*i for i in r3]
-        S = self.vector_sum(vec1, self.vector_sum(vec2, vec3, 1), 1)
+        S = self.operate_vector(vec1, self.operate_vector(vec2, vec3, 1), 1)
 
         term1 = math.sqrt(meu/(mag_N*mag_D))
         var1 = self.cross_product(D, r2)
         var2 = [i/mag_r2 for i in var1]
-        term2 = self.vector_sum(var2, S, 1)
+        term2 = self.operate_vector(var2, S, 1)
         v2 = [term1*i for i in term2]
 
         return v2
@@ -231,9 +231,9 @@ class Gibbs(object):
         veclocity vector).
 
         Args:
-            self : class variables
-            r : position vector
-            v : velocity vector
+            self: class variables
+            r: position vector
+            v: velocity vector
 
         Returns:
             set of six orbital elements
@@ -254,7 +254,7 @@ class Gibbs(object):
 
         var1 = [(mag_v**2 - meu/mag_r)*i for i in r]
         var2 = [self.dot_product(r, v)*i for i in v]
-        vec = self.vector_sum(var1, var2, 0)
+        vec = self.operate_vector(var1, var2, 0)
         eccentricity = [i/meu for i in vec]
         mag_e = self.magnitude(eccentricity)
 
