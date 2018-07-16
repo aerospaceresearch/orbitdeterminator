@@ -410,21 +410,33 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     ut2 = x['utc'][inds[1]]
     ut3 = x['utc'][inds[2]]
 
-    # print(' jd1 = ', jd01+ut1)
-    # print(' jd2 = ', jd02+ut2)
-    # print(' jd3 = ', jd03+ut3)
+    jd1 = jd01+ut1
+    jd2 = jd02+ut2
+    jd3 = jd03+ut3
 
-    # print(' ut1 = ', ut1)
-    # print(' ut2 = ', ut2)
-    # print(' ut3 = ', ut3)
+    t_jd1_utc = Time(jd1, format='jd', scale='utc')
+    t_jd2_utc = Time(jd2, format='jd', scale='utc')
+    t_jd3_utc = Time(jd3, format='jd', scale='utc')
+
+    t_jd1_tdb_val = t_jd1_utc.tdb.value
+    t_jd2_tdb_val = t_jd2_utc.tdb.value
+    t_jd3_tdb_val = t_jd3_utc.tdb.value
+
+    # print(' t_jd1 (utc) = ', t_jd1_utc)
+    # print(' t_jd2 (utc) = ', t_jd2_utc)
+    # print(' t_jd3 (utc) = ', t_jd3_utc)
+
+    # print(' t_jd1 (tdb) = ', t_jd1_tdb_val)
+    # print(' t_jd2 (tdb) = ', t_jd2_tdb_val)
+    # print(' t_jd3 (tdb) = ', t_jd3_tdb_val)
 
     au = 1.495978707e8
 
     Ea_hc_pos = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
-    Ea_jd1 = kernel[3,399].compute(jd01+ut1) + kernel[0,3].compute(jd01+ut1) - kernel[0,10].compute(jd01+ut1)
-    Ea_jd2 = kernel[3,399].compute(jd02+ut2) + kernel[0,3].compute(jd02+ut2) - kernel[0,10].compute(jd02+ut2)
-    Ea_jd3 = kernel[3,399].compute(jd03+ut3) + kernel[0,3].compute(jd03+ut3) - kernel[0,10].compute(jd03+ut3)
+    Ea_jd1 = kernel[3,399].compute(t_jd1_tdb_val) + kernel[0,3].compute(t_jd1_tdb_val) - kernel[0,10].compute(t_jd1_tdb_val)
+    Ea_jd2 = kernel[3,399].compute(t_jd2_tdb_val) + kernel[0,3].compute(t_jd2_tdb_val) - kernel[0,10].compute(t_jd2_tdb_val)
+    Ea_jd3 = kernel[3,399].compute(t_jd3_tdb_val) + kernel[0,3].compute(t_jd3_tdb_val) - kernel[0,10].compute(t_jd3_tdb_val)
 
     Ea_hc_pos[0] = Ea_jd1/au
     Ea_hc_pos[1] = Ea_jd2/au
@@ -988,9 +1000,12 @@ if __name__ == "__main__":
 
     # obs_arr = list(range(0,4))+list(range(7,88))+list(range(93,310))+list(range(335,976))+list(range(985,1102))+list(range(1252,1260))
     # obs_arr = list(range(0,4))+list(range(7,110))
-    obs_arr = list(range(986,1249))
     # obs_arr = [1114, 1136, 1251]
-    nobs = len(obs_arr) #2520-2417 #50 #2 #19
+    
+    # obs_arr = list(range(986,1249))
+    # obs_arr = list(range(986,990))
+    obs_arr = list(range(0,4))+list(range(7,11))
+    nobs = len(obs_arr)
     print('nobs = ', nobs)
     print('obs_arr = ', obs_arr)
 
