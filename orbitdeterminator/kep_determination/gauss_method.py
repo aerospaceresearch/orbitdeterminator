@@ -313,7 +313,7 @@ def gauss_polynomial(x, a, b, c):
 # Implementation of Gauss method for MPC optical observations of NEAs
 def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.nan):
     # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
-    kernel = SPK.open('de430t.bsp')
+    kernel = SPK.open('de430.bsp')
 
     # print(kernel)
 
@@ -330,7 +330,7 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     # ind_delta = 10
     # ind_end = ind_0+31 #1409
 
-    print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
+    # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
     ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
     dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
@@ -422,11 +422,12 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     # print('x[\'observatory\'][inds[0]] = ', x['observatory'][inds[0]])
     # print('mpc_observatories_data = ', mpc_observatories_data)
     data_OBS_1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)
-    print('data_OBS_1 = ', data_OBS_1[1])
     data_OBS_2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)
-    print('data_OBS_2 = ', data_OBS_2[1])
     data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
-    print('data_OBS_3 = ', data_OBS_3[1])
+
+    # print('data_OBS_1 = ', data_OBS_1[1])
+    # print('data_OBS_2 = ', data_OBS_2[1])
+    # print('data_OBS_3 = ', data_OBS_3[1])
 
     R[0] = (  Ea_jd1 + observerpos_mpc(data_OBS_1[1]['Long'][0], data_OBS_1[1]['sin'][0], data_OBS_1[1]['cos'][0], jd01, ut1)  )/au
     R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['sin'][0], data_OBS_2[1]['cos'][0], jd02, ut2)  )/au
@@ -896,10 +897,10 @@ def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0):
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         # print('i = ', i)
-        a_local = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
-        e_local = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
-        if a_local < 0.0 or e_local > 1.0:
-            continue
+        # a_local = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
+        # e_local = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], 0.295912208285591100E-03)
+        # if a_local < 0.0 or e_local > 1.0:
+        #     continue
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_mpc(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
         # print('*r2 = ', r2)
         # print('*v2 = ', v2)
@@ -907,6 +908,8 @@ def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0):
 
 ##############################
 if __name__ == "__main__":
+
+    np.set_printoptions(precision=16)
 
     # # Examples 5.11 and 5.12 from book
     # phi_deg = 40.0 # deg
@@ -977,7 +980,12 @@ if __name__ == "__main__":
     
     # obs_arr = list(range(0,20))
     # obs_arr = [0, 10, 20] # Ceres
-    obs_arr = [7214,7233,7256] # list(range(7648,7721))
+    # obs_arr = [7214,7233,7256]
+    # obs_arr = list(range(7214,7256))
+    obs_arr = [7145,7146,7148,7152,7155,7156,7157,7158,7159,7164,7172,7178,7185,7190,7197,7201,7205,7213,7214,7218,7219,7221,7222,7227,7231,7240,7241,7242,7250]
+    # obs_arr = [7106,7117,7133]
+    # ,7133,7145
+    # obs_arr = [7106,7117,7146,7148,7152,7155,7156,7157,7158,7159,7164,7172,7178,7185,7190,7197,7201,7205,7213,7214,7218,7219,7221,7222,7227,7231,7240,7241,7242,7250]
     nobs = len(obs_arr)
     print('nobs = ', nobs)
     print('obs_arr = ', obs_arr)
@@ -990,11 +998,11 @@ if __name__ == "__main__":
     y_Ea_vec = np.zeros((nobs-2,))
     z_Ea_vec = np.zeros((nobs-2,))
 
-    a_vec = np.zeros((nobs,))
-    e_vec = np.zeros((nobs,))
-    I_vec = np.zeros((nobs,))
-    W_vec = np.zeros((nobs,))
-    w_vec = np.zeros((nobs,))
+    a_vec = np.zeros((nobs-2,))
+    e_vec = np.zeros((nobs-2,))
+    I_vec = np.zeros((nobs-2,))
+    W_vec = np.zeros((nobs-2,))
+    w_vec = np.zeros((nobs-2,))
 
     r2s_guess_vec = np.zeros((nobs-2,))
 
@@ -1039,19 +1047,19 @@ if __name__ == "__main__":
         a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
         e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 
-        if 0.0<=e_num<=1.0 and a_num>=0.0:
-            a_vec[j] = a_num
-            e_vec[j] = e_num
-            I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-            W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-            w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
-            # print(a_vec[j], e_vec[j], I_vec[j], W_vec[j], w_vec[j])
-            x_vec[j] = r2[0]
-            y_vec[j] = r2[1]
-            z_vec[j] = r2[2]
-            x_Ea_vec[j] = Ea_hc_pos[1][0]
-            y_Ea_vec[j] = Ea_hc_pos[1][1]
-            z_Ea_vec[j] = Ea_hc_pos[1][2]
+#    if 0.0<=e_num<=1.0 and a_num>=0.0:
+        a_vec[j] = a_num
+        e_vec[j] = e_num
+        I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+        W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+        w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
+        # print(a_vec[j], e_vec[j], I_vec[j], W_vec[j], w_vec[j])
+        x_vec[j] = r2[0]
+        y_vec[j] = r2[1]
+        z_vec[j] = r2[2]
+        x_Ea_vec[j] = Ea_hc_pos[1][0]
+        y_Ea_vec[j] = Ea_hc_pos[1][1]
+        z_Ea_vec[j] = Ea_hc_pos[1][2]
 
         # print(a_num/au, 'au', ', ', e_num)
         # print(a_num, 'au', ', ', e_num)
@@ -1063,6 +1071,12 @@ if __name__ == "__main__":
     print('a_vec = ', a_vec)
     print('len(a_vec) = ', len(a_vec))
     print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
+
+    print('e_vec = ', e_vec)
+    print('len(e_vec) = ', len(e_vec))
+    e_vec_fil1 = e_vec[e_vec<1.0]
+    e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
+    print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
 
     print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
     # print('Semimajor axis, a: ', a_, 'km')
@@ -1077,13 +1091,13 @@ if __name__ == "__main__":
     ax = plt.axes(projection='3d')
 
     # Apophis plot
-    ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label='Apophis orbit')
+    ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label='Computed orbit')
     ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker='.', label='Earth orbit')
     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
     plt.legend()
     plt.xlabel('x (au)')
     plt.ylabel('y (au)')
-    plt.title('Angles-only orbit determ. (Gauss): Apophis')
+    plt.title('Angles-only orbit determ. (Gauss)')
     plt.show()
     # end, Apophis plot
 
