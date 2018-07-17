@@ -526,9 +526,11 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
         print('np.real(gauss_poly_roots[rt_indx[0]]) = ', np.real(gauss_poly_roots[rt_indx[0]]))
 
     if np.isnan(r2guess):
-        r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
+        # r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
+        r2_star = np.real(gauss_poly_roots[rt_indx[0][0]])
     else:
-        r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
+        # r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
+        r2_star = np.real(gauss_poly_roots[rt_indx[0][0]])
     print('r2_star = ', r2_star)
 
 
@@ -970,7 +972,11 @@ if __name__ == "__main__":
     # obs_arr = list(range(0,4))+list(range(7,11))
     # obs_arr = list(range(335,340))
     # obs_arr = list(range(7,15))
-    obs_arr = list(range(860,978))
+    
+    # obs_arr = list(range(860,978))
+    
+    # obs_arr = list(range(0,20))
+    obs_arr = [0, 10, 20]
     nobs = len(obs_arr)
     print('nobs = ', nobs)
     print('obs_arr = ', obs_arr)
@@ -1003,7 +1009,8 @@ if __name__ == "__main__":
         # inds_ = [obs_arr[j], obs_arr[j+1], obs_arr[j+2]]
         inds_ = [ind0, ind0+1, ind0+2]
         print('j = ', j)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_data.txt', refiters=5)
+        # r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_apophis_data.txt', refiters=5)
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_ceres_data.txt', refiters=5)
 
         # print('|r1| = ', np.linalg.norm(r1,ord=2))
         # print('|r2| = ', np.linalg.norm(r2,ord=2))
