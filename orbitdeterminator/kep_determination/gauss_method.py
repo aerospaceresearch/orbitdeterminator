@@ -1090,8 +1090,9 @@ if __name__ == "__main__":
     ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker='.', label='Earth orbit')
     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
     plt.legend()
-    plt.xlabel('x (au)')
-    plt.ylabel('y (au)')
+    ax.set_xlabel('x (au)')
+    ax.set_ylabel('y (au)')
+    ax.set_zlabel('z (au)')
     plt.title('Angles-only orbit determ. (Gauss)')
     plt.show()
     # end, Apophis plot
