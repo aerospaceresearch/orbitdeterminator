@@ -892,8 +892,8 @@ def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_sat(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_
 
-def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0):
-    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(mpc_observatories_data, inds_, mpc_data_fname)
+def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0, r2guess=np.nan):
+    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(mpc_observatories_data, inds_, mpc_data_fname, r2guess)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         # print('i = ', i)
