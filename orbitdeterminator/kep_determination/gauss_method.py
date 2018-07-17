@@ -1006,17 +1006,13 @@ if __name__ == "__main__":
 
     r2s_guess_vec = np.zeros((nobs-2,))
 
-
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
     ###########################
     print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
     for j in range (0,nobs-2):
         # Apply Gauss method to three elements of data
-        # inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
-        # ind0 = obs_arr[j]
         inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
-        # inds_ = [ind0, ind0+1, ind0+2]
         print('j = ', j)
         # r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_apophis_data.txt', refiters=5)
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_ceres_data.txt', refiters=5)
@@ -1040,14 +1036,13 @@ if __name__ == "__main__":
         # v2_au_day = v2*86400/au
         # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
         # mu = mu_Earth
-        # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
         mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
         mu = mu_Sun
 
         a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
         e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
 
-#    if 0.0<=e_num<=1.0 and a_num>=0.0:
+        #    if 0.0<=e_num<=1.0 and a_num>=0.0:
         a_vec[j] = a_num
         e_vec[j] = e_num
         I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
@@ -1081,7 +1076,7 @@ if __name__ == "__main__":
     print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
     # print('Semimajor axis, a: ', a_, 'km')
     # print(np.mean(a_vec[a_vec>0.0])/au, 'au', ', ', np.mean(e_vec[e_vec<1.0]))
-    print(np.mean(a_vec[a_vec>0.0]), 'au', ', ', np.mean(e_vec[a_vec>0.0]), ', ', np.mean(I_vec[a_vec>0.0]), 'deg', ', ', np.mean(W_vec[a_vec>0.0]), 'deg', ', ', np.mean(w_vec[a_vec>0.0]), 'deg')
+    print(np.mean(a_vec), 'au', ', ', np.mean(e_vec), ', ', np.mean(I_vec), 'deg', ', ', np.mean(W_vec), 'deg', ', ', np.mean(w_vec), 'deg')
 
     ###########################
     # Plot
@@ -1090,7 +1085,7 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = plt.axes(projection='3d')
 
-    # Apophis plot
+    # Sun-centered orbits: Computed orbit and Earth's
     ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label='Computed orbit')
     ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker='.', label='Earth orbit')
     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
