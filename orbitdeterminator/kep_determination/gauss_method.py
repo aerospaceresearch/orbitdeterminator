@@ -1005,17 +1005,15 @@ if __name__ == "__main__":
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
 
-    r2_root_ind_vec = np.zeros((nobs-2,),dtype=int)
-    # r2s_guess_vec.fill(np.nan)
-    # r2s_guess_vec[2] = 2.854258166676639
-    # r2s_guess_vec[3] = 2.8506167227657664
-    # r2s_guess_vec[4] = 2.847503066644062
-    # r2s_guess_vec[5] = 2.846765529110941
+    r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
 
     print('r2_root_ind_vec = ', r2_root_ind_vec)
     # print('np.isnan(r2s_guess_vec[7]) = ', np.isnan(r2s_guess_vec[7]))
 
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
+
+    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
+    mu = mu_Sun
 
     ###########################
     print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
@@ -1034,19 +1032,9 @@ if __name__ == "__main__":
 
         # print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
 
-        # print('r2 = ', r2, 'km')
-        # print('v2 = ', v2, 'km/s')
-
         # print('r2 = ', r2/au, 'au')
-        # print('v2 = ', v2*86400/au, 'au/day')
+        # print('v2 = ', v2, 'au/day')
         # print('JD2 = ', jd2, '\n')
-
-        # r2_au = r2/au
-        # v2_au_day = v2*86400/au
-        # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-        # mu = mu_Earth
-        mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-        mu = mu_Sun
 
         a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
         e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
@@ -1102,6 +1090,9 @@ if __name__ == "__main__":
     ax.set_xlabel('x (au)')
     ax.set_ylabel('y (au)')
     ax.set_zlabel('z (au)')
+    ax.set_xlim(-3.5, 3.5)
+    ax.set_ylim(-3.5, 3.5)
+    ax.set_zlim(-3.5, 3.5)
     plt.title('Angles-only orbit determ. (Gauss)')
     plt.show()
     # end, Apophis plot
