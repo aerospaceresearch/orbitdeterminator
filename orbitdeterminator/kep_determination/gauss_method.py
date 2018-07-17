@@ -330,7 +330,7 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     # ind_delta = 10
     # ind_end = ind_0+31 #1409
 
-    # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
+    print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
     ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
     dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
@@ -422,11 +422,11 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     # print('x[\'observatory\'][inds[0]] = ', x['observatory'][inds[0]])
     # print('mpc_observatories_data = ', mpc_observatories_data)
     data_OBS_1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)
-    # print('data_OBS_1 = ', data_OBS_1[1])
+    print('data_OBS_1 = ', data_OBS_1[1])
     data_OBS_2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)
-    # print('data_OBS_2 = ', data_OBS_2[1])
+    print('data_OBS_2 = ', data_OBS_2[1])
     data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
-    # print('data_OBS_3 = ', data_OBS_3[1])
+    print('data_OBS_3 = ', data_OBS_3[1])
 
     R[0] = (  Ea_jd1 + observerpos_mpc(data_OBS_1[1]['Long'][0], data_OBS_1[1]['sin'][0], data_OBS_1[1]['cos'][0], jd01, ut1)  )/au
     R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['sin'][0], data_OBS_2[1]['cos'][0], jd02, ut2)  )/au
@@ -976,7 +976,8 @@ if __name__ == "__main__":
     # obs_arr = list(range(860,978))
     
     # obs_arr = list(range(0,20))
-    obs_arr = [0, 10, 20]
+    # obs_arr = [0, 10, 20] # Ceres
+    obs_arr = [7214,7233,7256] # list(range(7648,7721))
     nobs = len(obs_arr)
     print('nobs = ', nobs)
     print('obs_arr = ', obs_arr)
@@ -1005,9 +1006,9 @@ if __name__ == "__main__":
     for j in range (0,nobs-2):
         # Apply Gauss method to three elements of data
         # inds_ = [1409, 1442, 1477] #[10,1,2] # [1409,1440,1477]
-        ind0 = obs_arr[j]
-        # inds_ = [obs_arr[j], obs_arr[j+1], obs_arr[j+2]]
-        inds_ = [ind0, ind0+1, ind0+2]
+        # ind0 = obs_arr[j]
+        inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
+        # inds_ = [ind0, ind0+1, ind0+2]
         print('j = ', j)
         # r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_apophis_data.txt', refiters=5)
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_ceres_data.txt', refiters=5)
