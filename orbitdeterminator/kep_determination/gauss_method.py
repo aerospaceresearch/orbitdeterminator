@@ -8,8 +8,9 @@ from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from least_squares import xyz_frame_
 import astropy.coordinates
-import astropy.units as uts
+from astropy import units as uts
 from astropy.time import Time
+from datetime import datetime
 # from poliastro.stumpff import c2, c3
 
 def load_mpc_observatories_data(mpc_observatories_fname):
@@ -80,31 +81,51 @@ def localsidtime(gmst_hrs, long):
 def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
 
     # # compute Greenwich mean sidereal time (in hours) at UT instant of JD0 date:
-    # gmst_hrs = gmst(jd0, ut)
+    gmst_hrs = gmst(jd0, ut)
     # # compute local sidereal time from GMST and longitude EAST of Greenwich:
-    # lmst_hrs = localsidtime(gmst_hrs, long)
+    lmst_hrs = localsidtime(gmst_hrs, long)
     # Earth's equatorial radius in kilometers
     Re = 6378.0 # km
 
     # compute geocentric, Earth-fixed, position of observing site
-    x_site = Re*parallax_c*np.cos(long)
-    y_site = Re*parallax_c*np.sin(long)
-    z_site = Re*parallax_s
+    # long_site_rad = np.deg2rad(long)
+    # x_site = Re*parallax_c*np.cos(long_site_rad)
+    # y_site = Re*parallax_c*np.sin(long_site_rad)
+    # z_site = Re*parallax_s
 
     # construct EarthLocation object associated to observing site
-    el_site = astropy.coordinates.EarthLocation.from_geocentric(x_site*uts.km, y_site*uts.km, z_site*uts.km)
+    # el_site = astropy.coordinates.EarthLocation.from_geocentric(x_site*uts.km, y_site*uts.km, z_site*uts.km)
+    # print('el_site = ', el_site)
     # construct Time object associated to Julian date jd0+ut at observing site
-    t_site = Time(jd0+ut, format='jd', location=el_site, scale='utc')
+    print('jd0 = ', jd0)
+    print('ut = ', ut)
+    # t_site = Time(jd0+ut, format='jd', location=el_site)
+    t_site = Time(jd0+ut, format='jd', scale='utc')
+    print('t_site = ', t_site)
+    # print('t_site.location.lon = ', t_site.location.lon )
+    print('t_site.to_datetime = ', t_site.to_datetime()  )
     # get local mean sidereal time
     # t_site_lmst = t_site.sidereal_time('mean')
-    t_site_lmst = t_site.sidereal_time('apparent')
-    lmst_hrs = t_site_lmst.value # hours
-    lmst_rad = np.deg2rad(lmst_hrs*15) # radians
+    long_site = astropy.coordinates.Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
+    print('str(long)+\'d\' = ', str(long)+'d')
+    print('long_site = ', long_site)
+    t_site_lmst = t_site.sidereal_time('mean', longitude=long_site)
+    print('t_site_lmst = ', t_site_lmst)
+    lmst_hrs2 = t_site_lmst.value # hours
+    print('gmst_hrs = ', gmst_hrs)
+    print('gmst_hrs2 = ', t_site.sidereal_time('mean', 'greenwich').value)
+    print('lmst_hrs = ', lmst_hrs)
+    print('lmst_hrs2 = ', lmst_hrs2)
+    lmst_rad = np.deg2rad(lmst_hrs*15.0) # radians
 
     # compute cartesian components of geocentric (non rotating) observer position
     x_gc = Re*parallax_c*np.cos(lmst_rad)
     y_gc = Re*parallax_c*np.sin(lmst_rad)
     z_gc = Re*parallax_s
+
+    print('x_gc = ', x_gc)
+    print('y_gc = ', y_gc)
+    print('z_gc = ', z_gc)
 
     return np.array((x_gc,y_gc,z_gc))
 
@@ -142,70 +163,6 @@ def cosinedirectors(ra_hrs, dec_deg):
     sina_cosd = np.sin(ra_rad)*np.cos(dec_rad)
     sind = np.sin(dec_rad)
     return np.array((cosa_cosd, sina_cosd, sind))
-
-# the following function was copied from
-# https://gist.github.com/jiffyclub/1294443
-def date_to_jd(year,month,day):
-    """
-    Convert a date to Julian Day.
-    
-    Algorithm from 'Practical Astronomy with your Calculator or Spreadsheet', 
-        4th ed., Duffet-Smith and Zwart, 2011.
-    
-    Parameters
-    ----------
-    year : int
-        Year as integer. Years preceding 1 A.D. should be 0 or negative.
-        The year before 1 A.D. is 0, 10 B.C. is year -9.
-        
-    month : int
-        Month as integer, Jan = 1, Feb. = 2, etc.
-    
-    day : float
-        Day, may contain fractional part.
-    
-    Returns
-    -------
-    jd : float
-        Julian Day
-        
-    Examples
-    --------
-    Convert 6 a.m., February 17, 1985 to Julian Day
-    
-    >>> date_to_jd(1985,2,17.25)
-    2446113.75
-    
-    """
-    if month == 1 or month == 2:
-        yearp = year - 1
-        monthp = month + 12
-    else:
-        yearp = year
-        monthp = month
-    
-    # this checks where we are in relation to October 15, 1582, the beginning
-    # of the Gregorian calendar.
-    if ((year < 1582) or
-        (year == 1582 and month < 10) or
-        (year == 1582 and month == 10 and day < 15)):
-        # before start of Gregorian calendar
-        B = 0
-    else:
-        # after start of Gregorian calendar
-        A = math.trunc(yearp / 100.)
-        B = 2 - A + math.trunc(A / 4.)
-        
-    if yearp < 0:
-        C = math.trunc((365.25 * yearp) - 0.75)
-    else:
-        C = math.trunc(365.25 * yearp)
-        
-    D = math.trunc(30.6001 * (monthp + 1))
-    
-    jd = B + C + D + day + 1720994.5
-    
-    return jd
 
 def lagrangef(mu, r2, tau):
     return 1.0-0.5*(mu/(r2**3))*(tau**2)
@@ -404,13 +361,17 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     # print('rho2 = ', rho2)
     # print('rho3 = ', rho3)
 
-    jd01 = date_to_jd(x['yr'][inds[0]], x['month'][inds[0]], x['day'][inds[0]])
-    jd02 = date_to_jd(x['yr'][inds[1]], x['month'][inds[1]], x['day'][inds[1]])
-    jd03 = date_to_jd(x['yr'][inds[2]], x['month'][inds[2]], x['day'][inds[2]])
+    jd01 = Time( datetime(x['yr'][inds[0]], x['month'][inds[0]], x['day'][inds[0]]) ).jd
+    jd02 = Time( datetime(x['yr'][inds[1]], x['month'][inds[1]], x['day'][inds[1]]) ).jd
+    jd03 = Time( datetime(x['yr'][inds[2]], x['month'][inds[2]], x['day'][inds[2]]) ).jd
 
     ut1 = x['utc'][inds[0]]
     ut2 = x['utc'][inds[1]]
     ut3 = x['utc'][inds[2]]
+
+    print('ut1 = ', ut1)
+    print('ut2 = ', ut2)
+    print('ut3 = ', ut3)
 
     jd1 = jd01+ut1
     jd2 = jd02+ut2
@@ -424,9 +385,9 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     t_jd2_tdb_val = t_jd2_utc.tdb.value
     t_jd3_tdb_val = t_jd3_utc.tdb.value
 
-    # print(' t_jd1 (utc) = ', t_jd1_utc)
-    # print(' t_jd2 (utc) = ', t_jd2_utc)
-    # print(' t_jd3 (utc) = ', t_jd3_utc)
+    print(' t_jd1 (utc) = ', t_jd1_utc)
+    print(' t_jd2 (utc) = ', t_jd2_utc)
+    print(' t_jd3 (utc) = ', t_jd3_utc)
 
     # print(' t_jd1 (tdb) = ', t_jd1_tdb_val)
     print(' t_jd2 (tdb) = ', t_jd2_tdb_val)
@@ -465,9 +426,9 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
     # print('data_OBS_3 = ', data_OBS_3[1])
 
-    R[0] = (  Ea_jd1 + observerpos_mpc(data_OBS_1[1]['Long'][0], data_OBS_1[1]['cos'][0], data_OBS_1[1]['sin'][0], jd01, ut1)  )/au
-    R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['cos'][0], data_OBS_2[1]['sin'][0], jd02, ut2)  )/au
-    R[2] = (  Ea_jd3 + observerpos_mpc(data_OBS_3[1]['Long'][0], data_OBS_3[1]['cos'][0], data_OBS_3[1]['sin'][0], jd03, ut3)  )/au
+    R[0] = (  Ea_jd1 + observerpos_mpc(data_OBS_1[1]['Long'][0], data_OBS_1[1]['sin'][0], data_OBS_1[1]['cos'][0], jd01, ut1)  )/au
+    R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['sin'][0], data_OBS_2[1]['cos'][0], jd02, ut2)  )/au
+    R[2] = (  Ea_jd3 + observerpos_mpc(data_OBS_3[1]['Long'][0], data_OBS_3[1]['sin'][0], data_OBS_3[1]['cos'][0], jd03, ut3)  )/au
 
     print('R[0] = ', R[0])
     print('R[1] = ', R[1])
@@ -1006,7 +967,8 @@ if __name__ == "__main__":
     # obs_arr = list(range(986,990))
     # obs_arr = list(range(0,4))+list(range(7,11))
     # obs_arr = list(range(335,340))
-    obs_arr = list(range(7,15))
+    # obs_arr = list(range(7,15))
+    obs_arr = list(range(860,978))
     nobs = len(obs_arr)
     print('nobs = ', nobs)
     print('obs_arr = ', obs_arr)
