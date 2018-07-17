@@ -62,7 +62,7 @@ def load_data_mpc(fname):
 
 # compute Greenwich mean sidereal time (in hours) at UT instant of Julian date JD0:
 def gmst(jd0, ut):
-    return np.mod(6.656306 + 0.0657098242*(jd0-2445700.5) + 1.0027379093*ut, 24.0)
+    return np.mod(6.656306 + 0.0657098242*(jd0-2445700.5) + 1.0027379093*(ut*24), 24.0)
 
 # compute Greenwich apparent sidereal time (in hours) at UT instant of Julian date JD0:
 # delta_lambda: nutation in longitude (hours)
@@ -80,6 +80,8 @@ def localsidtime(gmst_hrs, long):
 # formula taken from top of page 266, chapter 5, Orbital Mechanics book
 def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
 
+    # jd0_ = 2444970.5
+    # ut_ = 0.89245897
     # # compute Greenwich mean sidereal time (in hours) at UT instant of JD0 date:
     gmst_hrs = gmst(jd0, ut)
     # # compute local sidereal time from GMST and longitude EAST of Greenwich:
@@ -97,25 +99,25 @@ def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
     # el_site = astropy.coordinates.EarthLocation.from_geocentric(x_site*uts.km, y_site*uts.km, z_site*uts.km)
     # print('el_site = ', el_site)
     # construct Time object associated to Julian date jd0+ut at observing site
-    print('jd0 = ', jd0)
-    print('ut = ', ut)
+    # print('jd0 = ', jd0)
+    # print('ut = ', ut)
     # t_site = Time(jd0+ut, format='jd', location=el_site)
-    t_site = Time(jd0+ut, format='jd', scale='utc')
-    print('t_site = ', t_site)
+    t_site = Time(jd0+ut, format='jd')
+    # print('t_site = ', t_site)
     # print('t_site.location.lon = ', t_site.location.lon )
-    print('t_site.to_datetime = ', t_site.to_datetime()  )
+    # print('t_site.to_datetime = ', t_site.to_datetime()  )
     # get local mean sidereal time
     # t_site_lmst = t_site.sidereal_time('mean')
     long_site = astropy.coordinates.Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
-    print('str(long)+\'d\' = ', str(long)+'d')
-    print('long_site = ', long_site)
+    # print('str(long)+\'d\' = ', str(long)+'d')
+    # print('long_site = ', long_site)
     t_site_lmst = t_site.sidereal_time('mean', longitude=long_site)
-    print('t_site_lmst = ', t_site_lmst)
+    # print('t_site_lmst = ', t_site_lmst)
     lmst_hrs2 = t_site_lmst.value # hours
-    print('gmst_hrs = ', gmst_hrs)
-    print('gmst_hrs2 = ', t_site.sidereal_time('mean', 'greenwich').value)
-    print('lmst_hrs = ', lmst_hrs)
-    print('lmst_hrs2 = ', lmst_hrs2)
+    # print('gmst_hrs = ', gmst_hrs)
+    # print('gmst_hrs2 = ', t_site.sidereal_time('mean', 'greenwich').value)
+    # print('lmst_hrs = ', lmst_hrs)
+    # print('lmst_hrs2 = ', lmst_hrs2)
     lmst_rad = np.deg2rad(lmst_hrs*15.0) # radians
 
     # compute cartesian components of geocentric (non rotating) observer position
@@ -123,9 +125,9 @@ def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
     y_gc = Re*parallax_c*np.sin(lmst_rad)
     z_gc = Re*parallax_s
 
-    print('x_gc = ', x_gc)
-    print('y_gc = ', y_gc)
-    print('z_gc = ', z_gc)
+    # print('x_gc = ', x_gc)
+    # print('y_gc = ', y_gc)
+    # print('z_gc = ', z_gc)
 
     return np.array((x_gc,y_gc,z_gc))
 
@@ -369,9 +371,9 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     ut2 = x['utc'][inds[1]]
     ut3 = x['utc'][inds[2]]
 
-    print('ut1 = ', ut1)
-    print('ut2 = ', ut2)
-    print('ut3 = ', ut3)
+    # print('ut1 = ', ut1)
+    # print('ut2 = ', ut2)
+    # print('ut3 = ', ut3)
 
     jd1 = jd01+ut1
     jd2 = jd02+ut2
@@ -385,12 +387,12 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     t_jd2_tdb_val = t_jd2_utc.tdb.value
     t_jd3_tdb_val = t_jd3_utc.tdb.value
 
-    print(' t_jd1 (utc) = ', t_jd1_utc)
-    print(' t_jd2 (utc) = ', t_jd2_utc)
-    print(' t_jd3 (utc) = ', t_jd3_utc)
+    # print(' t_jd1 (utc) = ', t_jd1_utc)
+    # print(' t_jd2 (utc) = ', t_jd2_utc)
+    # print(' t_jd3 (utc) = ', t_jd3_utc)
 
     # print(' t_jd1 (tdb) = ', t_jd1_tdb_val)
-    print(' t_jd2 (tdb) = ', t_jd2_tdb_val)
+    # print(' t_jd2 (tdb) = ', t_jd2_tdb_val)
     # print(' t_jd3 (tdb) = ', t_jd3_tdb_val)
 
     au = 1.495978707e8
@@ -405,9 +407,9 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     Ea_hc_pos[1] = Ea_jd2/au
     Ea_hc_pos[2] = Ea_jd3/au
 
-    print('Ea_hc_pos[0] = ', Ea_hc_pos[0])
-    print('Ea_hc_pos[1] = ', Ea_hc_pos[1])
-    print('Ea_hc_pos[2] = ', Ea_hc_pos[2])
+    # print('Ea_hc_pos[0] = ', Ea_hc_pos[0])
+    # print('Ea_hc_pos[1] = ', Ea_hc_pos[1])
+    # print('Ea_hc_pos[2] = ', Ea_hc_pos[2])
 
     # print('range_ea = ', np.linalg.norm(Ea_jd1, ord=2)/au)
 
@@ -430,9 +432,9 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
     R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['sin'][0], data_OBS_2[1]['cos'][0], jd02, ut2)  )/au
     R[2] = (  Ea_jd3 + observerpos_mpc(data_OBS_3[1]['Long'][0], data_OBS_3[1]['sin'][0], data_OBS_3[1]['cos'][0], jd03, ut3)  )/au
 
-    print('R[0] = ', R[0])
-    print('R[1] = ', R[1])
-    print('R[2] = ', R[2])
+    # print('R[0] = ', R[0])
+    # print('R[1] = ', R[1])
+    # print('R[2] = ', R[2])
 
     # make sure time units are consistent!
     tau1 = ((jd01+ut1)-(jd02+ut2)) #*86400.0
@@ -897,8 +899,8 @@ def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0):
         if a_local < 0.0 or e_local > 1.0:
             continue
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_mpc(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
-        print('*r2 = ', r2)
-        print('*v2 = ', v2)
+        # print('*r2 = ', r2)
+        # print('*v2 = ', v2)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos
 
 ##############################
@@ -1006,8 +1008,8 @@ if __name__ == "__main__":
         # print('|r1| = ', np.linalg.norm(r1,ord=2))
         # print('|r2| = ', np.linalg.norm(r2,ord=2))
         # print('|r3| = ', np.linalg.norm(r3,ord=2))
-        print('r2 = ', r2)
-        print('v2 = ', v2)
+        # print('r2 = ', r2)
+        # print('v2 = ', v2)
 
         # print("*** CARTESIAN STATES AND REFERENCE EPOCH ***")
 
@@ -1068,7 +1070,7 @@ if __name__ == "__main__":
 
     # Apophis plot
     ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label='Apophis orbit')
-    ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker=',', label='Earth orbit')
+    ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker='.', label='Earth orbit')
     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
     plt.legend()
     plt.xlabel('x (au)')
