@@ -83,9 +83,9 @@ def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
     # jd0_ = 2444970.5
     # ut_ = 0.89245897
     # # compute Greenwich mean sidereal time (in hours) at UT instant of JD0 date:
-    gmst_hrs = gmst(jd0, ut)
+    # gmst_hrs = gmst(jd0, ut)
     # # compute local sidereal time from GMST and longitude EAST of Greenwich:
-    lmst_hrs = localsidtime(gmst_hrs, long)
+    # lmst_hrs = localsidtime(gmst_hrs, long)
     # Earth's equatorial radius in kilometers
     Re = 6378.0 # km
 
@@ -113,7 +113,7 @@ def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
     # print('long_site = ', long_site)
     t_site_lmst = t_site.sidereal_time('mean', longitude=long_site)
     # print('t_site_lmst = ', t_site_lmst)
-    lmst_hrs2 = t_site_lmst.value # hours
+    lmst_hrs = t_site_lmst.value # hours
     # print('gmst_hrs = ', gmst_hrs)
     # print('gmst_hrs2 = ', t_site.sidereal_time('mean', 'greenwich').value)
     # print('lmst_hrs = ', lmst_hrs)
