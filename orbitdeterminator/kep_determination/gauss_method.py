@@ -311,7 +311,7 @@ def gauss_polynomial(x, a, b, c):
     return (x**8)+a*(x**6)+b*(x**3)+c
 
 # Implementation of Gauss method for MPC optical observations of NEAs
-def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.nan):
+def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind=0):
     # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
     kernel = SPK.open('de430.bsp')
 
@@ -525,13 +525,14 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2guess=np.
         print('gauss_poly_roots = ', gauss_poly_roots)
         print('len(rt_indx[0]) = ', len(rt_indx[0]))
         print('np.real(gauss_poly_roots[rt_indx[0]]) = ', np.real(gauss_poly_roots[rt_indx[0]]))
+        print('r2_root_ind = ', r2_root_ind)
 
-    if np.isnan(r2guess):
-        # r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
-        r2_star = np.real(gauss_poly_roots[rt_indx[0][0]])
-    else:
-        # r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
-        r2_star = np.real(gauss_poly_roots[rt_indx[0][0]])
+    # if r2_root_ind==0:
+    #     # r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
+    #     r2_star = np.real(gauss_poly_roots[rt_indx[0][0]])
+    # else:
+    #     # r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
+    r2_star = np.real(gauss_poly_roots[rt_indx[0][r2_root_ind]])
     print('r2_star = ', r2_star)
 
 
@@ -892,8 +893,8 @@ def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_sat(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_
 
-def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0, r2guess=np.nan):
-    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(mpc_observatories_data, inds_, mpc_data_fname, r2guess)
+def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0, r2_root_ind=0):
+    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(mpc_observatories_data, inds_, mpc_data_fname, r2_root_ind=r2_root_ind)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         # print('i = ', i)
@@ -1004,7 +1005,15 @@ if __name__ == "__main__":
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
 
-    r2s_guess_vec = np.zeros((nobs-2,))
+    r2_root_ind_vec = np.zeros((nobs-2,),dtype=int)
+    # r2s_guess_vec.fill(np.nan)
+    # r2s_guess_vec[2] = 2.854258166676639
+    # r2s_guess_vec[3] = 2.8506167227657664
+    # r2s_guess_vec[4] = 2.847503066644062
+    # r2s_guess_vec[5] = 2.846765529110941
+
+    print('r2_root_ind_vec = ', r2_root_ind_vec)
+    # print('np.isnan(r2s_guess_vec[7]) = ', np.isnan(r2s_guess_vec[7]))
 
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
@@ -1015,7 +1024,7 @@ if __name__ == "__main__":
         inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
         print('j = ', j)
         # r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_apophis_data.txt', refiters=5)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_ceres_data.txt', refiters=5)
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_method_mpc(mpc_observatories_data, inds_, '../example_data/mpc_ceres_data.txt', refiters=5, r2_root_ind=r2_root_ind_vec[j])
 
         # print('|r1| = ', np.linalg.norm(r1,ord=2))
         # print('|r2| = ', np.linalg.norm(r2,ord=2))
