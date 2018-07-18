@@ -7,7 +7,8 @@ import numpy as np
 from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from least_squares import xyz_frame_
-import astropy.coordinates
+from astropy.coordinates import Longitude
+from astropy.coordinates import Angle
 from astropy import units as uts
 from astropy.time import Time
 from datetime import datetime
@@ -62,20 +63,20 @@ def load_data_mpc(fname):
 # phi' = atan(S/C)
 # rho = sqrt(S**2+C**2)
 
-# compute Greenwich mean sidereal time (in hours) at UT instant of Julian date JD0:
-def gmst(jd0, ut):
-    return np.mod(6.656306 + 0.0657098242*(jd0-2445700.5) + 1.0027379093*(ut*24), 24.0)
+# # compute Greenwich mean sidereal time (in hours) at UT instant of Julian date JD0:
+# def gmst(jd0, ut):
+#     return np.mod(6.656306 + 0.0657098242*(jd0-2445700.5) + 1.0027379093*(ut*24), 24.0)
 
-# compute Greenwich apparent sidereal time (in hours) at UT instant of Julian date JD0:
-# delta_lambda: nutation in longitude (hours)
-# epsilon: obliquity of the ecliptic (degrees)
-def gast(jd0, ut, delta_lambda, epsilon):
-    gmst_hrs = gmst(jd0, ut)
-    return np.mod(gmst_hrs+delta_lambda*np.cos(epsilon), 24.0)
+# # compute Greenwich apparent sidereal time (in hours) at UT instant of Julian date JD0:
+# # delta_lambda: nutation in longitude (hours)
+# # epsilon: obliquity of the ecliptic (degrees)
+# def gast(jd0, ut, delta_lambda, epsilon):
+#     gmst_hrs = gmst(jd0, ut)
+#     return np.mod(gmst_hrs+delta_lambda*np.cos(epsilon), 24.0)
 
-# compute local sidereal time from GMST and longitude EAST of Greenwich:
-def localsidtime(gmst_hrs, long):
-    return np.mod((gmst_hrs+long/15.0),24.0)
+# # compute local sidereal time from GMST and longitude EAST of Greenwich:
+# def localsidtime(gmst_hrs, long):
+#     return np.mod((gmst_hrs+long/15.0),24.0)
 
 # geocentric observer position at a given longitude,
 # parallax constants S and C, Julian date jd0 and UT time ut
@@ -110,7 +111,7 @@ def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
     # print('t_site.to_datetime = ', t_site.to_datetime()  )
     # get local mean sidereal time
     # t_site_lmst = t_site.sidereal_time('mean')
-    long_site = astropy.coordinates.Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
+    long_site = Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
     # print('str(long)+\'d\' = ', str(long)+'d')
     # print('long_site = ', long_site)
     t_site_lmst = t_site.sidereal_time('mean', longitude=long_site)
@@ -158,9 +159,10 @@ def observerpos_sat(phi_deg, altitude_km, f, lst_deg):
 
     return np.array((x_gc,y_gc,z_gc))
 
+#Line-Of-Sight (LOS) vector
 #ra must be in hrs, dec must be in deg
-def cosinedirectors(ra_hrs, dec_deg):
-    ra_rad = np.deg2rad(ra_hrs*15.0)
+def losvector(ra_hrs, dec_deg):
+    ra_rad = np.deg2rad(ra_hrs)
     dec_rad = np.deg2rad(dec_deg)
 
     cosa_cosd = np.cos(ra_rad)*np.cos(dec_rad)
@@ -322,44 +324,28 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # load MPC data for a given NEA
     x = load_data_mpc(mpc_data_fname)
 
-    # print('x[\'ra_hr\'] = ', x['ra_hr'][0:10])
-    # print('x[\'ra_min\'] = ', x['ra_min'][0:10]/60.0)
-    # print('x[\'ra_sec\'] = ', x['ra_sec'][0:10]/3600.0)
-    # print('ra  (hrs) = ', x['ra_hr'][6:18]+x['ra_min'][6:18]/60.0+x['ra_sec'][6:18]/3600.0)
-    # print('dec (deg) = ', x['dec_deg'][6:18]+x['dec_min'][6:18]/60.0+x['dec_sec'][6:18]/3600.0)
-
-    # ind_0 = 1409 #0
-    # ind_delta = 10
-    # ind_end = ind_0+31 #1409
-
     # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
-    ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
-    dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
-    # ra_hrs = np.array((43.537,54.420,64.318))/15.0
-    # dec_deg = np.array((-8.7833,-12.074,-15.105))
+    ra0 = Angle((x['ra_hr'][inds[0]], x['ra_min'][inds[0]], x['ra_sec'][inds[0]]), unit=uts.hour)
+    ra1 = Angle((x['ra_hr'][inds[1]], x['ra_min'][inds[1]], x['ra_sec'][inds[1]]), unit=uts.hour)
+    ra2 = Angle((x['ra_hr'][inds[2]], x['ra_min'][inds[2]], x['ra_sec'][inds[2]]), unit=uts.hour)
 
-    # cosacosd
-    # sinacosd
-    # sind
+    dec0 = Angle((x['dec_deg'][inds[0]], x['dec_min'][inds[0]], x['dec_sec'][inds[0]]), unit=uts.degree)
+    dec1 = Angle((x['dec_deg'][inds[1]], x['dec_min'][inds[1]], x['dec_sec'][inds[1]]), unit=uts.degree)
+    dec2 = Angle((x['dec_deg'][inds[2]], x['dec_min'][inds[2]], x['dec_sec'][inds[2]]), unit=uts.degree)
 
-    # ra_rad = np.deg2rad(ra_hrs*15.0)
-    # dec_rad = np.deg2rad(dec_deg)
+    # ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
+    # dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
 
-    # print('ra_rad = ', ra_rad)
-    # print('dec_rad = ', dec_rad)
+    ra_hrs = np.array((ra0.degree, ra1.degree, ra2.degree))
+    dec_deg = np.array((dec0.degree, dec1.degree, dec2.degree))
 
-    # cosa_cosd = np.cos(ra_rad)*np.cos(dec_rad)
-    # sina_cosd = np.sin(ra_rad)*np.cos(dec_rad)
-    # sind = np.sin(dec_rad)
+    # print('ra_hrs = ', ra_hrs)
+    # print('dec_deg = ', dec_deg)
 
-    # print('cosa_cosd = ', cosa_cosd)
-    # print('sina_cosd = ', sina_cosd)
-    # print('sind = ', sind)
-
-    rho1 = cosinedirectors(ra_hrs[0], dec_deg[0])
-    rho2 = cosinedirectors(ra_hrs[1], dec_deg[1])
-    rho3 = cosinedirectors(ra_hrs[2], dec_deg[2])
+    rho1 = losvector(ra_hrs[0], dec_deg[0])
+    rho2 = losvector(ra_hrs[1], dec_deg[1])
+    rho3 = losvector(ra_hrs[2], dec_deg[2])
 
     # print('rho1 = ', rho1)
     # print('rho2 = ', rho2)
@@ -671,9 +657,9 @@ def gauss_refinement_mpc(tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
 # Implementation of Gauss method for ra-dec observations of Earth satellites
 def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec):
 
-    rho1 = cosinedirectors(ra_hrs[0], dec_deg[0])
-    rho2 = cosinedirectors(ra_hrs[1], dec_deg[1])
-    rho3 = cosinedirectors(ra_hrs[2], dec_deg[2])
+    rho1 = losvector(ra_hrs[0], dec_deg[0])
+    rho2 = losvector(ra_hrs[1], dec_deg[1])
+    rho3 = losvector(ra_hrs[2], dec_deg[2])
 
     # print('rho1 = ', rho1)
     # print('rho2 = ', rho2)

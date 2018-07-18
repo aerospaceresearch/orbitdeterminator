@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 import gauss_method as gm
 
 #body name
-body_name_str = 'Ceres'
+# body_name_str = 'Apophis'
+body_name_str = 'Eros'
 
 #path of file of optical MPC-formatted observations
-body_fname_str = '../example_data/mpc_ceres_data.txt'
+body_fname_str = '../example_data/mpc_eros_data.txt'
 
 #load MPC data of listed observatories (longitude, parallax constants C, S) (~7,000 observations)
 mpc_observatories_data = gm.load_mpc_observatories_data('mpc_observatories.txt')
@@ -19,7 +20,8 @@ mu_Sun = 0.295912208285591100E-03 # au^3/day^2
 mu = mu_Sun
 
 #lines of observations file to be used for orbit determination
-obs_arr = [7145,7146,7148,7152,7155,7156,7157,7158,7159,7164,7172,7178,7185,7190,7197,7201,7205,7213,7214,7218,7219,7221,7222,7227,7231,7240,7241,7242,7250]
+obs_arr = [2341,2352,2362,2369,2377,2386,2387]
+# obs_arr = [2387,2393,2398]
 
 #the total number of observations used
 nobs = len(obs_arr)
@@ -39,7 +41,12 @@ e_vec = np.zeros((nobs-2,))
 I_vec = np.zeros((nobs-2,))
 W_vec = np.zeros((nobs-2,))
 w_vec = np.zeros((nobs-2,))
+
 r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
+# r2_root_ind_vec[3] = 2
+r2_root_ind_vec[4] = 1
+# r2_root_ind_vec[0] = 1
+
 
 print('r2_root_ind_vec = ', r2_root_ind_vec)
 print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
@@ -97,7 +104,7 @@ print(np.mean(a_vec), 'au', ', ', np.mean(e_vec), ', ', np.mean(I_vec), 'deg', '
 from mpl_toolkits import mplot3d
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-plot_lims_xyz = 3.0
+plot_lims_xyz = 1.2
 
 # Sun-centered orbits: Computed orbit and Earth's
 ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label=body_name_str+' orbit')
