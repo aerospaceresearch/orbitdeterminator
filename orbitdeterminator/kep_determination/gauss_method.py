@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from least_squares import xyz_frame_
 from astropy.coordinates import Longitude
 from astropy.coordinates import Angle
+from astropy.coordinates import SkyCoord
 from astropy import units as uts
 from astropy.time import Time
 from datetime import datetime
@@ -48,11 +49,12 @@ def load_data_mpc(fname):
         MPC format.
     '''
     # dt is the dtype for MPC-formatted text files
-    dt = 'i8,S7,S1,S1,S1,i8,i8,i8,f8,i8,i8,f8,i8,i8,f8,S9,S6,S6,S3'
+    dt = 'i8,S7,S1,S1,S1,i8,i8,i8,f8,U24,S9,S6,S6,S3'
     # mpc_names correspond to the dtype names of each field
-    mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','ra_hr','ra_min','ra_sec','dec_deg','dec_min','dec_sec','9xblank','magband','6xblank','observatory']
+    mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','radec','9xblank','magband','6xblank','observatory']
     # mpc_delims are the fixed-width column delimiter following MPC format description
-    mpc_delims = [5,7,1,1,1,4,3,3,7,2,3,7,3,3,6,9,6,6,3]
+    # mpc_delims = [5,7,1,1,1,4,3,3,7,2,3,7,3,3,6,9,6,6,3]
+    mpc_delims = [5,7,1,1,1,4,3,3,7,24,9,6,6,3]
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
 
 # the parallax constants S and C are defined by
@@ -160,11 +162,8 @@ def observerpos_sat(phi_deg, altitude_km, f, lst_deg):
     return np.array((x_gc,y_gc,z_gc))
 
 #Line-Of-Sight (LOS) vector
-#ra must be in hrs, dec must be in deg
-def losvector(ra_hrs, dec_deg):
-    ra_rad = np.deg2rad(ra_hrs)
-    dec_rad = np.deg2rad(dec_deg)
-
+#ra must be in rad, dec must be in rad
+def losvector(ra_rad, dec_rad):
     cosa_cosd = np.cos(ra_rad)*np.cos(dec_rad)
     sina_cosd = np.sin(ra_rad)*np.cos(dec_rad)
     sind = np.sin(dec_rad)
@@ -326,26 +325,19 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
 
     # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
-    ra0 = Angle((x['ra_hr'][inds[0]], x['ra_min'][inds[0]], x['ra_sec'][inds[0]]), unit=uts.hour)
-    ra1 = Angle((x['ra_hr'][inds[1]], x['ra_min'][inds[1]], x['ra_sec'][inds[1]]), unit=uts.hour)
-    ra2 = Angle((x['ra_hr'][inds[2]], x['ra_min'][inds[2]], x['ra_sec'][inds[2]]), unit=uts.hour)
+    # construct SkyCoord 3-element array with observational information
+    sc = np.zeros((3,),dtype=SkyCoord)
+    sc[0] = SkyCoord(x['radec'][inds[0]], unit=(uts.hourangle, uts.deg))
+    sc[1] = SkyCoord(x['radec'][inds[1]], unit=(uts.hourangle, uts.deg))
+    sc[2] = SkyCoord(x['radec'][inds[2]], unit=(uts.hourangle, uts.deg))
 
-    dec0 = Angle((x['dec_deg'][inds[0]], x['dec_min'][inds[0]], x['dec_sec'][inds[0]]), unit=uts.degree)
-    dec1 = Angle((x['dec_deg'][inds[1]], x['dec_min'][inds[1]], x['dec_sec'][inds[1]]), unit=uts.degree)
-    dec2 = Angle((x['dec_deg'][inds[2]], x['dec_min'][inds[2]], x['dec_sec'][inds[2]]), unit=uts.degree)
+    # print('sc[0] = ', sc[0])
+    # print('sc[1] = ', sc[1])
+    # print('sc[2] = ', sc[2])
 
-    # ra_hrs = x['ra_hr'][inds]+x['ra_min'][inds]/60.0+x['ra_sec'][inds]/3600.0
-    # dec_deg = x['dec_deg'][inds]+x['dec_min'][inds]/60.0+x['dec_sec'][inds]/3600.0
-
-    ra_hrs = np.array((ra0.degree, ra1.degree, ra2.degree))
-    dec_deg = np.array((dec0.degree, dec1.degree, dec2.degree))
-
-    # print('ra_hrs = ', ra_hrs)
-    # print('dec_deg = ', dec_deg)
-
-    rho1 = losvector(ra_hrs[0], dec_deg[0])
-    rho2 = losvector(ra_hrs[1], dec_deg[1])
-    rho3 = losvector(ra_hrs[2], dec_deg[2])
+    rho1 = losvector(sc[0].ra.rad, sc[0].dec.rad)
+    rho2 = losvector(sc[1].ra.rad, sc[1].dec.rad)
+    rho3 = losvector(sc[2].ra.rad, sc[2].dec.rad)
 
     # print('rho1 = ', rho1)
     # print('rho2 = ', rho2)
