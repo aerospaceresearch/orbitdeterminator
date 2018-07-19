@@ -12,7 +12,7 @@ from astropy.coordinates import Angle
 from astropy.coordinates import SkyCoord
 from astropy import units as uts
 from astropy.time import Time
-from datetime import datetime
+from datetime import datetime, timedelta
 # from poliastro.stumpff import c2, c3
 
 np.set_printoptions(precision=16)
@@ -51,12 +51,16 @@ def load_data_mpc(fname):
     # dt is the dtype for MPC-formatted text files
     dt = 'i8,S7,S1,S1,S1,i8,i8,i8,f8,U24,S9,S6,S6,S3'
     # mpc_names correspond to the dtype names of each field
+    # mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','ra_hr','ra_min','ra_sec','dec_deg','dec_min','dec_sec','9xblank','magband','6xblank','observatory']
     mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','radec','9xblank','magband','6xblank','observatory']
     # mpc_delims are the fixed-width column delimiter following MPC format description
     # mpc_delims = [5,7,1,1,1,4,3,3,7,2,3,7,3,3,6,9,6,6,3]
     mpc_delims = [5,7,1,1,1,4,3,3,7,24,9,6,6,3]
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
 
+# Compute geocentric observer position at the Julian date jd_utc (UTC)
+# at a given observation site defined by its longitude, and parallax constants S and C
+# formula taken from top of page 266, chapter 5, Orbital Mechanics book
 # the parallax constants S and C are defined by
 # S=rho cos phi' C=rho sin phi'
 # rho: slant range
@@ -64,65 +68,18 @@ def load_data_mpc(fname):
 # We have the following:
 # phi' = atan(S/C)
 # rho = sqrt(S**2+C**2)
+def observerpos_mpc(long, parallax_s, parallax_c, jd_utc):
 
-# # compute Greenwich mean sidereal time (in hours) at UT instant of Julian date JD0:
-# def gmst(jd0, ut):
-#     return np.mod(6.656306 + 0.0657098242*(jd0-2445700.5) + 1.0027379093*(ut*24), 24.0)
-
-# # compute Greenwich apparent sidereal time (in hours) at UT instant of Julian date JD0:
-# # delta_lambda: nutation in longitude (hours)
-# # epsilon: obliquity of the ecliptic (degrees)
-# def gast(jd0, ut, delta_lambda, epsilon):
-#     gmst_hrs = gmst(jd0, ut)
-#     return np.mod(gmst_hrs+delta_lambda*np.cos(epsilon), 24.0)
-
-# # compute local sidereal time from GMST and longitude EAST of Greenwich:
-# def localsidtime(gmst_hrs, long):
-#     return np.mod((gmst_hrs+long/15.0),24.0)
-
-# geocentric observer position at a given longitude,
-# parallax constants S and C, Julian date jd0 and UT time ut
-# formula taken from top of page 266, chapter 5, Orbital Mechanics book
-def observerpos_mpc(long, parallax_s, parallax_c, jd0, ut):
-
-    # jd0_ = 2444970.5
-    # ut_ = 0.89245897
-    # # compute Greenwich mean sidereal time (in hours) at UT instant of JD0 date:
-    # gmst_hrs = gmst(jd0, ut)
-    # # compute local sidereal time from GMST and longitude EAST of Greenwich:
-    # lmst_hrs = localsidtime(gmst_hrs, long)
     # Earth's equatorial radius in kilometers
     Re = 6378.0 # km
 
-    # compute geocentric, Earth-fixed, position of observing site
-    # long_site_rad = np.deg2rad(long)
-    # x_site = Re*parallax_c*np.cos(long_site_rad)
-    # y_site = Re*parallax_c*np.sin(long_site_rad)
-    # z_site = Re*parallax_s
-
-    # construct EarthLocation object associated to observing site
-    # el_site = astropy.coordinates.EarthLocation.from_geocentric(x_site*uts.km, y_site*uts.km, z_site*uts.km)
-    # print('el_site = ', el_site)
-    # construct Time object associated to Julian date jd0+ut at observing site
-    # print('jd0 = ', jd0)
-    # print('ut = ', ut)
-    # t_site = Time(jd0+ut, format='jd', location=el_site)
-    t_site = Time(jd0+ut, format='jd')
-    # print('t_site = ', t_site)
-    # print('t_site.location.lon = ', t_site.location.lon )
-    # print('t_site.to_datetime = ', t_site.to_datetime()  )
-    # get local mean sidereal time
-    # t_site_lmst = t_site.sidereal_time('mean')
+    # define Longitude object for the observation site longitude
     long_site = Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
-    # print('str(long)+\'d\' = ', str(long)+'d')
     # print('long_site = ', long_site)
-    t_site_lmst = t_site.sidereal_time('mean', longitude=long_site)
+    # compute sidereal time of observation at site
+    t_site_lmst = jd_utc.sidereal_time('mean', longitude=long_site)
     # print('t_site_lmst = ', t_site_lmst)
     lmst_hrs = t_site_lmst.value # hours
-    # print('gmst_hrs = ', gmst_hrs)
-    # print('gmst_hrs2 = ', t_site.sidereal_time('mean', 'greenwich').value)
-    # print('lmst_hrs = ', lmst_hrs)
-    # print('lmst_hrs2 = ', lmst_hrs2)
     lmst_rad = np.deg2rad(lmst_hrs*15.0) # radians
 
     # compute cartesian components of geocentric (non rotating) observer position
@@ -326,15 +283,22 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
 
     # construct SkyCoord 3-element array with observational information
-    sc = np.zeros((3,),dtype=SkyCoord)
-    sc[0] = SkyCoord(x['radec'][inds[0]], unit=(uts.hourangle, uts.deg))
-    sc[1] = SkyCoord(x['radec'][inds[1]], unit=(uts.hourangle, uts.deg))
-    sc[2] = SkyCoord(x['radec'][inds[2]], unit=(uts.hourangle, uts.deg))
+    timeobs = np.zeros((3,), dtype=Time)
+    sc = np.zeros((3,), dtype=SkyCoord)
+    
+    timeobs[0] = Time( datetime(x['yr'][inds[0]], x['month'][inds[0]], x['day'][inds[0]]) + timedelta(days=x['utc'][inds[0]]) )
+    timeobs[1] = Time( datetime(x['yr'][inds[1]], x['month'][inds[1]], x['day'][inds[1]]) + timedelta(days=x['utc'][inds[1]]) )
+    timeobs[2] = Time( datetime(x['yr'][inds[2]], x['month'][inds[2]], x['day'][inds[2]]) + timedelta(days=x['utc'][inds[2]]) )
+
+    sc[0] = SkyCoord(x['radec'][inds[0]], unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+    sc[1] = SkyCoord(x['radec'][inds[1]], unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+    sc[2] = SkyCoord(x['radec'][inds[2]], unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
 
     # print('sc[0] = ', sc[0])
     # print('sc[1] = ', sc[1])
     # print('sc[2] = ', sc[2])
 
+    #compute Line-Of-Sight (LOS) vectors
     rho1 = losvector(sc[0].ra.rad, sc[0].dec.rad)
     rho2 = losvector(sc[1].ra.rad, sc[1].dec.rad)
     rho3 = losvector(sc[2].ra.rad, sc[2].dec.rad)
@@ -343,37 +307,21 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # print('rho2 = ', rho2)
     # print('rho3 = ', rho3)
 
-    jd01 = Time( datetime(x['yr'][inds[0]], x['month'][inds[0]], x['day'][inds[0]]) ).jd
-    jd02 = Time( datetime(x['yr'][inds[1]], x['month'][inds[1]], x['day'][inds[1]]) ).jd
-    jd03 = Time( datetime(x['yr'][inds[2]], x['month'][inds[2]], x['day'][inds[2]]) ).jd
+    jd1 = sc[0].obstime.jd
+    jd2 = sc[1].obstime.jd
+    jd3 = sc[2].obstime.jd
 
-    ut1 = x['utc'][inds[0]]
-    ut2 = x['utc'][inds[1]]
-    ut3 = x['utc'][inds[2]]
+    # print('jd1 (utc) = ', jd1)
+    # print('jd2 (utc) = ', jd2)
+    # print('jd3 (utc) = ', jd3)
 
-    # print('ut1 = ', ut1)
-    # print('ut2 = ', ut2)
-    # print('ut3 = ', ut3)
+    t_jd1_tdb_val = sc[0].obstime.tdb.jd
+    t_jd2_tdb_val = sc[1].obstime.tdb.jd
+    t_jd3_tdb_val = sc[2].obstime.tdb.jd
 
-    jd1 = jd01+ut1
-    jd2 = jd02+ut2
-    jd3 = jd03+ut3
-
-    t_jd1_utc = Time(jd1, format='jd', scale='utc')
-    t_jd2_utc = Time(jd2, format='jd', scale='utc')
-    t_jd3_utc = Time(jd3, format='jd', scale='utc')
-
-    t_jd1_tdb_val = t_jd1_utc.tdb.value
-    t_jd2_tdb_val = t_jd2_utc.tdb.value
-    t_jd3_tdb_val = t_jd3_utc.tdb.value
-
-    # print(' t_jd1 (utc) = ', t_jd1_utc)
-    # print(' t_jd2 (utc) = ', t_jd2_utc)
-    # print(' t_jd3 (utc) = ', t_jd3_utc)
-
-    # print(' t_jd1 (tdb) = ', t_jd1_tdb_val)
-    # print(' t_jd2 (tdb) = ', t_jd2_tdb_val)
-    # print(' t_jd3 (tdb) = ', t_jd3_tdb_val)
+    # print(' jd1 (tdb) = ', t_jd1_tdb_val)
+    # print(' jd2 (tdb) = ', t_jd2_tdb_val)
+    # print(' jd3 (tdb) = ', t_jd3_tdb_val)
 
     au = 1.495978707e8
 
@@ -395,10 +343,6 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
 
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
-    # R[0] = Ea_jd1 + observerpos_mpc(long_691, C_691, S_691, jd01, ut1)
-    # R[1] = Ea_jd2 + observerpos_mpc(long_691, C_691, S_691, jd02, ut2)
-    # R[2] = Ea_jd3 + observerpos_mpc(long_691, C_691, S_691, jd03, ut3)
-
     # print('x[\'observatory\'][inds[0]] = ', x['observatory'][inds[0]])
     # print('mpc_observatories_data = ', mpc_observatories_data)
     data_OBS_1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)
@@ -409,20 +353,18 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # print('data_OBS_2 = ', data_OBS_2[1])
     # print('data_OBS_3 = ', data_OBS_3[1])
 
-    R[0] = (  Ea_jd1 + observerpos_mpc(data_OBS_1[1]['Long'][0], data_OBS_1[1]['sin'][0], data_OBS_1[1]['cos'][0], jd01, ut1)  )/au
-    R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['sin'][0], data_OBS_2[1]['cos'][0], jd02, ut2)  )/au
-    R[2] = (  Ea_jd3 + observerpos_mpc(data_OBS_3[1]['Long'][0], data_OBS_3[1]['sin'][0], data_OBS_3[1]['cos'][0], jd03, ut3)  )/au
+    R[0] = (  Ea_jd1 + observerpos_mpc(data_OBS_1[1]['Long'][0], data_OBS_1[1]['sin'][0], data_OBS_1[1]['cos'][0], sc[0].obstime)  )/au
+    R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['sin'][0], data_OBS_2[1]['cos'][0], sc[1].obstime)  )/au
+    R[2] = (  Ea_jd3 + observerpos_mpc(data_OBS_3[1]['Long'][0], data_OBS_3[1]['sin'][0], data_OBS_3[1]['cos'][0], sc[2].obstime)  )/au
 
     # print('R[0] = ', R[0])
     # print('R[1] = ', R[1])
     # print('R[2] = ', R[2])
 
     # make sure time units are consistent!
-    tau1 = ((jd01+ut1)-(jd02+ut2)) #*86400.0
-    tau3 = ((jd03+ut3)-(jd02+ut2)) #*86400.0
+    tau1 = (jd1-jd2)
+    tau3 = (jd3-jd2)
     tau = (tau3-tau1)
-    # tau1 = 0-118.10
-    # tau3 = 237.58-118.10
     # tau = (tau3-tau1)
 
     # print('tau1 = ', tau1)
@@ -569,7 +511,7 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
 
     # print('v2 = ', v2)
 
-    return r1, r2, r3, v2, jd02+ut2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_
+    return r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_
 
 # Refinement stage of Gauss method for MPC ra-dec observations
 # INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3
