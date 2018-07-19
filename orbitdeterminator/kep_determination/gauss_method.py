@@ -4,7 +4,6 @@
 
 import math
 import numpy as np
-from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from least_squares import xyz_frame_
 from astropy.coordinates import Longitude
@@ -28,9 +27,9 @@ def get_observatory_data(observatory_code, mpc_observatories_data):
     arr_index = np.where(mpc_observatories_data['Code'] == observatory_code)
     # print('arr_index = ', arr_index)
     # print('mpc_observatories_data[arr_index] = ', mpc_observatories_data[arr_index])
-    return arr_index, mpc_observatories_data[arr_index]
+    return arr_index[0], mpc_observatories_data[arr_index[0]]
 
-def load_data_mpc(fname):
+def load_mpc_data(fname):
     '''
     Loads minor planet position observation data from MPC-formatted files.
     MPC format for minor planet observations is described at
@@ -268,26 +267,15 @@ def lagrangeg_(tau, xi, z, mu):
     return tau-(xi**3)*stumpffS(z)/np.sqrt(mu)
 
 # Implementation of Gauss method for MPC optical observations of NEAs
-def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind=0):
-    # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
-    kernel = SPK.open('de430t.bsp')
-
-    # print(kernel)
-
+def gauss_estimate_mpc(spk_kernel, mpc_observatories_data, inds, mpc_data_fname, r2_root_ind=0):
     # load MPC data for a given NEA
-    x = load_data_mpc(mpc_data_fname)
-
-    # load observatory data
-    data_OBS_1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)
-    data_OBS_2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)
-    data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
-
+    x = load_mpc_data(mpc_data_fname)
     # print('MPC observation data:\n', x[ inds ], '\n')
 
     # construct SkyCoord 3-element array with observational information
     timeobs = np.zeros((3,), dtype=Time)
     sc = np.zeros((3,), dtype=SkyCoord)
-    
+
     timeobs[0] = Time( datetime(x['yr'][inds[0]], x['month'][inds[0]], x['day'][inds[0]]) + timedelta(days=x['utc'][inds[0]]) )
     timeobs[1] = Time( datetime(x['yr'][inds[1]], x['month'][inds[1]], x['day'][inds[1]]) + timedelta(days=x['utc'][inds[1]]) )
     timeobs[2] = Time( datetime(x['yr'][inds[2]], x['month'][inds[2]], x['day'][inds[2]]) + timedelta(days=x['utc'][inds[2]]) )
@@ -317,6 +305,20 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # print('jd2 (utc) = ', jd2)
     # print('jd3 (utc) = ', jd3)
 
+    ### COMPUTE OBSERVATION VECTORS
+
+    # load MPC observatory data
+    obsite1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)[1]
+    obsite2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)[1]
+    obsite3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)[1]
+    # print('obsite1 = ', obsite1)
+    # print('obsite2 = ', obsite2)
+    # print('obsite3 = ', obsite3)
+
+    # astronomical unit in km
+    au = 1.495978707e8
+
+    # compute TDB instant of each observation
     t_jd1_tdb_val = sc[0].obstime.tdb.jd
     t_jd2_tdb_val = sc[1].obstime.tdb.jd
     t_jd3_tdb_val = sc[2].obstime.tdb.jd
@@ -325,13 +327,11 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # print(' jd2 (tdb) = ', t_jd2_tdb_val)
     # print(' jd3 (tdb) = ', t_jd3_tdb_val)
 
-    au = 1.495978707e8
-
     Ea_hc_pos = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
-    Ea_jd1 = kernel[3,399].compute(t_jd1_tdb_val) + kernel[0,3].compute(t_jd1_tdb_val) - kernel[0,10].compute(t_jd1_tdb_val)
-    Ea_jd2 = kernel[3,399].compute(t_jd2_tdb_val) + kernel[0,3].compute(t_jd2_tdb_val) - kernel[0,10].compute(t_jd2_tdb_val)
-    Ea_jd3 = kernel[3,399].compute(t_jd3_tdb_val) + kernel[0,3].compute(t_jd3_tdb_val) - kernel[0,10].compute(t_jd3_tdb_val)
+    Ea_jd1 = spk_kernel[3,399].compute(t_jd1_tdb_val) + spk_kernel[0,3].compute(t_jd1_tdb_val) - spk_kernel[0,10].compute(t_jd1_tdb_val)
+    Ea_jd2 = spk_kernel[3,399].compute(t_jd2_tdb_val) + spk_kernel[0,3].compute(t_jd2_tdb_val) - spk_kernel[0,10].compute(t_jd2_tdb_val)
+    Ea_jd3 = spk_kernel[3,399].compute(t_jd3_tdb_val) + spk_kernel[0,3].compute(t_jd3_tdb_val) - spk_kernel[0,10].compute(t_jd3_tdb_val)
 
     Ea_hc_pos[0] = Ea_jd1/au
     Ea_hc_pos[1] = Ea_jd2/au
@@ -345,13 +345,9 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
 
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
-    # print('data_OBS_1 = ', data_OBS_1[1])
-    # print('data_OBS_2 = ', data_OBS_2[1])
-    # print('data_OBS_3 = ', data_OBS_3[1])
-
-    R[0] = (  Ea_jd1 + observerpos_mpc(data_OBS_1[1]['Long'][0], data_OBS_1[1]['sin'][0], data_OBS_1[1]['cos'][0], sc[0].obstime)  )/au
-    R[1] = (  Ea_jd2 + observerpos_mpc(data_OBS_2[1]['Long'][0], data_OBS_2[1]['sin'][0], data_OBS_2[1]['cos'][0], sc[1].obstime)  )/au
-    R[2] = (  Ea_jd3 + observerpos_mpc(data_OBS_3[1]['Long'][0], data_OBS_3[1]['sin'][0], data_OBS_3[1]['cos'][0], sc[2].obstime)  )/au
+    R[0] = (  Ea_jd1 + observerpos_mpc(obsite1['Long'][0], obsite1['sin'][0], obsite1['cos'][0], sc[0].obstime)  )/au
+    R[1] = (  Ea_jd2 + observerpos_mpc(obsite2['Long'][0], obsite2['sin'][0], obsite2['cos'][0], sc[1].obstime)  )/au
+    R[2] = (  Ea_jd3 + observerpos_mpc(obsite3['Long'][0], obsite3['sin'][0], obsite3['cos'][0], sc[2].obstime)  )/au
 
     # print('R[0] = ', R[0])
     # print('R[1] = ', R[1])
@@ -794,8 +790,8 @@ def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_sat(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_
 
-def gauss_method_mpc(mpc_observatories_data, inds_, mpc_data_fname, refiters=0, r2_root_ind=0):
-    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(mpc_observatories_data, inds_, mpc_data_fname, r2_root_ind=r2_root_ind)
+def gauss_method_mpc(spk_kernel, mpc_observatories_data, inds_, mpc_data_fname, refiters=0, r2_root_ind=0):
+    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(spk_kernel, mpc_observatories_data, inds_, mpc_data_fname, r2_root_ind=r2_root_ind)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         # print('i = ', i)
