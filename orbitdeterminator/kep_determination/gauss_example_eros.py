@@ -1,9 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import gauss_method as gm
+from jplephem.spk import SPK
+
+# load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
+# 'de430t.bsp' may be downloaded from
+# ftp://ssd.jpl.nasa.gov/pub/eph/planets/bsp/de430t.bsp
+spk_kernel = SPK.open('de430t.bsp')
+# print(spk_kernel)
 
 #body name
-# body_name_str = 'Apophis'
 body_name_str = 'Eros'
 
 #path of file of optical MPC-formatted observations
@@ -21,7 +27,6 @@ mu = mu_Sun
 
 #lines of observations file to be used for orbit determination
 obs_arr = [2341,2352,2362,2369,2377,2386,2387]
-# obs_arr = [2387,2393,2398]
 
 #the total number of observations used
 nobs = len(obs_arr)
@@ -55,7 +60,7 @@ for j in range (0,nobs-2):
     # Apply Gauss method to three elements of data
     inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
     print('j = ', j)
-    r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gm.gauss_method_mpc(mpc_observatories_data, inds_, body_fname_str, refiters=5, r2_root_ind=r2_root_ind_vec[j])
+    r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gm.gauss_method_mpc(spk_kernel, mpc_observatories_data, inds_, body_fname_str, refiters=5, r2_root_ind=r2_root_ind_vec[j])
 
     # print('|r1| = ', np.linalg.norm(r1,ord=2))
     # print('|r2| = ', np.linalg.norm(r2,ord=2))
