@@ -267,9 +267,6 @@ def lagrangef_(xi, z, r):
 def lagrangeg_(tau, xi, z, mu):
     return tau-(xi**3)*stumpffS(z)/np.sqrt(mu)
 
-def gauss_polynomial(x, a, b, c):
-    return (x**8)+a*(x**6)+b*(x**3)+c
-
 # Implementation of Gauss method for MPC optical observations of NEAs
 def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind=0):
     # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
@@ -280,7 +277,12 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # load MPC data for a given NEA
     x = load_data_mpc(mpc_data_fname)
 
-    # print('INPUT DATA FROM MPC:\n', x[ inds ], '\n')
+    # load observatory data
+    data_OBS_1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)
+    data_OBS_2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)
+    data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
+
+    # print('MPC observation data:\n', x[ inds ], '\n')
 
     # construct SkyCoord 3-element array with observational information
     timeobs = np.zeros((3,), dtype=Time)
@@ -342,12 +344,6 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # print('range_ea = ', np.linalg.norm(Ea_jd1, ord=2)/au)
 
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
-
-    # print('x[\'observatory\'][inds[0]] = ', x['observatory'][inds[0]])
-    # print('mpc_observatories_data = ', mpc_observatories_data)
-    data_OBS_1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)
-    data_OBS_2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)
-    data_OBS_3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)
 
     # print('data_OBS_1 = ', data_OBS_1[1])
     # print('data_OBS_2 = ', data_OBS_2[1])
@@ -422,12 +418,6 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     # print('b = ', b)
     # print('c = ', c)
 
-    # plot Gauss function in order to obtain a first estimate of a feasible root
-    # x_vals = np.arange(0.0, 2.0*au, 0.001*au)
-    # f_vals = gauss_polynomial(x_vals, a, b, c)
-    # plt.plot(x_vals/au, f_vals/1e60)
-    # plt.show()
-
     #get all real, positive solutions to the Gauss polynomial
     gauss_poly_coeffs = np.zeros((9,))
     gauss_poly_coeffs[0] = 1.0
@@ -456,11 +446,6 @@ def gauss_estimate_mpc(mpc_observatories_data, inds, mpc_data_fname, r2_root_ind
     #     # r2_star = np.real(gauss_poly_roots[rt_indx[0][len(rt_indx[0])-1]])
     r2_star = np.real(gauss_poly_roots[rt_indx[0][r2_root_ind]])
     print('r2_star = ', r2_star)
-
-
-    # r2_star = newton(gauss_polynomial, np.real(gauss_poly_roots[rt_indx])[0], args=(a, b, c)) #1.06*au)
-    # r2_star = newton(gauss_polynomial, 9000.0, args=(a, b, c)) #1.06*au)
-    #r2_star = 1.06*au
 
     # print('r2_star = ', r2_star/au)
     # print('r2_star = ', r2_star)
@@ -665,12 +650,6 @@ def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec)
     # print('a = ', a)
     # print('b = ', b)
     # print('c = ', c)
-
-    # plot Gauss function in order to obtain a first estimate of a feasible root
-    # x_vals = np.arange(0.0, 15000.0, 500.0)
-    # f_vals = gauss_polynomial(x_vals, a, b, c)
-    # plt.plot(x_vals, f_vals)
-    # plt.show()
 
     #get all real, positive solutions to the Gauss polynomial
     gauss_poly_coeffs = np.zeros((9,))
