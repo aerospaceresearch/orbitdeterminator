@@ -9,11 +9,14 @@ from jplephem.spk import SPK
 spk_kernel = SPK.open('de430t.bsp')
 # print(spk_kernel)
 
+# path of file of optical MPC-formatted observations
+body_fname_str = '../example_data/mpc_ceres_data.txt'
+# load MPC data for a given NEA
+mpc_object_data = gm.load_mpc_data(body_fname_str)
+# print('MPC observation data:\n', mpc_object_data[ inds ], '\n')
+
 #body name
 body_name_str = 'Ceres'
-
-#path of file of optical MPC-formatted observations
-body_fname_str = '../example_data/mpc_ceres_data.txt'
 
 #load MPC data of listed observatories (longitude, parallax constants C, S) (~7,000 observations)
 mpc_observatories_data = gm.load_mpc_observatories_data('mpc_observatories.txt')
@@ -55,7 +58,7 @@ for j in range (0,nobs-2):
     # Apply Gauss method to three elements of data
     inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
     print('j = ', j)
-    r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gm.gauss_method_mpc(spk_kernel, mpc_observatories_data, inds_, body_fname_str, refiters=5, r2_root_ind=r2_root_ind_vec[j])
+    r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gm.gauss_method_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=5, r2_root_ind=r2_root_ind_vec[j])
 
     # print('|r1| = ', np.linalg.norm(r1,ord=2))
     # print('|r2| = ', np.linalg.norm(r2,ord=2))

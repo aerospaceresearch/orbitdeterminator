@@ -267,22 +267,18 @@ def lagrangeg_(tau, xi, z, mu):
     return tau-(xi**3)*stumpffS(z)/np.sqrt(mu)
 
 # Implementation of Gauss method for MPC optical observations of NEAs
-def gauss_estimate_mpc(spk_kernel, mpc_observatories_data, inds, mpc_data_fname, r2_root_ind=0):
-    # load MPC data for a given NEA
-    x = load_mpc_data(mpc_data_fname)
-    # print('MPC observation data:\n', x[ inds ], '\n')
-
+def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
     # construct SkyCoord 3-element array with observational information
     timeobs = np.zeros((3,), dtype=Time)
     sc = np.zeros((3,), dtype=SkyCoord)
 
-    timeobs[0] = Time( datetime(x['yr'][inds[0]], x['month'][inds[0]], x['day'][inds[0]]) + timedelta(days=x['utc'][inds[0]]) )
-    timeobs[1] = Time( datetime(x['yr'][inds[1]], x['month'][inds[1]], x['day'][inds[1]]) + timedelta(days=x['utc'][inds[1]]) )
-    timeobs[2] = Time( datetime(x['yr'][inds[2]], x['month'][inds[2]], x['day'][inds[2]]) + timedelta(days=x['utc'][inds[2]]) )
+    timeobs[0] = Time( datetime(mpc_object_data['yr'][inds[0]], mpc_object_data['month'][inds[0]], mpc_object_data['day'][inds[0]]) + timedelta(days=mpc_object_data['utc'][inds[0]]) )
+    timeobs[1] = Time( datetime(mpc_object_data['yr'][inds[1]], mpc_object_data['month'][inds[1]], mpc_object_data['day'][inds[1]]) + timedelta(days=mpc_object_data['utc'][inds[1]]) )
+    timeobs[2] = Time( datetime(mpc_object_data['yr'][inds[2]], mpc_object_data['month'][inds[2]], mpc_object_data['day'][inds[2]]) + timedelta(days=mpc_object_data['utc'][inds[2]]) )
 
-    sc[0] = SkyCoord(x['radec'][inds[0]], unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
-    sc[1] = SkyCoord(x['radec'][inds[1]], unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
-    sc[2] = SkyCoord(x['radec'][inds[2]], unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
+    sc[0] = SkyCoord(mpc_object_data['radec'][inds[0]], unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+    sc[1] = SkyCoord(mpc_object_data['radec'][inds[1]], unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+    sc[2] = SkyCoord(mpc_object_data['radec'][inds[2]], unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
 
     # print('sc[0] = ', sc[0])
     # print('sc[1] = ', sc[1])
@@ -308,9 +304,9 @@ def gauss_estimate_mpc(spk_kernel, mpc_observatories_data, inds, mpc_data_fname,
     ### COMPUTE OBSERVATION VECTORS
 
     # load MPC observatory data
-    obsite1 = get_observatory_data(x['observatory'][inds[0]], mpc_observatories_data)[1]
-    obsite2 = get_observatory_data(x['observatory'][inds[1]], mpc_observatories_data)[1]
-    obsite3 = get_observatory_data(x['observatory'][inds[2]], mpc_observatories_data)[1]
+    obsite1 = get_observatory_data(mpc_object_data['observatory'][inds[0]], mpc_observatories_data)[1]
+    obsite2 = get_observatory_data(mpc_object_data['observatory'][inds[1]], mpc_observatories_data)[1]
+    obsite3 = get_observatory_data(mpc_object_data['observatory'][inds[2]], mpc_observatories_data)[1]
     # print('obsite1 = ', obsite1)
     # print('obsite2 = ', obsite2)
     # print('obsite3 = ', obsite3)
@@ -790,8 +786,8 @@ def gauss_method_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement_sat(tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_
 
-def gauss_method_mpc(spk_kernel, mpc_observatories_data, inds_, mpc_data_fname, refiters=0, r2_root_ind=0):
-    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(spk_kernel, mpc_observatories_data, inds_, mpc_data_fname, r2_root_ind=r2_root_ind)
+def gauss_method_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=0, r2_root_ind=0):
+    r1, r2, r3, v2, jd2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, r2_root_ind=r2_root_ind)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         # print('i = ', i)
