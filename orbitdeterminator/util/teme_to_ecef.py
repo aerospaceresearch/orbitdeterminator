@@ -22,8 +22,6 @@ def conv_to_ecef(coords):
     tgt = tg0h + we*(t-t_mid)
     era = (tgt%86400)*360/86400
     lng = lng-era
-    if lng < -180:
-        lng = 360+lng
     return np.column_stack((t,lat,lng,alt))
 
 if __name__ == "__main__":

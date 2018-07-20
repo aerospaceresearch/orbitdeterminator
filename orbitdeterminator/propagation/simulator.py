@@ -96,7 +96,7 @@ class save_r(OpWriter):
     def write(self,t,s):
         if not self.t == t:
             self.f = open(self.file_name,'a')
-            self.f.write("{} {} {} {} {} {} {}\r\n".format(t,*s))
+            self.f.write("{} {} {} {}\r\n".format(t,*s))
             self.f.close()
             self.t = t
             print("\rIteration:",self.iter,end=' '*10)
