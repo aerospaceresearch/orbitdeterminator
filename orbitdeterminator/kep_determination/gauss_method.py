@@ -13,6 +13,7 @@ from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
+from least_squares import xyz_frame_
 
 np.set_printoptions(precision=16)
 
@@ -268,6 +269,11 @@ def get_observations_data(mpc_object_data, inds):
 
     return obs_radec, obs_t, site_codes
 
+# heliocentric position of Earth at Julian date t_tdb (TDB, days), according to SPK kernel defined by spk_kernel
+# returns: cartesian position in km
+def earth_ephemeris(spk_kernel, t_tdb):
+    return spk_kernel[3,399].compute(t_tdb) + spk_kernel[0,3].compute(t_tdb) - spk_kernel[0,10].compute(t_tdb)
+
 def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
     # astronomical unit in km
     au = cts.au.to(uts.Unit('km')).value
@@ -289,9 +295,9 @@ def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site
     # print(' jd2 (tdb) = ', t_jd2_tdb_val)
     # print(' jd3 (tdb) = ', t_jd3_tdb_val)
 
-    Ea_jd1 = spk_kernel[3,399].compute(t_jd1_tdb_val) + spk_kernel[0,3].compute(t_jd1_tdb_val) - spk_kernel[0,10].compute(t_jd1_tdb_val)
-    Ea_jd2 = spk_kernel[3,399].compute(t_jd2_tdb_val) + spk_kernel[0,3].compute(t_jd2_tdb_val) - spk_kernel[0,10].compute(t_jd2_tdb_val)
-    Ea_jd3 = spk_kernel[3,399].compute(t_jd3_tdb_val) + spk_kernel[0,3].compute(t_jd3_tdb_val) - spk_kernel[0,10].compute(t_jd3_tdb_val)
+    Ea_jd1 = earth_ephemeris(spk_kernel, t_jd1_tdb_val)
+    Ea_jd2 = earth_ephemeris(spk_kernel, t_jd2_tdb_val)
+    Ea_jd3 = earth_ephemeris(spk_kernel, t_jd3_tdb_val)
 
     Ea_hc_pos[0] = Ea_jd1/au
     Ea_hc_pos[1] = Ea_jd2/au
@@ -686,17 +692,36 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
     print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
 
+    a_mean = np.mean(a_vec) #au
+    e_mean = np.mean(e_vec) #dimensionless
+    I_mean = np.mean(I_vec) #deg
+    W_mean = np.mean(W_vec) #deg
+    w_mean = np.mean(w_vec) #deg
+
     print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
-    print(np.mean(a_vec), 'au', ', ', np.mean(e_vec), ', ', np.mean(I_vec), 'deg', ', ', np.mean(W_vec), 'deg', ', ', np.mean(w_vec), 'deg')
+    print(a_mean, 'au', ', ', e_mean, ', ', I_mean, 'deg', ', ', W_mean, 'deg', ', ', w_mean, 'deg')
+
+    npoints = 1000
+    theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
+    x_orb_vec = np.zeros((npoints,))
+    y_orb_vec = np.zeros((npoints,))
+    z_orb_vec = np.zeros((npoints,))
+
+    for i in range(0,npoints):
+        recovered_xyz = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
+        x_orb_vec[i] = recovered_xyz[0]
+        y_orb_vec[i] = recovered_xyz[1]
+        z_orb_vec[i] = recovered_xyz[2]
 
     # PLOT
     fig = plt.figure()
     ax = plt.axes(projection='3d')
 
     # Sun-centered orbits: Computed orbit and Earth's
-    ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label=body_name_str+' orbit')
+    ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='+', label=body_name_str+' orbit')
     ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker='.', label='Earth orbit')
     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+    ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'black', linewidth=0.5, label=body_name_str+' orbit')
     plt.legend()
     ax.set_xlabel('x (au)')
     ax.set_ylabel('y (au)')
