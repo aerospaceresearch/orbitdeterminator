@@ -343,27 +343,27 @@ def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
     t2 = obs_t[1]
     t3 = obs_t[2]
 
-    print('t1 = ', t1)
-    print('t2 = ', t2)
-    print('t3 = ', t3)
+    # print('t1 = ', t1)
+    # print('t2 = ', t2)
+    # print('t3 = ', t3)
 
     # compute Line-Of-Sight (LOS) vectors
     rho1 = losvector(obs_radec[0].ra.rad, obs_radec[0].dec.rad)
     rho2 = losvector(obs_radec[1].ra.rad, obs_radec[1].dec.rad)
     rho3 = losvector(obs_radec[2].ra.rad, obs_radec[2].dec.rad)
 
-    print('rho1 = ', rho1)
-    print('rho2 = ', rho2)
-    print('rho3 = ', rho3)
+    # print('rho1 = ', rho1)
+    # print('rho2 = ', rho2)
+    # print('rho3 = ', rho3)
 
     # compute time differences; make sure time units are consistent!
     tau1 = (t1-t2)
     tau3 = (t3-t2)
     tau = (tau3-tau1)
 
-    print('tau1 = ', tau1)
-    print('tau3 = ', tau3)
-    print('tau = ', tau)
+    # print('tau1 = ', tau1)
+    # print('tau3 = ', tau3)
+    # print('tau = ', tau)
 
     p = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
 
