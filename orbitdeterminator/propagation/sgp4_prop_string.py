@@ -1,3 +1,5 @@
+"""SGP4 propagator. This is a wrapper around the PyPI SGP4 propagator."""
+
 import time
 
 import numpy as np
@@ -8,6 +10,19 @@ from sgp4.io import twoline2rv
 avg_bstar = 0.21109E-4
 
 def propagate(kep,init_time,final_time,bstar=avg_bstar):
+    """Propagates a set of keplerian elements.
+
+       Args:
+           kep(1x6 numpy array): osculating keplerian elements at epoch
+           init_time(float): initial time (epoch)
+           final_time(float): final time
+           bstar(float): bstar drag coefficient
+
+       Returns:
+           pos(1x3 numpy array): the position at tf
+           vel(1x3 numpy array): the velocity at tf
+    """
+
     t0 = time.gmtime(init_time)
 
     t0 = ((t0.tm_year%100)*1000 +

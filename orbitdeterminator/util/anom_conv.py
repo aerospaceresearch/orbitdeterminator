@@ -1,6 +1,18 @@
+"""Vectorized anomaly conversion scripts"""
+
 import numpy as np
 
 def true_to_ecc(theta,e):
+    """Converts true anomaly to eccentric anomaly.
+
+       Args:
+           theta(numpy array): array of true anomalies (in radians)
+           e(float): eccentricity
+
+       Returns:
+           numpy array: array of eccentric anomalies (in radians)
+    """
+
     pi2=2*np.pi
     raw = np.arctan2((1-e**2)*np.sin(theta), e+np.cos(theta))
     raw = raw%pi2
@@ -13,9 +25,29 @@ def true_to_ecc(theta,e):
     return raw-correct
 
 def ecc_to_mean(E,e):
+    """Converts eccentric anomaly to mean anomaly.
+
+       Args:
+           E(numpy array): array of eccentric anomalies (in radians)
+           e(float): eccentricity
+
+       Returns:
+           numpy array: array of mean anomalies (in radians)
+    """
+
     return E - e*np.sin(E)
 
 def mean_to_t(M,a):
+    """Converts mean anomaly to time elapsed.
+
+       Args:
+           M(numpy array): array of mean anomalies (in radians)
+           a(float): semi-major axis
+
+       Returns:
+           numpy array: numpy array of time elapsed
+    """
+
     n = (a**3/398600.4405)**0.5
     return n*(M-M[0])
 

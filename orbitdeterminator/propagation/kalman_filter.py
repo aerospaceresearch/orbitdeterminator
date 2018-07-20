@@ -1,11 +1,28 @@
+"""Kalman Filter to smoothen observations. It continuously reads a file
+   where observations are being written and updates its estimate based
+   on the observations and the cowell model."""
+
 import time
 import numpy as np
 from functools import partial
 from orbitdeterminator.propagation.cowell import rk4
 
 class KalmanFilter():
+    """Kalman Filter class wrapper."""
+
     @staticmethod
     def Jacobian(s,t0,tf):
+        """Numerically computes the Jacobian of rk4(s,t0,tf).
+
+           Args:
+               s(1x6 numpy array): the state vector at t0 [rx,ry,rz,vx,vy,vz]
+               t0(float): the intial time
+               tf(float): the final time
+
+           Returns:
+               3x3 numpy matrix: the topleft half of the Jacobian of rk4(s,t0,tf)
+        """
+
         f = partial(rk4,t0=t0,tf=tf)
         F = np.empty((3,3))
         a = np.zeros(6)
@@ -13,7 +30,7 @@ class KalmanFilter():
         h = 0.0005
         a[0] = h
         F[:,0] = (f(s+a) - f(s-a))[0:3]/2/h
-        
+
         a[0], a[1] = 0, h
         F[:,1] = (f(s+a) - f(s-a))[0:3]/2/h
 
@@ -23,6 +40,18 @@ class KalmanFilter():
         return F
 
     def process(self,s,t0,dgsn_file):
+        """The main Kalman Filter. Continuously reads an obervations file and
+           updates the state estimate.
+
+           Args:
+               s(1x6 numpy array): the state vector [rx,ry,rz,vx,vy,vz]
+               t0(float): epoch of s
+               dgsn_file(string): path to the observations file
+
+           Returns:
+               nothing
+        """
+
         self.s = s
         self.t0 = t0
         self.P = np.diag([900,900,900]) # prediction error
@@ -43,10 +72,10 @@ class KalmanFilter():
 
             t = int(state[0])
             z = [float(x) for x in state[1:4]]
-            
+
             # predict
             self.s = rk4(self.s, self.t0, t)
-            
+
             #if (t-self.t0 > 100):
             #    self.s[0:3] = z
             #    self.t0 = t

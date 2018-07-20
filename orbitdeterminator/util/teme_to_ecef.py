@@ -1,7 +1,22 @@
+"""Converts coordinates in TEME frame to ECEF frame."""
+
 from datetime import datetime, timezone
 import numpy as np
 
 def conv_to_ecef(coords):
+    """Converts coordinates in TEME frame to ECEF frame.
+
+       Args:
+           coords(nx4 numpy array): list of coordinates in the format [t,x,y,z]
+
+       Returns:
+           nx4 numpy array: list of coordinates in the format
+                            [t, latitude, longitude, altitude]
+
+                            Note that these coordinates are with respect to the
+                            surface of the Earth. Latitude, longitude are in degrees.
+    """
+
     t = coords[:,0]
     x = coords[:,1]
     y = coords[:,2]
@@ -22,10 +37,8 @@ def conv_to_ecef(coords):
     tgt = tg0h + we*(t-t_mid)
     era = (tgt%86400)*360/86400
     lng = lng-era
-    if lng < -180:
-        lng = 360+lng
     return np.column_stack((t,lat,lng,alt))
 
 if __name__ == "__main__":
-    ecef_coords = conv_to_ECEF(np.array([[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076]]))
+    ecef_coords = conv_to_ecef(np.array([[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076],[1521562500,768.281,5835.68,2438.076]]))
     print(ecef_coords)
