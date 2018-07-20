@@ -4,9 +4,7 @@
 
 import math
 import numpy as np
-from astropy.coordinates import Longitude
-from astropy.coordinates import Angle
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import Longitude, Angle, SkyCoord
 from astropy import units as uts
 from astropy.time import Time
 from datetime import datetime, timedelta
