@@ -27,7 +27,7 @@ def get_observatory_data(observatory_code, mpc_observatories_data):
     arr_index = np.where(mpc_observatories_data['Code'] == observatory_code)
     # print('arr_index = ', arr_index)
     # print('mpc_observatories_data[arr_index] = ', mpc_observatories_data[arr_index])
-    return arr_index[0], mpc_observatories_data[arr_index[0]]
+    return mpc_observatories_data[arr_index[0]]
 
 def load_mpc_data(fname):
     '''
@@ -284,15 +284,6 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
     # print('sc[1] = ', sc[1])
     # print('sc[2] = ', sc[2])
 
-    #compute Line-Of-Sight (LOS) vectors
-    rho1 = losvector(sc[0].ra.rad, sc[0].dec.rad)
-    rho2 = losvector(sc[1].ra.rad, sc[1].dec.rad)
-    rho3 = losvector(sc[2].ra.rad, sc[2].dec.rad)
-
-    # print('rho1 = ', rho1)
-    # print('rho2 = ', rho2)
-    # print('rho3 = ', rho3)
-
     jd1 = sc[0].obstime.jd
     jd2 = sc[1].obstime.jd
     jd3 = sc[2].obstime.jd
@@ -301,12 +292,12 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
     # print('jd2 (utc) = ', jd2)
     # print('jd3 (utc) = ', jd3)
 
-    ### COMPUTE OBSERVATION VECTORS
+    ### COMPUTE OBSERVER POSITION VECTORS
 
     # load MPC observatory data
-    obsite1 = get_observatory_data(mpc_object_data['observatory'][inds[0]], mpc_observatories_data)[1]
-    obsite2 = get_observatory_data(mpc_object_data['observatory'][inds[1]], mpc_observatories_data)[1]
-    obsite3 = get_observatory_data(mpc_object_data['observatory'][inds[2]], mpc_observatories_data)[1]
+    obsite1 = get_observatory_data(mpc_object_data['observatory'][inds[0]], mpc_observatories_data)
+    obsite2 = get_observatory_data(mpc_object_data['observatory'][inds[1]], mpc_observatories_data)
+    obsite3 = get_observatory_data(mpc_object_data['observatory'][inds[2]], mpc_observatories_data)
     # print('obsite1 = ', obsite1)
     # print('obsite2 = ', obsite2)
     # print('obsite3 = ', obsite3)
@@ -349,7 +340,18 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
     # print('R[1] = ', R[1])
     # print('R[2] = ', R[2])
 
-    # make sure time units are consistent!
+    ### PERFORM GAUSS METHOD ALGORITHM
+
+    #compute Line-Of-Sight (LOS) vectors
+    rho1 = losvector(sc[0].ra.rad, sc[0].dec.rad)
+    rho2 = losvector(sc[1].ra.rad, sc[1].dec.rad)
+    rho3 = losvector(sc[2].ra.rad, sc[2].dec.rad)
+
+    # print('rho1 = ', rho1)
+    # print('rho2 = ', rho2)
+    # print('rho3 = ', rho3)
+
+    # compute time differences; make sure time units are consistent!
     tau1 = (jd1-jd2)
     tau3 = (jd3-jd2)
     tau = (tau3-tau1)
