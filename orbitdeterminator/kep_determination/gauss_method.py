@@ -6,6 +6,7 @@ import math
 import numpy as np
 from astropy.coordinates import Longitude, Angle, SkyCoord
 from astropy import units as uts
+from astropy import constants as cts
 from astropy.time import Time
 from datetime import datetime, timedelta
 from jplephem.spk import SPK
@@ -67,7 +68,7 @@ def load_mpc_data(fname):
 def observerpos_mpc(long, parallax_s, parallax_c, jd_utc):
 
     # Earth's equatorial radius in kilometers
-    Re = 6378.0 # km
+    Re = cts.R_earth.to(uts.Unit('km')).value
 
     # define Longitude object for the observation site longitude
     long_site = Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
@@ -96,7 +97,7 @@ def observerpos_mpc(long, parallax_s, parallax_c, jd_utc):
 #lst_deg: local sidereal time, degrees
 def observerpos_sat(phi_deg, altitude_km, f, lst_deg):
     # Earth's equatorial radius in kilometers
-    Re = 6378.0 #Earth's radius, km
+    Re = cts.R_earth.to(uts.Unit('km')).value
     phi_rad = np.deg2rad(phi_deg)
     cos_phi = np.cos( phi_rad )
     lst_rad = np.deg2rad(lst_deg)
@@ -269,7 +270,7 @@ def get_observations_data(mpc_object_data, inds):
 
 def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
     # astronomical unit in km
-    au = 1.495978707e8
+    au = cts.au.to(uts.Unit('km')).value
     Ea_hc_pos = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
     # load MPC observatory data
@@ -531,9 +532,8 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
 
 # Implementation of Gauss method for MPC optical observations of NEAs
 def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
-    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
-    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = mu_Sun
+    # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
+    mu = cts.GM_sun.to(uts.Unit("au3 / day2")).value
 
     # extract observations data
     obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
@@ -548,8 +548,8 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
 
 # Implementation of Gauss method for ra-dec observations of Earth satellites
 def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
-    mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu = mu_Earth
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    mu = cts.GM_earth.to(uts.Unit("km3 / s2")).value
 
     # construct vector of observation time intervals (seconds)
     timeobs = np.zeros((3,), dtype=Time)
@@ -582,8 +582,8 @@ def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec,
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_
 
 def gauss_iterator_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0):
-    mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu = mu_Earth
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    mu = cts.GM_earth.to(uts.Unit("km3 / s2")).value
     r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0, refiters):
@@ -591,8 +591,8 @@ def gauss_iterator_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec,
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_
 
 def gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=0, r2_root_ind=0):
-    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = mu_Sun
+    # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
+    mu = cts.GM_sun.to(uts.Unit("au3 / day2")).value
     r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, r2_root_ind=r2_root_ind)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
@@ -614,11 +614,11 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
     #definition of the astronomical unit in km
-    au = 1.495978707e8
+    au = cts.au.to(uts.Unit('km')).value
 
     # Sun's G*m value
-    mu_Sun = 0.295912208285591100E-03 # au^3/day^2
-    mu = mu_Sun
+    # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
+    mu = cts.GM_sun.to(uts.Unit("au3 / day2")).value
 
     #the total number of observations used
     nobs = len(obs_arr)
