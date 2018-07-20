@@ -10,6 +10,9 @@ from astropy.coordinates import SkyCoord
 from astropy import units as uts
 from astropy.time import Time
 from datetime import datetime, timedelta
+from jplephem.spk import SPK
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
 # from poliastro.stumpff import c2, c3
 
 np.set_printoptions(precision=16)
@@ -622,3 +625,110 @@ def gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
     for i in range(0,refiters):
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos
+
+def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0):
+    # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
+    # 'de430t.bsp' may be downloaded from
+    # ftp://ssd.jpl.nasa.gov/pub/eph/planets/bsp/de430t.bsp
+    spk_kernel = SPK.open('de430t.bsp')
+    # print(spk_kernel)
+
+    # load MPC data for a given NEA
+    mpc_object_data = load_mpc_data(body_fname_str)
+    # print('MPC observation data:\n', mpc_object_data[ inds ], '\n')
+
+    #load MPC data of listed observatories (longitude, parallax constants C, S) (~7,000 observations)
+    mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
+
+    #definition of the astronomical unit in km
+    au = 1.495978707e8
+
+    # Sun's G*m value
+    mu_Sun = 0.295912208285591100E-03 # au^3/day^2
+    mu = mu_Sun
+
+    #the total number of observations used
+    nobs = len(obs_arr)
+
+    print('nobs = ', nobs)
+    print('obs_arr = ', obs_arr)
+
+    #auxiliary arrays
+    x_vec = np.zeros((nobs-2,))
+    y_vec = np.zeros((nobs-2,))
+    z_vec = np.zeros((nobs-2,))
+    x_Ea_vec = np.zeros((nobs-2,))
+    y_Ea_vec = np.zeros((nobs-2,))
+    z_Ea_vec = np.zeros((nobs-2,))
+    a_vec = np.zeros((nobs-2,))
+    e_vec = np.zeros((nobs-2,))
+    I_vec = np.zeros((nobs-2,))
+    W_vec = np.zeros((nobs-2,))
+    w_vec = np.zeros((nobs-2,))
+
+    print('r2_root_ind_vec = ', r2_root_ind_vec)
+    print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
+
+    for j in range (0,nobs-2):
+        # Apply Gauss method to three elements of data
+        inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
+        print('j = ', j)
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+
+        # print('|r1| = ', np.linalg.norm(r1,ord=2))
+        # print('|r2| = ', np.linalg.norm(r2,ord=2))
+        # print('|r3| = ', np.linalg.norm(r3,ord=2))
+        # print('r2 = ', r2)
+        # print('v2 = ', v2)
+
+        a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+        e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+
+        a_vec[j] = a_num
+        e_vec[j] = e_num
+        I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+        W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+        w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
+        x_vec[j] = r2[0]
+        y_vec[j] = r2[1]
+        z_vec[j] = r2[2]
+        x_Ea_vec[j] = Ea_hc_pos[1][0]
+        y_Ea_vec[j] = Ea_hc_pos[1][1]
+        z_Ea_vec[j] = Ea_hc_pos[1][2]
+
+    # print(a_num/au, 'au', ', ', e_num)
+    # print(a_num, 'au', ', ', e_num)
+    # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
+
+    # print('x_vec = ', x_vec)
+    # print('a_vec = ', a_vec)
+    # print('e_vec = ', e_vec)
+    print('a_vec = ', a_vec)
+    print('len(a_vec) = ', len(a_vec))
+    print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
+
+    print('e_vec = ', e_vec)
+    print('len(e_vec) = ', len(e_vec))
+    e_vec_fil1 = e_vec[e_vec<1.0]
+    e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
+    print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
+
+    print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
+    print(np.mean(a_vec), 'au', ', ', np.mean(e_vec), ', ', np.mean(I_vec), 'deg', ', ', np.mean(W_vec), 'deg', ', ', np.mean(w_vec), 'deg')
+
+    # PLOT
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+
+    # Sun-centered orbits: Computed orbit and Earth's
+    ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='.', label=body_name_str+' orbit')
+    ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker='.', label='Earth orbit')
+    ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+    plt.legend()
+    ax.set_xlabel('x (au)')
+    ax.set_ylabel('y (au)')
+    ax.set_zlabel('z (au)')
+    plt.title('Angles-only orbit determ. (Gauss): '+body_name_str)
+    plt.show()
+
+    return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
