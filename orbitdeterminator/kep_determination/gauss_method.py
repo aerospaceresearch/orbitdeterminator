@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-# from poliastro.stumpff import c2, c3
+from poliastro.stumpff import c2, c3
 
 np.set_printoptions(precision=16)
 
@@ -51,10 +51,8 @@ def load_mpc_data(fname):
     # dt is the dtype for MPC-formatted text files
     dt = 'i8,S7,S1,S1,S1,i8,i8,i8,f8,U24,S9,S6,S6,S3'
     # mpc_names correspond to the dtype names of each field
-    # mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','ra_hr','ra_min','ra_sec','dec_deg','dec_min','dec_sec','9xblank','magband','6xblank','observatory']
     mpc_names = ['mpnum','provdesig','discovery','publishnote','j2000','yr','month','day','utc','radec','9xblank','magband','6xblank','observatory']
     # mpc_delims are the fixed-width column delimiter following MPC format description
-    # mpc_delims = [5,7,1,1,1,4,3,3,7,2,3,7,3,3,6,9,6,6,3]
     mpc_delims = [5,7,1,1,1,4,3,3,7,24,9,6,6,3]
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
 
@@ -205,29 +203,6 @@ def alpha(x, y, z, u, v, w, mu):
     myVelSqr=(u**2)+(v**2)+(w**2)
     return (2.0/myRadius)-(myVelSqr/mu)
 
-def stumpffS(z):
-    if z>0:
-        sqrtz = np.sqrt(z)
-        return (sqrtz-np.sin(sqrtz))/(sqrtz**3)
-    elif z<0:
-        sqrtz = np.sqrt(-z)
-        # print('sqrtz = ', sqrtz)
-        return (np.sinh(sqrtz)-sqrtz)/(sqrtz**3)
-    elif z==0:
-        return 1.0/6.0
-
-def stumpffC(z):
-    if z>0:
-        sqrtz = np.sqrt(z)
-        return (1.0-np.cos(sqrtz))/z
-    elif z<0:
-        sqrtz = np.sqrt(-z)
-        # print('z = ', z)
-        # print('sqrtz = ', sqrtz)
-        return (np.cosh(sqrtz)-1.0)/(-z)
-    elif z==0:
-        return 1.0/2.0
-
 #vr0 is the radial velocity $vr0 = \vec r_0 \cdot \vec r_0$
 def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
     # compute preliminaries
@@ -248,8 +223,8 @@ def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
         a_i = (r0*vr0)/np.sqrt(mu)
         b_i = 1.0-alpha0*r0
         # print(' * z_i = ', z_i)
-        C_z_i = stumpffC(z_i)
-        S_z_i = stumpffS(z_i)
+        C_z_i = c2(z_i)
+        S_z_i = c3(z_i)
         f_i = a_i*xi2*C_z_i + b_i*(xi**3)*S_z_i + r0*xi - np.sqrt(mu)*dt
         g_i = a_i*xi*(1.0-z_i*S_z_i) + b_i*xi2*C_z_i+r0
         ratio_i = f_i/g_i
@@ -262,10 +237,10 @@ def lagrangef_(xi, z, r):
     # print('xi = ', xi)
     # print('z = ', z)
     # print('r = ', r)
-    return 1.0-(xi**2)*stumpffC(z)/r
+    return 1.0-(xi**2)*c2(z)/r
 
 def lagrangeg_(tau, xi, z, mu):
-    return tau-(xi**3)*stumpffS(z)/np.sqrt(mu)
+    return tau-(xi**3)*c3(z)/np.sqrt(mu)
 
 def get_observations_data(mpc_object_data, inds):
     # construct SkyCoord 3-element array with observational information
