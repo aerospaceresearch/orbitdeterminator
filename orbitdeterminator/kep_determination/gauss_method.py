@@ -486,58 +486,6 @@ def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
 
     return r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_
 
-# Implementation of Gauss method for MPC optical observations of NEAs
-def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
-    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
-    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = mu_Sun
-
-    # extract observations data
-    obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
-
-    # compute observer position vectors wrt Sun
-    R, Ea_hc_pos = get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes)
-
-    # perform core Gauss method
-    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
-
-    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_
-
-# Implementation of Gauss method for ra-dec observations of Earth satellites
-def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
-    mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu = mu_Earth
-
-    # construct vector of observation time intervals (seconds)
-    timeobs = np.zeros((3,), dtype=Time)
-    timeobs[0] = Time( datetime(2010, 1, 1) + timedelta(seconds=t_sec[0]) )
-    timeobs[1] = Time( datetime(2010, 1, 1) + timedelta(seconds=t_sec[1]) )
-    timeobs[2] = Time( datetime(2010, 1, 1) + timedelta(seconds=t_sec[2]) )
-    obs_t = np.zeros((3,))
-    obs_t[0] = (timeobs[0]-timeobs[1]).to(uts.second).value
-    obs_t[1] = 0.0
-    obs_t[2] = (timeobs[2]-timeobs[1]).to(uts.second).value
-
-    # construct SkyCoord 3-element array with observational information
-    obs_radec = np.zeros((3,), dtype=SkyCoord)
-    obs_radec[0] = SkyCoord( ra=ra_hrs[0], dec=dec_deg[0], unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
-    obs_radec[1] = SkyCoord( ra=ra_hrs[1], dec=dec_deg[1], unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
-    obs_radec[2] = SkyCoord( ra=ra_hrs[2], dec=dec_deg[2], unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
-
-    # compute geocentric observer position vectors at observation event
-    R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
-    R[0] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[0])
-    R[1] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[1])
-    R[2] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[2])
-    # print('R[0] = ', R[0])
-    # print('R[1] = ', R[1])
-    # print('R[2] = ', R[2])
-
-    # perform core Gauss method
-    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
-
-    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_
-
 # Refinement stage of Gauss method
 # INPUT: tau1, tau3, r2, v2, mu, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3
 # OUTPUT: updated r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3
@@ -607,6 +555,58 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
     # print('v2 = ', v2)
 
     return r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1_, g1_, f3_, g3_
+
+# Implementation of Gauss method for MPC optical observations of NEAs
+def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
+    # mu_Sun = 132712440041.939400 # Sun's G*m, km^3/seg^2
+    mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
+    mu = mu_Sun
+
+    # extract observations data
+    obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
+
+    # compute observer position vectors wrt Sun
+    R, Ea_hc_pos = get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes)
+
+    # perform core Gauss method
+    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
+
+    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_
+
+# Implementation of Gauss method for ra-dec observations of Earth satellites
+def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
+    mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    mu = mu_Earth
+
+    # construct vector of observation time intervals (seconds)
+    timeobs = np.zeros((3,), dtype=Time)
+    timeobs[0] = Time( datetime(2010, 1, 1) + timedelta(seconds=t_sec[0]) )
+    timeobs[1] = Time( datetime(2010, 1, 1) + timedelta(seconds=t_sec[1]) )
+    timeobs[2] = Time( datetime(2010, 1, 1) + timedelta(seconds=t_sec[2]) )
+    obs_t = np.zeros((3,))
+    obs_t[0] = (timeobs[0]-timeobs[1]).to(uts.second).value
+    obs_t[1] = 0.0
+    obs_t[2] = (timeobs[2]-timeobs[1]).to(uts.second).value
+
+    # construct SkyCoord 3-element array with observational information
+    obs_radec = np.zeros((3,), dtype=SkyCoord)
+    obs_radec[0] = SkyCoord( ra=ra_hrs[0], dec=dec_deg[0], unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+    obs_radec[1] = SkyCoord( ra=ra_hrs[1], dec=dec_deg[1], unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+    obs_radec[2] = SkyCoord( ra=ra_hrs[2], dec=dec_deg[2], unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
+
+    # compute geocentric observer position vectors at observation event
+    R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
+    R[0] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[0])
+    R[1] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[1])
+    R[2] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[2])
+    # print('R[0] = ', R[0])
+    # print('R[1] = ', R[1])
+    # print('R[2] = ', R[2])
+
+    # perform core Gauss method
+    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
+
+    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_
 
 def gauss_iterator_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0):
     mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
