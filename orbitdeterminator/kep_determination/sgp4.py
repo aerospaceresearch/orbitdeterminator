@@ -4,8 +4,6 @@ The code takes a TLE and computes state vectors for next 8 hrs at every second.
 
 import numpy as np
 import math
-# import time
-# from datetime import datetime, timedelta
 
 pi = np.pi
 meu = 398600.4418
@@ -13,156 +11,6 @@ two_pi = 2*pi;
 min_per_day = 1440
 
 class SGP4(object):
-
-    @classmethod
-    def find_year(self, year):
-        '''
-        Returns year of launch of the satellite.
-
-        Values in the range 00-56 are assumed to correspond to years in the
-        range 2000 to 2056 while values in the range 57-99 are assumed to
-        correspond to years in the range 1957 to 1999.
-
-        Args:
-            self: class variables
-            year: last 2 digits of the year
-
-        Returns:
-            whole year number
-        '''
-
-        if(year >=0 and year <=56):
-            return year + 2000;
-        else:
-            return year + 1900;
-
-    @classmethod
-    def find_date(self, date):
-        '''
-        Finds date of the year from number of days.
-
-        Args:
-            self: class variables
-            date: Number of days
-
-        Returns:
-            date in a tuple with value as (year, month, day)
-        '''
-
-        year = int(self.find_year(int(''.join(date[0:2]))))
-        day = int(''.join(date[2:5]))
-
-        daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
-
-        # If the year is Leap year or not
-        if(year % 4 == 0):
-            daysInMonth[1] = 29
-
-        i = 0
-        while(day > daysInMonth[i]):
-            day -= daysInMonth[i]
-            i += 1
-
-        month = i+1
-
-        return year, month, day
-
-    @classmethod
-    def find_time(self, time):
-        '''
-        Finds the time of the day from the input in milliseconds.
-
-        Args:
-            self: class variables
-            time: Time in milliseconds
-
-        Returns:
-            time in a tuple with value as (hour, minute, second)
-        '''
-        time = float('0.'+str(time))
-
-        time = time*24
-        hour = int(time)
-        time = time - hour
-
-        time = time*60
-        minute = int(time)
-        time = time - minute
-
-        time = time*60
-        time = float("{0:.3f}".format(time))
-        second = time
-        time = time - int(time)
-        time = float("{0:.3f}".format(time))
-
-        return hour, minute, second
-
-    # @classmethod
-    # def julian_day(self, year, mon, day, hr, mts, sec):
-    #     '''
-    #     Converts given timestamp into Julian format.
-    #
-    #     Args:
-    #         self: class variables
-    #         year: year number
-    #         mon: month in year
-    #         day: date in the month
-    #         hr: hour
-    #         mts: minutes in the hour
-    #         sec: seconds in minute
-    #
-    #     Returns:
-    #         time in Julian format
-    #     '''
-    #     return (367.0*year-7.0*(year + ((mon + 9.0) // 12.0)) * 0.25 // 1.0 +
-    #       275.0 * mon // 9.0 + day + 1721013.5 +
-    #       ((sec / 60.0 + mts) / 60.0 + hr) / 24.0)
-    #
-    # @classmethod
-    # def update_epoch(self, yr, mth, day, hr, mts, sec):
-    #     '''
-    #     Adds one second to the given time.
-    #
-    #     Args:
-    #         self: class variables
-    #         yr: year
-    #         mth: month
-    #         day: date
-    #         hr: hour
-    #         mts: minutes
-    #         sec: seconds
-    #
-    #     Returns:
-    #         updated timestamp epoch in a tuple with value as (year, month, day,
-    #         hour, minute, second)
-    #     '''
-    #     sec += 1
-    #
-    #     if(sec >= 60):
-    #         sec = 0
-    #         mts += 1
-    #
-    #     if(mts >= 60):
-    #         mts = 0
-    #         hr += 1
-    #
-    #     if(hr >= 24):
-    #         hr = 0
-    #         day += 1
-    #
-    #     daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
-    #     if(yr % 4 == 0):
-    #         daysInMonth[1] = 29
-    #
-    #     if(day > daysInMonth[mth-1]):
-    #         day = 1
-    #         mth += 1
-    #
-    #     if(mth > 12):
-    #         mth = 1
-    #         yr += 1
-    #
-    #     return yr, mth, day, hr, mts, sec
 
     def propagate(self, line1, line2):
         '''
@@ -177,9 +25,6 @@ class SGP4(object):
         Returns:
             final: vector containing all state vectors for 8 hours
         '''
-        # year, month, day = self.find_date(''.join(line1[18:23]))
-        # hour, minute, second = self.find_time(''.join(line1[24:32]))
-        # self.jd = self.julian_day(year, month, day, hour, minute, second)
 
         self.xmo = float(''.join(line2[43:51])) * (pi/180)
         self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
@@ -189,27 +34,16 @@ class SGP4(object):
         self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
         self.bstar = int(''.join(line1[53:59]))*(1e-5)*(10**int(''.join(line1[59:61])))
 
-        # ts = time.localtime(time.time())
-        # yr = ts.tm_year
-        # mth = ts.tm_mon
-        # day = ts.tm_mday
-        # hr = ts.tm_hour
-        # mts = ts.tm_min
-        # sec = ts.tm_sec
-
         final = np.zeros((28800,6))
         i = 0
         upto = 28800                # 28800 secs in 8 hours (in seconds)
         while(i < upto):
-            # j = self.julian_day(yr, mth, day, hr, mts, sec)
-            # tsince = (j - self.jd)*min_per_day
             tsince = i
             pos, vel = self.propagation_model(tsince)
             data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
             data = [float("{0:.5f}".format(i)) for i in data]
             print(str(tsince) + " - " + str(data))
             final[i,:] = data
-            # yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
             i = i + 1
 
         return final
@@ -417,9 +251,6 @@ class SGP4(object):
         return pos, vel
 
 if __name__ == "__main__":
-    line1 = "1 32785U 08021C   18201.86927515  .00000199  00000-0  27157-4 0  9996"
-    line2 = "2 32785  97.5464 212.4389 0011563 289.3405  70.6562 14.88147354554182"
-
     line1 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8"
     line2 = "2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518   105"
 
