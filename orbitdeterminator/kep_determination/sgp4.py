@@ -4,8 +4,8 @@ The code takes a TLE and computes state vectors for next 8 hrs at every second.
 
 import numpy as np
 import math
-import time
-from datetime import datetime, timedelta
+# import time
+# from datetime import datetime, timedelta
 
 pi = np.pi
 meu = 398600.4418
@@ -177,8 +177,8 @@ class SGP4(object):
         Returns:
             final: vector containing all state vectors for 8 hours
         '''
-        year, month, day = self.find_date(''.join(line1[18:23]))
-        hour, minute, second = self.find_time(''.join(line1[24:32]))
+        # year, month, day = self.find_date(''.join(line1[18:23]))
+        # hour, minute, second = self.find_time(''.join(line1[24:32]))
         # self.jd = self.julian_day(year, month, day, hour, minute, second)
 
         self.xmo = float(''.join(line2[43:51])) * (pi/180)
