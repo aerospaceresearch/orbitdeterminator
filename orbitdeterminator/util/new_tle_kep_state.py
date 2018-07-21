@@ -42,17 +42,6 @@ def EtoT(E,e):
 def MtoT(M,e):
     return EtoT(MtoE(M,e),e)
 
-def scale(s,T):
-    s = np.ravel(s)
-    tmp = np.empty(6)
-
-    def f(x):
-        tmp[0:3] = np.multiply(x,s[0:3])
-        tmp[3:6] = np.multiply(1/(x**0.5),s[3:6])
-        return T - time_period(tmp)
-
-    return fsolve(f,1)[0]
-
 def tle_to_state(tle):
     """ This function converts from TLE elements to the position and velocity vector
 
@@ -83,13 +72,9 @@ def tle_to_state(tle):
 
     kep = np.array([sma,ecc,inc,argp,raan,tanom])
     s = kep_to_state(kep)
-    x = scale(s,T)   # scales sma so that time period = T
 
-    kep[0] = kep[0]*x
     print("Keplerian Elements:")
     print(kep)
-    s[0:3] = np.multiply(x,s[0:3])
-    s[3:6] = np.multiply(1/(x**0.5),s[3:6])
 
     return s
 
