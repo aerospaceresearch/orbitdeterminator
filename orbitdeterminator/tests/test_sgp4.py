@@ -25,12 +25,17 @@ def test_find_date():
 
     date = '18194'
     date = obj.find_date(date)
-    ans = (2018, 7, 14)
+    ans = (2018, 7, 13)
     assert(date == ans)
 
-    date = '72193'
+    date = '72145'
     date = obj.find_date(date)
-    ans = (1972, 7, 12)
+    ans = (1972, 5, 24)
+    assert(date == ans)
+
+    date = '74145'
+    date = obj.find_date(date)
+    ans = (1974, 5, 25)
     assert(date == ans)
 
     del(obj)
@@ -38,14 +43,19 @@ def test_find_date():
 def test_find_time():
     obj = SGP4()
 
+    time = 25992506
+    time = obj.find_time(time)
+    ans = (6, 14, 17.525)
+    assert(time == ans)
+
     time = 6084328
     time = obj.find_time(time)
-    ans = (7, 52, 19)
+    ans = (14, 36, 8.594)
     assert(time == ans)
 
     time = 78026175
     time = obj.find_time(time)
-    ans = (4, 12, 0)
+    ans = (18, 43, 34.615)
     assert(time == ans)
 
     del(obj)
@@ -89,6 +99,16 @@ def test_update_epoch():
     year, mon, day, hr, mts, sec = 2018, 1, 1, 00, 00, 00
     epoch = obj.update_epoch(year, mon, day, hr, mts, sec)
     ans = (2018, 1, 1, 0, 0, 1)
+    assert(epoch == ans)
+
+    year, mon, day, hr, mts, sec = 2016, 2, 28, 23, 59, 59
+    epoch = obj.update_epoch(year, mon, day, hr, mts, sec)
+    ans = (2016, 2, 29, 0, 0, 0)
+    assert(epoch == ans)
+
+    year, mon, day, hr, mts, sec = 2018, 2, 28, 23, 59, 59
+    epoch = obj.update_epoch(year, mon, day, hr, mts, sec)
+    ans = (2018, 3, 1, 0, 0, 0)
     assert(epoch == ans)
 
     del(obj)
