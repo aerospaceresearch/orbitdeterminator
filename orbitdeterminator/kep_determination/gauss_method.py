@@ -69,7 +69,7 @@ def load_mpc_data(fname):
     mpc_delims = [5,7,1,1,1,4,3,3,7,24,9,6,6,3]
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
 
-# Compute geocentric observer position at the Julian date jd_utc (UTC)
+# Compute geocentric observer position at UTC instant t_utc
 # at a given observation site defined by its longitude, and parallax constants S and C
 # formula taken from top of page 266, chapter 5, Orbital Mechanics book
 # the parallax constants S and C are defined by
@@ -79,7 +79,7 @@ def load_mpc_data(fname):
 # We have the following:
 # phi' = atan(S/C)
 # rho = sqrt(S**2+C**2)
-def observerpos_mpc(long, parallax_s, parallax_c, jd_utc):
+def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
 
     # Earth's equatorial radius in kilometers
     Re = cts.R_earth.to(uts.Unit('km')).value
@@ -88,7 +88,7 @@ def observerpos_mpc(long, parallax_s, parallax_c, jd_utc):
     long_site = Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
     # print('long_site = ', long_site)
     # compute sidereal time of observation at site
-    t_site_lmst = jd_utc.sidereal_time('mean', longitude=long_site)
+    t_site_lmst = t_utc.sidereal_time('mean', longitude=long_site)
     # print('t_site_lmst = ', t_site_lmst)
     lmst_hrs = t_site_lmst.value # hours
     lmst_rad = np.deg2rad(lmst_hrs*15.0) # radians
@@ -296,6 +296,9 @@ def observer_wrt_sun(spk_kernel, long, parallax_s, parallax_c, t_utc):
     t_jd_tdb = t_utc.tdb.jd
     xyz_es = earth_ephemeris(spk_kernel, t_jd_tdb)
     xyz_oe = observerpos_mpc(long, parallax_s, parallax_c, t_utc)
+    print('xyz_es = ', xyz_es)
+    print('xyz_oe = ', xyz_oe)
+    print('(xyz_oe+xyz_es)/au = ', (xyz_oe+xyz_es)/au)
     return (xyz_oe+xyz_es)/au
 
 def object_wrt_sun(t_utc, a, e, taup, omega, I, Omega):
@@ -308,21 +311,48 @@ def rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, 
 
 def rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
     r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega)
+    print('r_v = ', r_v)
     r_v_norm = np.linalg.norm(r_v, ord=2)
+    print('r_v_norm = ', r_v_norm)
     # r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc-r_v_norm/c_light, a, e, taup, omega, I, Omega)
     # r_v_norm = np.linalg.norm(r_v, ord=2)
     r_v_unit = r_v/r_v_norm
+    print('r_v_unit = ', r_v_unit)
     cosd_cosa = r_v_unit[0]
     cosd_sina = r_v_unit[1]
     sind = r_v_unit[2]
-    ra = np.arctan2(cosd_sina, cosd_cosa)
-    dec = np.arcsin(sind)
-    return 15.0*np.rad2deg(ra), np.rad2deg(dec)
+    ra_rad = np.arctan2(cosd_sina, cosd_cosa)
+    dec_rad = np.arcsin(sind)
+    # mylos = losvector(ra_rad, dec_rad)
+    # print('mylos = ', mylos)
+    if ra_rad <0.0:
+        return ra_rad+np.pi, dec_rad
+    else:
+        return ra_rad, dec_rad
+
+# signed difference between two angles
+# code adapted from https://rosettacode.org/wiki/Angle_difference_between_two_bearings#Python
+def angle_diff_rad(a1_rad, a2_rad):
+    r = (a2_rad - a1_rad) % (2.0*np.pi)
+    # Python modulus has same sign as divisor, which is positive here,
+    # so no need to consider negative case
+    if r >= np.pi:
+        r -= (2.0*np.pi)
+    return r
 
 def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax_c):
     ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime, x[0], x[1], x[2], x[3], x[4], x[5])
-    ra_obs, dec_obs = t_ra_dec_datapoint.ra.deg, t_ra_dec_datapoint.dec.deg
-    return (ra_comp-ra_obs)**2+(dec_comp-dec_obs)**2
+    ra_obs, dec_obs = t_ra_dec_datapoint.ra.rad, t_ra_dec_datapoint.dec.rad
+    print('ra_obs = ', ra_obs)
+    print('dec_obs = ', dec_obs)
+    print('ra_comp = ', ra_comp)
+    print('dec_comp = ', dec_comp)
+    #"unsigned" distance between points in torus
+    diff_ra = angle_diff_rad(ra_obs, ra_comp)
+    diff_dec = angle_diff_rad(dec_obs, dec_comp)
+    print('diff_ra = ', np.rad2deg(diff_ra), 'deg')
+    print('diff_dec = ', np.rad2deg(diff_dec), 'deg')
+    return diff_ra**2+diff_dec**2
 
 def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
     # astronomical unit in km
