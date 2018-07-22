@@ -17,4 +17,4 @@ nobs = len(obs_arr)
 r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
 r2_root_ind_vec[4] = 1 # uncomment and modify if adequate root of Gauss polynomial has to be selected
 
-x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec = gm.gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=5)
+a_mean, e_mean, taup_mean, I_mean, W_mean, w_mean = gm.gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=5)
