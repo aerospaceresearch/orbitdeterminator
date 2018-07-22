@@ -13,8 +13,7 @@ from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
-from least_squares import xyz_frame_
-from least_squares import orbel2xyz
+from least_squares import xyz_frame_, orbel2xyz, truean2eccan, meanmotion
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 
@@ -211,6 +210,11 @@ def trueanomaly(x, y, z, u, v, w, mu):
     elif v_r_num<0.0:
         return 2.0*np.pi-np.arccos(np.dot(e_vec, r_vec))
 
+def taupericenter(t, e, f, n):
+    E0 = truean2eccan(e, f)
+    M0 = E0-e*np.sin(E0)
+    return t-M0/n
+
 # alpha = 1/a
 def alpha(x, y, z, u, v, w, mu):
     myRadius=np.sqrt((x**2)+(y**2)+(z**2))
@@ -275,9 +279,9 @@ def get_observations_data(mpc_object_data, inds):
     # print('obs_radec[2] = ', obs_radec[2])
 
     # construct vector of observation time (continous variable)
-    obs_t[0] = obs_radec[0].obstime.jd
-    obs_t[1] = obs_radec[1].obstime.jd
-    obs_t[2] = obs_radec[2].obstime.jd
+    obs_t[0] = obs_radec[0].obstime.tdb.jd
+    obs_t[1] = obs_radec[1].obstime.tdb.jd
+    obs_t[2] = obs_radec[2].obstime.tdb.jd
 
     site_codes = [mpc_object_data['observatory'][inds[0]], mpc_object_data['observatory'][inds[1]], mpc_object_data['observatory'][inds[2]]]
 
@@ -313,11 +317,11 @@ def rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, om
     sind = r_v_unit[2]
     ra = np.arctan2(cosd_sina, cosd_cosa)
     dec = np.arcsin(sind)
-    return ra, dec
+    return 15.0*np.rad2deg(ra), np.rad2deg(dec)
 
 def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax_c):
-    ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_ra_dec_datapoint[0], x[0], x[1], x[2], x[3], x[4], x[5])
-    ra_obs, dec_obs = t_ra_dec_datapoint[1], t_ra_dec_datapoint[2]
+    ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime, x[0], x[1], x[2], x[3], x[4], x[5])
+    ra_obs, dec_obs = t_ra_dec_datapoint.ra.deg, t_ra_dec_datapoint.dec.deg
     return (ra_comp-ra_obs)**2+(dec_comp-dec_obs)**2
 
 def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
@@ -584,7 +588,7 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
 # Implementation of Gauss method for MPC optical observations of NEAs
 def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
 
     # extract observations data
     obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
@@ -595,7 +599,7 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
     # perform core Gauss method
     r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
 
-    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_
+    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_, obs_t
 
 # Implementation of Gauss method for ra-dec observations of Earth satellites
 def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
@@ -643,12 +647,12 @@ def gauss_iterator_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec,
 
 def gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=0, r2_root_ind=0):
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = cts.GM_sun.to(uts.Unit("au3 / day2")).value
-    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_ = gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, r2_root_ind=r2_root_ind)
+    mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_, obs_t = gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, r2_root_ind=r2_root_ind)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
-    return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos
+    return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t
 
 def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0):
     # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
@@ -669,7 +673,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     # Sun's G*m value
     # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
-    mu = cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
 
     #the total number of observations used
     nobs = len(obs_arr)
@@ -683,6 +687,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     z_vec = np.zeros((nobs-2,))
     a_vec = np.zeros((nobs-2,))
     e_vec = np.zeros((nobs-2,))
+    taup_vec = np.zeros((nobs-2,))
     I_vec = np.zeros((nobs-2,))
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
@@ -697,7 +702,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         # Apply Gauss method to three elements of data
         inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
         print('j = ', j)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos = gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t = gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
 
         # print('|r1| = ', np.linalg.norm(r1,ord=2))
         # print('|r2| = ', np.linalg.norm(r2,ord=2))
@@ -710,9 +715,12 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
         a_num = semimajoraxis(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
         e_num = eccentricity(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
+        f_num = trueanomaly(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
+        n_num = meanmotion(mu, a_num)
 
         a_vec[j] = a_num
         e_vec[j] = e_num
+        taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num)
         I_vec[j] = np.rad2deg( inclination(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
         W_vec[j] = np.rad2deg( longascnode(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
         w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
@@ -741,14 +749,17 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
     print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
 
+    print('taup_vec = ', taup_vec)
+
     a_mean = np.mean(a_vec) #au
     e_mean = np.mean(e_vec) #dimensionless
     I_mean = np.mean(I_vec) #deg
     W_mean = np.mean(W_vec) #deg
     w_mean = np.mean(w_vec) #deg
+    taup_mean = np.mean(taup_vec) #deg
 
-    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, I, Omega, omega ***')
-    print(a_mean, 'au', ', ', e_mean, ', ', I_mean, 'deg', ', ', W_mean, 'deg', ', ', w_mean, 'deg')
+    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, I, Omega, omega ***')
+    print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', I_mean, 'deg, ', W_mean, 'deg, ', w_mean, 'deg')
 
     npoints = 1000
     theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
