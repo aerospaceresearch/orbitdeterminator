@@ -654,7 +654,7 @@ def gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t
 
-def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0):
+def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0, plot=True):
     # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
     # 'de430t.bsp' may be downloaded from
     # ftp://ssd.jpl.nasa.gov/pub/eph/planets/bsp/de430t.bsp
@@ -753,10 +753,10 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     a_mean = np.mean(a_vec) #au
     e_mean = np.mean(e_vec) #dimensionless
+    taup_mean = np.mean(taup_vec) #deg
     I_mean = np.mean(I_vec) #deg
     W_mean = np.mean(W_vec) #deg
     w_mean = np.mean(w_vec) #deg
-    taup_mean = np.mean(taup_vec) #deg
 
     print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, I, Omega, omega ***')
     print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', I_mean, 'deg, ', W_mean, 'deg, ', w_mean, 'deg')
@@ -781,24 +781,26 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     # fig = plt.figure(figsize=plt.figaspect(1.0))
     # fig = plt.figure()
     # ax = plt.axes(aspect='equal', projection='3d')
-    ax = plt.axes(aspect='equal', projection='3d')
+    if plot:
+        ax = plt.axes(aspect='equal', projection='3d')
 
-    # Sun-centered orbits: Computed orbit and Earth's
-    ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
-    ax.scatter3D(x_Ea_vec, y_Ea_vec, z_Ea_vec, color='blue', marker='.', label='Earth orbit')
-    ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5)
-    ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
-    ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
-    plt.legend()
-    ax.set_xlabel('x (au)')
-    ax.set_ylabel('y (au)')
-    ax.set_zlabel('z (au)')
-    xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
-    ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
-    ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
-    ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
-    ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
-    ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
-    plt.show()
+        # Sun-centered orbits: Computed orbit and Earth's
+        ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+        ax.scatter3D(x_Ea_vec, y_Ea_vec, z_Ea_vec, color='blue', marker='.', label='Earth orbit')
+        ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5)
+        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
+        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
+        plt.legend()
+        ax.set_xlabel('x (au)')
+        ax.set_ylabel('y (au)')
+        ax.set_zlabel('z (au)')
+        xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
+        ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
+        ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
+        plt.show()
 
-    return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
+    # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
+    return a_mean, e_mean, taup_mean, I_mean, W_mean, w_mean
