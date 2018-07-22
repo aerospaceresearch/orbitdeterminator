@@ -14,6 +14,19 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
 from least_squares import xyz_frame_
+from least_squares import orbel2xyz
+from astropy.coordinates.earth_orientation import obliquity
+from astropy.coordinates.matrix_utilities import rotation_matrix
+
+au = cts.au.to(uts.Unit('km')).value
+mu_Sun = cts.GM_sun.to(uts.Unit("au3 / day2")).value
+
+obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
+rot_equat_to_eclip = rotation_matrix( obliquity_j2000, 'x') #rotation matrix from equatorial to ecliptic frames
+rot_eclip_to_equat = rotation_matrix(-obliquity_j2000, 'x') #rotation matrix from ecliptic to equatorial frames
+
+# print('obliquity_j2000 = ', obliquity_j2000)
+# print('rot_equat_to_eclip = ', rot_equat_to_eclip)
 
 np.set_printoptions(precision=16)
 
@@ -274,9 +287,34 @@ def get_observations_data(mpc_object_data, inds):
 def earth_ephemeris(spk_kernel, t_tdb):
     return spk_kernel[3,399].compute(t_tdb) + spk_kernel[0,3].compute(t_tdb) - spk_kernel[0,10].compute(t_tdb)
 
+def observer_wrt_sun(spk_kernel, long, parallax_s, parallax_c, t_utc):
+    t_jd_tdb = t_utc.tdb.jd
+    xyz_es = earth_ephemeris(spk_kernel, t_jd_tdb)
+    xyz_oe = observerpos_mpc(long, parallax_s, parallax_c, t_utc)
+    return (xyz_oe+xyz_es)/au
+
+def object_wrt_sun(t_utc, a, e, taup, omega, I, Omega):
+    t_jd_tdb = t_utc.tdb.jd
+    xyz_eclip = orbel2xyz(t_jd_tdb, mu_Sun, a, e, taup, omega, I, Omega)
+    return np.matmul(rot_eclip_to_equat, xyz_eclip)
+
+def rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
+    return object_wrt_sun(t_utc, a, e, taup, omega, I, Omega)-observer_wrt_sun(spk_kernel, long, parallax_s, parallax_c, t_utc)
+
+def rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
+    r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega)
+    r_v_norm = np.linalg.norm(r_v, ord=2)
+    r_v_unit = r_v/r_v_norm
+    cosd_cosa = r_v_unit[0]
+    cosd_sina = r_v_unit[1]
+    sind = r_v_unit[2]
+    ra = arctan2(cosd_sina, cosd_cosa)
+    dec = arcsin(sind)
+
+    return ra, dec
+
 def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
     # astronomical unit in km
-    au = cts.au.to(uts.Unit('km')).value
     Ea_hc_pos = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
     # load MPC observatory data
@@ -620,7 +658,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
     #definition of the astronomical unit in km
-    au = cts.au.to(uts.Unit('km')).value
+    # au = cts.au.to(uts.Unit('km')).value
 
     # Sun's G*m value
     # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
@@ -636,14 +674,14 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     x_vec = np.zeros((nobs-2,))
     y_vec = np.zeros((nobs-2,))
     z_vec = np.zeros((nobs-2,))
-    x_Ea_vec = np.zeros((nobs-2,))
-    y_Ea_vec = np.zeros((nobs-2,))
-    z_Ea_vec = np.zeros((nobs-2,))
     a_vec = np.zeros((nobs-2,))
     e_vec = np.zeros((nobs-2,))
     I_vec = np.zeros((nobs-2,))
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
+    x_Ea_vec = np.zeros((nobs-2,))
+    y_Ea_vec = np.zeros((nobs-2,))
+    z_Ea_vec = np.zeros((nobs-2,))
 
     print('r2_root_ind_vec = ', r2_root_ind_vec)
     print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
@@ -660,20 +698,24 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         # print('r2 = ', r2)
         # print('v2 = ', v2)
 
-        a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+        r2_eclip = np.matmul(rot_equat_to_eclip, r2)
+        v2_eclip = np.matmul(rot_equat_to_eclip, v2)
+
+        a_num = semimajoraxis(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
+        e_num = eccentricity(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
 
         a_vec[j] = a_num
         e_vec[j] = e_num
-        I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-        W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-        w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
-        x_vec[j] = r2[0]
-        y_vec[j] = r2[1]
-        z_vec[j] = r2[2]
-        x_Ea_vec[j] = Ea_hc_pos[1][0]
-        y_Ea_vec[j] = Ea_hc_pos[1][1]
-        z_Ea_vec[j] = Ea_hc_pos[1][2]
+        I_vec[j] = np.rad2deg( inclination(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
+        W_vec[j] = np.rad2deg( longascnode(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
+        w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
+        x_vec[j] = r2_eclip[0]
+        y_vec[j] = r2_eclip[1]
+        z_vec[j] = r2_eclip[2]
+        Ea_hc_pos_eclip = np.matmul(rot_equat_to_eclip, Ea_hc_pos[1])
+        x_Ea_vec[j] = Ea_hc_pos_eclip[0]
+        y_Ea_vec[j] = Ea_hc_pos_eclip[1]
+        z_Ea_vec[j] = Ea_hc_pos_eclip[2]
 
     # print(a_num/au, 'au', ', ', e_num)
     # print(a_num, 'au', ', ', e_num)
@@ -698,35 +740,47 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     W_mean = np.mean(W_vec) #deg
     w_mean = np.mean(w_vec) #deg
 
-    print('*** AVERAGE ORBITAL ELEMENTS: a, e, I, Omega, omega ***')
+    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, I, Omega, omega ***')
     print(a_mean, 'au', ', ', e_mean, ', ', I_mean, 'deg', ', ', W_mean, 'deg', ', ', w_mean, 'deg')
 
     npoints = 1000
     theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
+    t_Ea_vec = np.linspace(2451544.5, 2451544.5+365.3, npoints)
     x_orb_vec = np.zeros((npoints,))
     y_orb_vec = np.zeros((npoints,))
     z_orb_vec = np.zeros((npoints,))
+    x_Ea_orb_vec = np.zeros((npoints,))
+    y_Ea_orb_vec = np.zeros((npoints,))
+    z_Ea_orb_vec = np.zeros((npoints,))
 
     for i in range(0,npoints):
-        recovered_xyz = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
-        x_orb_vec[i] = recovered_xyz[0]
-        y_orb_vec[i] = recovered_xyz[1]
-        z_orb_vec[i] = recovered_xyz[2]
+        x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
+        xyz_Ea_orb_vec_equat = earth_ephemeris(spk_kernel, t_Ea_vec[i])/au
+        xyz_Ea_orb_vec_eclip = np.matmul(rot_equat_to_eclip, xyz_Ea_orb_vec_equat)
+        x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
 
     # PLOT
-    fig = plt.figure()
-    ax = plt.axes(projection='3d')
+    # fig = plt.figure(figsize=plt.figaspect(1.0))
+    # fig = plt.figure()
+    # ax = plt.axes(aspect='equal', projection='3d')
+    ax = plt.axes(aspect='equal', projection='3d')
 
     # Sun-centered orbits: Computed orbit and Earth's
-    ax.scatter3D(x_vec[x_vec!=0.0], y_vec[x_vec!=0.0], z_vec[x_vec!=0.0], color='red', marker='+', label=body_name_str+' orbit')
-    ax.scatter3D(x_Ea_vec[x_Ea_vec!=0.0], y_Ea_vec[x_Ea_vec!=0.0], z_Ea_vec[x_Ea_vec!=0.0], color='blue', marker='.', label='Earth orbit')
     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
-    ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'black', linewidth=0.5, label=body_name_str+' orbit')
+    ax.scatter3D(x_Ea_vec, y_Ea_vec, z_Ea_vec, color='blue', marker='.', label='Earth orbit')
+    ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5)
+    ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
+    ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
     plt.legend()
     ax.set_xlabel('x (au)')
     ax.set_ylabel('y (au)')
     ax.set_zlabel('z (au)')
-    plt.title('Angles-only orbit determ. (Gauss): '+body_name_str)
+    xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
+    ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
+    ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
+    ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
+    ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
+    ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
     plt.show()
 
     return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
