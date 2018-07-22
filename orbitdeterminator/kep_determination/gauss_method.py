@@ -19,7 +19,8 @@ from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 
 au = cts.au.to(uts.Unit('km')).value
-mu_Sun = cts.GM_sun.to(uts.Unit("au3 / day2")).value
+mu_Sun = cts.GM_sun.to(uts.Unit('au3 / day2')).value
+c_light = cts.c.to(uts.Unit('au/day'))
 
 obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
 rot_equat_to_eclip = rotation_matrix( obliquity_j2000, 'x') #rotation matrix from equatorial to ecliptic frames
@@ -304,14 +305,20 @@ def rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, 
 def rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
     r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega)
     r_v_norm = np.linalg.norm(r_v, ord=2)
+    # r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc-r_v_norm/c_light, a, e, taup, omega, I, Omega)
+    # r_v_norm = np.linalg.norm(r_v, ord=2)
     r_v_unit = r_v/r_v_norm
     cosd_cosa = r_v_unit[0]
     cosd_sina = r_v_unit[1]
     sind = r_v_unit[2]
-    ra = arctan2(cosd_sina, cosd_cosa)
-    dec = arcsin(sind)
-
+    ra = np.arctan2(cosd_sina, cosd_cosa)
+    dec = np.arcsin(sind)
     return ra, dec
+
+def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax_c):
+    ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_ra_dec_datapoint[0], x[0], x[1], x[2], x[3], x[4], x[5])
+    ra_obs, dec_obs = t_ra_dec_datapoint[1], t_ra_dec_datapoint[2]
+    return (ra_comp-ra_obs)**2+(dec_comp-dec_obs)**2
 
 def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
     # astronomical unit in km
