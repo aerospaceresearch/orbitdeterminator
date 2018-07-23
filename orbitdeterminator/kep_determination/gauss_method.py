@@ -212,7 +212,7 @@ def trueanomaly(x, y, z, u, v, w, mu):
 
 def taupericenter(t, e, f, n):
     E0 = truean2eccan(e, f)
-    M0 = E0-e*np.sin(E0)
+    M0 = np.mod(E0-e*np.sin(E0), 2.0*np.pi)
     return t-M0/n
 
 # alpha = 1/a
@@ -296,14 +296,16 @@ def observer_wrt_sun(spk_kernel, long, parallax_s, parallax_c, t_utc):
     t_jd_tdb = t_utc.tdb.jd
     xyz_es = earth_ephemeris(spk_kernel, t_jd_tdb)
     xyz_oe = observerpos_mpc(long, parallax_s, parallax_c, t_utc)
-    print('xyz_es = ', xyz_es)
-    print('xyz_oe = ', xyz_oe)
-    print('(xyz_oe+xyz_es)/au = ', (xyz_oe+xyz_es)/au)
+    # print('xyz_es = ', xyz_es)
+    # print('xyz_oe = ', xyz_oe)
+    # print('(xyz_oe+xyz_es)/au = ', (xyz_oe+xyz_es)/au)
     return (xyz_oe+xyz_es)/au
 
 def object_wrt_sun(t_utc, a, e, taup, omega, I, Omega):
     t_jd_tdb = t_utc.tdb.jd
     xyz_eclip = orbel2xyz(t_jd_tdb, mu_Sun, a, e, taup, omega, I, Omega)
+    # print('xyz_eclip = ', xyz_eclip)
+    # print('np.matmul(rot_eclip_to_equat, xyz_eclip) = ', np.matmul(rot_eclip_to_equat, xyz_eclip))
     return np.matmul(rot_eclip_to_equat, xyz_eclip)
 
 def rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
@@ -311,22 +313,20 @@ def rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, 
 
 def rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
     r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega)
-    print('r_v = ', r_v)
+    # print('r_v = ', r_v)
     r_v_norm = np.linalg.norm(r_v, ord=2)
-    print('r_v_norm = ', r_v_norm)
+    # print('r_v_norm = ', r_v_norm)
     # r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc-r_v_norm/c_light, a, e, taup, omega, I, Omega)
     # r_v_norm = np.linalg.norm(r_v, ord=2)
     r_v_unit = r_v/r_v_norm
-    print('r_v_unit = ', r_v_unit)
+    # print('r_v_unit = ', r_v_unit)
     cosd_cosa = r_v_unit[0]
     cosd_sina = r_v_unit[1]
     sind = r_v_unit[2]
     ra_rad = np.arctan2(cosd_sina, cosd_cosa)
     dec_rad = np.arcsin(sind)
-    # mylos = losvector(ra_rad, dec_rad)
-    # print('mylos = ', mylos)
     if ra_rad <0.0:
-        return ra_rad+np.pi, dec_rad
+        return ra_rad+2.0*np.pi, dec_rad
     else:
         return ra_rad, dec_rad
 
@@ -342,17 +342,21 @@ def angle_diff_rad(a1_rad, a2_rad):
 
 def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax_c):
     ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime, x[0], x[1], x[2], x[3], x[4], x[5])
+    los_comp = losvector(ra_comp, dec_comp)
+    # print('los_comp = ', los_comp)
     ra_obs, dec_obs = t_ra_dec_datapoint.ra.rad, t_ra_dec_datapoint.dec.rad
-    print('ra_obs = ', ra_obs)
-    print('dec_obs = ', dec_obs)
-    print('ra_comp = ', ra_comp)
-    print('dec_comp = ', dec_comp)
+    los_obs = losvector(ra_obs, dec_obs)
+    # print('los_obs = ', los_obs)
+    # print('ra_obs = ', ra_obs)
+    # print('dec_obs = ', dec_obs)
+    # print('ra_comp = ', ra_comp)
+    # print('dec_comp = ', dec_comp)
     #"unsigned" distance between points in torus
     diff_ra = angle_diff_rad(ra_obs, ra_comp)
     diff_dec = angle_diff_rad(dec_obs, dec_comp)
-    print('diff_ra = ', np.rad2deg(diff_ra), 'deg')
-    print('diff_dec = ', np.rad2deg(diff_dec), 'deg')
-    return diff_ra**2+diff_dec**2
+    # print('diff_ra = ', np.rad2deg(diff_ra), 'deg')
+    # print('diff_dec = ', np.rad2deg(diff_dec), 'deg')
+    return np.array((diff_ra,diff_dec))
 
 def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
     # astronomical unit in km
@@ -738,6 +742,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         # print('|r2| = ', np.linalg.norm(r2,ord=2))
         # print('|r3| = ', np.linalg.norm(r3,ord=2))
         # print('r2 = ', r2)
+        # print('obs_t[1] = ', obs_t[1])
         # print('v2 = ', v2)
 
         r2_eclip = np.matmul(rot_equat_to_eclip, r2)
@@ -751,9 +756,9 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         a_vec[j] = a_num
         e_vec[j] = e_num
         taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num)
+        w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
         I_vec[j] = np.rad2deg( inclination(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
         W_vec[j] = np.rad2deg( longascnode(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
-        w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
         x_vec[j] = r2_eclip[0]
         y_vec[j] = r2_eclip[1]
         z_vec[j] = r2_eclip[2]
@@ -779,17 +784,17 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
     print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
 
-    print('taup_vec = ', taup_vec)
+    # print('taup_vec = ', taup_vec)
 
     a_mean = np.mean(a_vec) #au
     e_mean = np.mean(e_vec) #dimensionless
     taup_mean = np.mean(taup_vec) #deg
+    w_mean = np.mean(w_vec) #deg
     I_mean = np.mean(I_vec) #deg
     W_mean = np.mean(W_vec) #deg
-    w_mean = np.mean(w_vec) #deg
 
-    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, I, Omega, omega ***')
-    print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', I_mean, 'deg, ', W_mean, 'deg, ', w_mean, 'deg')
+    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
+    print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
 
     npoints = 1000
     theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
@@ -833,4 +838,4 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         plt.show()
 
     # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
-    return a_mean, e_mean, taup_mean, I_mean, W_mean, w_mean
+    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean
