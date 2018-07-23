@@ -728,6 +728,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     x_Ea_vec = np.zeros((nobs-2,))
     y_Ea_vec = np.zeros((nobs-2,))
     z_Ea_vec = np.zeros((nobs-2,))
+    t_vec = np.zeros((nobs,))
 
     print('r2_root_ind_vec = ', r2_root_ind_vec)
     print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
@@ -744,6 +745,12 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         # print('r2 = ', r2)
         # print('obs_t[1] = ', obs_t[1])
         # print('v2 = ', v2)
+
+        if j==0:
+            t_vec[0] = obs_t[0]
+        elif j==nobs-3:
+            t_vec[j+2] = obs_t[2]
+        t_vec[j+1] = obs_t[1]
 
         r2_eclip = np.matmul(rot_equat_to_eclip, r2)
         v2_eclip = np.matmul(rot_equat_to_eclip, v2)
@@ -785,6 +792,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
 
     # print('taup_vec = ', taup_vec)
+    print('t_vec = ', t_vec)
 
     a_mean = np.mean(a_vec) #au
     e_mean = np.mean(e_vec) #dimensionless
@@ -792,6 +800,10 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     w_mean = np.mean(w_vec) #deg
     I_mean = np.mean(I_vec) #deg
     W_mean = np.mean(W_vec) #deg
+
+    print('Observational arc:')
+    print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
+    print('Last observation (UTC) : ', Time(t_vec[nobs-2], format='jd').iso)
 
     print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
     print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
