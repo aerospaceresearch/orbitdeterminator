@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Orbit Determinator'
-copyright = '2017, Nilesh Chaturvedi, Alexandros Kazantzidis'
+copyright = '2018, Nilesh Chaturvedi, Alexandros Kazantzidis'
 author = 'Nilesh Chaturvedi, Alexandros Kazantzidis'
 
 # The version info for the project you're documenting, acts as replacement for
