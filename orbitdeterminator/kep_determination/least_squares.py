@@ -84,7 +84,7 @@ def meanmotion(mu,a):
 
 # get mean anomaly from mean motion (n), time (t) and time of pericenter passage (taup)
 def meananomaly(n, t, taup):
-    return n*(t-taup)
+    return np.mod(n*(t-taup), 2.0*np.pi)
 
 # compute eccentric anomaly (E) from eccentricity (e) and mean anomaly (M)
 def eccentricanomaly(e,M):
