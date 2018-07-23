@@ -1,160 +1,30 @@
-"""
-The code takes a TLE and computes state vectors for 8 hrs at every second
-"""
-
-import sys
-import os.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+'''
+The code takes a TLE and computes state vectors for next 8 hrs at every second.
+'''
 
 import numpy as np
 import math
-import csv
-import time
-import requests
-from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
 
 pi = np.pi
 meu = 398600.4418
 two_pi = 2*pi;
 min_per_day = 1440
 
-"""
-class for SGP4 implementation
-"""
 class SGP4(object):
 
-    @classmethod
-    def find_year(self, year):
-        """
-        Returns year of launch of the satellite.
-
-        Values in the range 00-56 are assumed to correspond to years in the range 2000 to 2056 while
-        values in the range 57-99 are assumed to correspond to years in the range 1957 to 1999.
+    def propagate(self, line1, line2):
+        '''
+        Computes state vectors at every second for 8 hours and stores them into
+        a vector and returns the final vector.
 
         Args:
-            self : class variables
-            year : last 2 digits of the year
+            self: class variables
+            line1: line 1 in TLE
+            line2: line 2 in TLE
 
         Returns:
-            whole year number
-        """
-
-        if(year >=0 and year <=56):
-            return year + 2000;
-        else:
-            return year + 1900;
-
-    @classmethod
-    def find_date(self, date):
-        """
-        Finds date of the year from the input (in number of days)
-
-        Args:
-            self : class variables
-            date : Number of days
-
-        Returns:
-            date in format DD/MM/YYYY
-        """
-
-        year = int(self.find_year(int(''.join(date[0:2]))))
-        day = int(''.join(date[2:5]))
-
-        daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
-
-        # If the year is Leap year or not
-        if(year % 4 == 0):
-            daysInMonth[1] = 29
-
-        i = 0
-        while(day > daysInMonth[i]):
-            day -= daysInMonth[i]
-            i += 1
-
-        day += 1
-        month = i+1
-        # print(str(year) + "/" + str(month) + "/" + str(day))
-
-        return year, month, day
-
-    @classmethod
-    def find_time(self, time):
-        """
-        Finds date of the year from the input (in milliseconds)
-
-        Args:
-            self : class variables
-            time : Time in milliseconds
-
-        Returns:
-            time in format HH:MM:SS
-        """
-
-        second = timedelta(float(time)/1000)
-        time = datetime(1,1,1) + second
-
-        hour = int(time.hour)
-        minute = int(time.minute)
-        second = int(time.second)
-        # print(str(hour) + ":" + str(minute) + ":" + str(second))
-
-        return hour, minute, second
-
-    @classmethod
-    def julian_day(self, year, mon, day, hr, mts, sec):
-        """
-        Converts given timestamp into Julian form
-
-        Args:
-            self : class variables
-            year : year number
-            mon : month in year
-            day : date in the month
-            hr : hour
-            mts : minutes in the hour
-            sec : seconds in minute
-
-        Returns:
-            time in Julian form
-        """
-        return (367.0*year-7.0*(year + ((mon + 9.0) // 12.0)) * 0.25 // 1.0 +
-          275.0 * mon // 9.0 + day + 1721013.5 +
-          ((sec / 60.0 + mts) / 60.0 + hr) / 24.0)
-
-    @classmethod
-    def assure_path_exists(self, loc):
-        """
-        Creates a folder for output files if it does not exists
-
-        Args:
-            self : class variables
-            loc : path to the folder
-
-        Returns:
-            NIL
-        """
-        # dir = os.path.dirname(path)
-        if(os.path.exists(loc) == False):
-            os.makedirs(loc)
-
-    def maintain_data(self, line0, line1, line2):
-        """
-        Reads data, call propagation model and generates output files
-
-        Args:
-            self : class variables
-            line0 : satellite name
-            line1 : line 1 in TLE
-            line2 : line 2 in TLE
-
-        Returns:
-            NIL
-        """
-        year, month, day = self.find_date(''.join(line1[18:23]))
-        hour, minute, second = self.find_time(''.join(line1[24:32]))
-        self.jd = self.julian_day(year, month, day, hour, minute, second)
-        # print(self.jd)
+            final: vector containing all state vectors for 8 hours
+        '''
 
         self.xmo = float(''.join(line2[43:51])) * (pi/180)
         self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
@@ -164,96 +34,32 @@ class SGP4(object):
         self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
         self.bstar = int(''.join(line1[53:59]))*(1e-5)*(10**int(''.join(line1[59:61])))
 
-        ts = time.localtime(time.time())
-        yr = ts.tm_year
-        mth = ts.tm_mon
-        day = ts.tm_mday
-        hr = ts.tm_hour
-        mts = ts.tm_min
-        sec = ts.tm_sec
+        final = np.zeros((28800,6))
+        i = 0
+        upto = 28800                # 28800 secs in 8 hours (in seconds)
+        while(i < upto):
+            tsince = i
+            pos, vel = self.propagation_model(tsince)
+            data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
+            data = [float("{0:.5f}".format(i)) for i in data]
+            print(str(tsince) + " - " + str(data))
+            final[i,:] = data
+            i = i + 1
 
-        suffix_date = str(yr) + "-" + str(mth) + "-" + str(day)
-        suffix_time = str(hr) + ":" + str(mts) + ":" + str(sec)
-        filename = line0 + "_" + suffix_date + "_" + suffix_time
-
-        self.assure_path_exists("../output/")
-        path = "../output/" + filename + ".csv"
-        with open(path,'a') as myfile:
-            writer = csv.writer(myfile)
-            i = 0
-            while(i < 28800):               # 28800
-                j = self.julian_day(yr, mth, day, hr, mts, sec)
-                tsince = (j - self.jd)*min_per_day
-                pos, vel = self.propagation_model(tsince)
-                data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
-                data = [float("{0:.5f}".format(i)) for i in data]
-                print(i, data)
-                writer.writerows([data])
-                yr, mth, day, hr, mts, sec = self.update_epoch(yr, mth, day, hr, mts, sec)
-                i = i + 1
-
-    @classmethod
-    def update_epoch(self, yr, mth, day, hr, mts, sec):
-        """
-        Adds one second to the given time
-
-        Args:
-            self : class variables
-            yr : year
-            mth : month
-            day : date
-            hr : hour
-            mts : minutes
-            sec : seconds
-
-        Returns:
-            yr : year
-            mth : month
-            day : date
-            hr : hour
-            mts : minutes
-            sec : seconds
-        """
-        sec += 1
-
-        if(sec >= 60):
-            sec = 0
-            mts += 1
-
-        if(mts >= 60):
-            mts = 0
-            hr += 1
-
-        if(hr >= 24):
-            hr = 0
-            day += 1
-
-        daysInMonth = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
-        if(yr % 4 == 0):
-            daysInMonth[1] = 29
-
-        if(day > daysInMonth[mth-1]):
-            day = 1
-            mth += 1
-
-        if(mth > 12):
-            mth = 1
-            yr += 1
-
-        return yr, mth, day, hr, mts, sec
+        return final
 
     def propagation_model(self, tsince):
-        """
-        Computes state vectors at given time epoch
+        '''
+        Computes state vectors at a given time epoch.
 
         Args:
-            self : class variables
-            tsince : time epoch
+            self: class variables
+            tsince: time epoch
 
         Returns:
-            pos : position vector
-            vel : velocity vector
-        """
+            pos: position vector
+            vel: velocity vector
+        '''
         ae = 1
         tothrd = 2.0/3.0
         XJ3 = -2.53881e-6
@@ -445,27 +251,10 @@ class SGP4(object):
         return pos, vel
 
 if __name__ == "__main__":
-    page = requests.get("https://www.celestrak.com/NORAD/elements/cubesat.txt")
-    soup = BeautifulSoup(page.content, 'html.parser')
-    tle = list(soup.children)
-    tle = tle[0].splitlines()
+    line1 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8"
+    line2 = "2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518   105"
 
-    count = len(tle)
-    for i in range(0,count,3):
-        print(str(i/3) + " - " + tle[i])
-        obj = SGP4()
-        obj.maintain_data(tle[i].replace(" ", ""), tle[i+1], tle[i+2])
-        del(obj)
-
-    # line1 = tle[1]
-    # line2 = tle[2]
-    # line1 = "1 35933U 09051C   18170.11271880  .00000090  00000-0  31319-4 0  9993"
-    # line2 = "2 35933  98.5496 322.8685 0005266 206.2829 153.8102 14.56270197463823"
-
-    # obj = SGP4()
-    # obj.maintain_data(tle[0].replace(" ", ""), line1, line2)
-    # # pos = [-1.57548492e+03, 3.58011715e+03, 5.91547730e+03]
-    # # vel = [2.95658397e+00, -5.52287181e+00, 4.12343017e+00]
-    # # print(line1)
-    # # print(line2)
-    # del(obj)
+    obj = SGP4()
+    state_vec = obj.propagate(line1, line2)
+    # print(state_vec)
+    del(obj)

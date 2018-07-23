@@ -84,18 +84,18 @@ def test_cross_product():
 
     del(obj)
 
-def test_vector_sum():
+def test_operate_vector():
     obj = Gibbs()
 
     vec1 = [123.76, 233.98, 675.21]
     vec2 = [13.234, 231.235, 8776.65]
 
-    vec = obj.vector_sum(vec1, vec2, 1)
+    vec = obj.operate_vector(vec1, vec2, 1)
     vec = [float("{0:.2f}".format(i)) for i in vec]
     ans = [136.99, 465.22, 9451.86]
     assert_array_equal(vec, ans)
 
-    vec = obj.vector_sum(vec1, vec2, 0)
+    vec = obj.operate_vector(vec1, vec2, 0)
     vec = [float("{0:.2f}".format(i)) for i in vec]
     ans = [110.53, 2.74, -8101.44]
     assert_array_equal(vec, ans)
@@ -103,12 +103,12 @@ def test_vector_sum():
     vec1 = [435.3452, -655.621, 956.075]
     vec2 = [537.956, 392.374, -755.343]
 
-    vec = obj.vector_sum(vec1, vec2, 1)
+    vec = obj.operate_vector(vec1, vec2, 1)
     vec = [float("{0:.2f}".format(i)) for i in vec]
     ans = [973.3, -263.25, 200.73]
     assert_array_equal(vec, ans)
 
-    vec = obj.vector_sum(vec1, vec2, 0)
+    vec = obj.operate_vector(vec1, vec2, 0)
     vec = [float("{0:.2f}".format(i)) for i in vec]
     ans = [-102.61, -1047.99, 1711.42]
     assert_array_equal(vec, ans)
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     test_magnitude()
     test_dot_product()
     test_cross_product()
-    test_vector_sum()
+    test_operate_vector()
     test_unit()
     test_gibbs()
     test_orbital_elements()
