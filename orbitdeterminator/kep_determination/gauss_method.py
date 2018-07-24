@@ -342,10 +342,10 @@ def angle_diff_rad(a1_rad, a2_rad):
 
 def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax_c):
     ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime, x[0], x[1], x[2], x[3], x[4], x[5])
-    los_comp = losvector(ra_comp, dec_comp)
+    # los_comp = losvector(ra_comp, dec_comp)
     # print('los_comp = ', los_comp)
     ra_obs, dec_obs = t_ra_dec_datapoint.ra.rad, t_ra_dec_datapoint.dec.rad
-    los_obs = losvector(ra_obs, dec_obs)
+    # los_obs = losvector(ra_obs, dec_obs)
     # print('los_obs = ', los_obs)
     # print('ra_obs = ', ra_obs)
     # print('dec_obs = ', dec_obs)
@@ -354,6 +354,24 @@ def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax
     #"unsigned" distance between points in torus
     diff_ra = angle_diff_rad(ra_obs, ra_comp)
     diff_dec = angle_diff_rad(dec_obs, dec_comp)
+    # print('diff_ra = ', np.rad2deg(diff_ra), 'deg')
+    # print('diff_dec = ', np.rad2deg(diff_dec), 'deg')
+    return np.array((diff_ra,diff_dec))
+
+def radec_residual_rov(x, t, ra_obs_rad, dec_obs_rad, spk_kernel, long, parallax_s, parallax_c):
+    ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t, x[0], x[1], x[2], x[3], x[4], x[5])
+    # los_comp = losvector(ra_comp, dec_comp)
+    # print('los_comp = ', los_comp)
+    # ra_obs, dec_obs = t_ra_dec_datapoint.ra.rad, t_ra_dec_datapoint.dec.rad
+    # los_obs = losvector(ra_obs, dec_obs)
+    # print('los_obs = ', los_obs)
+    # print('ra_obs = ', ra_obs)
+    # print('dec_obs = ', dec_obs)
+    # print('ra_comp = ', ra_comp)
+    # print('dec_comp = ', dec_comp)
+    #"unsigned" distance between points in torus
+    diff_ra = angle_diff_rad(ra_obs_rad, ra_comp)
+    diff_dec = angle_diff_rad(dec_obs_rad, dec_comp)
     # print('diff_ra = ', np.rad2deg(diff_ra), 'deg')
     # print('diff_dec = ', np.rad2deg(diff_dec), 'deg')
     return np.array((diff_ra,diff_dec))
@@ -803,7 +821,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     print('Observational arc:')
     print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
-    print('Last observation (UTC) : ', Time(t_vec[nobs-2], format='jd').iso)
+    print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
     print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
     print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
