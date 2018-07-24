@@ -1,3 +1,6 @@
+# TODO: evaluate Earth ephemeris only once for a given TDB instant
+# this implies saving all UTC times and their TDB equivalencies
+
 from least_squares import xyz_frame_, orbel2xyz, time2truean
 import gauss_method as gm
 from datetime import datetime, timedelta
@@ -8,6 +11,20 @@ from astropy import units as uts
 from astropy import constants as cts
 from astropy.time import Time
 from scipy.optimize import least_squares
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+
+# compute auxiliary vector of observed ra,dec values
+# inds = obs_arr
+def radec_obs_vec(inds, mpc_object_data):
+    rov = np.zeros((2*len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
+        obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
+        rov[2*i-2], rov[2*i-1] = obs_t_ra_dec.ra.rad, obs_t_ra_dec.dec.rad
+    return rov
 
 # compute residuals vector for ra/dec observations
 # inds = obs_arr
@@ -38,6 +55,69 @@ def radec_res_vec(x, inds, mpc_object_data, mpc_observatories_data, spk_kernel):
         # observed minus computed residual:
         rv[2*i-2], rv[2*i-1] = radec_res
     return rv
+
+# compute residuals vector for ra/dec observations with pre-computed observed radec values vector
+# inds = obs_arr
+def radec_res_vec_rov(x, inds, mpc_object_data, mpc_observatories_data, spk_kernel, rov):
+    rv = np.zeros((2*len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        # obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
+        timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
+        site_code = mpc_object_data['observatory'][indm1]
+        # obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
+        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)[0]
+        # radec_res = gm.radec_residual(x, obs_t_ra_dec, spk_kernel, obsite['Long'], obsite['sin'], obsite['cos'])
+        radec_res = gm.radec_residual_rov(x, timeobs, rov[2*i-2], rov[2*i-1], spk_kernel, obsite['Long'], obsite['sin'], obsite['cos'])
+
+        # print('timeobs = ', timeobs)
+        # print('obs_t_ra_dec = ', obs_t_ra_dec)
+        # print('obs_t_ra_dec.obstime = ', obs_t_ra_dec.obstime)
+        # print('obs_t_ra_dec.obstime.jd = ', obs_t_ra_dec.obstime.jd)
+        # print('obs_t_ra_dec.ra.deg = ', obs_t_ra_dec.ra.deg)
+        # print('obs_t_ra_dec.dec.deg = ', obs_t_ra_dec.dec.deg)
+        # print('site_code = ', site_code)
+        # print('obsite = ', obsite)
+        # print('obsite[\'Long\'] = ', obsite['Long'])
+        # print('obsite[\'sin\'] = ', obsite['sin'])
+        # print('obsite[\'cos\'] = ', obsite['cos'])
+        # print('radec_res = ', radec_res)
+        # observed minus computed residual:
+        rv[2*i-2], rv[2*i-1] = radec_res
+    return rv
+
+# compute residuals vector for ra/dec observations; return observation times and residual vector
+# inds = obs_arr
+def t_radec_res_vec(x, inds, mpc_object_data, mpc_observatories_data, spk_kernel):
+    rv = np.zeros((2*len(inds)))
+    tv = np.zeros((len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        # obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
+        timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
+        site_code = mpc_object_data['observatory'][indm1]
+        obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
+        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)[0]
+        radec_res = gm.radec_residual(x, obs_t_ra_dec, spk_kernel, obsite['Long'], obsite['sin'], obsite['cos'])
+
+        # print('timeobs = ', timeobs)
+        # print('obs_t_ra_dec = ', obs_t_ra_dec)
+        # print('obs_t_ra_dec.obstime = ', obs_t_ra_dec.obstime)
+        # print('obs_t_ra_dec.obstime.jd = ', obs_t_ra_dec.obstime.jd)
+        # print('obs_t_ra_dec.ra.deg = ', obs_t_ra_dec.ra.deg)
+        # print('obs_t_ra_dec.dec.deg = ', obs_t_ra_dec.dec.deg)
+        # print('site_code = ', site_code)
+        # print('obsite = ', obsite)
+        # print('obsite[\'Long\'] = ', obsite['Long'])
+        # print('obsite[\'sin\'] = ', obsite['sin'])
+        # print('obsite[\'cos\'] = ', obsite['cos'])
+        # print('radec_res = ', radec_res)
+        # observed minus computed residual:
+        rv[2*i-2], rv[2*i-1] = radec_res
+        tv[i] = timeobs.tdb.jd
+    return tv, rv
 
 # path of file of optical MPC-formatted observations
 body_fname_str = '../example_data/mpc_eros_data.txt'
@@ -96,7 +176,18 @@ print('x0 = ', x0)
 obs_arr_ls1 = np.array(range(7475,7539))
 obs_arr_ls2 = np.array(range(7562,7719))
 obs_arr_ls = np.concatenate([obs_arr_ls1, obs_arr_ls2])
-print('obs_arr_ls = ', obs_arr_ls)
+# obs_arr_ls = np.array(range(7475,7485))
+# print('obs_arr_ls = ', obs_arr_ls)
+print('obs_arr_ls[0] = ', obs_arr_ls[0])
+print('obs_arr_ls[-1] = ', obs_arr_ls[-1])
+nobs_ls = len(obs_arr_ls)
+print('nobs_ls = ', nobs_ls)
+
+rov = radec_obs_vec(obs_arr_ls, mpc_object_data)
+# print('rov = ', rov)
+# print('len(rov) = ', len(rov))
+
+#         radec_res_vec_rov(x, inds, mpc_object_data, mpc_observatories_data, spk_kernel, rov)
 
 rv0 = radec_res_vec(x0, obs_arr_ls, mpc_object_data, mpc_observatories_data, spk_kernel)
 Q0 = np.linalg.norm(rv0, ord=2)/len(rv0)
@@ -104,13 +195,13 @@ Q0 = np.linalg.norm(rv0, ord=2)/len(rv0)
 # print('rv0 = ', rv0)
 print('Q0 = ', Q0)
 
-Q_ls = least_squares(radec_res_vec, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, spk_kernel), method='lm')
+Q_ls = least_squares(radec_res_vec_rov, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, spk_kernel, rov), method='lm')
 
 print('scipy.optimize.least_squares exited with code ', Q_ls.status)
 print(Q_ls.message,'\n')
 print('Q_ls.x = ', Q_ls.x)
 
-rv_star = radec_res_vec(Q_ls.x, obs_arr_ls, mpc_object_data, mpc_observatories_data, spk_kernel)
+tv_star, rv_star = t_radec_res_vec(Q_ls.x, obs_arr_ls, mpc_object_data, mpc_observatories_data, spk_kernel)
 Q_star = np.linalg.norm(rv_star, ord=2)/len(rv_star)
 # print('rv* = ', rv_star)
 print('Q* = ', Q_star)
@@ -130,6 +221,51 @@ print('Apocenter distance (Q):              ', Q_ls.x[0]*(1.0+Q_ls.x[1]), 'au')
 print('Argument of pericenter (omega):      ', np.rad2deg(Q_ls.x[3]), 'deg')
 print('Inclination (I):                     ', np.rad2deg(Q_ls.x[4]), 'deg')
 print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_ls.x[5]), 'deg')
+
+ra_res_vec = np.rad2deg(rv_star[0::2])*(3600.0)
+dec_res_vec = np.rad2deg(rv_star[1::2])*(3600.0)
+
+print('len(ra_res_vec) = ', len(ra_res_vec))
+print('len(dec_res_vec) = ', len(dec_res_vec))
+print('nobs_ls = ', nobs_ls)
+print('len(tv_star) = ', len(tv_star))
+# print('tv_star = ', tv_star)
+
+# ax = plt.axes(aspect='equal', projection='3d')
+
+# # Sun-centered orbits: Computed orbit and Earth's
+# ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+# ax.scatter3D(x_Ea_vec, y_Ea_vec, z_Ea_vec, color='blue', marker='.', label='Earth orbit')
+# ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5)
+# ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
+# ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
+# plt.legend()
+# ax.set_xlabel('x (au)')
+# ax.set_ylabel('y (au)')
+# ax.set_zlabel('z (au)')
+# xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
+# ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
+# ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
+# ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
+# ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
+# ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
+
+# y_rad = 0.001
+
+f, axarr = plt.subplots(2, sharex=True)
+axarr[0].set_title('Gauss + LS fit residuals: RA, Dec')
+axarr[0].scatter(tv_star, ra_res_vec, s=0.75, label='delta RA (\")')
+# axarr[0].set_xlabel('time (JDTDB)')
+axarr[0].set_ylabel('RA (\")')
+# axarr[0].set_title('Sharing X axis')
+axarr[1].scatter(tv_star, dec_res_vec, s=0.75, label='delta Dec (\")')
+axarr[1].set_xlabel('time (JDTDB)')
+axarr[1].set_ylabel('Dec (\")')
+# # plt.xlim(4,5)
+# # plt.ylim(-y_rad, y_rad)
+
+plt.show()
+
 
 # print(' = ', )
 
