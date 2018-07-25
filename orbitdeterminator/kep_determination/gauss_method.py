@@ -334,6 +334,52 @@ def get_observations_data(mpc_object_data, inds):
 
     return obs_radec, obs_t, site_codes
 
+def get_observations_data_sat(iod_object_data, inds):
+    # construct SkyCoord 3-element array with observational information
+    timeobs = np.zeros((3,), dtype=Time)
+    obs_radec = np.zeros((3,), dtype=SkyCoord)
+    obs_t = np.zeros((3,))
+
+    # print('iod_object_data[\'hr\'][inds[0]] = ', iod_object_data['hr'][inds[0]])
+    # print('iod_object_data[\'min\'][inds[0]] = ', iod_object_data['min'][inds[0]])
+    # print('iod_object_data[\'sec\'][inds[0]] = ', iod_object_data['sec'][inds[0]])
+    # print('iod_object_data[\'msec\'][inds[0]] = ', iod_object_data['msec'][inds[0]])
+
+    td1 = timedelta(hours=1.0*iod_object_data['hr'][inds[0]], minutes=1.0*iod_object_data['min'][inds[0]], seconds=(iod_object_data['sec'][inds[0]]+iod_object_data['msec'][inds[0]]/1000.0))
+    td2 = timedelta(hours=1.0*iod_object_data['hr'][inds[1]], minutes=1.0*iod_object_data['min'][inds[1]], seconds=(iod_object_data['sec'][inds[1]]+iod_object_data['msec'][inds[1]]/1000.0))
+    td3 = timedelta(hours=1.0*iod_object_data['hr'][inds[2]], minutes=1.0*iod_object_data['min'][inds[2]], seconds=(iod_object_data['sec'][inds[2]]+iod_object_data['msec'][inds[2]]/1000.0))
+
+    timeobs[0] = Time( datetime(iod_object_data['yr'][inds[0]], iod_object_data['month'][inds[0]], iod_object_data['day'][inds[0]]) + td1 )
+    timeobs[1] = Time( datetime(iod_object_data['yr'][inds[1]], iod_object_data['month'][inds[1]], iod_object_data['day'][inds[1]]) + td2 )
+    timeobs[2] = Time( datetime(iod_object_data['yr'][inds[2]], iod_object_data['month'][inds[2]], iod_object_data['day'][inds[2]]) + td3 )
+
+    # print('timeobs = ', timeobs)
+
+    raHHMMmmm0 = iod_object_data['raHH'][inds[0]] + (iod_object_data['raMM'][inds[0]]+iod_object_data['rammm'][inds[0]]/1000.0)/60.0
+    raHHMMmmm1 = iod_object_data['raHH'][inds[1]] + (iod_object_data['raMM'][inds[1]]+iod_object_data['rammm'][inds[1]]/1000.0)/60.0
+    raHHMMmmm2 = iod_object_data['raHH'][inds[2]] + (iod_object_data['raMM'][inds[2]]+iod_object_data['rammm'][inds[2]]/1000.0)/60.0
+
+    decHHMMmmm0 = iod_object_data['decDD'][inds[0]] + (iod_object_data['decMM'][inds[0]]+iod_object_data['decmmm'][inds[0]]/1000.0)/60.0
+    decHHMMmmm1 = iod_object_data['decDD'][inds[1]] + (iod_object_data['decMM'][inds[1]]+iod_object_data['decmmm'][inds[1]]/1000.0)/60.0
+    decHHMMmmm2 = iod_object_data['decDD'][inds[2]] + (iod_object_data['decMM'][inds[2]]+iod_object_data['decmmm'][inds[2]]/1000.0)/60.0
+
+    obs_radec[0] = SkyCoord(ra=raHHMMmmm0, dec=decHHMMmmm0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+    obs_radec[1] = SkyCoord(ra=raHHMMmmm1, dec=decHHMMmmm1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+    obs_radec[2] = SkyCoord(ra=raHHMMmmm2, dec=decHHMMmmm2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
+
+    # print('obs_radec[0] = ', obs_radec[0])
+    # print('obs_radec[1] = ', obs_radec[1])
+    # print('obs_radec[2] = ', obs_radec[2])
+
+    # construct vector of observation time (continous variable)
+    obs_t[0] = obs_radec[0].obstime.jd
+    obs_t[1] = obs_radec[1].obstime.jd
+    obs_t[2] = obs_radec[2].obstime.jd
+
+    site_codes = [iod_object_data['station'][inds[0]], iod_object_data['station'][inds[1]], iod_object_data['station'][inds[2]]]
+
+    return obs_radec, obs_t, site_codes
+
 # heliocentric position of Earth at Julian date t_tdb (TDB, days), according to SPK kernel defined by spk_kernel
 # returns: cartesian position in km
 def earth_ephemeris(spk_kernel, t_tdb):
@@ -700,10 +746,30 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
 
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_, obs_t
 
-# Implementation of Gauss method for ra-dec observations of Earth satellites
+# Implementation of Gauss method for IOD-formatted optical observations of Earth satellites
+def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=0):
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    mu = mu_Earth
+
+    # extract observations data
+    obs_radec, obs_t, site_codes = get_observations_data_sat(iod_object_data, inds)
+
+    print('obs_radec = ', obs_radec)
+    print('obs_t = ', obs_t)
+    print('site_codes = ', site_codes)
+
+    # compute observer position vectors wrt Sun
+    R = get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes)
+
+    # perform core Gauss method
+    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
+
+    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_, obs_t
+
+# Implementation of Gauss method for ra-dec observations of Earth satellites; method for book examples
 def gauss_estimate_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu = cts.GM_earth.to(uts.Unit("km3 / s2")).value
+    mu = mu_Earth
 
     # construct vector of observation time intervals (seconds)
     timeobs = np.zeros((3,), dtype=Time)
@@ -737,7 +803,7 @@ def gauss_estimate_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t
 
 def gauss_iterator_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0):
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu = cts.GM_earth.to(uts.Unit("km3 / s2")).value
+    mu = mu_Earth
     r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_estimate_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0, refiters):
@@ -934,7 +1000,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
-    print('sat_observatories_data = ', sat_observatories_data)
+    # print('sat_observatories_data = ', sat_observatories_data)
 
     # Earth's G*m value
     mu = mu_Earth
@@ -963,7 +1029,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     print('r2_root_ind_vec = ', r2_root_ind_vec)
     print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
 
-    # r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, obs_arr[0:3], refiters=0, r2_root_ind=0)
+    r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, np.array(obs_arr[0:3])-1, refiters=0, r2_root_ind=0)
 
     # for j in range (0,nobs-2):
     #     # Apply Gauss method to three elements of data
