@@ -1,5 +1,5 @@
 # File was retrieved from sattools/data/sites.txt (GitHub repo)
-No   ID   Latitude Longitude  Elev    Observer
+No   ID  Latitude Longitude   Elev    Observer
 1111 RL   38.9478 -104.5614   2073    Ron Lee
 4171 CB   52.8344    6.3785     10    Cees Bassa
 4172 LB   52.3713    5.2580     -3    Leo Barhorst
