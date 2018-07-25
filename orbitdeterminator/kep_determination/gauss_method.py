@@ -1121,6 +1121,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     I_vec = np.zeros((nobs-2,))
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
+    n_vec = np.zeros((nobs-2,))
     t_vec = np.zeros((nobs,))
 
     print('r2_root_ind_vec = ', r2_root_ind_vec)
@@ -1165,6 +1166,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
         I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
         W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+        n_vec[j] = n_num
         t_vec[j+1] = obs_t[1]
         x_vec[j+1] = r2[0]
         y_vec[j+1] = r2[1]
@@ -1197,13 +1199,14 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     w_mean = np.mean(w_vec) #deg
     I_mean = np.mean(I_vec) #deg
     W_mean = np.mean(W_vec) #deg
+    n_mean = np.mean(n_vec) #sec
 
     print('Observational arc:')
     print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
-    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
-    print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
+    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega, T ***')
+    print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean, 'seconds')
 
     npoints = 1000
     theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
@@ -1239,4 +1242,4 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         plt.show()
 
     # # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
-    # return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean
+    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
