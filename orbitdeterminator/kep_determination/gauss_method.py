@@ -74,6 +74,37 @@ def load_mpc_data(fname):
     mpc_delims = [5,7,1,1,1,4,3,3,7,24,9,6,6,3]
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
 
+def load_iod_data(fname):
+    '''
+    Loads satellite position observation data files following the Interactive
+    Orbit Determination format (IOD). Currently, the only supported angle format
+    is 2, as specified in IOD format. IOD format is described at
+    http://www.satobs.org/position/IODformat.html. IOD sub-format 2 corresponds to:
+
+              50        60
+             89 123456789 1234
+    RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
+
+    TODO: add other IOD angle sub-formats; construct numpy array according to different
+    angle formats.
+
+    Args:
+        fname (string): name of the IOD-formatted text file to be parsed
+
+    Returns:
+        x (numpy array): array of satellite position observations following the
+        IOD format, with angle format code = 2.
+    '''
+    # dt is the dtype for IOD-formatted text files
+    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S1, S1'
+    # iod_names correspond to the dtype names of each field
+    iod_names = ['object','station','stationstatus','utcdate','utctime','timeunc','angformat','epoch','raHH','raMM','rammm','decDD','decMM','decmmm','posunc','optical','vismag']
+    # TODO: read first line, get sub-format, construct iod_delims from there
+    # as it is now, it only works for the given test file iod_data.txt
+    # iod_delims are the fixed-width column delimiter followinf IOD format description
+    iod_delims = [15, 5, 2, 9, 9, 3, 2, 1, 3, 2, 3, 3, 2, 2, 3, 2, 1]
+    return np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+
 # Compute geocentric observer position at UTC instant t_utc
 # at a given observation site defined by its longitude, and parallax constants S and C
 # formula taken from top of page 266, chapter 5, Orbital Mechanics book
@@ -875,3 +906,162 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean
+
+def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0, plot=True):
+    # load IOD data for a given satellite
+    iod_object_data = load_iod_data(body_fname_str)
+    print('IOD observation data:\n', iod_object_data, '\n')
+    print('IOD observation data:\n', iod_object_data[ obs_arr ], '\n')
+
+    # #load MPC data of listed observatories (longitude, parallax constants C, S) (~7,000 observations)
+    # mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
+
+    # #definition of the astronomical unit in km
+    # # au = cts.au.to(uts.Unit('km')).value
+
+    # # Sun's G*m value
+    # # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
+    # mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+
+    # #the total number of observations used
+    # nobs = len(obs_arr)
+
+    # print('nobs = ', nobs)
+    # print('obs_arr = ', obs_arr)
+
+    # #auxiliary arrays
+    # x_vec = np.zeros((nobs-2,))
+    # y_vec = np.zeros((nobs-2,))
+    # z_vec = np.zeros((nobs-2,))
+    # a_vec = np.zeros((nobs-2,))
+    # e_vec = np.zeros((nobs-2,))
+    # taup_vec = np.zeros((nobs-2,))
+    # I_vec = np.zeros((nobs-2,))
+    # W_vec = np.zeros((nobs-2,))
+    # w_vec = np.zeros((nobs-2,))
+    # x_Ea_vec = np.zeros((nobs-2,))
+    # y_Ea_vec = np.zeros((nobs-2,))
+    # z_Ea_vec = np.zeros((nobs-2,))
+    # t_vec = np.zeros((nobs,))
+
+    # print('r2_root_ind_vec = ', r2_root_ind_vec)
+    # print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
+
+    # for j in range (0,nobs-2):
+    #     # Apply Gauss method to three elements of data
+    #     inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
+    #     print('j = ', j)
+    #     r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t = gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+
+    #     # print('|r1| = ', np.linalg.norm(r1,ord=2))
+    #     # print('|r2| = ', np.linalg.norm(r2,ord=2))
+    #     # print('|r3| = ', np.linalg.norm(r3,ord=2))
+    #     # print('r2 = ', r2)
+    #     # print('obs_t[1] = ', obs_t[1])
+    #     # print('v2 = ', v2)
+
+    #     if j==0:
+    #         t_vec[0] = obs_t[0]
+    #     elif j==nobs-3:
+    #         t_vec[j+2] = obs_t[2]
+    #     t_vec[j+1] = obs_t[1]
+
+    #     r2_eclip = np.matmul(rot_equat_to_eclip, r2)
+    #     v2_eclip = np.matmul(rot_equat_to_eclip, v2)
+
+    #     a_num = semimajoraxis(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
+    #     e_num = eccentricity(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
+    #     f_num = trueanomaly(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
+    #     n_num = meanmotion(mu, a_num)
+
+    #     a_vec[j] = a_num
+    #     e_vec[j] = e_num
+    #     taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num)
+    #     w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
+    #     I_vec[j] = np.rad2deg( inclination(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
+    #     W_vec[j] = np.rad2deg( longascnode(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
+    #     x_vec[j] = r2_eclip[0]
+    #     y_vec[j] = r2_eclip[1]
+    #     z_vec[j] = r2_eclip[2]
+    #     Ea_hc_pos_eclip = np.matmul(rot_equat_to_eclip, Ea_hc_pos[1])
+    #     x_Ea_vec[j] = Ea_hc_pos_eclip[0]
+    #     y_Ea_vec[j] = Ea_hc_pos_eclip[1]
+    #     z_Ea_vec[j] = Ea_hc_pos_eclip[2]
+
+    # # print(a_num/au, 'au', ', ', e_num)
+    # # print(a_num, 'au', ', ', e_num)
+    # # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
+
+    # # print('x_vec = ', x_vec)
+    # # print('a_vec = ', a_vec)
+    # # print('e_vec = ', e_vec)
+    # print('a_vec = ', a_vec)
+    # print('len(a_vec) = ', len(a_vec))
+    # print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
+
+    # print('e_vec = ', e_vec)
+    # print('len(e_vec) = ', len(e_vec))
+    # e_vec_fil1 = e_vec[e_vec<1.0]
+    # e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
+    # print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
+
+    # # print('taup_vec = ', taup_vec)
+    # print('t_vec = ', t_vec)
+
+    # a_mean = np.mean(a_vec) #au
+    # e_mean = np.mean(e_vec) #dimensionless
+    # taup_mean = np.mean(taup_vec) #deg
+    # w_mean = np.mean(w_vec) #deg
+    # I_mean = np.mean(I_vec) #deg
+    # W_mean = np.mean(W_vec) #deg
+
+    # print('Observational arc:')
+    # print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
+    # print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
+
+    # print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
+    # print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
+
+    # npoints = 1000
+    # theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
+    # t_Ea_vec = np.linspace(2451544.5, 2451544.5+365.3, npoints)
+    # x_orb_vec = np.zeros((npoints,))
+    # y_orb_vec = np.zeros((npoints,))
+    # z_orb_vec = np.zeros((npoints,))
+    # x_Ea_orb_vec = np.zeros((npoints,))
+    # y_Ea_orb_vec = np.zeros((npoints,))
+    # z_Ea_orb_vec = np.zeros((npoints,))
+
+    # for i in range(0,npoints):
+    #     x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
+    #     xyz_Ea_orb_vec_equat = earth_ephemeris(spk_kernel, t_Ea_vec[i])/au
+    #     xyz_Ea_orb_vec_eclip = np.matmul(rot_equat_to_eclip, xyz_Ea_orb_vec_equat)
+    #     x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
+
+    # # PLOT
+    # # fig = plt.figure(figsize=plt.figaspect(1.0))
+    # # fig = plt.figure()
+    # # ax = plt.axes(aspect='equal', projection='3d')
+    # if plot:
+    #     ax = plt.axes(aspect='equal', projection='3d')
+
+    #     # Sun-centered orbits: Computed orbit and Earth's
+    #     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+    #     ax.scatter3D(x_Ea_vec, y_Ea_vec, z_Ea_vec, color='blue', marker='.', label='Earth orbit')
+    #     ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5)
+    #     ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
+    #     ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
+    #     plt.legend()
+    #     ax.set_xlabel('x (au)')
+    #     ax.set_ylabel('y (au)')
+    #     ax.set_zlabel('z (au)')
+    #     xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
+    #     ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
+    #     ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
+    #     ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
+    #     ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
+    #     ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
+    #     plt.show()
+
+    # # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
+    # return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean
