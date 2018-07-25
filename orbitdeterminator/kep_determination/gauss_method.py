@@ -21,6 +21,8 @@ au = cts.au.to(uts.Unit('km')).value
 mu_Sun = cts.GM_sun.to(uts.Unit('au3 / day2')).value
 mu_Earth = cts.GM_earth.to(uts.Unit('km3 / s2')).value
 c_light = cts.c.to(uts.Unit('au/day'))
+earth_f = 0.003353
+Re = cts.R_earth.to(uts.Unit('km')).value
 
 obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
 rot_equat_to_eclip = rotation_matrix( obliquity_j2000, 'x') #rotation matrix from equatorial to ecliptic frames
@@ -49,10 +51,22 @@ def get_observatory_data(observatory_code, mpc_observatories_data):
     # print('mpc_observatories_data[arr_index] = ', mpc_observatories_data[arr_index])
     # print('arr_index = ', arr_index)
     # print('arr_index[0] = ', arr_index[0])
-    # print('arr_index[0] = ', arr_index[0][0])
+    # print('arr_index[0][0] = ', arr_index[0][0])
     # print('mpc_observatories_data[arr_index[0]] = ', mpc_observatories_data[arr_index[0]])
     # print('mpc_observatories_data[arr_index[0][0]] = ', mpc_observatories_data[arr_index[0][0]])
     return mpc_observatories_data[arr_index[0][0]]
+
+def get_station_data(station_code, sat_observatories_data):
+    # print('station_code = ', station_code)
+    # print('sat_observatories_data[\'No\'] = ', sat_observatories_data['No'])
+    arr_index = np.where(sat_observatories_data['No'] == station_code)
+    # print('arr_index = ', arr_index)
+    # print('sat_observatories_data[arr_index] = ', sat_observatories_data[arr_index])
+    # print('arr_index[0] = ', arr_index[0])
+    # print('arr_index[0][0] = ', arr_index[0][0])
+    # print('sat_observatories_data[arr_index[0]] = ', sat_observatories_data[arr_index[0]])
+    print('sat_observatories_data[arr_index[0][0]] = ', sat_observatories_data[arr_index[0][0]])
+    return sat_observatories_data[arr_index[0][0]]
 
 def load_mpc_data(fname):
     '''
@@ -115,9 +129,9 @@ def load_iod_data(fname):
         2, 3, 3, 2, 2, 2, 1, 2, 1]
     return np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
 
-# Compute geocentric observer position at UTC instant t_utc
+# Compute geocentric observer position at UTC instant t_utc, for Sun-centered orbits,
 # at a given observation site defined by its longitude, and parallax constants S and C
-# formula taken from top of page 266, chapter 5, Orbital Mechanics book
+# formula taken from top of page 266, chapter 5, Orbital Mechanics book (Curtis)
 # the parallax constants S and C are defined by
 # S=rho cos phi' C=rho sin phi'
 # rho: slant range
@@ -128,16 +142,14 @@ def load_iod_data(fname):
 def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
 
     # Earth's equatorial radius in kilometers
-    Re = cts.R_earth.to(uts.Unit('km')).value
+    # Re = cts.R_earth.to(uts.Unit('km')).value
 
     # define Longitude object for the observation site longitude
     long_site = Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
     # print('long_site = ', long_site)
     # compute sidereal time of observation at site
     t_site_lmst = t_utc.sidereal_time('mean', longitude=long_site)
-    # print('t_site_lmst = ', t_site_lmst)
-    lmst_hrs = t_site_lmst.value # hours
-    lmst_rad = np.deg2rad(lmst_hrs*15.0) # radians
+    lmst_rad = t_site_lmst.rad # np.deg2rad(lmst_hrs*15.0) # radians
 
     # compute cartesian components of geocentric (non rotating) observer position
     x_gc = Re*parallax_c*np.cos(lmst_rad)
@@ -150,15 +162,64 @@ def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
 
     return np.array((x_gc,y_gc,z_gc))
 
+# Compute geocentric observer position at UTC instant t_utc, for Earth-centered orbits,
+# at a given observation site defined by its longitude, latitude and elevation above reference ellipsoid
+# formula taken from bottom of page 265 (Eq. 5.56), chapter 5, Orbital Mechanics book (Curtis)
+# lat: geodetic latitude (deg)
+# long: longitude (deg)
+# elev: elevation above reference ellipsoid (km)
+# t_utc: time (UTC)
+def observerpos_sat(lat, long, elev, t_utc):
+
+    # Earth's equatorial radius in kilometers
+    # Re = cts.R_earth.to(uts.Unit('km')).value
+
+    # define Longitude object for the observation site longitude
+    # print('long = ', long)
+    # print('lat = ', lat)
+    long_site = Longitude(long, uts.degree, wrap_angle=180.0*uts.degree)
+    # print('long_site = ', long_site)
+    # long_site = Longitude(long, uts.degree, wrap_angle=360.0*uts.degree)
+    # print('long_site = ', long_site)
+    # compute sidereal time of observation at site
+    t_site_lmst = t_utc.sidereal_time('mean', longitude=long_site)
+    # print('t_site_lmst = ', t_site_lmst)
+    # print('t_lmgt = ', t_utc.sidereal_time('mean', 'greenwich'))
+    lmst_rad = t_site_lmst.rad # np.deg2rad(lmst_hrs*15.0) # radians
+
+    # latitude
+    phi_rad = np.deg2rad(lat)
+
+    # convert ellipsoid coordinates to cartesian
+    cos_phi = np.cos( phi_rad )
+    cos_phi_cos_theta = cos_phi*np.cos( lmst_rad )
+    cos_phi_sin_theta = cos_phi*np.sin( lmst_rad )
+    sin_phi = np.sin( phi_rad )
+    denum = np.sqrt(1.0-(2.0*earth_f-earth_f**2)*sin_phi**2)
+    r_xy = Re/denum+elev
+    r_z = Re*((1.0-earth_f)**2)/denum+elev
+
+    # compute cartesian components of geocentric (non-rotating) observer position
+    x_gc = r_xy*cos_phi_cos_theta
+    y_gc = r_xy*cos_phi_sin_theta
+    z_gc = r_z*sin_phi
+
+    print('x_gc = ', x_gc)
+    print('y_gc = ', y_gc)
+    print('z_gc = ', z_gc)
+
+    return np.array((x_gc,y_gc,z_gc))
+
 #observerpos_sat_book: compute the geocentric position of observer (Earth-centered orbit)
 #this function works to run examples from Orbital Mechanics book
+# formula taken from bottom of page 265 (Eq. 5.56), chapter 5, Orbital Mechanics book (Curtis)
 #phi_deg: geodetic latitude (phi), degrees
 #altitude_km: altitude above reference ellipsoid, kilometers
 #f: Earth's flattening/oblateness factor (adimensional)
 #lst_deg: local sidereal time, degrees
 def observerpos_sat_book(phi_deg, altitude_km, f, lst_deg):
     # Earth's equatorial radius in kilometers
-    Re = cts.R_earth.to(uts.Unit('km')).value
+    # Re = cts.R_earth.to(uts.Unit('km')).value
     phi_rad = np.deg2rad(phi_deg)
     cos_phi = np.cos( phi_rad )
     lst_rad = np.deg2rad(lst_deg)
@@ -354,27 +415,30 @@ def get_observations_data_sat(iod_object_data, inds):
     timeobs[2] = Time( datetime(iod_object_data['yr'][inds[2]], iod_object_data['month'][inds[2]], iod_object_data['day'][inds[2]]) + td3 )
 
     # print('timeobs = ', timeobs)
+    # print('timeobs00 = ', (timeobs[0]-timeobs[0]).sec)
+    # print('timeobs10 = ', (timeobs[1]-timeobs[0]).sec)
+    # print('timeobs20 = ', (timeobs[2]-timeobs[0]).sec)
 
     raHHMMmmm0 = iod_object_data['raHH'][inds[0]] + (iod_object_data['raMM'][inds[0]]+iod_object_data['rammm'][inds[0]]/1000.0)/60.0
     raHHMMmmm1 = iod_object_data['raHH'][inds[1]] + (iod_object_data['raMM'][inds[1]]+iod_object_data['rammm'][inds[1]]/1000.0)/60.0
     raHHMMmmm2 = iod_object_data['raHH'][inds[2]] + (iod_object_data['raMM'][inds[2]]+iod_object_data['rammm'][inds[2]]/1000.0)/60.0
 
-    decHHMMmmm0 = iod_object_data['decDD'][inds[0]] + (iod_object_data['decMM'][inds[0]]+iod_object_data['decmmm'][inds[0]]/1000.0)/60.0
-    decHHMMmmm1 = iod_object_data['decDD'][inds[1]] + (iod_object_data['decMM'][inds[1]]+iod_object_data['decmmm'][inds[1]]/1000.0)/60.0
-    decHHMMmmm2 = iod_object_data['decDD'][inds[2]] + (iod_object_data['decMM'][inds[2]]+iod_object_data['decmmm'][inds[2]]/1000.0)/60.0
+    decDDMMmmm0 = iod_object_data['decDD'][inds[0]] + (iod_object_data['decMM'][inds[0]]+iod_object_data['decmmm'][inds[0]]/1000.0)/60.0
+    decDDMMmmm1 = iod_object_data['decDD'][inds[1]] + (iod_object_data['decMM'][inds[1]]+iod_object_data['decmmm'][inds[1]]/1000.0)/60.0
+    decDDMMmmm2 = iod_object_data['decDD'][inds[2]] + (iod_object_data['decMM'][inds[2]]+iod_object_data['decmmm'][inds[2]]/1000.0)/60.0
 
-    obs_radec[0] = SkyCoord(ra=raHHMMmmm0, dec=decHHMMmmm0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
-    obs_radec[1] = SkyCoord(ra=raHHMMmmm1, dec=decHHMMmmm1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
-    obs_radec[2] = SkyCoord(ra=raHHMMmmm2, dec=decHHMMmmm2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
+    obs_radec[0] = SkyCoord(ra=raHHMMmmm0, dec=decDDMMmmm0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+    obs_radec[1] = SkyCoord(ra=raHHMMmmm1, dec=decDDMMmmm1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+    obs_radec[2] = SkyCoord(ra=raHHMMmmm2, dec=decDDMMmmm2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
 
     # print('obs_radec[0] = ', obs_radec[0])
     # print('obs_radec[1] = ', obs_radec[1])
     # print('obs_radec[2] = ', obs_radec[2])
 
     # construct vector of observation time (continous variable)
-    obs_t[0] = obs_radec[0].obstime.jd
-    obs_t[1] = obs_radec[1].obstime.jd
-    obs_t[2] = obs_radec[2].obstime.jd
+    obs_t[0] = (timeobs[0]-timeobs[0]).sec
+    obs_t[1] = (timeobs[1]-timeobs[0]).sec
+    obs_t[2] = (timeobs[2]-timeobs[0]).sec
 
     site_codes = [iod_object_data['station'][inds[0]], iod_object_data['station'][inds[1]], iod_object_data['station'][inds[2]]]
 
@@ -514,18 +578,32 @@ def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site
 def get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes):
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
     # load MPC observatory data
-    obsite1 = get_observatory_data(site_codes[0], sat_observatories_data)
-    obsite2 = get_observatory_data(site_codes[1], sat_observatories_data)
-    obsite3 = get_observatory_data(site_codes[2], sat_observatories_data)
+    obsite1 = get_station_data(site_codes[0], sat_observatories_data)
+    obsite2 = get_station_data(site_codes[1], sat_observatories_data)
+    obsite3 = get_station_data(site_codes[2], sat_observatories_data)
     # print('obsite1 = ', obsite1)
     # print('obsite2 = ', obsite2)
     # print('obsite3 = ', obsite3)
 
-    ##################### TODO: Implement observerpos_sat; fix this function
+    # print('obsite1[\'Latitude\'] = ', obsite1['Latitude'])
+    # print('obsite2[\'Latitude\'] = ', obsite2['Latitude'])
+    # print('obsite3[\'Latitude\'] = ', obsite3['Latitude'])
 
-    R[0] = observerpos_sat(obsite1['Long'], obsite1['sin'], obsite1['cos'], obs_radec[0].obstime)
-    R[1] = observerpos_sat(obsite2['Long'], obsite2['sin'], obsite2['cos'], obs_radec[1].obstime)
-    R[2] = observerpos_sat(obsite3['Long'], obsite3['sin'], obsite3['cos'], obs_radec[2].obstime)
+    # print('obsite1[\'Longitude\'] = ', obsite1['Longitude'])
+    # print('obsite2[\'Longitude\'] = ', obsite2['Longitude'])
+    # print('obsite3[\'Longitude\'] = ', obsite3['Longitude'])
+
+    # print('obsite1[\'Elev\'] = ', obsite1['Elev'])
+    # print('obsite2[\'Elev\'] = ', obsite2['Elev'])
+    # print('obsite3[\'Elev\'] = ', obsite3['Elev'])
+
+    # print('obs_radec[0].obstime = ', obs_radec[0].obstime)
+    # print('obs_radec[1].obstime = ', obs_radec[1].obstime)
+    # print('obs_radec[2].obstime = ', obs_radec[2].obstime)
+
+    R[0] = observerpos_sat(obsite1['Latitude'], obsite1['Longitude'], obsite1['Elev'], obs_radec[0].obstime)
+    R[1] = observerpos_sat(obsite2['Latitude'], obsite2['Longitude'], obsite2['Elev'], obs_radec[1].obstime)
+    R[2] = observerpos_sat(obsite3['Latitude'], obsite3['Longitude'], obsite3['Elev'], obs_radec[2].obstime)
 
     # print('R[0] = ', R[0])
     # print('R[1] = ', R[1])
@@ -776,8 +854,11 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
     # extract observations data
     obs_radec, obs_t, site_codes = get_observations_data_sat(iod_object_data, inds)
 
-    print('obs_radec = ', obs_radec)
+    obs_t_jd = np.array((obs_radec[0].obstime.jd, obs_radec[1].obstime.jd, obs_radec[2].obstime.jd))
+
+    print('*******************   obs_radec = ', obs_radec)
     print('obs_t = ', obs_t)
+    print('obs_t_jd = ', obs_t_jd)
     print('site_codes = ', site_codes)
 
     # compute observer position vectors wrt Sun
@@ -786,7 +867,7 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
     # perform core Gauss method
     r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
 
-    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_, obs_t
+    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_, obs_t_jd
 
 # Implementation of Gauss method for ra-dec observations of Earth satellites; method for book examples
 def gauss_estimate_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
@@ -987,9 +1068,6 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
 
     # PLOT
-    # fig = plt.figure(figsize=plt.figaspect(1.0))
-    # fig = plt.figure()
-    # ax = plt.axes(aspect='equal', projection='3d')
     if plot:
         ax = plt.axes(aspect='equal', projection='3d')
 
@@ -1018,7 +1096,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(body_fname_str)
     # print('IOD observation data:\n', iod_object_data, '\n')
-    # print('IOD observation data:\n', iod_object_data[ obs_arr ], '\n')
+    print('IOD observation data:\n', iod_object_data[ np.array(obs_arr)-1 ], '\n')
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
@@ -1034,140 +1112,131 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     print('obs_arr = ', obs_arr)
 
     # #auxiliary arrays
-    x_vec = np.zeros((nobs-2,))
-    y_vec = np.zeros((nobs-2,))
-    z_vec = np.zeros((nobs-2,))
+    x_vec = np.zeros((nobs,))
+    y_vec = np.zeros((nobs,))
+    z_vec = np.zeros((nobs,))
     a_vec = np.zeros((nobs-2,))
     e_vec = np.zeros((nobs-2,))
     taup_vec = np.zeros((nobs-2,))
     I_vec = np.zeros((nobs-2,))
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
-    x_Ea_vec = np.zeros((nobs-2,))
-    y_Ea_vec = np.zeros((nobs-2,))
-    z_Ea_vec = np.zeros((nobs-2,))
     t_vec = np.zeros((nobs,))
 
     print('r2_root_ind_vec = ', r2_root_ind_vec)
     print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
 
-    r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, np.array(obs_arr[0:3])-1, refiters=0, r2_root_ind=0)
+    for j in range (0,nobs-2):
+        # Apply Gauss method to three elements of data
+        inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
+        # print('inds_ = ', inds_)
+        print('j = ', j)
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+        # print('obs_t = ', obs_t)
 
-    # for j in range (0,nobs-2):
-    #     # Apply Gauss method to three elements of data
-    #     inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
-    #     print('j = ', j)
-    #     r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t = gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+        print('|r1| = ', np.linalg.norm(r1,ord=2))
+        print('|r2| = ', np.linalg.norm(r2,ord=2))
+        print('|r3| = ', np.linalg.norm(r3,ord=2))
+        # print('r2 = ', r2)
+        # print('obs_t[1] = ', obs_t[1])
+        # print('v2 = ', v2)
 
-    #     # print('|r1| = ', np.linalg.norm(r1,ord=2))
-    #     # print('|r2| = ', np.linalg.norm(r2,ord=2))
-    #     # print('|r3| = ', np.linalg.norm(r3,ord=2))
-    #     # print('r2 = ', r2)
-    #     # print('obs_t[1] = ', obs_t[1])
-    #     # print('v2 = ', v2)
+        if j==0:
+            t_vec[0] = obs_t[0]
+            x_vec[0] = r1[0]
+            y_vec[0] = r1[1]
+            z_vec[0] = r1[2]
+        if j==nobs-3:
+            t_vec[nobs-1] = obs_t[2]
+            x_vec[nobs-1] = r3[0]
+            y_vec[nobs-1] = r3[1]
+            z_vec[nobs-1] = r3[2]
 
-    #     if j==0:
-    #         t_vec[0] = obs_t[0]
-    #     elif j==nobs-3:
-    #         t_vec[j+2] = obs_t[2]
-    #     t_vec[j+1] = obs_t[1]
+        a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+        e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+        f_num = trueanomaly(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+        n_num = meanmotion(mu, a_num)
 
-    #     r2_eclip = np.matmul(rot_equat_to_eclip, r2)
-    #     v2_eclip = np.matmul(rot_equat_to_eclip, v2)
+        a_vec[j] = a_num
+        e_vec[j] = e_num
+        print('obst_t = ', obs_t)
+        print('obs_t[1] = ', obs_t[1])
+        taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num*86400)
+        w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
+        I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+        W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
+        t_vec[j+1] = obs_t[1]
+        x_vec[j+1] = r2[0]
+        y_vec[j+1] = r2[1]
+        z_vec[j+1] = r2[2]
 
-    #     a_num = semimajoraxis(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
-    #     e_num = eccentricity(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
-    #     f_num = trueanomaly(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
-    #     n_num = meanmotion(mu, a_num)
-
-    #     a_vec[j] = a_num
-    #     e_vec[j] = e_num
-    #     taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num)
-    #     w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
-    #     I_vec[j] = np.rad2deg( inclination(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
-    #     W_vec[j] = np.rad2deg( longascnode(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
-    #     x_vec[j] = r2_eclip[0]
-    #     y_vec[j] = r2_eclip[1]
-    #     z_vec[j] = r2_eclip[2]
-    #     Ea_hc_pos_eclip = np.matmul(rot_equat_to_eclip, Ea_hc_pos[1])
-    #     x_Ea_vec[j] = Ea_hc_pos_eclip[0]
-    #     y_Ea_vec[j] = Ea_hc_pos_eclip[1]
-    #     z_Ea_vec[j] = Ea_hc_pos_eclip[2]
-
-    # # print(a_num/au, 'au', ', ', e_num)
-    # # print(a_num, 'au', ', ', e_num)
-    # # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
+        print(a_num, 'km', ', ', e_num)
+        print('   * * * n_num = ', n_num, ' T_num = ', 2.0*np.pi/n_num)
+        # # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
 
     # # print('x_vec = ', x_vec)
-    # # print('a_vec = ', a_vec)
-    # # print('e_vec = ', e_vec)
-    # print('a_vec = ', a_vec)
-    # print('len(a_vec) = ', len(a_vec))
-    # print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
+    print('a_vec = ', a_vec)
+    print('len(a_vec) = ', len(a_vec))
+    print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
 
-    # print('e_vec = ', e_vec)
-    # print('len(e_vec) = ', len(e_vec))
+    print('e_vec = ', e_vec)
+    print('len(e_vec) = ', len(e_vec))
     # e_vec_fil1 = e_vec[e_vec<1.0]
     # e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
     # print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
 
-    # # print('taup_vec = ', taup_vec)
-    # print('t_vec = ', t_vec)
+    print('w_vec = ', w_vec)
+    print('I_vec = ', I_vec)
+    print('W_vec = ', W_vec)
+    print('taup_vec = ', taup_vec)
+    print('t_vec = ', t_vec)
 
-    # a_mean = np.mean(a_vec) #au
-    # e_mean = np.mean(e_vec) #dimensionless
-    # taup_mean = np.mean(taup_vec) #deg
-    # w_mean = np.mean(w_vec) #deg
-    # I_mean = np.mean(I_vec) #deg
-    # W_mean = np.mean(W_vec) #deg
+    a_mean = np.mean(a_vec) #km
+    e_mean = np.mean(e_vec) #dimensionless
+    taup_mean = np.mean(taup_vec) #deg
+    w_mean = np.mean(w_vec) #deg
+    I_mean = np.mean(I_vec) #deg
+    W_mean = np.mean(W_vec) #deg
 
-    # print('Observational arc:')
-    # print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
-    # print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
+    print('Observational arc:')
+    print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
+    print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
-    # print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
-    # print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
+    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
+    print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
 
-    # npoints = 1000
-    # theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
-    # t_Ea_vec = np.linspace(2451544.5, 2451544.5+365.3, npoints)
-    # x_orb_vec = np.zeros((npoints,))
-    # y_orb_vec = np.zeros((npoints,))
-    # z_orb_vec = np.zeros((npoints,))
-    # x_Ea_orb_vec = np.zeros((npoints,))
-    # y_Ea_orb_vec = np.zeros((npoints,))
-    # z_Ea_orb_vec = np.zeros((npoints,))
+    npoints = 1000
+    theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
+    x_orb_vec = np.zeros((npoints,))
+    y_orb_vec = np.zeros((npoints,))
+    z_orb_vec = np.zeros((npoints,))
 
-    # for i in range(0,npoints):
-    #     x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
-    #     xyz_Ea_orb_vec_equat = earth_ephemeris(spk_kernel, t_Ea_vec[i])/au
-    #     xyz_Ea_orb_vec_eclip = np.matmul(rot_equat_to_eclip, xyz_Ea_orb_vec_equat)
-    #     x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
+    for i in range(0,npoints):
+        x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
 
-    # # PLOT
-    # # fig = plt.figure(figsize=plt.figaspect(1.0))
-    # # fig = plt.figure()
-    # # ax = plt.axes(aspect='equal', projection='3d')
-    # if plot:
-    #     ax = plt.axes(aspect='equal', projection='3d')
+    print('x_vec = ', x_vec)
+    print('y_vec = ', y_vec)
+    print('z_vec = ', z_vec)
 
-    #     # Sun-centered orbits: Computed orbit and Earth's
-    #     ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
-    #     ax.scatter3D(x_Ea_vec, y_Ea_vec, z_Ea_vec, color='blue', marker='.', label='Earth orbit')
-    #     ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5)
-    #     ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
-    #     ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
-    #     plt.legend()
-    #     ax.set_xlabel('x (au)')
-    #     ax.set_ylabel('y (au)')
-    #     ax.set_zlabel('z (au)')
-    #     xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
-    #     ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
-    #     ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
-    #     ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
-    #     ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
-    #     ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
-    #     plt.show()
+    # PLOT
+    if plot:
+        ax = plt.axes(aspect='equal', projection='3d')
+
+        # Sun-centered orbits: Computed orbit and Earth's
+        ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
+        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
+        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
+        plt.legend()
+        ax.set_xlabel('x (km)')
+        ax.set_ylabel('y (km)')
+        ax.set_zlabel('z (km)')
+        xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
+        ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
+        ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
+        plt.show()
 
     # # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
     # return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean
