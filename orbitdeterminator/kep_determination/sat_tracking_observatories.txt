@@ -1,5 +1,5 @@
 # File was retrieved from sattools/data/sites.txt (GitHub repo)
-# No ID   Latitude Longitude   Elev   Observer
+No   ID   Latitude Longitude  Elev    Observer
 1111 RL   38.9478 -104.5614   2073    Ron Lee
 4171 CB   52.8344    6.3785     10    Cees Bassa
 4172 LB   52.3713    5.2580     -3    Leo Barhorst
@@ -15,6 +15,7 @@
 0434 IR  -26.1030   27.9288   1646    Ian Roberts
 0435 GR  -33.9369   18.5101     25    Greg Roberts
 0710 LS   52.3261   10.6756     85    Lutz Schindler
+0799 PP   36.9608   22.1448    120    Pierros Papadeas
 0899 FM  -34.8961  -56.1227     30    Fernando Mederos
 1056 MK   57.0122   23.9833      4    Martins Keruss
 1086 NK   46.4778   30.7556     56    Nikolay Koshkin
@@ -32,26 +33,26 @@
 2756 AK   56.0907   -3.1623     25    Andy Kirkham
 4353 ML   52.1541    4.4908      0    Marco Langbroek
 4354 ML   52.1168    4.5602     -2    Marco Langbroek
-4355 ML   52.1388    4.4994     -2    Marco Langbroek   
+4355 ML   52.1388    4.4994     -2    Marco Langbroek
 4541 AR   41.9639   12.4531     80    Alberto Rango
-4542 AR   41.9683   12.4545     80    Alberto Rango 
+4542 AR   41.9683   12.4545     80    Alberto Rango
 4641 AR   41.1060   16.9010     70    Alberto Rango
 5555 SG   56.1019   94.5533    154    Sergey Guryanov
 5918 BG   59.2985   18.1045     40    Bjorn Gimle
 5919 BG   59.2615   18.6206     30    Bjorn Gimle
 6226 SC   28.4861  -97.8194    110    Scott Campbell
 7777 BY   38.1656   -2.3267   1608    Brad Young remote
-7778 BY  -31.2733  149.0644   1122    Brad Young SSO 
+7778 BY  -31.2733  149.0644   1122    Brad Young SSO
 7779 BY   32.9204 -105.5283   2225    Brad Young NM
 8048 ST   49.4175 -123.6420      1.   Scott Tilley
 8049 ST   49.4348 -123.6685     40.   Scott Tilley
 8305 PG   26.2431  -98.2163     30    Paul Gabriel
 8335 BY   36.1397  -95.9838    205    Brad Young
 8336 BY   36.1397  -95.9838    205    Brad Young
-8438 SS   38.8108 -119.7750   1545    Sierra Stars 
+8438 SS   38.8108 -119.7750   1545    Sierra Stars
 8536 TL   36.8479  -76.5010      4    Tim Luton
 8539 SN   39.4707  -79.3388    839    Steve Newcomb
-8597 TB  -34.9638  138.6333    100    Tony Beresford 
+8597 TB  -34.9638  138.6333    100    Tony Beresford
 8600 PC  -32.9770  151.6477     18    Paul Camilleri
 0699 PC  -14.4733  132.2369    108    Paul Camilleri
 8730 EC   30.3086  -97.7279    150    Ed Cannon
