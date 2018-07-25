@@ -959,15 +959,16 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     print('obs_arr = ', obs_arr)
 
     #auxiliary arrays
-    x_vec = np.zeros((nobs-2,))
-    y_vec = np.zeros((nobs-2,))
-    z_vec = np.zeros((nobs-2,))
+    x_vec = np.zeros((nobs,))
+    y_vec = np.zeros((nobs,))
+    z_vec = np.zeros((nobs,))
     a_vec = np.zeros((nobs-2,))
     e_vec = np.zeros((nobs-2,))
     taup_vec = np.zeros((nobs-2,))
     I_vec = np.zeros((nobs-2,))
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
+    n_vec = np.zeros((nobs-2,))
     x_Ea_vec = np.zeros((nobs-2,))
     y_Ea_vec = np.zeros((nobs-2,))
     z_Ea_vec = np.zeros((nobs-2,))
@@ -990,10 +991,17 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         # print('v2 = ', v2)
 
         if j==0:
+            print('***** HIIIIIIIIIIIIIIIIIIIIIII AAFLKADSJFLKASVLKADFHVALKDFHVLAKDHV*******')
             t_vec[0] = obs_t[0]
-        elif j==nobs-3:
-            t_vec[j+2] = obs_t[2]
-        t_vec[j+1] = obs_t[1]
+            x_vec[0] = r1[0]
+            y_vec[0] = r1[1]
+            z_vec[0] = r1[2]
+        if j==nobs-3:
+            print('***** HOLA AAFLKADSJFLKASVLKADFHVALKDFHVLAKDHV*******')
+            t_vec[nobs-1] = obs_t[2]
+            x_vec[nobs-1] = r3[0]
+            y_vec[nobs-1] = r3[1]
+            z_vec[nobs-1] = r3[2]
 
         r2_eclip = np.matmul(rot_equat_to_eclip, r2)
         v2_eclip = np.matmul(rot_equat_to_eclip, v2)
@@ -1009,9 +1017,11 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
         I_vec[j] = np.rad2deg( inclination(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
         W_vec[j] = np.rad2deg( longascnode(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
-        x_vec[j] = r2_eclip[0]
-        y_vec[j] = r2_eclip[1]
-        z_vec[j] = r2_eclip[2]
+        n_vec[j] = n_num
+        t_vec[j+1] = obs_t[1]
+        x_vec[j+1] = r2_eclip[0]
+        y_vec[j+1] = r2_eclip[1]
+        z_vec[j+1] = r2_eclip[2]
         Ea_hc_pos_eclip = np.matmul(rot_equat_to_eclip, Ea_hc_pos[1])
         x_Ea_vec[j] = Ea_hc_pos_eclip[0]
         y_Ea_vec[j] = Ea_hc_pos_eclip[1]
@@ -1021,7 +1031,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     # print(a_num, 'au', ', ', e_num)
     # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
 
-    # print('x_vec = ', x_vec)
+    print('x_vec = ', x_vec)
     # print('a_vec = ', a_vec)
     # print('e_vec = ', e_vec)
     print('a_vec = ', a_vec)
@@ -1043,13 +1053,14 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     w_mean = np.mean(w_vec) #deg
     I_mean = np.mean(I_vec) #deg
     W_mean = np.mean(W_vec) #deg
+    n_mean = np.mean(n_vec) #sec
 
     print('Observational arc:')
     print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
-    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega ***')
-    print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg')
+    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega, T ***')
+    print(a_mean, 'au, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDTDB, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean, 'days')
 
     npoints = 1000
     theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
@@ -1090,7 +1101,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         plt.show()
 
     # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
-    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean
+    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
 
 def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0, plot=True):
     # load IOD data for a given satellite
@@ -1206,7 +1217,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
     print('*** AVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T ***')
-    print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean, 'seconds')
+    print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean/60.0, 'min')
 
     npoints = 1000
     theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
@@ -1217,9 +1228,9 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     for i in range(0,npoints):
         x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
 
-    print('x_vec = ', x_vec)
-    print('y_vec = ', y_vec)
-    print('z_vec = ', z_vec)
+    # print('x_vec = ', x_vec)
+    # print('y_vec = ', y_vec)
+    # print('z_vec = ', z_vec)
 
     # PLOT
     if plot:
@@ -1242,4 +1253,4 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         plt.show()
 
     # # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
-    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
+    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0
