@@ -41,7 +41,12 @@ def get_observatory_data(observatory_code, mpc_observatories_data):
     arr_index = np.where(mpc_observatories_data['Code'] == observatory_code)
     # print('arr_index = ', arr_index)
     # print('mpc_observatories_data[arr_index] = ', mpc_observatories_data[arr_index])
-    return mpc_observatories_data[arr_index[0]]
+    # print('arr_index = ', arr_index)
+    # print('arr_index[0] = ', arr_index[0])
+    # print('arr_index[0] = ', arr_index[0][0])
+    # print('mpc_observatories_data[arr_index[0]] = ', mpc_observatories_data[arr_index[0]])
+    # print('mpc_observatories_data[arr_index[0][0]] = ', mpc_observatories_data[arr_index[0][0]])
+    return mpc_observatories_data[arr_index[0][0]]
 
 def load_mpc_data(fname):
     '''
@@ -105,6 +110,7 @@ def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
     return np.array((x_gc,y_gc,z_gc))
 
 #observerpos_sat_book: compute the geocentric position of observer (Earth-centered orbit)
+#this function works to run examples from Orbital Mechanics book
 #phi_deg: geodetic latitude (phi), degrees
 #altitude_km: altitude above reference ellipsoid, kilometers
 #f: Earth's flattening/oblateness factor (adimensional)
@@ -408,9 +414,9 @@ def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site
     # print('Ea_hc_pos[1] = ', Ea_hc_pos[1])
     # print('Ea_hc_pos[2] = ', Ea_hc_pos[2])
 
-    R[0] = (  Ea_jd1 + observerpos_mpc(obsite1['Long'][0], obsite1['sin'][0], obsite1['cos'][0], obs_radec[0].obstime)  )/au
-    R[1] = (  Ea_jd2 + observerpos_mpc(obsite2['Long'][0], obsite2['sin'][0], obsite2['cos'][0], obs_radec[1].obstime)  )/au
-    R[2] = (  Ea_jd3 + observerpos_mpc(obsite3['Long'][0], obsite3['sin'][0], obsite3['cos'][0], obs_radec[2].obstime)  )/au
+    R[0] = (  Ea_jd1 + observerpos_mpc(obsite1['Long'], obsite1['sin'], obsite1['cos'], obs_radec[0].obstime)  )/au
+    R[1] = (  Ea_jd2 + observerpos_mpc(obsite2['Long'], obsite2['sin'], obsite2['cos'], obs_radec[1].obstime)  )/au
+    R[2] = (  Ea_jd3 + observerpos_mpc(obsite3['Long'], obsite3['sin'], obsite3['cos'], obs_radec[2].obstime)  )/au
 
     # print('R[0] = ', R[0])
     # print('R[1] = ', R[1])
