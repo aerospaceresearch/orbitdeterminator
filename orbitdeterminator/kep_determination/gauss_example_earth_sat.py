@@ -21,7 +21,7 @@ t_sec = np.array((0.0, 118.10, 237.58))
 #     # print('i = ', i)
     
 
-r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_ = gm.gauss_iterator_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=10)
+r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_ = gm.gauss_iterator_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=10)
 
 print('r2 = ', r2)
 print('v2 = ', v2)

@@ -104,12 +104,12 @@ def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
 
     return np.array((x_gc,y_gc,z_gc))
 
-#observerpos_sat: compute the geocentric position of observer (Earth-centered orbit)
+#observerpos_sat_book: compute the geocentric position of observer (Earth-centered orbit)
 #phi_deg: geodetic latitude (phi), degrees
 #altitude_km: altitude above reference ellipsoid, kilometers
 #f: Earth's flattening/oblateness factor (adimensional)
 #lst_deg: local sidereal time, degrees
-def observerpos_sat(phi_deg, altitude_km, f, lst_deg):
+def observerpos_sat_book(phi_deg, altitude_km, f, lst_deg):
     # Earth's equatorial radius in kilometers
     Re = cts.R_earth.to(uts.Unit('km')).value
     phi_rad = np.deg2rad(phi_deg)
@@ -654,7 +654,7 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_, obs_t
 
 # Implementation of Gauss method for ra-dec observations of Earth satellites
-def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
+def gauss_estimate_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, r2_root_ind=0):
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     mu = cts.GM_earth.to(uts.Unit("km3 / s2")).value
 
@@ -676,9 +676,9 @@ def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec,
 
     # compute geocentric observer position vectors at observation event
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
-    R[0] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[0])
-    R[1] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[1])
-    R[2] = observerpos_sat(phi_deg, altitude_km, f, lst_deg[2])
+    R[0] = observerpos_sat_book(phi_deg, altitude_km, f, lst_deg[0])
+    R[1] = observerpos_sat_book(phi_deg, altitude_km, f, lst_deg[1])
+    R[2] = observerpos_sat_book(phi_deg, altitude_km, f, lst_deg[2])
     # print('R[0] = ', R[0])
     # print('R[1] = ', R[1])
     # print('R[2] = ', R[2])
@@ -688,10 +688,10 @@ def gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec,
 
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_
 
-def gauss_iterator_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0):
+def gauss_iterator_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec, refiters=0):
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     mu = cts.GM_earth.to(uts.Unit("km3 / s2")).value
-    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_estimate_sat(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec)
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_estimate_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t_sec)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0, refiters):
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
