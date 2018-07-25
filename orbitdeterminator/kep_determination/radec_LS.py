@@ -266,6 +266,5 @@ axarr[1].set_ylabel('Dec (\")')
 
 plt.show()
 
-
 # print(' = ', )
 
