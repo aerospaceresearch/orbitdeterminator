@@ -511,6 +511,28 @@ def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site
 
     return R, Ea_hc_pos
 
+def get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes):
+    R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
+    # load MPC observatory data
+    obsite1 = get_observatory_data(site_codes[0], sat_observatories_data)
+    obsite2 = get_observatory_data(site_codes[1], sat_observatories_data)
+    obsite3 = get_observatory_data(site_codes[2], sat_observatories_data)
+    # print('obsite1 = ', obsite1)
+    # print('obsite2 = ', obsite2)
+    # print('obsite3 = ', obsite3)
+
+    ##################### TODO: Implement observerpos_sat; fix this function
+
+    R[0] = observerpos_sat(obsite1['Long'], obsite1['sin'], obsite1['cos'], obs_radec[0].obstime)
+    R[1] = observerpos_sat(obsite2['Long'], obsite2['sin'], obsite2['cos'], obs_radec[1].obstime)
+    R[2] = observerpos_sat(obsite3['Long'], obsite3['sin'], obsite3['cos'], obs_radec[2].obstime)
+
+    # print('R[0] = ', R[0])
+    # print('R[1] = ', R[1])
+    # print('R[2] = ', R[2])
+
+    return R
+
 def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
     # get Julian date of observations
     t1 = obs_t[0]
