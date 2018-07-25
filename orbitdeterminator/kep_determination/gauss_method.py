@@ -19,6 +19,7 @@ from astropy.coordinates.matrix_utilities import rotation_matrix
 
 au = cts.au.to(uts.Unit('km')).value
 mu_Sun = cts.GM_sun.to(uts.Unit('au3 / day2')).value
+mu_Earth = cts.GM_earth.to(uts.Unit('km3 / s2')).value
 c_light = cts.c.to(uts.Unit('au/day'))
 
 obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
@@ -32,8 +33,13 @@ np.set_printoptions(precision=16)
 
 def load_mpc_observatories_data(mpc_observatories_fname):
     obs_dt = 'S3, f8, f8, f8, S48'
-    obs_delims = [4,10,9,10,48]
+    obs_delims = [4, 10, 9, 10, 48]
     return np.genfromtxt(mpc_observatories_fname, dtype=obs_dt, names=True, delimiter=obs_delims, autostrip=True, encoding=None)
+
+def load_sat_observatories_data(sat_observatories_fname):
+    obs_dt = 'i8, S2, f8, f8, f8, S18'
+    obs_delims = [4, 3, 10, 10, 8, 21]
+    return np.genfromtxt(sat_observatories_fname, dtype=obs_dt, names=True, delimiter=obs_delims, autostrip=True, encoding=None, skip_header=1)
 
 def get_observatory_data(observatory_code, mpc_observatories_data):
     # print('observatory_code = ', observatory_code)
@@ -96,13 +102,17 @@ def load_iod_data(fname):
         IOD format, with angle format code = 2.
     '''
     # dt is the dtype for IOD-formatted text files
-    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S1, S1'
+    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S1, S1'
     # iod_names correspond to the dtype names of each field
-    iod_names = ['object','station','stationstatus','utcdate','utctime','timeunc','angformat','epoch','raHH','raMM','rammm','decDD','decMM','decmmm','posunc','optical','vismag']
+    iod_names = ['object', 'station', 'stationstatus', 'yr', 'month', 'day',
+        'hr', 'min', 'sec', 'msec', 'timeM', 'timeX', 'angformat', 'epoch', 'raHH',
+        'raMM','rammm','decDD','decMM','decmmm','radecM','radecX','optical','vismag']
     # TODO: read first line, get sub-format, construct iod_delims from there
     # as it is now, it only works for the given test file iod_data.txt
     # iod_delims are the fixed-width column delimiter followinf IOD format description
-    iod_delims = [15, 5, 2, 9, 9, 3, 2, 1, 3, 2, 3, 3, 2, 2, 3, 2, 1]
+    iod_delims = [15, 5, 2, 5, 2, 2,
+        2, 2, 2, 3, 2, 1, 2, 1, 3,
+        2, 3, 3, 2, 2, 2, 1, 2, 1]
     return np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
 
 # Compute geocentric observer position at UTC instant t_utc
@@ -734,6 +744,15 @@ def gauss_iterator_sat_book(phi_deg, altitude_km, f, ra_hrs, dec_deg, lst_deg, t
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_
 
+def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds_, refiters=0, r2_root_ind=0):
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
+    mu = mu_Earth
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_, obs_t = gauss_estimate_sat(iod_object_data, sat_observatories_data, inds_, r2_root_ind=r2_root_ind)
+    # Apply refinement to Gauss' method, `refiters` iterations
+    for i in range(0,refiters):
+        r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+    return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t
+
 def gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=0, r2_root_ind=0):
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
@@ -754,7 +773,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     mpc_object_data = load_mpc_data(body_fname_str)
     # print('MPC observation data:\n', mpc_object_data[ inds ], '\n')
 
-    #load MPC data of listed observatories (longitude, parallax constants C, S) (~7,000 observations)
+    #load MPC data of listed observatories (longitude, parallax constants C, S)
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
     #definition of the astronomical unit in km
@@ -910,42 +929,41 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0, plot=True):
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(body_fname_str)
-    print('IOD observation data:\n', iod_object_data, '\n')
-    print('IOD observation data:\n', iod_object_data[ obs_arr ], '\n')
+    # print('IOD observation data:\n', iod_object_data, '\n')
+    # print('IOD observation data:\n', iod_object_data[ obs_arr ], '\n')
 
-    # #load MPC data of listed observatories (longitude, parallax constants C, S) (~7,000 observations)
-    # mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
+    #load data of listed observatories (longitude, latitude, elevation)
+    sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
+    print('sat_observatories_data = ', sat_observatories_data)
 
-    # #definition of the astronomical unit in km
-    # # au = cts.au.to(uts.Unit('km')).value
-
-    # # Sun's G*m value
-    # # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
-    # mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    # Earth's G*m value
+    mu = mu_Earth
 
     # #the total number of observations used
-    # nobs = len(obs_arr)
+    nobs = len(obs_arr)
 
-    # print('nobs = ', nobs)
-    # print('obs_arr = ', obs_arr)
+    print('nobs = ', nobs)
+    print('obs_arr = ', obs_arr)
 
     # #auxiliary arrays
-    # x_vec = np.zeros((nobs-2,))
-    # y_vec = np.zeros((nobs-2,))
-    # z_vec = np.zeros((nobs-2,))
-    # a_vec = np.zeros((nobs-2,))
-    # e_vec = np.zeros((nobs-2,))
-    # taup_vec = np.zeros((nobs-2,))
-    # I_vec = np.zeros((nobs-2,))
-    # W_vec = np.zeros((nobs-2,))
-    # w_vec = np.zeros((nobs-2,))
-    # x_Ea_vec = np.zeros((nobs-2,))
-    # y_Ea_vec = np.zeros((nobs-2,))
-    # z_Ea_vec = np.zeros((nobs-2,))
-    # t_vec = np.zeros((nobs,))
+    x_vec = np.zeros((nobs-2,))
+    y_vec = np.zeros((nobs-2,))
+    z_vec = np.zeros((nobs-2,))
+    a_vec = np.zeros((nobs-2,))
+    e_vec = np.zeros((nobs-2,))
+    taup_vec = np.zeros((nobs-2,))
+    I_vec = np.zeros((nobs-2,))
+    W_vec = np.zeros((nobs-2,))
+    w_vec = np.zeros((nobs-2,))
+    x_Ea_vec = np.zeros((nobs-2,))
+    y_Ea_vec = np.zeros((nobs-2,))
+    z_Ea_vec = np.zeros((nobs-2,))
+    t_vec = np.zeros((nobs,))
 
-    # print('r2_root_ind_vec = ', r2_root_ind_vec)
-    # print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
+    print('r2_root_ind_vec = ', r2_root_ind_vec)
+    print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
+
+    # r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, obs_arr[0:3], refiters=0, r2_root_ind=0)
 
     # for j in range (0,nobs-2):
     #     # Apply Gauss method to three elements of data

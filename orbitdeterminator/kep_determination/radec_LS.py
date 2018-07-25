@@ -37,7 +37,7 @@ def radec_res_vec(x, inds, mpc_object_data, mpc_observatories_data, spk_kernel):
         timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
         site_code = mpc_object_data['observatory'][indm1]
         obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
-        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)[0]
+        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)
         radec_res = gm.radec_residual(x, obs_t_ra_dec, spk_kernel, obsite['Long'], obsite['sin'], obsite['cos'])
 
         # print('timeobs = ', timeobs)
@@ -67,7 +67,7 @@ def radec_res_vec_rov(x, inds, mpc_object_data, mpc_observatories_data, spk_kern
         timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
         site_code = mpc_object_data['observatory'][indm1]
         # obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
-        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)[0]
+        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)
         # radec_res = gm.radec_residual(x, obs_t_ra_dec, spk_kernel, obsite['Long'], obsite['sin'], obsite['cos'])
         radec_res = gm.radec_residual_rov(x, timeobs, rov[2*i-2], rov[2*i-1], spk_kernel, obsite['Long'], obsite['sin'], obsite['cos'])
 
@@ -99,7 +99,7 @@ def t_radec_res_vec(x, inds, mpc_object_data, mpc_observatories_data, spk_kernel
         timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
         site_code = mpc_object_data['observatory'][indm1]
         obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
-        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)[0]
+        obsite = gm.get_observatory_data(site_code, mpc_observatories_data)
         radec_res = gm.radec_residual(x, obs_t_ra_dec, spk_kernel, obsite['Long'], obsite['sin'], obsite['cos'])
 
         # print('timeobs = ', timeobs)
