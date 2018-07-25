@@ -1205,7 +1205,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
-    print('*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC): a, e, taup, omega, I, Omega, T ***')
+    print('*** AVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T ***')
     print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean, 'seconds')
 
     npoints = 1000
