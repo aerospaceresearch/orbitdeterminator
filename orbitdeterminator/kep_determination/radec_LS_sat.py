@@ -214,5 +214,32 @@ axarr[1].set_ylabel('Dec (\")')
 # # plt.ylim(-y_rad, y_rad)
 plt.show()
 
+npoints = 1000
+theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
+x_orb_vec = np.zeros((npoints,))
+y_orb_vec = np.zeros((npoints,))
+z_orb_vec = np.zeros((npoints,))
+
+for i in range(0,npoints):
+    x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(Q_ls.x[0], Q_ls.x[1], theta_vec[i], Q_ls.x[3], Q_ls.x[4], Q_ls.x[5])
+
+ax = plt.axes(aspect='equal', projection='3d')
+
+# Earth-centered orbits: Computed orbit and Earth's
+ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
+# ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+')
+ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5, label=body_name_str+' orbit')
+plt.legend()
+ax.set_xlabel('x (km)')
+ax.set_ylabel('y (km)')
+ax.set_zlabel('z (km)')
+xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
+ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
+ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
+ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
+ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
+ax.set_title('Satellite orbit (Gauss+LS): '+body_name_str)
+plt.show()
+
 # print(' = ', )
 
