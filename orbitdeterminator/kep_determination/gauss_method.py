@@ -1237,7 +1237,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     if plot:
         ax = plt.axes(aspect='equal', projection='3d')
 
-        # Sun-centered orbits: Computed orbit and Earth's
+        # Earth-centered orbits: Computed orbit and Earth's
         ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
         ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
         ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
