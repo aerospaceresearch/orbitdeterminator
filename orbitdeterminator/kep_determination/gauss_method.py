@@ -65,7 +65,7 @@ def get_station_data(station_code, sat_observatories_data):
     # print('arr_index[0] = ', arr_index[0])
     # print('arr_index[0][0] = ', arr_index[0][0])
     # print('sat_observatories_data[arr_index[0]] = ', sat_observatories_data[arr_index[0]])
-    print('sat_observatories_data[arr_index[0][0]] = ', sat_observatories_data[arr_index[0][0]])
+    # print('sat_observatories_data[arr_index[0][0]] = ', sat_observatories_data[arr_index[0][0]])
     return sat_observatories_data[arr_index[0][0]]
 
 def load_mpc_data(fname):
@@ -204,9 +204,9 @@ def observerpos_sat(lat, long, elev, t_utc):
     y_gc = r_xy*cos_phi_sin_theta
     z_gc = r_z*sin_phi
 
-    print('x_gc = ', x_gc)
-    print('y_gc = ', y_gc)
-    print('z_gc = ', z_gc)
+    # print('x_gc = ', x_gc)
+    # print('y_gc = ', y_gc)
+    # print('z_gc = ', z_gc)
 
     return np.array((x_gc,y_gc,z_gc))
 
@@ -856,10 +856,10 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
 
     obs_t_jd = np.array((obs_radec[0].obstime.jd, obs_radec[1].obstime.jd, obs_radec[2].obstime.jd))
 
-    print('*******************   obs_radec = ', obs_radec)
-    print('obs_t = ', obs_t)
-    print('obs_t_jd = ', obs_t_jd)
-    print('site_codes = ', site_codes)
+    # print('obs_radec = ', obs_radec)
+    # print('obs_t = ', obs_t)
+    # print('obs_t_jd = ', obs_t_jd)
+    # print('site_codes = ', site_codes)
 
     # compute observer position vectors wrt Sun
     R = get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes)
@@ -1107,7 +1107,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(body_fname_str)
     # print('IOD observation data:\n', iod_object_data, '\n')
-    print('IOD observation data:\n', iod_object_data[ np.array(obs_arr)-1 ], '\n')
+    # print('IOD observation data:\n', iod_object_data[ np.array(obs_arr)-1 ], '\n')
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
@@ -1146,9 +1146,9 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
         # print('obs_t = ', obs_t)
 
-        print('|r1| = ', np.linalg.norm(r1,ord=2))
-        print('|r2| = ', np.linalg.norm(r2,ord=2))
-        print('|r3| = ', np.linalg.norm(r3,ord=2))
+        # print('|r1| = ', np.linalg.norm(r1,ord=2))
+        # print('|r2| = ', np.linalg.norm(r2,ord=2))
+        # print('|r3| = ', np.linalg.norm(r3,ord=2))
         # print('r2 = ', r2)
         # print('obs_t[1] = ', obs_t[1])
         # print('v2 = ', v2)
@@ -1171,8 +1171,8 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
         a_vec[j] = a_num
         e_vec[j] = e_num
-        print('obst_t = ', obs_t)
-        print('obs_t[1] = ', obs_t[1])
+        # print('obst_t = ', obs_t)
+        # print('obs_t[1] = ', obs_t[1])
         taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num*86400)
         w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
         I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
@@ -1183,14 +1183,14 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         y_vec[j+1] = r2[1]
         z_vec[j+1] = r2[2]
 
-        print(a_num, 'km', ', ', e_num)
-        print('   * * * n_num = ', n_num, ' T_num = ', 2.0*np.pi/n_num)
+        # print(a_num, 'km', ', ', e_num)
+        # print('n_num = ', n_num, ' T_num = ', 2.0*np.pi/n_num)
         # # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
 
     # # print('x_vec = ', x_vec)
     print('a_vec = ', a_vec)
     print('len(a_vec) = ', len(a_vec))
-    print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
+    # print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
 
     print('e_vec = ', e_vec)
     print('len(e_vec) = ', len(e_vec))
@@ -1198,11 +1198,11 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     # e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
     # print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
 
-    print('w_vec = ', w_vec)
-    print('I_vec = ', I_vec)
-    print('W_vec = ', W_vec)
-    print('taup_vec = ', taup_vec)
-    print('t_vec = ', t_vec)
+    # print('w_vec = ', w_vec)
+    # print('I_vec = ', I_vec)
+    # print('W_vec = ', W_vec)
+    # print('taup_vec = ', taup_vec)
+    # print('t_vec = ', t_vec)
 
     a_mean = np.mean(a_vec) #km
     e_mean = np.mean(e_vec) #dimensionless
@@ -1212,11 +1212,12 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     W_mean = np.mean(W_vec) #deg
     n_mean = np.mean(n_vec) #sec
 
-    print('Observational arc:')
+    print('\nObservational arc:')
+    print('Number of observations: ', len(obs_arr))
     print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
-    print('*** AVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T ***')
+    print('\n*** AVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T ***')
     print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean/60.0, 'min')
 
     npoints = 1000
