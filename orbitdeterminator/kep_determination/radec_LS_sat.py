@@ -101,10 +101,11 @@ def t_radec_res_vec(x, inds, iod_object_data, sat_observatories_data, rov):
     return tv, rv
 
 # path of file of optical IOD-formatted observations
+# the example contains tracking data for satellite USA 74
 body_fname_str = '../example_data/iod_data_af2.txt'
 
 #body name
-body_name_str = '43145'
+body_name_str = 'USA 74 (21799)'
 
 #lines of observations file to be used for orbit determination
 obs_arr = [1, 3, 4, 6, 8] # LB observations of 21799 91 076C on 2018 Jul 22
@@ -140,7 +141,7 @@ x0 = q0[0:6]
 x0[3:6] = np.deg2rad(x0[3:6])
 # print('x0 = ', x0)
 
-obs_arr_ls = np.array(range(1, 9))
+obs_arr_ls = np.array(range(1, 8+1))
 print('obs_arr_ls = ', obs_arr_ls)
 # print('obs_arr_ls[0] = ', obs_arr_ls[0])
 # print('obs_arr_ls[-1] = ', obs_arr_ls[-1])
@@ -179,13 +180,13 @@ print('Last observation (UTC) : ', Time(tv_star[-1], format='jd').iso)
 
 n_num = meanmotion(gm.mu_Earth, Q_ls.x[0])
 
-print('\nOrbital elements, least-squares solution:')
+print('\nOrbital elements, Gauss + least-squares solution:')
 # print('Reference epoch (t0):                ', t_mean)
 print('Semi-major axis (a):                 ', Q_ls.x[0], 'km')
 print('Eccentricity (e):                    ', Q_ls.x[1])
 print('Time of pericenter passage (tau):    ', Time(Q_ls.x[2], format='jd').iso, 'JDUTC')
-print('Pericenter distance (q):             ', Q_ls.x[0]*(1.0-Q_ls.x[1]), 'km')
-print('Apocenter distance (Q):              ', Q_ls.x[0]*(1.0+Q_ls.x[1]), 'km')
+print('Pericenter altitude (q):             ', Q_ls.x[0]*(1.0-Q_ls.x[1])-gm.Re, 'km')
+print('Apocenter altitue (Q):              ', Q_ls.x[0]*(1.0+Q_ls.x[1])-gm.Re, 'km')
 # print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_ls.x[0], Q_ls.x[1], gm.mu_Sun, t_mean, Q_ls.x[2])), 'deg')
 print('Argument of pericenter (omega):      ', np.rad2deg(Q_ls.x[3]), 'deg')
 print('Inclination (I):                     ', np.rad2deg(Q_ls.x[4]), 'deg')
