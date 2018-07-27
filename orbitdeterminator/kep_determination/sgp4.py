@@ -53,7 +53,7 @@ class SGP4(object):
             pos, vel = self.propagation_model(tsince)
             data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
             data = [float("{0:.5f}".format(i)) for i in data]
-            ele = gibbs.orbital_elements(pos, vel)
+            # ele = gibbs.orbital_elements(pos, vel)
             # print(str(tsince) + " - " + str(ele))
             # print(str(tsince) + " - " + str(pos) + " " + str(vel))
             final[i,:] = data

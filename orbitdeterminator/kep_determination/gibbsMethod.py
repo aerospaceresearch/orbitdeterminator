@@ -77,8 +77,8 @@ class Gibbs(object):
         myfile = open(path, 'r')
         myfile.readline()           # it is used to remove the header line
 
-        upto = 1                    # size-2
         size = self.find_length(path)
+        upto = size-2                    # size-2
         final = np.zeros((upto, 6))
 
         r1 = self.convert_list(re.split('\t|\n', myfile.readline()))
