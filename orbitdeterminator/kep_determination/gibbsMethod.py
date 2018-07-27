@@ -1,6 +1,5 @@
 '''
-Gibbs method converts a set of three position vectors into state vectors (a pair
-of position and velocity vector)
+Converts a set of three psoition vectors into state vector using Gibb's method from which orbital elements can be found easily.
 '''
 
 import sys
@@ -20,31 +19,36 @@ class Gibbs(object):
     @classmethod
     def convert_list(self, vec):
         '''
-        Converts the values of a vector of datatype str into float.
+        Type casts the input data for the ease of use.
+
+        Converts the values of the input list with string datatype into float
+        for the ease of furthur computation.
 
         Args:
-            self: class variables
-            vec: input vector
+            vec (list): input vector
 
         Returns:
-            vector converted to float values
+            list: vector converted to float values
         '''
         return [float(vec[1]), float(vec[2]), float(vec[3])]
 
     @classmethod
     def find_length(self, path):
         '''
-        Finds the length of the input file. File should contain a header line
-        describing all it attributes. This function removes the header line. If
-        the file does not contains the header line then the first line of data
-        will get removed.
+        Finds the length of the input file.
+
+        Calculates the length of the file with the given path containing all the
+        position vectors. File should contain a header line describing all of its
+        attributes in a single line only. This function removes the header line
+        before it calculates file length. If the file does not contains the header
+        line then the first line of data will get removed and you have to add 1
+        to the output after it returns the result.
 
         Args:
-            self: class variables
-            path: file path
+            path (str): file path
 
         Returns:
-            size: length of file
+            int: length of file
         '''
         length = open(path, 'r')
         length.readline()       # it is used to remove the header line
@@ -57,30 +61,35 @@ class Gibbs(object):
 
     def read_file(self, path):
         '''
-        Read the data of the file in a set of three position vectors and
-        then applies gibbsMethod on it and stores it to a final vector.
+        Invokes the Gibb's implementation and stores the result in a list.
+
+        Read the file with the given path and forms a set of three position vectors
+        then applies Gibb's Method on that set and computes state vector for every
+        set. After computing state vectors it stores the result into a list. Now,
+        these state vectors can be used to find orbital elements.
 
         Args:
-            self: class variables
-            path: path to input file
+            path (str): path to input file
 
         Returns:
-            final: list of all pair of position and velocity vector
+            numpy.ndarray: list of all pair of position and velocity vector
         '''
         myfile = open(path, 'r')
         myfile.readline()           # it is used to remove the header line
 
+        upto = 1                    # size-2
         size = self.find_length(path)
-        final = np.zeros((size-2, 6))
+        final = np.zeros((upto, 6))
 
         r1 = self.convert_list(re.split('\t|\n', myfile.readline()))
         r2 = self.convert_list(re.split('\t|\n', myfile.readline()))
 
         i = 0
-        while(i < size-2):
+        while(i < upto):
             r3 = self.convert_list(re.split('\t|\n', myfile.readline()))
             v2 = self.gibbs(r1, r2, r3)
-
+            ele = self.orbital_elements(r2, v2)
+            print(ele)
             data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
             final[i,:] = data
 
@@ -93,14 +102,13 @@ class Gibbs(object):
     @classmethod
     def magnitude(self, vec):
         '''
-        Computes magnitude of the vector.
+        Computes magnitude of the input vector.
 
         Args:
-            self: class variables
-            vec: vector
+            vec (list): vector
 
         Returns:
-            magnitude of vector
+            float: magnitude of vector
         '''
         mag_vec = math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
         return mag_vec
@@ -108,49 +116,48 @@ class Gibbs(object):
     @classmethod
     def dot_product(self, a, b):
         '''
-        Dot product of two vectors. Multiplies corresponding axis with each
-        other and then add them. Returns a single value.
+        Computes dot product of two vectors. Multiplies corresponding axis with each
+        other and then adds them. Returns a single value.
 
         Args:
-            self: class variables
-            a: first vector
-            b: second vector
+            a (list/array): first vector
+            b (list/array): second vector
 
         Returns:
-            dot product
+            float: dot product of given vectors
         '''
         return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
 
     @classmethod
     def cross_product(self, a, b):
         '''
-        Cross product of two vectors. Returns a vector.
+        Computes cross product of the given vectors. Returns a vector.
 
         Args:
-            self: class variables
-            a: first vector
-            b: second vector
+            a (list/array): first vector
+            b (list/array): second vector
 
         Returns:
-            cross product
+            list/array: cross product of given vectors
         '''
         return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
 
     @classmethod
     def operate_vector(self, a, b, flag):
         '''
+        Adds or subtracts input vectors based on the flag value.
+
         If flag is 1 then add both vectors with corresponding values else if
-        flag is 0 (zeros) then subtract two vectors with corresponding values.
+        flag is 0 (zero) then subtract two vectors with corresponding values.
         Returns a vector.
 
         Args:
-            self: class variables
-            a: first vector
-            b: second vector
-            flag: checks for operation (addition/subtraction)
+            a (list/array): first vector
+            b (list/array): second vector
+            flag (int): checks for operation (addition/subtraction)
 
         Returns:
-            sum/difference of vector based on flag value
+            list/array: sum/difference of vector based on flag value
         '''
         if(flag == 1):
             return [a[0]+b[0], a[1]+b[1], a[2]+b[2]]
@@ -164,11 +171,10 @@ class Gibbs(object):
         its magnitude. Returns a vector.
 
         Args:
-            self: class variables
-            vec: input vector
+            vec (list): input vector
 
         Returns:
-            unit vector
+            list: unit vector
         '''
         mag = self.magnitude(vec)
         return [i/mag for i in vec]
@@ -176,18 +182,19 @@ class Gibbs(object):
     @classmethod
     def gibbs(self, r1, r2, r3):
         '''
-        Computes veclocity vector (part of state vector) using Gibb's Method
-        and takes r2 (input) as its position vector (part of state vector).
+        Computes state vector from the given set of three position vectors using Gibb's implementation.
+
+        Computes velocity vector (part of state vector) using Gibb's Method
+        and takes r2 (input argument) as its position vector (part of state vector).
         Both combined forms state vector.
 
         Args:
-            self: class variables
-            r1: first position vector
-            r2: second position vector
-            r3: third position vector
+            r1 (list): first position vector
+            r2 (list): second position vector
+            r3 (list): third position vector
 
         Returns:
-            v2: velocity vector
+            list: velocity vector
         '''
         mag_r1 = self.magnitude(r1)
         mag_r2 = self.magnitude(r2)
@@ -227,16 +234,18 @@ class Gibbs(object):
     @classmethod
     def orbital_elements(self, r, v):
         '''
-        Computes orbital elements from state vectors (pair of position and
-        veclocity vector).
+        Computes orbital elements from state vector.
+
+        Orbital elements is a set of six parameters which are semi-major axis,
+        inclination, right ascension of the ascending node, eccentricity,
+        argument of perigee and mean anomaly.
 
         Args:
-            self: class variables
-            r: position vector
-            v: velocity vector
+            r (list): position vector
+            v (list): velocity vector
 
         Returns:
-            set of six orbital elements
+            list: set of six orbital elements
         '''
         mag_r = self.magnitude(r)
         mag_v = self.magnitude(v)
