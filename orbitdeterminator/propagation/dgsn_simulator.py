@@ -108,7 +108,7 @@ class DGSNSimulator():
         self.is_running = False
         self.op_writer.close()
 
-def sig_handler(simulator, signal, frame):
+def __sig_handler(simulator, signal, frame):
     """Ctrl-C handler"""
 
     simulator.stop()
@@ -162,6 +162,12 @@ class print_lat_lon(OpWriter):
 class save_r(OpWriter):
     """Saves the position vector to a file"""
     def __init__(self, name):
+        """Initialize the class.
+
+           Args:
+               name(string): file name
+        """
+
         self.file_name = name
         self.iter = 0
 
@@ -233,5 +239,5 @@ if __name__ == "__main__":
     params.op_writer = save_r('ISS_DGSN.csv')
 
     s = DGSNSimulator(params)
-    signal.signal(signal.SIGINT, partial(sig_handler,s))
+    signal.signal(signal.SIGINT, partial(__sig_handler,s))
     s.simulate()

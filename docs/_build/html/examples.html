@@ -24,26 +24,18 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Orbit Determinator 1.0.0 documentation" href="index.html"/>
-        <link rel="prev" title="Modules documentation" href="modules.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Modules documentation" href="modules.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -60,7 +52,7 @@
 
           
             
-            <img src="_static/icon.png" class="logo" />
+            <img src="_static/icon.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -94,16 +86,19 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Package info</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Modules documentation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#run-the-program-with-main-py">Run the program with main.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-program-with-main-py">* Run the program with main.py</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#process">Process</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#results">Results</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#using-certain-modules">Using certain modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-program-with-automated-py">* Run the program with automated.py</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id1">Process</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#using-certain-modules">* Using certain modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Process</a></li>
 </ul>
 </li>
 </ul>
@@ -119,7 +114,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Orbit Determinator</a>
@@ -127,9 +122,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -174,11 +170,11 @@
   <div class="section" id="tutorials">
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="run-the-program-with-main-py">
-<h2>Run the program with main.py<a class="headerlink" href="#run-the-program-with-main-py" title="Permalink to this headline">¶</a></h2>
+<h2>* Run the program with main.py<a class="headerlink" href="#run-the-program-with-main-py" title="Permalink to this headline">¶</a></h2>
 <p>For the first example we will showcase how you can use the full features of the package
 with main.py. Simply executing the main.py by giving the name of .csv file that contains
 the positional data of the satellite, as an argument in the function process(data_file):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">error_apriori</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">error_apriori</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data</span>
 <span class="sd">    file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots</span>
@@ -197,7 +193,7 @@ the positional data of the satellite, as an argument in the function process(dat
 located in the src folder and the process will run. You also need to input a apriori estimation of the measurements
 errors, which in the example case is 20km per point (points every 1 second). In the case you are using your own
 positional data set you need to estimate this value and input it because it is critical for the filtering process:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">run</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s2">&quot;orbit.csv&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">run</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s2">&quot;orbit.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -239,13 +235,46 @@ described by the keplerian elements (via the interpolation method).</p>
 </div>
 </div>
 </div>
+<div class="section" id="run-the-program-with-automated-py">
+<h2>* Run the program with automated.py<a class="headerlink" href="#run-the-program-with-automated-py" title="Permalink to this headline">¶</a></h2>
+<p><cite>automated.py</cite> is another flavour of main.py that is supposed to run on a server. It keeps listening for new files in a particular directory and processes them when they arrive.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All the processing invloved in this module is identical to that of main.py.</p>
+</div>
+<p>For testing purpose some files have already put in a folder named src. These are raw unprocessed files. There is another folder named dst which contains processed files along with a graph saved in the form of svg.</p>
+<p>To execute this script, change the directory to the script’s directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">orbitdeterminator</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>and run the code using python3:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">automated</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>and thats it. This will keep listening for new files and process them as they arrive.</p>
+<div class="figure">
+<img alt="_images/automated_console.jpg" src="_images/automated_console.jpg" />
+</div>
+<div class="figure">
+<img alt="_images/automated_graph.svg" src="_images/automated_graph.svg" /></div>
+<div class="section" id="id1">
+<h3>Process<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Initialize an empty git repository in src folder</li>
+<li>Read the untracked files of that folder and put them in a list</li>
+<li>Process the files in this list and save the results(processed data and graph) to dst folder</li>
+<li>Stage the processed file in the src folder in order to avoid processing the same files multiple times.</li>
+<li>Check for any untracked files in src and apply steps 2-4 again.</li>
+</ul>
+</div>
+</div>
 <div class="section" id="using-certain-modules">
-<h2>Using certain modules<a class="headerlink" href="#using-certain-modules" title="Permalink to this headline">¶</a></h2>
+<h2>* Using certain modules<a class="headerlink" href="#using-certain-modules" title="Permalink to this headline">¶</a></h2>
 <p>In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
 path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
 located inside the src folder and has <strong>tab delimeter</strong> (read_data.py reads with this delimiter).</p>
-<div class="section" id="id1">
-<h3>Process<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id2">
+<h3>Process<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Read the data</li>
 <li>Filter the data</li>
@@ -253,7 +282,7 @@ located inside the src folder and has <strong>tab delimeter</strong> (read_data.
 </ul>
 <p>So first we read the data using the util/read_data.load_data function. Just input the .csv file name into the
 function and it will create a numpy array with the positional data ready to be processed:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">read_data</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s2">&quot;orbit.csv&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">read_data</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s2">&quot;orbit.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -262,7 +291,7 @@ function and it will create a numpy array with the positional data ready to be p
 function first. And it is critical for the x, y, z to be in kilometers.</p>
 </div>
 <p>We continue by applying the Triple moving average filter:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data_after_filter</span> <span class="o">=</span> <span class="n">triple_moving_average</span><span class="o">.</span><span class="n">generate_filtered_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data_after_filter</span> <span class="o">=</span> <span class="n">triple_moving_average</span><span class="o">.</span><span class="n">generate_filtered_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>We suggest using 3 as the window size of the filter. Came to this conclusion after a lot of testing. Next we apply
@@ -270,7 +299,7 @@ the second filter to the data set which will be of a larger window size so that 
 a larger scale. The optimal window size for the Savintzky - Golay filter is being computed by the function
 golay_window.c(error_apriori) in which we only have to input the apriori error estimation for the initial data set
 (or the measurements error):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">error_apriori</span> <span class="o">=</span> <span class="mf">20.0</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">error_apriori</span> <span class="o">=</span> <span class="mf">20.0</span>
 <span class="n">c</span> <span class="o">=</span> <span class="n">golay_window</span><span class="o">.</span><span class="n">c</span><span class="p">(</span><span class="n">error_apriori</span><span class="p">)</span>
 
 <span class="n">window</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="n">c</span>
@@ -279,12 +308,12 @@ golay_window.c(error_apriori) in which we only have to input the apriori error e
 </div>
 <p>The other 2 lines after the use of the golay_window.c(error_apriori) are needed to compute the window size for the
 Savintzky - Golay filter and again for the polynomial parameter of the filter we suggest using 3:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data_after_filter</span> <span class="o">=</span> <span class="n">sav_golay</span><span class="o">.</span><span class="n">golay</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">data_after_filter</span> <span class="o">=</span> <span class="n">sav_golay</span><span class="o">.</span><span class="n">golay</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>At this point we have the filtered positional data set ready to be inputed into the
 Lamberts - Kalman and Spline interpolation algorithms so that the final keplerian elements can be computed:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">kep_lamb</span> <span class="o">=</span> <span class="n">lamberts_kalman</span><span class="o">.</span><span class="n">create_kep</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kep_lamb</span> <span class="o">=</span> <span class="n">lamberts_kalman</span><span class="o">.</span><span class="n">create_kep</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">)</span>
 <span class="n">kep_final_lamb</span> <span class="o">=</span> <span class="n">lamberts_kalman</span><span class="o">.</span><span class="n">kalman</span><span class="p">(</span><span class="n">kep_lamb</span><span class="p">,</span> <span class="mf">0.01</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">kep_inter</span> <span class="o">=</span> <span class="n">interpolation</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">data_after_filter</span><span class="p">)</span>
 <span class="n">kep_final_inter</span> <span class="o">=</span> <span class="n">lamberts_kalman</span><span class="o">.</span><span class="n">kalman</span><span class="p">(</span><span class="n">kep_inter</span><span class="p">,</span> <span class="mf">0.01</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
@@ -304,9 +333,7 @@ kep_final_inter a numpy array 1x6 has the final computed keplerian elements.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -326,7 +353,7 @@ kep_final_inter a numpy array 1x6 has the final computed keplerian elements.</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -345,6 +372,7 @@ kep_final_inter a numpy array 1x6 has the final computed keplerian elements.</p>
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'1.0.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -357,19 +385,13 @@ kep_final_inter a numpy array 1x6 has the final computed keplerian elements.</p>
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

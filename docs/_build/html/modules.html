@@ -24,27 +24,19 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Orbit Determinator 1.0.0 documentation" href="index.html"/>
-        <link rel="next" title="Tutorials" href="examples.html"/>
-        <link rel="prev" title="Package info" href="introduction.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorials" href="examples.html" />
+    <link rel="prev" title="Welcome to Orbit Determinator’s documentation!" href="index.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -61,7 +53,7 @@
 
           
             
-            <img src="_static/icon.png" class="logo" />
+            <img src="_static/icon.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -95,7 +87,6 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Package info</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Modules documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#filters">Filters:</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.filters.triple_moving_average">Triple Moving Average</a></li>
@@ -104,7 +95,19 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#interpolation">Interpolation:</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.lamberts_kalman">Lamberts-Kalman Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.gibbsMethod">Gibb’s Method</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.interpolation">Spline Interpolation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.ellipse_fit">Ellipse Fit</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#propagation">Propagation:</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.sgp4">Propagation Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.propagation.cowell">Cowell Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulator">Simulator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dgsn-simulator">DGSN Simulator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.propagation.kalman_filter">Kalman Filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.propagation.sgp4_prop">sgp4_prop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.propagation.sgp4_prop_string">sgp4_prop_string</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#utils">Utils:</a><ul>
@@ -114,6 +117,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.util.input_transf">input_transf</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.util.rkf78">rkf78</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.util.golay_window">golay_window</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.util.anom_conv">anom_conv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.util.new_tle_kep_state">new_tle_kep_state</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.util.teme_to_ecef">teme_to_ecef</a></li>
 </ul>
 </li>
 </ul>
@@ -130,7 +136,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">Orbit Determinator</a>
@@ -138,9 +144,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -202,8 +209,8 @@ n = window size</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) – the name of the .csv file containing the positional data</li>
-<li><strong>window</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – window size applied into the filter</li>
+<li><strong>filename</strong> (<em>string</em>) – the name of the .csv file containing the positional data</li>
+<li><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – window size applied into the filter</li>
 </ul>
 </td>
 </tr>
@@ -227,7 +234,7 @@ n = window size</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>signal_array</strong> (<em>numpy array</em>) – the array of values on which the filter is to be applied</li>
-<li><strong>window_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the no. of points before and after x0 which should be considered for calculating A and B</li>
+<li><strong>window_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the no. of points before and after x0 which should be considered for calculating A and B</li>
 </ul>
 </td>
 </tr>
@@ -249,11 +256,11 @@ n = window size</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> (<em>list</em>) – a list of numbers</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – a list of numbers</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">weighted average of the terms in the list</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></td>
 </tr>
 </tbody>
 </table>
@@ -274,8 +281,8 @@ polynomial and window parameters we input</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> (<em>numpy array</em>) – containing all of the positional data in the format of (time, x, y, z)</li>
-<li><strong>window</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – window size of the Savintzky-Golay filter</li>
-<li><strong>degree</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – degree of the polynomial in Savintzky-Golay filter</li>
+<li><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – window size of the Savintzky-Golay filter</li>
+<li><strong>degree</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – degree of the polynomial in Savintzky-Golay filter</li>
 </ul>
 </td>
 </tr>
@@ -400,18 +407,28 @@ and produces two vectors with the state vector for both positions using Lamberts
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>x1</strong> (<em>numpy array</em>) – time and position for point 1 [time1,x1,y1,z1]</li>
 <li><strong>x2</strong> (<em>numpy array</em>) – time and position for point 2 [time2,x2,y2,z2]</li>
-<li><strong>time</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – time difference between the 2 points</li>
+<li><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – time difference between the 2 points</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">true if we want to keep retrogade, False if we want counter-clock wise</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)">bool</a></p>
 </td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.kep_determination.gibbsMethod">
+<span id="gibb-s-method"></span><h3>Gibb’s Method<a class="headerlink" href="#module-orbitdeterminator.kep_determination.gibbsMethod" title="Permalink to this headline">¶</a></h3>
+<p>The code takes the position vector and computes state vectors using Gibb’s Method.</p>
+<dl class="data">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.meu">
+<code class="descclassname">orbitdeterminator.kep_determination.gibbsMethod.</code><code class="descname">meu</code><em class="property"> = 398600.4418</em><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.meu" title="Permalink to this definition">¶</a></dt>
+<dd><p>class for Gibb’s implementation</p>
 </dd></dl>
 
 </div>
@@ -428,7 +445,7 @@ given spline corresponds to). This gives the velocity at that point.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>spline</strong> (<em>list</em>) – component wise cubic splines of orbit data points
+<li><strong>spline</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – component wise cubic splines of orbit data points
 of the format [spline_x, spline_y, spline_z].</li>
 <li><strong>point</strong> (<em>numpy array</em>) – point at which velocity is to be calculated.</li>
 </ul>
@@ -454,14 +471,14 @@ of the format [spline_x, spline_y, spline_z].</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>orbit_data</strong> (<em>numpy array</em>) – array of orbit data points of the</li>
-<li><strong>[</strong><strong>time</strong><strong>, </strong><strong>x</strong><strong>, </strong><strong>y</strong><strong>, </strong><strong>z</strong><strong>]</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#format" title="(in Python v2.7)"><em>format</em></a>) – </li>
+<li><strong>[</strong><strong>time</strong><strong>, </strong><strong>x</strong><strong>, </strong><strong>y</strong><strong>, </strong><strong>z</strong><strong>]</strong> (<em>format</em>) – </li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">component wise cubic splines of orbit data points of the format [spline_x, spline_y, spline_z]</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></p>
 </td>
 </tr>
 </tbody>
@@ -481,6 +498,631 @@ of the format [spline_x, spline_y, spline_z].</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">computed keplerian elements for every point of the orbit</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.kep_determination.ellipse_fit">
+<span id="ellipse-fit"></span><h3>Ellipse Fit<a class="headerlink" href="#module-orbitdeterminator.kep_determination.ellipse_fit" title="Permalink to this headline">¶</a></h3>
+<p>Finds out the ellipse that best fits to a set of data points and calculates
+its keplerian elements.</p>
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.ellipse_fit.determine_kep">
+<code class="descclassname">orbitdeterminator.kep_determination.ellipse_fit.</code><code class="descname">determine_kep</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/ellipse_fit.html#determine_kep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.ellipse_fit.determine_kep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines keplerian elements that fit a set of points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>nx3 numpy array</em>) – A numpy array of points in the format [x y z].</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(kep,res) - The keplerian elements and the residuals as a tuple.
+kep: 1x6 numpy array
+res: nx3 numpy array<p>For the keplerian elements:
+kep[0] - semi-major axis (in whatever units the data was provided in)
+kep[1] - eccentricity
+kep[2] - inclination (in degrees)
+kep[3] - argument of periapsis (in degrees)
+kep[4] - right ascension of ascending node (in degrees)
+kep[5] - true anomaly of the first row in the data (in degrees)</p>
+<p>For the residuals: (in whatever units the data was provided in)
+res[0] - residuals in x axis
+res[1] - residuals in y axis
+res[2] - residuals in z axis</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.kep_determination.ellipse_fit.plot_kep">
+<code class="descclassname">orbitdeterminator.kep_determination.ellipse_fit.</code><code class="descname">plot_kep</code><span class="sig-paren">(</span><em>kep</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/ellipse_fit.html#plot_kep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.ellipse_fit.plot_kep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the original data and the orbit defined by the keplerian elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>kep</strong> (<em>1x6 numpy array</em>) – keplerian elements</li>
+<li><strong>data</strong> (<em>nx3 numpy array</em>) – original data</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nothing</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="propagation">
+<h2>Propagation:<a class="headerlink" href="#propagation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-orbitdeterminator.kep_determination.sgp4">
+<span id="propagation-model"></span><h3>Propagation Model<a class="headerlink" href="#module-orbitdeterminator.kep_determination.sgp4" title="Permalink to this headline">¶</a></h3>
+<p>The code takes a TLE and computes state vectors for 8 hrs at every second</p>
+<dl class="data">
+<dt id="orbitdeterminator.kep_determination.sgp4.min_per_day">
+<code class="descclassname">orbitdeterminator.kep_determination.sgp4.</code><code class="descname">min_per_day</code><em class="property"> = 1440</em><a class="headerlink" href="#orbitdeterminator.kep_determination.sgp4.min_per_day" title="Permalink to this definition">¶</a></dt>
+<dd><p>class for SGP4 implementation</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.propagation.cowell">
+<span id="cowell-method"></span><h3>Cowell Method<a class="headerlink" href="#module-orbitdeterminator.propagation.cowell" title="Permalink to this headline">¶</a></h3>
+<p>Numerical orbit propagator based on RK4. Takes into account J2 and drag perturbations.</p>
+<dl class="function">
+<dt id="orbitdeterminator.propagation.cowell.drag">
+<code class="descclassname">orbitdeterminator.propagation.cowell.</code><code class="descname">drag</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/cowell.html#drag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.cowell.drag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the drag acceleration for a given state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>1x6 numpy array</em>) – the state vector [rx,ry,rz,vx,vy,vz]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the drag acceleration [ax,ay,az]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">1x3 numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.cowell.j2_pert">
+<code class="descclassname">orbitdeterminator.propagation.cowell.</code><code class="descname">j2_pert</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/cowell.html#j2_pert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.cowell.j2_pert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the J2 acceleration for a given state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>1x6 numpy array</em>) – the state vector [rx,ry,rz,vx,vy,vz]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the J2 acceleration [ax,ay,az]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">1x3 numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.cowell.propagate_state">
+<code class="descclassname">orbitdeterminator.propagation.cowell.</code><code class="descname">propagate_state</code><span class="sig-paren">(</span><em>s</em>, <em>t0</em>, <em>tf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/cowell.html#propagate_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.cowell.propagate_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to the rk4 function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.cowell.rk4">
+<code class="descclassname">orbitdeterminator.propagation.cowell.</code><code class="descname">rk4</code><span class="sig-paren">(</span><em>s</em>, <em>t0</em>, <em>tf</em>, <em>h=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/cowell.html#rk4"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.cowell.rk4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runge-Kutta 4th Order Numerical Integrator</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Args:</dt>
+<dd>s(1x6 numpy array): the state vector [rx,ry,rz,vx,vy,vz]
+t0(float)  : initial time
+tf(float)  : final time
+h(float)   : step-size</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the state at time tf</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1x6 numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.cowell.rkf45">
+<code class="descclassname">orbitdeterminator.propagation.cowell.</code><code class="descname">rkf45</code><span class="sig-paren">(</span><em>s</em>, <em>t0</em>, <em>tf</em>, <em>h=10</em>, <em>tol=1e-06</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/cowell.html#rkf45"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.cowell.rkf45" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runge-Kutta Fehlberg 4(5) Numerical Integrator</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Args:</dt>
+<dd>s(1x6 numpy array): the state vector [rx,ry,rz,vx,vy,vz]
+t0(float)  : initial time
+tf(float)  : final time
+h(float)   : step-size
+tol(float) : tolerance of error</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the state at time tf</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1x6 numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.cowell.sdot">
+<code class="descclassname">orbitdeterminator.propagation.cowell.</code><code class="descname">sdot</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/cowell.html#sdot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.cowell.sdot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the time derivative of a given state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>1x6 numpy array</em>) – the state vector [rx,ry,rz,vx,vy,vz]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the time derivative of s [vx,vy,vz,ax,ay,az]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">1x6 numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.cowell.time_period">
+<code class="descclassname">orbitdeterminator.propagation.cowell.</code><code class="descname">time_period</code><span class="sig-paren">(</span><em>s</em>, <em>h=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/cowell.html#time_period"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.cowell.time_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the nodal time period of an orbit.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s</strong> (<em>1x6 numpy array</em>) – the state vector [rx,ry,rz,vx,vy,vz]</li>
+<li><strong>h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – step-size</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the nodal time period of the orbit</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)">float</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="simulator">
+<h3>Simulator<a class="headerlink" href="#simulator" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="orbitdeterminator.propagation.simulator.Simulator">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.simulator.</code><code class="descname">Simulator</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#Simulator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.Simulator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for the simulator.</p>
+<dl class="method">
+<dt id="orbitdeterminator.propagation.simulator.Simulator.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#Simulator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.Simulator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the simulator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> – A SimParams object containing kep,t0,t,period,speed,
+and op_writer</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.simulator.Simulator.calc">
+<code class="descname">calc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#Simulator.calc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.Simulator.calc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the satellite state at current time and
+calls itself after a certain amount of time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.simulator.Simulator.simulate">
+<code class="descname">simulate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#Simulator.simulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.Simulator.simulate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts the calculation thread and waits for keyboard input.
+Press q or Ctrl-C to quit the simulator cleanly.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.simulator.Simulator.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#Simulator.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.Simulator.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops the simulator cleanly.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.simulator.SimParams">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.simulator.</code><code class="descname">SimParams</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#SimParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.SimParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>SimParams class. This is just a container for all
+the parameters required to start the simulation.</p>
+<p>kep(1x6 numpy array): the intial osculating keplerian elements
+epoch(float): the epoch of the above kep
+period(float): maximum time period between observations
+t0(float): starting time of the simulation
+speed(float): speed of the simulation
+op_writer(OpWriter): output handling object</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.simulator.OpWriter">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.simulator.</code><code class="descname">OpWriter</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#OpWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.OpWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base output writer class. Inherit this class
+and override the methods.</p>
+<dl class="method">
+<dt id="orbitdeterminator.propagation.simulator.OpWriter.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#OpWriter.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.OpWriter.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Anything that has to be executed after
+finishing writing the output. Runs once.</p>
+<p>Example: Closing connection to a database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.simulator.OpWriter.open">
+<code class="descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#OpWriter.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.OpWriter.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Anything that has to be executed before
+starting to write output. Runs once.</p>
+<p>Example: Establishing connection to database</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="orbitdeterminator.propagation.simulator.OpWriter.write">
+<em class="property">static </em><code class="descname">write</code><span class="sig-paren">(</span><em>t</em>, <em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#OpWriter.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.OpWriter.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called everytime the calc thread
+finishes a computation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t</strong> – the current time of simulation</li>
+<li><strong>s</strong> – the state vector at t [rx,ry,rz,vx,vy,vz]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.simulator.print_r">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.simulator.</code><code class="descname">print_r</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#print_r"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.print_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orbitdeterminator.propagation.simulator.OpWriter" title="orbitdeterminator.propagation.simulator.OpWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">orbitdeterminator.propagation.simulator.OpWriter</span></code></a></p>
+<p>Prints the position vector</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.simulator.save_r">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.simulator.</code><code class="descname">save_r</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#save_r"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.save_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orbitdeterminator.propagation.simulator.OpWriter" title="orbitdeterminator.propagation.simulator.OpWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">orbitdeterminator.propagation.simulator.OpWriter</span></code></a></p>
+<p>Saves the position vector to a file</p>
+<dl class="method">
+<dt id="orbitdeterminator.propagation.simulator.save_r.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/simulator.html#save_r.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.simulator.save_r.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>string</em>) – file name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="dgsn-simulator">
+<h3>DGSN Simulator<a class="headerlink" href="#dgsn-simulator" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.dgsn_simulator.</code><code class="descname">DGSNSimulator</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#DGSNSimulator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for the simulator.</p>
+<dl class="method">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#DGSNSimulator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the simulator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> – A SimParams object containing kep,t0,t,period,speed,
+op_writer, dgsn_period, and dgsn_thresh. For a
+description of the parameters, look at the documentation
+of the SimParams class.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.calc">
+<code class="descname">calc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#DGSNSimulator.calc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.calc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the satellite state at current time and
+calls itself after a certain amount of time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.simulate">
+<code class="descname">simulate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#DGSNSimulator.simulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.simulate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts the calculation thread and waits for keyboard input.
+Press q or Ctrl-C to quit the simulator cleanly.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#DGSNSimulator.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops the simulator cleanly.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.SimParams">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.dgsn_simulator.</code><code class="descname">SimParams</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#SimParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.SimParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>SimParams class. This is just a container for all
+the parameters required to start the simulation.</p>
+<p>kep(1x6 numpy array): the intial osculating keplerian elements
+epoch(float): the epoch of the above kep
+period(float): maximum time period between observations
+t0(float): starting time of the simulation
+speed(float): speed of the simulation
+op_writer(OpWriter): output handling object</p>
+<p>r_jit(float): std of Gaussian noise applied to observations
+dgsn_period(float): average time period between gaps
+dgsn_thresh(float): used to control the duration of the gap.</p>
+<blockquote>
+<div>it is a number between 0 and 1. a higher
+number means a bigger gap.</div></blockquote>
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.OpWriter">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.dgsn_simulator.</code><code class="descname">OpWriter</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#OpWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.OpWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base output writer class. Inherit this class
+and override the methods.</p>
+<dl class="method">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.OpWriter.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#OpWriter.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.OpWriter.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Anything that has to be executed after
+finishing writing the output. Runs once.</p>
+<p>Example: Closing connection to a database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.OpWriter.open">
+<code class="descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#OpWriter.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.OpWriter.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Anything that has to be executed before
+starting to write output. Runs once.</p>
+<p>Example: Establishing connection to database</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.OpWriter.write">
+<em class="property">static </em><code class="descname">write</code><span class="sig-paren">(</span><em>t</em>, <em>r</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#OpWriter.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.OpWriter.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called everytime the calc thread
+finishes a computation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t</strong> – the current time of simulation</li>
+<li><strong>s</strong> – the state vector at t [rx,ry,rz,vx,vy,vz]</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.print_r">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.dgsn_simulator.</code><code class="descname">print_r</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#print_r"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.print_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orbitdeterminator.propagation.dgsn_simulator.OpWriter" title="orbitdeterminator.propagation.dgsn_simulator.OpWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">orbitdeterminator.propagation.dgsn_simulator.OpWriter</span></code></a></p>
+<p>Prints the position vector</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.save_r">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.dgsn_simulator.</code><code class="descname">save_r</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#save_r"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.save_r" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#orbitdeterminator.propagation.dgsn_simulator.OpWriter" title="orbitdeterminator.propagation.dgsn_simulator.OpWriter"><code class="xref py py-class docutils literal notranslate"><span class="pre">orbitdeterminator.propagation.dgsn_simulator.OpWriter</span></code></a></p>
+<p>Saves the position vector to a file</p>
+<dl class="method">
+<dt id="orbitdeterminator.propagation.dgsn_simulator.save_r.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/dgsn_simulator.html#save_r.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.dgsn_simulator.save_r.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>string</em>) – file name</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.propagation.kalman_filter">
+<span id="kalman-filter"></span><h3>Kalman Filter<a class="headerlink" href="#module-orbitdeterminator.propagation.kalman_filter" title="Permalink to this headline">¶</a></h3>
+<p>Kalman Filter to smoothen observations. It continuously reads a file
+where observations are being written and updates its estimate based
+on the observations and the cowell model.</p>
+<dl class="class">
+<dt id="orbitdeterminator.propagation.kalman_filter.KalmanFilter">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.kalman_filter.</code><code class="descname">KalmanFilter</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/kalman_filter.html#KalmanFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.kalman_filter.KalmanFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kalman Filter class wrapper.</p>
+<dl class="method">
+<dt id="orbitdeterminator.propagation.kalman_filter.KalmanFilter.process">
+<code class="descname">process</code><span class="sig-paren">(</span><em>s</em>, <em>t0</em>, <em>dgsn_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/kalman_filter.html#KalmanFilter.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.kalman_filter.KalmanFilter.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main Kalman Filter. Continuously reads an obervations file and
+updates the state estimate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s</strong> (<em>1x6 numpy array</em>) – the state vector [rx,ry,rz,vx,vy,vz]</li>
+<li><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – epoch of s</li>
+<li><strong>dgsn_file</strong> (<em>string</em>) – path to the observations file</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nothing</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.propagation.sgp4_prop">
+<span id="sgp4-prop"></span><h3>sgp4_prop<a class="headerlink" href="#module-orbitdeterminator.propagation.sgp4_prop" title="Permalink to this headline">¶</a></h3>
+<p>SGP4 propagator. This is a wrapper around the PyPI SGP4 propagator.
+However, this does not generate an artificial TLE. So there is no
+string manipulation involved. Hence this is faster than sgp4_prop_string.</p>
+<dl class="function">
+<dt id="orbitdeterminator.propagation.sgp4_prop.kep_to_sat">
+<code class="descclassname">orbitdeterminator.propagation.sgp4_prop.</code><code class="descname">kep_to_sat</code><span class="sig-paren">(</span><em>kep</em>, <em>epoch</em>, <em>bstar=0.21109E-4</em>, <em>whichconst=wgs72</em>, <em>afspc_mode=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4_prop.html#kep_to_sat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4_prop.kep_to_sat" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Converts a set of keplerian elements into a Satellite object.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>kep(1x6 numpy array): the osculating keplerian elements at epoch
+epoch(float): the epoch
+bstar(float): bstar drag coefficient
+whichconst(float): gravity model. refer pypi sgp4 documentation
+afspc_mode(boolean): refer pypi sgp4 documentation</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an sgp4 satellite object encapsulating the arguments</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">Satellite object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.sgp4_prop.propagate_kep">
+<code class="descclassname">orbitdeterminator.propagation.sgp4_prop.</code><code class="descname">propagate_kep</code><span class="sig-paren">(</span><em>kep</em>, <em>t0</em>, <em>tf</em>, <em>bstar=2.1109e-05</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4_prop.html#propagate_kep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4_prop.propagate_kep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagates a set of keplerian elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>kep</strong> (<em>1x6 numpy array</em>) – osculating keplerian elements at epoch</li>
+<li><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – initial time (epoch)</li>
+<li><strong>tf</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – final time</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the position at tf
+vel(1x3 numpy array): the velocity at tf</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pos(1x3 numpy array)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.propagation.sgp4_prop.propagate_state">
+<code class="descclassname">orbitdeterminator.propagation.sgp4_prop.</code><code class="descname">propagate_state</code><span class="sig-paren">(</span><em>r</em>, <em>v</em>, <em>t0</em>, <em>tf</em>, <em>bstar=2.1109e-05</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4_prop.html#propagate_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4_prop.propagate_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagates a state vector</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>r</strong> (<em>1x3 numpy array</em>) – the position vector at epoch</li>
+<li><strong>v</strong> (<em>1x3 numpy array</em>) – the velocity vector at epoch</li>
+<li><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – initial time (epoch)</li>
+<li><strong>tf</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – final time</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the position at tf
+vel(1x3 numpy array): the velocity at tf</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pos(1x3 numpy array)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.propagation.sgp4_prop_string">
+<span id="sgp4-prop-string"></span><h3>sgp4_prop_string<a class="headerlink" href="#module-orbitdeterminator.propagation.sgp4_prop_string" title="Permalink to this headline">¶</a></h3>
+<p>SGP4 propagator. This is a wrapper around PyPI SGP4 propagator.
+It constructs an artificial TLE and passes it to the PyPI module.</p>
+<dl class="function">
+<dt id="orbitdeterminator.propagation.sgp4_prop_string.propagate">
+<code class="descclassname">orbitdeterminator.propagation.sgp4_prop_string.</code><code class="descname">propagate</code><span class="sig-paren">(</span><em>kep</em>, <em>init_time</em>, <em>final_time</em>, <em>bstar=2.1109e-05</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4_prop_string.html#propagate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4_prop_string.propagate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propagates a set of keplerian elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>kep</strong> (<em>1x6 numpy array</em>) – osculating keplerian elements at epoch</li>
+<li><strong>init_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – initial time (epoch)</li>
+<li><strong>final_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – final time</li>
+<li><strong>bstar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – bstar drag coefficient</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the position at tf
+vel(1x3 numpy array): the velocity at tf</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pos(1x3 numpy array)</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -532,7 +1174,7 @@ r(3),r(4),r(5): velocity vector (vx,vy,vz) km/s</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) – name of the csv file to be parsed</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) – name of the csv file to be parsed</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">array of the orbit positions, each point of the orbit is of the
 format (time, x, y, z)</td>
@@ -587,8 +1229,8 @@ kep(1): orbital eccentricity (non-dimensional)</p>
 <div><p>(0 &lt;= eccentricity &lt; 1)</p>
 </div></blockquote>
 <p>kep(2): orbital inclination (degrees)
-kep(3): right ascension of ascending node (degrees)
-kep(4): argument of perigee (degress)
+kep(3): argument of perigee (degress)
+kep(4): right ascension of ascending node (degrees)
 kep(5): true anomaly (degrees)</p>
 </p>
 </td>
@@ -656,11 +1298,11 @@ a time interval tf</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>neq</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of differential equations</li>
-<li><strong>ti</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – initial simulation time</li>
-<li><strong>tf</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – final simulation time</li>
-<li><strong>h</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – initial guess for integration step size</li>
-<li><strong>tetol</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – truncation error tolerance [non-dimensional]</li>
+<li><strong>neq</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – number of differential equations</li>
+<li><strong>ti</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – initial simulation time</li>
+<li><strong>tf</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – final simulation time</li>
+<li><strong>h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – initial guess for integration step size</li>
+<li><strong>tetol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – truncation error tolerance [non-dimensional]</li>
 <li><strong>x</strong> (<em>numpy array</em>) – integration vector at time = ti</li>
 </ul>
 </td>
@@ -697,19 +1339,183 @@ a time interval tf</p>
 <div class="section" id="module-orbitdeterminator.util.golay_window">
 <span id="golay-window"></span><h3>golay_window<a class="headerlink" href="#module-orbitdeterminator.util.golay_window" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
-<dt id="orbitdeterminator.util.golay_window.c">
-<code class="descclassname">orbitdeterminator.util.golay_window.</code><code class="descname">c</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/golay_window.html#c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.golay_window.c" title="Permalink to this definition">¶</a></dt>
+<dt id="orbitdeterminator.util.golay_window.window">
+<code class="descclassname">orbitdeterminator.util.golay_window.</code><code class="descname">window</code><span class="sig-paren">(</span><em>error</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/golay_window.html#window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.golay_window.window" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the constant c which is needed to determine the savintzky - golay filter window
 window = len(data) / c ,where c is a constant strongly related to the error contained in the data set</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>error</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the a-priori error estimation for each measurment</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>error</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – the a-priori error estimation for each measurment</li>
+<li><strong>data</strong> (<em>numpy array</em>) – the positional data set</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">constant which describes the window that needs to be inputed to the savintzky - golay filter</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">constant which describes the window that needs to be inputed to the savintzky - golay filter</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)">float</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.util.anom_conv">
+<span id="anom-conv"></span><h3>anom_conv<a class="headerlink" href="#module-orbitdeterminator.util.anom_conv" title="Permalink to this headline">¶</a></h3>
+<p>Vectorized anomaly conversion scripts</p>
+<dl class="function">
+<dt id="orbitdeterminator.util.anom_conv.ecc_to_mean">
+<code class="descclassname">orbitdeterminator.util.anom_conv.</code><code class="descname">ecc_to_mean</code><span class="sig-paren">(</span><em>E</em>, <em>e</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/anom_conv.html#ecc_to_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.anom_conv.ecc_to_mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts eccentric anomaly to mean anomaly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>E</strong> (<em>numpy array</em>) – array of eccentric anomalies (in radians)</li>
+<li><strong>e</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – eccentricity</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array of mean anomalies (in radians)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.util.anom_conv.mean_to_t">
+<code class="descclassname">orbitdeterminator.util.anom_conv.</code><code class="descname">mean_to_t</code><span class="sig-paren">(</span><em>M</em>, <em>a</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/anom_conv.html#mean_to_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.anom_conv.mean_to_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts mean anomaly to time elapsed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>M</strong> (<em>numpy array</em>) – array of mean anomalies (in radians)</li>
+<li><strong>a</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – semi-major axis</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy array of time elapsed</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.util.anom_conv.true_to_ecc">
+<code class="descclassname">orbitdeterminator.util.anom_conv.</code><code class="descname">true_to_ecc</code><span class="sig-paren">(</span><em>theta</em>, <em>e</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/anom_conv.html#true_to_ecc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.anom_conv.true_to_ecc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts true anomaly to eccentric anomaly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>theta</strong> (<em>numpy array</em>) – array of true anomalies (in radians)</li>
+<li><strong>e</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – eccentricity</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array of eccentric anomalies (in radians)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.util.new_tle_kep_state">
+<span id="new-tle-kep-state"></span><h3>new_tle_kep_state<a class="headerlink" href="#module-orbitdeterminator.util.new_tle_kep_state" title="Permalink to this headline">¶</a></h3>
+<p>This module computes the state vector from keplerian elements.</p>
+<dl class="function">
+<dt id="orbitdeterminator.util.new_tle_kep_state.kep_to_state">
+<code class="descclassname">orbitdeterminator.util.new_tle_kep_state.</code><code class="descname">kep_to_state</code><span class="sig-paren">(</span><em>kep</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/new_tle_kep_state.html#kep_to_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.new_tle_kep_state.kep_to_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function converts from keplerian elements to the position and velocity vector</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kep</strong> (<em>1x6 numpy array</em>) – kep contains the following variables
+kep[0] = semi-major axis (kms)
+kep[1] = eccentricity (number)
+kep[2] = inclination (degrees)
+kep[3] = argument of perigee (degrees)
+kep[4] = right ascension of ascending node (degrees)
+kep[5] = true anomaly (degrees)</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:
+r: 1x6 numpy array which contains the position and velocity vector</p>
+<blockquote>
+<div>r[0],r[1],r[2] = position vector [rx,ry,rz] km
+r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="orbitdeterminator.util.new_tle_kep_state.tle_to_state">
+<code class="descclassname">orbitdeterminator.util.new_tle_kep_state.</code><code class="descname">tle_to_state</code><span class="sig-paren">(</span><em>tle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/new_tle_kep_state.html#tle_to_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.new_tle_kep_state.tle_to_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function converts from TLE elements to position and velocity vector</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tle</strong> (<em>1x6 numpy array</em>) – tle contains the following variables
+tle[0] = inclination (degrees)
+tle[1] = right ascension of the ascending node (degrees)
+tle[2] = eccentricity (number)
+tle[3] = argument of perigee (degrees)
+tle[4] = mean anomaly (degrees)
+tle[5] = mean motion (revs per day)</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:
+r: 1x6 numpy array which contains the position and velocity vector</p>
+<blockquote>
+<div>r[0],r[1],r[2] = position vector [rx,ry,rz] km
+r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-orbitdeterminator.util.teme_to_ecef">
+<span id="teme-to-ecef"></span><h3>teme_to_ecef<a class="headerlink" href="#module-orbitdeterminator.util.teme_to_ecef" title="Permalink to this headline">¶</a></h3>
+<p>Converts coordinates in TEME frame to ECEF frame.</p>
+<dl class="function">
+<dt id="orbitdeterminator.util.teme_to_ecef.conv_to_ecef">
+<code class="descclassname">orbitdeterminator.util.teme_to_ecef.</code><code class="descname">conv_to_ecef</code><span class="sig-paren">(</span><em>coords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/util/teme_to_ecef.html#conv_to_ecef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.util.teme_to_ecef.conv_to_ecef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts coordinates in TEME frame to ECEF frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>coords</strong> (<em>nx4 numpy array</em>) – list of coordinates in the format [t,x,y,z]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>list of coordinates in the format</dt>
+<dd>[t, latitude, longitude, altitude]<p class="last">Note that these coordinates are with respect to the
+surface of the Earth. Latitude, longitude are in degrees.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">nx4 numpy array</td>
 </tr>
 </tbody>
 </table>
@@ -721,9 +1527,7 @@ window = len(data) / c ,where c is a constant strongly related to the error cont
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -732,7 +1536,7 @@ window = len(data) / c ,where c is a constant strongly related to the error cont
         <a href="examples.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="introduction.html" class="btn btn-neutral" title="Package info" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="Welcome to Orbit Determinator’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -745,7 +1549,7 @@ window = len(data) / c ,where c is a constant strongly related to the error cont
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -764,6 +1568,7 @@ window = len(data) / c ,where c is a constant strongly related to the error cont
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
             VERSION:'1.0.0',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -776,19 +1581,13 @@ window = len(data) / c ,where c is a constant strongly related to the error cont
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

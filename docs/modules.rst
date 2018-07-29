@@ -32,12 +32,76 @@ Spline Interpolation
 .. automodule:: orbitdeterminator.kep_determination.interpolation
    :members:
 
+Ellipse Fit
+~~~~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.kep_determination.ellipse_fit
+   :members:
+
 Propagation:
 ------------
 
 Propagation Model
 ~~~~~~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.kep_determination.sgp4
+   :members:
+
+Cowell Method
+~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.propagation.cowell
+   :members:
+
+Simulator
+~~~~~~~~~~~~~~~~~
+.. autoclass:: orbitdeterminator.propagation.simulator.Simulator
+   :special-members: __init__
+   :members:
+
+.. autoclass:: orbitdeterminator.propagation.simulator.SimParams
+   :members:
+
+.. autoclass:: orbitdeterminator.propagation.simulator.OpWriter
+   :members:
+
+.. autoclass:: orbitdeterminator.propagation.simulator.print_r
+   :show-inheritance:
+
+.. autoclass:: orbitdeterminator.propagation.simulator.save_r
+   :show-inheritance:
+   :members: __init__
+
+
+DGSN Simulator
+~~~~~~~~~~~~~~~~~
+.. autoclass:: orbitdeterminator.propagation.dgsn_simulator.DGSNSimulator
+   :special-members: __init__
+   :members:
+
+.. autoclass:: orbitdeterminator.propagation.dgsn_simulator.SimParams
+   :members:
+
+.. autoclass:: orbitdeterminator.propagation.dgsn_simulator.OpWriter
+   :members:
+
+.. autoclass:: orbitdeterminator.propagation.dgsn_simulator.print_r
+   :show-inheritance:
+
+.. autoclass:: orbitdeterminator.propagation.dgsn_simulator.save_r
+   :show-inheritance:
+   :members: __init__
+
+Kalman Filter
+~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.propagation.kalman_filter
+   :members:
+
+sgp4_prop
+~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.propagation.sgp4_prop
+   :members:
+
+sgp4_prop_string
+~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.propagation.sgp4_prop_string
    :members:
 
 Utils:
@@ -71,4 +135,19 @@ rkf78
 golay_window
 ~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.util.golay_window
+   :members:
+
+anom_conv
+~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.util.anom_conv
+   :members:
+
+new_tle_kep_state
+~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.util.new_tle_kep_state
+   :members:
+
+teme_to_ecef
+~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.util.teme_to_ecef
    :members:
