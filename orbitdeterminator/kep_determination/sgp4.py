@@ -1,9 +1,14 @@
 '''
-The code takes a TLE and computes state vectors for next 8 hrs at every second.
+Takes a TLE at a certain time epoch and then computes the state vectors and hence orbital elements too at every time epoch (at every second) for the next 8 hours.
 '''
+
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 import numpy as np
 import math
+from kep_determination.gibbsMethod import *
 
 pi = np.pi
 meu = 398600.4418
@@ -14,16 +19,21 @@ class SGP4(object):
 
     def propagate(self, line1, line2):
         '''
-        Computes state vectors at every second for 8 hours and stores them into
-        a vector and returns the final vector.
+        Invokes the function to compute state vectors and organises the final result.
+
+        The function extracts necessary information from the given TLE which the
+        propagation model needs, then it computes the state vector for the next
+        8 hours (28800 seconds in 8 hours) at every time epoch (28800 time epcohs)
+        using the sgp4 propagation model. The values of state vector is formatted
+        upto five decimal points and then all the state vectors got appended in
+        a list which stores the final output.
 
         Args:
-            self: class variables
-            line1: line 1 in TLE
-            line2: line 2 in TLE
+            line1 (str): line 1 of the TLE
+            line2 (str): line 2 of the TLE
 
         Returns:
-            final: vector containing all state vectors for 8 hours
+            numpy.ndarray: vector containing all state vectorss
         '''
 
         self.xmo = float(''.join(line2[43:51])) * (pi/180)
@@ -34,31 +44,38 @@ class SGP4(object):
         self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
         self.bstar = int(''.join(line1[53:59]))*(1e-5)*(10**int(''.join(line1[59:61])))
 
-        final = np.zeros((28800,6))
         i = 0
         upto = 28800                # 28800 secs in 8 hours (in seconds)
+        final = np.zeros((upto,6))
+        gibbs = Gibbs()
         while(i < upto):
             tsince = i
             pos, vel = self.propagation_model(tsince)
             data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
             data = [float("{0:.5f}".format(i)) for i in data]
-            print(str(tsince) + " - " + str(data))
+            # ele = gibbs.orbital_elements(pos, vel)
+            # print(str(tsince) + " - " + str(ele))
+            # print(str(tsince) + " - " + str(pos) + " " + str(vel))
             final[i,:] = data
             i = i + 1
+
+        del(gibbs)
 
         return final
 
     def propagation_model(self, tsince):
         '''
-        Computes state vectors at a given time epoch.
+        From the time epoch and information from TLE, applies SGP4 on it.
+
+        The function applies the Simplified General Perturbations algorithm
+        SGP4 on the information extracted from the TLE at the given time epoch
+        'tsince' and computes the state vector from it.
 
         Args:
-            self: class variables
-            tsince: time epoch
+            tsince (int): time epoch
 
         Returns:
-            pos: position vector
-            vel: velocity vector
+            tuple: position and velocity vector
         '''
         ae = 1
         tothrd = 2.0/3.0
@@ -250,11 +267,109 @@ class SGP4(object):
 
         return pos, vel
 
+    @classmethod
+    def recover_tle(self, pos, vel):
+        """
+        Recovers TLE back from state vector.
+
+        First of all, only necessary information (which are inclination, right
+        ascension of the ascending node, eccentricity, argument of perigee, mean
+        anomaly, mean motion and bstar) that are needed in the computation of
+        SGP4 propagation model are recovered. It is using a general format of
+        TLE. State vectors are used to find orbital elements which are then
+        inserted into the TLE format at their respective positions. Mean motion
+        and bstar is calculated separately as it is not a part of orbital elements.
+
+        Args:
+            pos (list): position vector
+            vel (list): velocity vector
+
+        Returns:
+            list: line1 and line2 of TLE
+        """
+        # TLE format
+        line1 = "1 xxxxxx xxxxxxxx xxxxx.xxxxxxxx _.xxxxxxxx _xxxxx_x _xxxxx_x x xxxxx"
+        line2 = "2 xxxxx xxx.xxxx xxx.xxxx xxxxxxx xxx.xxxx xxx.xxxx xx.xxxxxxxxxxxxxx"
+
+        # line 1
+        line1 = list(line1)
+        line1 = "".join(line1)
+
+        # line 2
+        line2 = list(line2)
+
+        gibbs = Gibbs()
+        ele = gibbs.orbital_elements(pos, vel)
+        del(gibbs)
+
+        # inclination
+        inc = float("{0:.4f}".format(ele[1]))
+        if(inc < 10.0):
+            inc = str("  ") + str(inc)
+        elif(inc < 100.0):
+            inc = str(" ") + str(inc)
+        line2[8:16] = str(inc)
+
+        # right ascension of ascending node
+        asc = float("{0:.4f}".format(ele[2]))
+        if(asc < 10.0):
+            asc = str("  ") + str(asc)
+        elif(asc < 100.0):
+            asc = str(" ") + str(asc)
+        line2[17:25] = str(asc)
+
+        # eccentricity
+        e = list("{0:.7f}".format(ele[3]))
+        e = str("".join(e[2:]))
+        line2[26:33] = e
+
+        # argument of perigee
+        per = float("{0:.4f}".format(ele[4]))
+        if(per < 10.0):
+            per = str("  ") + str(per)
+        elif(per < 100.0):
+            per = str(" ") + str(per)
+        line2[34:42] = str(per)
+
+        # mean anomaly
+        anom = float("{0:.4f}".format(ele[5]))
+        if(anom < 10.0):
+            anom = str("  ") + str(anom)
+        elif(anom < 100.0):
+            anom = str(" ") + str(anom)
+        line2[43:51] = str(anom)
+
+        # mean motion (revolution per day)
+        t = 2*pi*math.sqrt(ele[0]**3/meu)
+        n = 1/t
+        n = n*86400                     # 86400 seconds in a day
+        n = float("{0:.8f}".format(n))
+        if(n < 10.0):
+            n = str(" ") + str(n)
+        line2[52:63] = str(n)
+
+        line2 = "".join(line2)
+        # print(line2)
+
+        tle = [line1, line2]
+        return tle
+
 if __name__ == "__main__":
     line1 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8"
     line2 = "2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518   105"
 
+    # line1 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8"
+    # line2 = "2 88888 134.8946 112.5155 0009954 111.4817 248.8041 16.05824518   105"
+
     obj = SGP4()
     state_vec = obj.propagate(line1, line2)
     # print(state_vec)
+
+    # Recover TLE from state vector
+    pos = [state_vec[0][0], state_vec[0][1], state_vec[0][2]]
+    vel = [state_vec[0][3], state_vec[0][4], state_vec[0][5]]
+    tle = obj.recover_tle(pos, vel)
+    print(tle[0])
+    print(tle[1])
+
     del(obj)
