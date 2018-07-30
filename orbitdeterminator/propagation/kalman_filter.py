@@ -11,7 +11,7 @@ class KalmanFilter():
     """Kalman Filter class wrapper."""
 
     @staticmethod
-    def Jacobian(s,t0,tf):
+    def __Jacobian(s,t0,tf):
         """Numerically computes the Jacobian of rk4(s,t0,tf).
 
            Args:
@@ -81,7 +81,7 @@ class KalmanFilter():
             #    self.t0 = t
             #    continue
 
-            F = self.Jacobian(self.s, self.t0, t)
+            F = self.__Jacobian(self.s, self.t0, t)
 
             self.P = np.matmul(self.P,F.T)
             self.P = np.matmul(F,self.P)

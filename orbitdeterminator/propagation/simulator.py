@@ -75,7 +75,7 @@ class Simulator():
         self.is_running = False
         self.op_writer.close()
 
-def sig_handler(simulator, signal, frame):
+def __sig_handler(simulator, signal, frame):
     """Ctrl-C handler"""
 
     simulator.stop()
@@ -132,6 +132,12 @@ class print_lat_lon(OpWriter):
 class save_r(OpWriter):
     """Saves the position vector to a file"""
     def __init__(self, name):
+        """Initialize the class.
+
+           Args:
+               name(string): file name
+        """
+
         self.file_name = name
 
     def open(self):
@@ -186,5 +192,5 @@ if __name__ == "__main__":
     params.op_writer = print_lat_lon() #save_r('ISS.csv')
 
     s = Simulator(params)
-    signal.signal(signal.SIGINT, partial(sig_handler,s))
+    signal.signal(signal.SIGINT, partial(__sig_handler,s))
     s.simulate()

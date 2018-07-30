@@ -1,4 +1,6 @@
-"""SGP4 propagator. This is a wrapper around the PyPI SGP4 propagator."""
+"""SGP4 propagator. This is a wrapper around the PyPI SGP4 propagator.
+   However, this does not generate an artificial TLE. So there is no
+   string manipulation involved. Hence this is faster than sgp4_prop_string."""
 
 from datetime import datetime
 import numpy as np
@@ -7,7 +9,7 @@ from sgp4.earth_gravity import wgs72
 from sgp4.propagation import sgp4init
 from orbitdeterminator.util.state_kep import state_kep
 
-def true_to_mean(T,e):
+def __true_to_mean(T,e):
     """Converts true anomaly to mean anomaly.
 
        Args:
@@ -28,7 +30,9 @@ def true_to_mean(T,e):
 # Parts of this method have been copied from:
 # https://github.com/brandon-rhodes/python-sgp4/blob/master/sgp4/io.py
 def kep_to_sat(kep,epoch,bstar=0.21109E-4,whichconst=wgs72,afspc_mode=False):
-    """Converts a set of keplerian elements into a Satellite object.
+    """kep_to_sat(kep,epoch,bstar=0.21109E-4,whichconst=wgs72,afspc_mode=False)
+
+       Converts a set of keplerian elements into a Satellite object.
 
        Args:
            kep(1x6 numpy array): the osculating keplerian elements at epoch
@@ -65,7 +69,7 @@ def kep_to_sat(kep,epoch,bstar=0.21109E-4,whichconst=wgs72,afspc_mode=False):
     satrec.nodeo = kep[4]
     satrec.ecco = kep[1]
     satrec.argpo = kep[3]
-    satrec.mo = true_to_mean(kep[5],kep[1])
+    satrec.mo = __true_to_mean(kep[5],kep[1])
     satrec.no = 86400/(2*np.pi*(kep[0]**3/398600.4405)**0.5)
 
     satrec.no   = satrec.no / xpdotp; #   rad/min

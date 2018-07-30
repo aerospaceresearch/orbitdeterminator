@@ -8,7 +8,7 @@ from orbitdeterminator.propagation.cowell import time_period
 
 mu = 398600.4418
 
-def MtoE(M,e):
+def __MtoE(M,e):
     """Calculates the eccentric anomaly from the mean anomaly.
 
        Args:
@@ -29,35 +29,35 @@ def MtoE(M,e):
 
     return E
 
-def TtoE(T,e):
+def __TtoE(T,e):
     E = math.atan2((1-e**2)**0.5*math.sin(T),e+math.cos(T))
     E = E%(2*math.pi)
     return E
 
-def EtoT(E,e):
+def __EtoT(E,e):
     T = math.atan2((1-e**2)**0.5*math.sin(E),math.cos(E)-e)
     T = T%(2*math.pi)
     return T
 
 def MtoT(M,e):
-    return EtoT(MtoE(M,e),e)
+    return __EtoT(__MtoE(M,e),e)
 
 def tle_to_state(tle):
-    """ This function converts from TLE elements to the position and velocity vector
+    """ This function converts from TLE elements to position and velocity vector
 
         Args:
-            kep(1x6 numpy array): kep contains the following variables
-            tle[0] = inclination (degrees)
-            tle[1] = right ascension of the ascending node (degrees)
-            tle[2] = eccentricity (number)
-            tle[3] = argument of perigee (degrees)
-            tle[4] = mean anomaly (degrees)
-            tle[5] = mean motion (revs per day)
+            tle(1x6 numpy array): tle contains the following variables
+                tle[0] = inclination (degrees)
+                tle[1] = right ascension of the ascending node (degrees)
+                tle[2] = eccentricity (number)
+                tle[3] = argument of perigee (degrees)
+                tle[4] = mean anomaly (degrees)
+                tle[5] = mean motion (revs per day)
 
         Returns:
         r: 1x6 numpy array which contains the position and velocity vector
-	   r[0],r[1],r[2] = position vector [rx,ry,rz] km
-	   r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s
+           r[0],r[1],r[2] = position vector [rx,ry,rz] km
+           r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s
     """
 
     # unload orbital elements array
@@ -83,17 +83,17 @@ def kep_to_state(kep):
 
         Args:
             kep(1x6 numpy array): kep contains the following variables
-            kep[0] = semi-major axis (kms)
-            kep[1] = eccentricity (number)
-            kep[2] = inclination (degrees)
-            kep[3] = argument of perigee (degrees)
-            kep[4] = right ascension of ascending node (degrees)
-            kep[5] = true anomaly (degrees)
+                kep[0] = semi-major axis (kms)
+                kep[1] = eccentricity (number)
+                kep[2] = inclination (degrees)
+                kep[3] = argument of perigee (degrees)
+                kep[4] = right ascension of ascending node (degrees)
+                kep[5] = true anomaly (degrees)
 
         Returns:
         r: 1x6 numpy array which contains the position and velocity vector
-	   r[0],r[1],r[2] = position vector [rx,ry,rz] km
-	   r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s
+           r[0],r[1],r[2] = position vector [rx,ry,rz] km
+           r[3],r[4],r[5] = velocity vector [vx,vy,vz] km/s
     """
 
     r = np.zeros((6,1))
@@ -105,7 +105,7 @@ def kep_to_state(kep):
     inc = math.radians(kep[2])  # inclination
     argp = math.radians(kep[3])  # argument of perigee
     raan = math.radians(kep[4])  # right ascension of the ascending node
-    eanom = TtoE(math.radians(kep[5]), ecc)  # we use mean anomaly(kep(5)) and the function MtoE to compute eccentric anomaly (eanom)
+    eanom = __TtoE(math.radians(kep[5]), ecc)  # we use mean anomaly(kep(5)) and the function MtoE to compute eccentric anomaly (eanom)
 
     smb = sma * math.sqrt(1-ecc**2)
 
