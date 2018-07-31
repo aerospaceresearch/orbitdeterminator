@@ -1,4 +1,5 @@
-"""SGP4 propagator. This is a wrapper around the PyPI SGP4 propagator."""
+"""SGP4 propagator. This is a wrapper around PyPI SGP4 propagator.
+   It constructs an artificial TLE and passes it to the PyPI module."""
 
 import time
 

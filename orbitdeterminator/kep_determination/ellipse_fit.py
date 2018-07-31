@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import minimize
 from functools import partial
 
-def read_args():
+def __read_args():
     """Reads command line arguments.
 
        Returns:
@@ -23,7 +23,7 @@ def read_args():
     return parser.parse_args()
 
 
-def cross_sum(data):
+def __cross_sum(data):
     """Returns the normalized sum of the cross products between consecutive vectors.
 
     Args:
@@ -42,7 +42,7 @@ def cross_sum(data):
     return cross_sum/np.linalg.norm(cross_sum)
 
 
-def plane_err(data,coeffs):
+def __plane_err(data,coeffs):
     """Calculates the total squared error of the data wrt a plane.
 
        The data should be a list of points. coeffs is an array of
@@ -61,7 +61,7 @@ def plane_err(data,coeffs):
     return np.sum((a*data[:,0]+b*data[:,1]+c*data[:,2])**2)/(a**2+b**2+c**2)
 
 
-def project_to_plane(points,coeffs):
+def __project_to_plane(points,coeffs):
     """Projects points onto a plane.
 
        Projects a list of points onto the plane ax+by+c=0,
@@ -84,7 +84,7 @@ def project_to_plane(points,coeffs):
     return np.matmul(points,proj_mat)/(a**2+b**2+c**2)
 
 
-def conv_to_2D(points,x,y):
+def __conv_to_2D(points,x,y):
     """Finds coordinates of points in a plane wrt a basis.
 
        Given a list of points in a plane, and a basis of the plane,
@@ -106,7 +106,7 @@ def conv_to_2D(points,x,y):
 
     return coords
 
-def cart_to_pol(points):
+def __cart_to_pol(points):
     """Converts a list of cartesian coordinates into polar ones.
 
        Args:
@@ -122,7 +122,7 @@ def cart_to_pol(points):
 
     return pol
 
-def ellipse_err(polar_coords,params):
+def __ellipse_err(polar_coords,params):
     """Calculates the total squared error of the data wrt an ellipse.
 
        params is a 3 element array used to define an ellipse.
@@ -154,7 +154,7 @@ def ellipse_err(polar_coords,params):
     return err
 
 
-def residuals(data,params,polar_coords,basis):
+def __residuals(data,params,polar_coords,basis):
     """Calculates the residuals after fitting the ellipse.
 
        Residuals are the difference between the fitted points and
@@ -200,7 +200,7 @@ def residuals(data,params,polar_coords,basis):
 
     return residuals
 
-def read_file(file_name):
+def __read_file(file_name):
     """Reads a space separated csv file with 4 columns in the format t x y z.
 
        Args:
@@ -242,10 +242,10 @@ def determine_kep(data):
     # try to fit a plane to the data first.
 
     # make a partial function of plane_err by supplying the data
-    plane_err_data = partial(plane_err,data)
+    plane_err_data = partial(__plane_err,data)
 
     # plane is defined by ax+by+cz=0.
-    p0 = cross_sum(data) # make an initial guess
+    p0 = __cross_sum(data) # make an initial guess
 
     # minimize the error
     p = minimize(plane_err_data,p0,method='nelder-mead',options={'maxiter':1000}).x
@@ -271,19 +271,19 @@ def determine_kep(data):
     # now we try to convert the problem into a 2D problem.
 
     # project all the points onto the plane.
-    proj_data = project_to_plane(data,p)
+    proj_data = __project_to_plane(data,p)
 
     # p_x and p_y are 2 orthogonal unit vectors on the plane.
     p_x,p_y = lan_vec, np.cross(p,lan_vec)
     p_x,p_y = p_x/np.linalg.norm(p_x), p_y/np.linalg.norm(p_y)
 
     # find coordinates of the points wrt the basis [p_x,p_y].
-    coords_2D = conv_to_2D(proj_data,p_x,p_y)
+    coords_2D = __conv_to_2D(proj_data,p_x,p_y)
 
     # now try to fit an ellipse to these points.
 
     # convert them into polar coordinates
-    polar_coords = cart_to_pol(coords_2D)
+    polar_coords = __cart_to_pol(coords_2D)
 
     # make an initial guess for the parametres
     r_m = np.min(polar_coords[:,0])
@@ -294,7 +294,7 @@ def determine_kep(data):
 
     params0 = [a0,e0,t00] # initial guess
     # make a partial function of ellipse_err with the data
-    ellipse_err_data = partial(ellipse_err,polar_coords)
+    ellipse_err_data = partial(__ellipse_err,polar_coords)
     # minimize the error
     params = minimize(ellipse_err_data,params0,method='nelder-mead',options={'maxiter':1000}).x
     params[2] = params[2]%(2*math.pi)  # bring argp between 0-360 degrees
@@ -303,7 +303,7 @@ def determine_kep(data):
     true_anom = (polar_coords[0][1]-params[2])%(2*math.pi)
 
     # calculation of residuals
-    res = residuals(data,params,polar_coords,np.column_stack((p_x,p_y)))
+    res = __residuals(data,params,polar_coords,np.column_stack((p_x,p_y)))
 
     kep = np.empty((6,1))
     kep[0] = params[0]
@@ -315,7 +315,7 @@ def determine_kep(data):
 
     return kep,res
 
-def print_kep(kep,res,unit):
+def __print_kep(kep,res,unit):
     """Prints the keplerian elements and some information on residuals.
 
        Args:
@@ -399,8 +399,8 @@ def plot_kep(kep,data):
     plt.show()
 
 if __name__ == "__main__":
-    args = read_args()
-    data = read_file(args.file)
+    args = __read_args()
+    data = __read_file(args.file)
     kep, res = determine_kep(data)
-    print_kep(kep,res,args.units)
+    __print_kep(kep,res,args.units)
     plot_kep(kep,data)
