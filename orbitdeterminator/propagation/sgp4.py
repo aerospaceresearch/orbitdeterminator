@@ -124,7 +124,7 @@ class SGP4(object):
         i = t1
         size = t2-t1+1
         final = np.zeros((size,6))
-        gibbs = Gibbs()
+        # gibbs = Gibbs()
         while(i <= t2):
             tsince = i
             pos, vel = self.propagation_model(tsince)
@@ -136,7 +136,7 @@ class SGP4(object):
             final[i,:] = data
             i = i + 1
 
-        del(gibbs)
+        # del(gibbs)
 
         return final
 
