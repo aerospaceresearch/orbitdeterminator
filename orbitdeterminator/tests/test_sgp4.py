@@ -3,7 +3,7 @@ import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
 from numpy.testing import assert_array_equal
-from kep_determination.sgp4 import *
+from propagation.sgp4 import *
 
 def test_proapagation_model():
     obj = SGP4()
