@@ -39,7 +39,6 @@ Function Declaration:\n\n\
        Parameter 1: First line of the TLE\n\
        Parameter 2: Second line of the TLE\n\
        Returns: NIL\n")
-   pass
 
 class SGP4(object):
 
@@ -433,7 +432,7 @@ if __name__ == "__main__":
     # line2 = "2 88888 134.8946 112.5155 0009954 111.4817 248.8041 16.05824518   105"
 
     obj = SGP4()
-    obj.compute_necessary_tle(line1,line2)
+    # obj.compute_necessary_tle(line1,line2)
     state_vec = obj.propagate(0, 28800)
     print(state_vec)
     print()

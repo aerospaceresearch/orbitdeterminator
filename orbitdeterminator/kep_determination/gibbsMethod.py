@@ -239,7 +239,7 @@ class Gibbs(object):
         Computes orbital elements from state vector.
 
         Orbital elements is a set of six parameters which are semi-major axis,
-        inclination, right ascension of the ascending node, eccentricity, 
+        inclination, right ascension of the ascending node, eccentricity,
         argument of perigee and mean anomaly.
 
         Args:
