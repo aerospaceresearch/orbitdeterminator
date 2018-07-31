@@ -1,5 +1,7 @@
 '''
-Takes a TLE at a certain time epoch and then computes the state vectors and hence orbital elements too at every time epoch (at every second) for the next 8 hours.
+Takes a TLE at a certain time epoch and then computes the state vectors and
+hence orbital elements too at every time epoch (at every second) for the next 8
+hours.
 '''
 
 import sys
@@ -42,11 +44,13 @@ Function Declaration:\n\n\
 class SGP4(object):
 
     def __init__(self):
+        '''Initializes flag variable to check for FlagCheckError.'''
         self.flag = 0
 
     def compute_necessary_kep(self, kep, b_star=0.21109E-4):
         '''
-        Initializes the necessary class variables which are needed in the computation of the propagation model.
+        Initializes the necessary class variables which are needed in the
+        computation of the propagation model.
 
         Args:
             line1 (str): line 1 of the TLE
@@ -72,7 +76,8 @@ class SGP4(object):
 
     def compute_necessary_tle(self, line1, line2):
         '''
-        Initializes the necessary class variables which are needed in the computation of the propagation model.
+        Initializes the necessary class variables which are needed in the
+        computation of the propagation model.
 
         Args:
             line1 (str): line 1 of the TLE
