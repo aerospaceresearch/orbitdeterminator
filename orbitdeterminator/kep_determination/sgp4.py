@@ -14,10 +14,85 @@ pi = np.pi
 meu = 398600.4418
 two_pi = 2*pi;
 min_per_day = 1440
+ae = 1
+tothrd = 2.0/3.0
+XJ3 = -2.53881e-6
+e6a = 1.0E-6
+xkmper = 6378.135
+ge = 398600.8           # Earth gravitational constant
+CK2 = 1.0826158e-3/2.0
+CK4 = -3.0*-1.65597e-6/8.0
+
+class Error(Exception):
+   '''Base class for other exceptions.'''
+   pass
+
+class FlagCheckError(Error):
+   '''Raised when compute_necessary() function is not called.'''
+
+   def __init__(self):
+       print("Error: Call compute_necessary() function of the class SGP4 before calling propagate().\n\n\
+Function Declaration:\n\n\
+       compute_necessary(str, str)\n\
+       Parameter 1: First line of the TLE\n\
+       Parameter 2: Second line of the TLE\n\
+       Returns: NIL\n")
+   pass
 
 class SGP4(object):
 
-    def propagate(self, line1, line2):
+    def __init__(self):
+        self.flag = 0
+
+    def compute_necessary_kep(self, kep, b_star=0.21109E-4):
+        '''
+        Initializes the necessary class variables which are needed in the computation of the propagation model.
+
+        Args:
+            line1 (str): line 1 of the TLE
+            line2 (str): line 2 of the TLE
+
+        Returns:
+            NIL
+        '''
+        self.flag = 1
+        self.xincl = float(kep[1]) * (pi/180)     # in degree
+        self.xnodeo = float(kep[2]) * (pi/180)
+        self.eo = float(kep[3])
+        self.omegao = float(kep[4]) * (pi/180)
+        self.xmo = float(kep[5]) * (pi/180)
+
+        t = 2*pi*math.sqrt(kep[0]**3/meu)
+        n = 1/t
+        n = n*86400                     # 86400 seconds in a day
+        self.xno = n*two_pi/min_per_day
+        self.bstar = b_star
+
+        # print(self.xmo,self.xnodeo,self.omegao,self.xincl,self.eo,self.xno,self.bstar)
+
+    def compute_necessary_tle(self, line1, line2):
+        '''
+        Initializes the necessary class variables which are needed in the computation of the propagation model.
+
+        Args:
+            line1 (str): line 1 of the TLE
+            line2 (str): line 2 of the TLE
+
+        Returns:
+            NIL
+        '''
+        self.flag = 1
+        self.xmo = float(''.join(line2[43:51])) * (pi/180)
+        self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
+        self.omegao = float(''.join(line2[34:42])) * (pi/180)
+        self.xincl = float(''.join(line2[8:16])) * (pi/180)
+        self.eo = float('0.'+str(''.join(line2[26:33])))
+        self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
+        self.bstar = int(''.join(line1[53:59]))*(1e-5)*(10**int(''.join(line1[59:61])))
+
+        # print(self.xmo,self.xnodeo,self.omegao,self.xincl,self.eo,self.xno,self.bstar)
+
+    def propagate(self, t1, t2):
         '''
         Invokes the function to compute state vectors and organises the final result.
 
@@ -29,26 +104,23 @@ class SGP4(object):
         a list which stores the final output.
 
         Args:
-            line1 (str): line 1 of the TLE
-            line2 (str): line 2 of the TLE
+            t1 (int): start time epoch
+            t2 (int): end time epoch
 
         Returns:
             numpy.ndarray: vector containing all state vectorss
         '''
+        try:
+            if(self.flag == 0):
+                raise FlagCheckError
+        except FlagCheckError:
+            sys.exit()
 
-        self.xmo = float(''.join(line2[43:51])) * (pi/180)
-        self.xnodeo = float(''.join(line2[17:25])) * (pi/180)
-        self.omegao = float(''.join(line2[34:42])) * (pi/180)
-        self.xincl = float(''.join(line2[8:16])) * (pi/180)
-        self.eo = float('0.'+str(''.join(line2[26:33])))
-        self.xno = float(''.join(line2[52:63]))*two_pi/min_per_day
-        self.bstar = int(''.join(line1[53:59]))*(1e-5)*(10**int(''.join(line1[59:61])))
-
-        i = 0
-        upto = 28800                # 28800 secs in 8 hours (in seconds)
-        final = np.zeros((upto,6))
+        i = t1
+        size = t2-t1+1
+        final = np.zeros((size,6))
         gibbs = Gibbs()
-        while(i < upto):
+        while(i <= t2):
             tsince = i
             pos, vel = self.propagation_model(tsince)
             data = [pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]]
@@ -77,14 +149,6 @@ class SGP4(object):
         Returns:
             tuple: position and velocity vector
         '''
-        ae = 1
-        tothrd = 2.0/3.0
-        XJ3 = -2.53881e-6
-        e6a = 1.0E-6
-        xkmper = 6378.135
-        ge = 398600.8           # Earth gravitational constant
-        CK2 = 1.0826158e-3/2.0
-        CK4 = -3.0*-1.65597e-6/8.0
 
         # Constants
         s = ae + 78 / xkmper
@@ -279,6 +343,9 @@ class SGP4(object):
         TLE. State vectors are used to find orbital elements which are then
         inserted into the TLE format at their respective positions. Mean motion
         and bstar is calculated separately as it is not a part of orbital elements.
+        Format of TLE, x denotes that there is a digit, c denotes a character value,
+        underscore(_) denotes a plus/minus(+/-) sign value and period(.) denotes
+        a decimal point.
 
         Args:
             pos (list): position vector
@@ -288,12 +355,12 @@ class SGP4(object):
             list: line1 and line2 of TLE
         """
         # TLE format
-        line1 = "1 xxxxxx xxxxxxxx xxxxx.xxxxxxxx _.xxxxxxxx _xxxxx_x _xxxxx_x x xxxxx"
+        line1 = "1 xxxxxc xxxxxccc xxxxx.xxxxxxxx _.xxxxxxxx _xxxxx_x _xxxxx_x x xxxxx"
         line2 = "2 xxxxx xxx.xxxx xxx.xxxx xxxxxxx xxx.xxxx xxx.xxxx xx.xxxxxxxxxxxxxx"
 
         # line 1
-        line1 = list(line1)
-        line1 = "".join(line1)
+        # line1 = list(line1)
+        # line1 = "".join(line1)
 
         # line 2
         line2 = list(line2)
@@ -349,7 +416,6 @@ class SGP4(object):
         line2[52:63] = str(n)
 
         line2 = "".join(line2)
-        # print(line2)
 
         tle = [line1, line2]
         return tle
@@ -362,14 +428,29 @@ if __name__ == "__main__":
     # line2 = "2 88888 134.8946 112.5155 0009954 111.4817 248.8041 16.05824518   105"
 
     obj = SGP4()
-    state_vec = obj.propagate(line1, line2)
-    # print(state_vec)
+    obj.compute_necessary_tle(line1,line2)
+    state_vec = obj.propagate(0, 28800)
+    print(state_vec)
+    print()
+
+    # To get keplerian elements from state vector
+    # gibbs = Gibbs()
+    # pos = [state_vec[0][0], state_vec[0][1], state_vec[0][2]]
+    # vel = [state_vec[0][3], state_vec[0][4], state_vec[0][5]]
+    # ele = gibbs.orbital_elements(pos,vel)
+    # print(ele)
+
+    ele = [6641.785974865588, 72.8538850731544, 115.96228572568285, \
+    0.009668565050958889, 59.42251148052069, 104.89188402366825]
+    obj.compute_necessary_kep(ele)
+    state_vec = obj.propagate(0, 28800)
+    print(state_vec)
 
     # Recover TLE from state vector
-    pos = [state_vec[0][0], state_vec[0][1], state_vec[0][2]]
-    vel = [state_vec[0][3], state_vec[0][4], state_vec[0][5]]
-    tle = obj.recover_tle(pos, vel)
-    print(tle[0])
-    print(tle[1])
+    # pos = [state_vec[0][0], state_vec[0][1], state_vec[0][2]]
+    # vel = [state_vec[0][3], state_vec[0][4], state_vec[0][5]]
+    # tle = obj.recover_tle(pos, vel)
+    # print(tle[0])
+    # print(tle[1])
 
     del(obj)
