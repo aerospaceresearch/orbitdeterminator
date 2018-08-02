@@ -1,5 +1,6 @@
 '''
-Converts a set of three psoition vectors into state vector using Gibb's method from which orbital elements can be found easily.
+Converts a set of three psoition vectors into state vector using Gibb's method
+from which orbital elements can be found easily.
 '''
 
 import sys
@@ -116,8 +117,8 @@ class Gibbs(object):
     @classmethod
     def dot_product(self, a, b):
         '''
-        Computes dot product of two vectors. Multiplies corresponding axis with each
-        other and then adds them. Returns a single value.
+        Computes dot product of two vectors. Multiplies corresponding axis with
+        each other and then adds them. Returns a single value.
 
         Args:
             a (list/array): first vector
@@ -182,11 +183,12 @@ class Gibbs(object):
     @classmethod
     def gibbs(self, r1, r2, r3):
         '''
-        Computes state vector from the given set of three position vectors using Gibb's implementation.
+        Computes state vector from the given set of three position vectors using
+        Gibb's implementation.
 
         Computes velocity vector (part of state vector) using Gibb's Method
-        and takes r2 (input argument) as its position vector (part of state vector).
-        Both combined forms state vector.
+        and takes r2 (input argument) as its position vector (part of state
+        vector). Both combined forms state vector.
 
         Args:
             r1 (list): first position vector
