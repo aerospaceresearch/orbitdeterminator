@@ -24,7 +24,7 @@ Lamberts-Kalman Method
 
 Gibb's Method
 ~~~~~~~~~~~~~
-.. automodule:: orbitdeterminator.kep_determination.gibbsMethod
+.. autoclass:: orbitdeterminator.kep_determination.gibbsMethod.Gibbs
    :members:
 
 Spline Interpolation
@@ -42,7 +42,11 @@ Propagation:
 
 Propagation Model
 ~~~~~~~~~~~~~~~~~
-.. automodule:: orbitdeterminator.kep_determination.sgp4
+.. autoclass:: orbitdeterminator.propagation.sgp4.SGP4
+   :special-members: __init__
+   :members:
+
+.. autoclass:: orbitdeterminator.propagation.sgp4.FlagCheckError
    :members:
 
 Cowell Method

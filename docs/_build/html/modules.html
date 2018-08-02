@@ -95,13 +95,13 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#interpolation">Interpolation:</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.lamberts_kalman">Lamberts-Kalman Method</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.gibbsMethod">Gibb’s Method</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gibb-s-method">Gibb’s Method</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.interpolation">Spline Interpolation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.ellipse_fit">Ellipse Fit</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#propagation">Propagation:</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.kep_determination.sgp4">Propagation Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#propagation-model">Propagation Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-orbitdeterminator.propagation.cowell">Cowell Method</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulator">Simulator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dgsn-simulator">DGSN Simulator</a></li>
@@ -422,13 +422,247 @@ and produces two vectors with the state vector for both positions using Lamberts
 </dd></dl>
 
 </div>
-<div class="section" id="module-orbitdeterminator.kep_determination.gibbsMethod">
-<span id="gibb-s-method"></span><h3>Gibb’s Method<a class="headerlink" href="#module-orbitdeterminator.kep_determination.gibbsMethod" title="Permalink to this headline">¶</a></h3>
-<p>The code takes the position vector and computes state vectors using Gibb’s Method.</p>
-<dl class="data">
-<dt id="orbitdeterminator.kep_determination.gibbsMethod.meu">
-<code class="descclassname">orbitdeterminator.kep_determination.gibbsMethod.</code><code class="descname">meu</code><em class="property"> = 398600.4418</em><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.meu" title="Permalink to this definition">¶</a></dt>
-<dd><p>class for Gibb’s implementation</p>
+<div class="section" id="gibb-s-method">
+<h3>Gibb’s Method<a class="headerlink" href="#gibb-s-method" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.kep_determination.gibbsMethod.</code><code class="descname">Gibbs</code><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.convert_list">
+<em class="property">classmethod </em><code class="descname">convert_list</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.convert_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.convert_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Type casts the input data for the ease of use.</p>
+<p>Converts the values of the input list with string datatype into float
+for the ease of furthur computation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vec</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – input vector</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">vector converted to float values</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.cross_product">
+<em class="property">classmethod </em><code class="descname">cross_product</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.cross_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.cross_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes cross product of the given vectors. Returns a vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> (<em>list/array</em>) – first vector</li>
+<li><strong>b</strong> (<em>list/array</em>) – second vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">cross product of given vectors</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list/array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.dot_product">
+<em class="property">classmethod </em><code class="descname">dot_product</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.dot_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.dot_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes dot product of two vectors. Multiplies corresponding axis with
+each other and then adds them. Returns a single value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> (<em>list/array</em>) – first vector</li>
+<li><strong>b</strong> (<em>list/array</em>) – second vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dot product of given vectors</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)">float</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.find_length">
+<em class="property">classmethod </em><code class="descname">find_length</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.find_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.find_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the length of the input file.</p>
+<p>Calculates the length of the file with the given path containing all the
+position vectors. File should contain a header line describing all of its
+attributes in a single line only. This function removes the header line
+before it calculates file length. If the file does not contains the header
+line then the first line of data will get removed and you have to add 1
+to the output after it returns the result.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – file path</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">length of file</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.gibbs">
+<em class="property">classmethod </em><code class="descname">gibbs</code><span class="sig-paren">(</span><em>r1</em>, <em>r2</em>, <em>r3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.gibbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.gibbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes state vector from the given set of three position vectors using
+Gibb’s implementation.</p>
+<p>Computes velocity vector (part of state vector) using Gibb’s Method
+and takes r2 (input argument) as its position vector (part of state
+vector). Both combined forms state vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>r1</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – first position vector</li>
+<li><strong>r2</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – second position vector</li>
+<li><strong>r3</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – third position vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">velocity vector</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.magnitude">
+<em class="property">classmethod </em><code class="descname">magnitude</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.magnitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.magnitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes magnitude of the input vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vec</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – vector</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">magnitude of vector</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)">float</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.operate_vector">
+<em class="property">classmethod </em><code class="descname">operate_vector</code><span class="sig-paren">(</span><em>a</em>, <em>b</em>, <em>flag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.operate_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.operate_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds or subtracts input vectors based on the flag value.</p>
+<p>If flag is 1 then add both vectors with corresponding values else if
+flag is 0 (zero) then subtract two vectors with corresponding values.
+Returns a vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> (<em>list/array</em>) – first vector</li>
+<li><strong>b</strong> (<em>list/array</em>) – second vector</li>
+<li><strong>flag</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – checks for operation (addition/subtraction)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">sum/difference of vector based on flag value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list/array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.orbital_elements">
+<em class="property">classmethod </em><code class="descname">orbital_elements</code><span class="sig-paren">(</span><em>r</em>, <em>v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.orbital_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.orbital_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes orbital elements from state vector.</p>
+<p>Orbital elements is a set of six parameters which are semi-major axis,
+inclination, right ascension of the ascending node, eccentricity,
+argument of perigee and mean anomaly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>r</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – position vector</li>
+<li><strong>v</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – velocity vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set of six orbital elements</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.read_file">
+<code class="descname">read_file</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.read_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.read_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invokes the Gibb’s implementation and stores the result in a list.</p>
+<p>Read the file with the given path and forms a set of three position vectors
+then applies Gibb’s Method on that set and computes state vector for every
+set. After computing state vectors it stores the result into a list. Now,
+these state vectors can be used to find orbital elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – path to input file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of all pair of position and velocity vector</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.kep_determination.gibbsMethod.Gibbs.unit">
+<em class="property">classmethod </em><code class="descname">unit</code><span class="sig-paren">(</span><em>vec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/kep_determination/gibbsMethod.html#Gibbs.unit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.kep_determination.gibbsMethod.Gibbs.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds unit vector of the given vector. Divides each value of vector by
+its magnitude. Returns a vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vec</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – input vector</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">unit vector</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -562,13 +796,152 @@ res[2] - residuals in z axis</p>
 </div>
 <div class="section" id="propagation">
 <h2>Propagation:<a class="headerlink" href="#propagation" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="module-orbitdeterminator.kep_determination.sgp4">
-<span id="propagation-model"></span><h3>Propagation Model<a class="headerlink" href="#module-orbitdeterminator.kep_determination.sgp4" title="Permalink to this headline">¶</a></h3>
-<p>The code takes a TLE and computes state vectors for 8 hrs at every second</p>
-<dl class="data">
-<dt id="orbitdeterminator.kep_determination.sgp4.min_per_day">
-<code class="descclassname">orbitdeterminator.kep_determination.sgp4.</code><code class="descname">min_per_day</code><em class="property"> = 1440</em><a class="headerlink" href="#orbitdeterminator.kep_determination.sgp4.min_per_day" title="Permalink to this definition">¶</a></dt>
-<dd><p>class for SGP4 implementation</p>
+<div class="section" id="propagation-model">
+<h3>Propagation Model<a class="headerlink" href="#propagation-model" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="orbitdeterminator.propagation.sgp4.SGP4">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.sgp4.</code><code class="descname">SGP4</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#SGP4"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.SGP4" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="orbitdeterminator.propagation.sgp4.SGP4.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#SGP4.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.SGP4.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes flag variable to check for FlagCheckError.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.sgp4.SGP4.compute_necessary_kep">
+<code class="descname">compute_necessary_kep</code><span class="sig-paren">(</span><em>kep</em>, <em>b_star=2.1109e-05</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#SGP4.compute_necessary_kep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.SGP4.compute_necessary_kep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the necessary class variables which are needed in the
+computation of the propagation model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>line1</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – line 1 of the TLE</li>
+<li><strong>line2</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – line 2 of the TLE</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">NIL</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.sgp4.SGP4.compute_necessary_tle">
+<code class="descname">compute_necessary_tle</code><span class="sig-paren">(</span><em>line1</em>, <em>line2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#SGP4.compute_necessary_tle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.SGP4.compute_necessary_tle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the necessary class variables which are needed in the
+computation of the propagation model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>line1</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – line 1 of the TLE</li>
+<li><strong>line2</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – line 2 of the TLE</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">NIL</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.sgp4.SGP4.propagate">
+<code class="descname">propagate</code><span class="sig-paren">(</span><em>t1</em>, <em>t2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#SGP4.propagate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.SGP4.propagate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invokes the function to compute state vectors and organises the final result.</p>
+<p>The function extracts necessary information from the given TLE which the
+propagation model needs, then it computes the state vector for the next
+8 hours (28800 seconds in 8 hours) at every time epoch (28800 time epcohs)
+using the sgp4 propagation model. The values of state vector is formatted
+upto five decimal points and then all the state vectors got appended in
+a list which stores the final output.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>t1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – start time epoch</li>
+<li><strong>t2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – end time epoch</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">vector containing all state vectorss</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="orbitdeterminator.propagation.sgp4.SGP4.propagation_model">
+<code class="descname">propagation_model</code><span class="sig-paren">(</span><em>tsince</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#SGP4.propagation_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.SGP4.propagation_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>From the time epoch and information from TLE, applies SGP4 on it.</p>
+<p>The function applies the Simplified General Perturbations algorithm
+SGP4 on the information extracted from the TLE at the given time epoch
+‘tsince’ and computes the state vector from it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tsince</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – time epoch</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">position and velocity vector</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="orbitdeterminator.propagation.sgp4.SGP4.recover_tle">
+<em class="property">classmethod </em><code class="descname">recover_tle</code><span class="sig-paren">(</span><em>pos</em>, <em>vel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#SGP4.recover_tle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.SGP4.recover_tle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recovers TLE back from state vector.</p>
+<p>First of all, only necessary information (which are inclination, right
+ascension of the ascending node, eccentricity, argument of perigee, mean
+anomaly, mean motion and bstar) that are needed in the computation of
+SGP4 propagation model are recovered. It is using a general format of
+TLE. State vectors are used to find orbital elements which are then
+inserted into the TLE format at their respective positions. Mean motion
+and bstar is calculated separately as it is not a part of orbital elements.
+Format of TLE, x denotes that there is a digit, c denotes a character value,
+underscore(_) denotes a plus/minus(+/-) sign value and period(.) denotes
+a decimal point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pos</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – position vector</li>
+<li><strong>vel</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – velocity vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">line1 and line2 of TLE</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="orbitdeterminator.propagation.sgp4.FlagCheckError">
+<em class="property">class </em><code class="descclassname">orbitdeterminator.propagation.sgp4.</code><code class="descname">FlagCheckError</code><a class="reference internal" href="_modules/orbitdeterminator/propagation/sgp4.html#FlagCheckError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#orbitdeterminator.propagation.sgp4.FlagCheckError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised when compute_necessary() function is not called.</p>
 </dd></dl>
 
 </div>
@@ -1545,7 +1918,7 @@ surface of the Earth. Latitude, longitude are in degrees.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Nilesh Chaturvedi, Alexandros Kazantzidis.
+        &copy; Copyright 2018, Nilesh Chaturvedi, Alexandros Kazantzidis.
 
     </p>
   </div>
