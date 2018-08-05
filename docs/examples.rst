@@ -162,3 +162,92 @@ kep_final_inter a numpy array 1x6 has the final computed keplerian elements.
 .. warning::
 
    If the orbit you want to compute is polar (i = 90) then we suggest you to use only the interpolation method.
+
+===========================
+Using ellipse_fit method
+===========================
+
+If a lot of points are available spread over the entire orbit, then the ellipse fit method can be used for orbit 
+determination. The module ``kep_determination.ellipse_fit`` has two methods - ``determine_kep`` and ``plot_kep``. 
+As the name suggests, ``determine_kep`` is used to determine the orbit and ``plot_kep`` is used to plot it. 
+Call ``determine_kep`` with::
+
+    kep,res = determine_kep(data)
+
+where *data* is a nx3 numpy array. The ellipse_fit method does not use time information at all. Hence, the 
+input format is *[(x,y,z),...]*. The method results two arguments - the first output is the Keplerian 
+elements while the second output is the list of residuals.
+
+Plot the results using the ``plot_kep`` method. Call it with::
+
+    plot_kep(kep,data)
+
+where *kep* is the Keplerian elements we got in the last step and data is the original data. The result should 
+look like this.
+
+.. figure:: ellipse_fit.png
+
+===========================
+Using propagation modules
+===========================
+
+Cowell Method
+~~~~~~~~~~~~~~
+
+The module ``propagation.cowell`` propagates a satellite along its orbit using numerical integration. It takes 
+into account the oblateness of the Earth and atmospheric drag. The module has many methods for calculating 
+drag and J2 acceleration, and integrating them. However, here we will discuss only the important ones. One is 
+``propagate_state`` and the other is ``time_period``. ``propagate_state`` propagates a state vector from t1 to t2.
+``time_period`` finds out the nodal time period of an orbit, given a state vector. Call ``propagate_state`` like this.::
+
+    sf = propagate_state(si,t0,tf)
+
+where si is the state at t0 and sf is the state at tf.
+
+.. note::
+    In all propagation related discussions a state vector is the numpy array *[rx,ry,rz,vx,vy,vz]*.
+
+Similarly to find out time period call ``time_period`` like this.::
+
+    t = time_period(s)
+
+DGSN Simulator
+~~~~~~~~~~~~~~~
+
+The module ``propagation.dgsn_simulator`` can be used for simulating the DGSN. Given a satellite, it propagates 
+the satellite along its orbit and periodically outputs its location. The location will have some associated with 
+it. Observations will also not be exactly periodic. There will be slight variations. And sometimes observations 
+might not be available (for example, the satellite is out of range of the DGSN).
+
+To use this simulator, 3 classes are used.
+
+- The SimParams class - This is a collection of all the simulation parameters.
+- The OpWriter class - This class tells the simulator what to do with the output.
+- The DGSNSimulator class - This is the actual simulator class.
+
+To start, we must choose an OpWriter class. This will tell the simulator what to do with the output. To use it, 
+extend the class and override its ``write`` method. Several sample classes have been provided. For this example we 
+will use the default ``print_r`` class. This just prints the output.
+
+Now create a SimParams object. For now, only set the kep, epoch and t0.::
+
+    epoch = 1531152114
+    t0 = epoch
+    iss_kep = np.array([6785.6420,0.0003456,51.6418,290.0933,266.6543,212.4306])
+    
+    params = SimParams()
+    params.kep = iss_kep
+    params.epoch = epoch
+    params.t0 = t0
+
+Now initialize the simulator with these parameters and start it.::
+
+    s = DGSNSimulator(params)
+    s.simulate()
+
+The program should start printing the time and the corresponding satellite coordinates on the terminal.
+
+.. note::
+
+    The module ``propagation.simulator`` is similar to this module. The only difference is that it doesn't 
+    add any noise. So it can be used for comparison purposes.
