@@ -4,8 +4,6 @@ import math
 import numpy as np
 from scipy.optimize import fsolve
 
-from orbitdeterminator.propagation.cowell import time_period
-
 mu = 398600.4418
 
 def __MtoE(M,e):
