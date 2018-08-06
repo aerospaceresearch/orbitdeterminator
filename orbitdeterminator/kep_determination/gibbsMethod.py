@@ -283,11 +283,10 @@ class Gibbs(object):
 
         return [axis, inclination, ascension, mag_e, perigee, anomaly]
 
-if __name__ == "__main__":
-    filename = "orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv"
-    path = "../example_data/" + filename
-
-    obj = Gibbs()
-    vector = obj.read_file(path)
-    del(obj)
-    print(vector)
+# if __name__ == "__main__":
+#     filename = "orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv"
+#     path = "../example_data/" + filename
+#
+#     obj = Gibbs()
+#     vector = obj.read_file(path)
+#     del(obj)
