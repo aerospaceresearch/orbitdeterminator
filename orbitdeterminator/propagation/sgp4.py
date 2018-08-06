@@ -1,6 +1,6 @@
 '''
 Takes a TLE at a certain time epoch and then computes the state vectors and
-hence orbital elements too at every time epoch (at every second) for the next 8
+hence orbital elements at every time epoch (at every second) for the next 8
 hours.
 '''
 
@@ -26,16 +26,22 @@ CK2 = 1.0826158e-3/2.0
 CK4 = -3.0*-1.65597e-6/8.0
 
 class Error(Exception):
-   '''Base class for other exceptions.'''
+   '''Base class for the exceptions.'''
    pass
 
 class FlagCheckError(Error):
-   '''Raised when compute_necessary() function is not called.'''
+   '''Raised when compute_necessary_xxx() function is not called.'''
 
    def __init__(self):
-       print("Error: Call compute_necessary() function of the class SGP4 before calling propagate().\n\n\
+       print("Error: Call compute_necessary_kep() or compute_necessary_tle() function of the class SGP4\n\
+       before calling propagate().\n\n\
 Function Declaration:\n\n\
-       compute_necessary(str, str)\n\
+       compute_necessary_kep(list, float)\n\
+       Parameter 1:List of keplerian elements (semi-major axis, inclination, ascension,\n\
+                   eccentricity, perigee, anomaly)\n\
+       Parameter 2:bstar drag term\n\
+       Returns: NIL\n\n\
+       compute_necessary_tle(str, str)\n\
        Parameter 1: First line of the TLE\n\
        Parameter 2: Second line of the TLE\n\
        Returns: NIL\n")
@@ -43,17 +49,17 @@ Function Declaration:\n\n\
 class SGP4(object):
 
     def __init__(self):
-        '''Initializes flag variable to check for FlagCheckError.'''
+        '''Initializes flag variable to check for FlagCheckError (custom exception).'''
         self.flag = 0
 
     def compute_necessary_kep(self, kep, b_star=0.21109E-4):
         '''
-        Initializes the necessary class variables which are needed in the
-        computation of the propagation model.
+        Initializes the necessary class variables using keplerian elements which
+        are needed in the computation of the propagation model.
 
         Args:
-            line1 (str): line 1 of the TLE
-            line2 (str): line 2 of the TLE
+            kep (list): kep elements in order [axis, inclination, ascension, eccentricity, perigee, anomaly]
+            b_star (float): bstar drag term
 
         Returns:
             NIL
@@ -75,8 +81,8 @@ class SGP4(object):
 
     def compute_necessary_tle(self, line1, line2):
         '''
-        Initializes the necessary class variables which are needed in the
-        computation of the propagation model.
+        Initializes the necessary class variables using TLE which are needed in
+        the computation of the propagation model.
 
         Args:
             line1 (str): line 1 of the TLE
@@ -100,19 +106,20 @@ class SGP4(object):
         '''
         Invokes the function to compute state vectors and organises the final result.
 
-        The function extracts necessary information from the given TLE which the
-        propagation model needs, then it computes the state vector for the next
-        8 hours (28800 seconds in 8 hours) at every time epoch (28800 time epcohs)
-        using the sgp4 propagation model. The values of state vector is formatted
-        upto five decimal points and then all the state vectors got appended in
-        a list which stores the final output.
+        The function first checks if compute_necessary_xxx() is called or not if
+        not then a custom exception is raised stating that call this function
+        first. Then it computes the state vector for the next 8 hours (28800
+        seconds in 8 hours) at every time epoch (28800 time epcohs) using the
+        sgp4 propagation model. The values of state vector is formatted upto
+        five decimal points and then all the state vectors got appended in a
+        list which stores the final output.
 
         Args:
             t1 (int): start time epoch
             t2 (int): end time epoch
 
         Returns:
-            numpy.ndarray: vector containing all state vectorss
+            numpy.ndarray: vector containing all state vectors
         '''
         try:
             if(self.flag == 0):
@@ -347,7 +354,7 @@ class SGP4(object):
         TLE. State vectors are used to find orbital elements which are then
         inserted into the TLE format at their respective positions. Mean motion
         and bstar is calculated separately as it is not a part of orbital elements.
-        Format of TLE, x denotes that there is a digit, c denotes a character value,
+        Format of TLE: x denotes that there is a digit, c denotes a character value,
         underscore(_) denotes a plus/minus(+/-) sign value and period(.) denotes
         a decimal point.
 
@@ -424,37 +431,24 @@ class SGP4(object):
         tle = [line1, line2]
         return tle
 
-if __name__ == "__main__":
-    line1 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8"
-    line2 = "2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518   105"
-
-    # line1 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8"
-    # line2 = "2 88888 134.8946 112.5155 0009954 111.4817 248.8041 16.05824518   105"
-
-    obj = SGP4()
-    # obj.compute_necessary_tle(line1,line2)
-    state_vec = obj.propagate(0, 28800)
-    print(state_vec)
-    print()
-
-    # To get keplerian elements from state vector
-    # gibbs = Gibbs()
-    # pos = [state_vec[0][0], state_vec[0][1], state_vec[0][2]]
-    # vel = [state_vec[0][3], state_vec[0][4], state_vec[0][5]]
-    # ele = gibbs.orbital_elements(pos,vel)
-    # print(ele)
-
-    ele = [6641.785974865588, 72.8538850731544, 115.96228572568285, \
-    0.009668565050958889, 59.42251148052069, 104.89188402366825]
-    obj.compute_necessary_kep(ele)
-    state_vec = obj.propagate(0, 28800)
-    print(state_vec)
-
-    # Recover TLE from state vector
-    # pos = [state_vec[0][0], state_vec[0][1], state_vec[0][2]]
-    # vel = [state_vec[0][3], state_vec[0][4], state_vec[0][5]]
-    # tle = obj.recover_tle(pos, vel)
-    # print(tle[0])
-    # print(tle[1])
-
-    del(obj)
+# if __name__ == "__main__":
+#     line1 = "1 88888U          80275.98708465  .00073094  13844-3  66816-4 0     8"
+#     line2 = "2 88888  72.8435 115.9689 0086731  52.6988 110.5714 16.05824518   105"
+#
+#     # using compute_necessary_tle()
+#     obj = SGP4()
+#     obj.compute_necessary_tle(line1,line2)
+#     state_vec = obj.propagate(0, 28800)
+#
+#     # using compute_necessary_kep()
+#     ele = [6641.785974865588, 72.8538850731544, 115.96228572568285, \
+#     0.009668565050958889, 59.42251148052069, 104.89188402366825]
+#     obj.compute_necessary_kep(ele)
+#     state_vec = obj.propagate(0, 28800)
+#
+#     # Recover TLE from state vector
+#     pos = [state_vec[0][0], state_vec[0][1], state_vec[0][2]]
+#     vel = [state_vec[0][3], state_vec[0][4], state_vec[0][5]]
+#     tle = obj.recover_tle(pos, vel)
+#
+#     del(obj)
