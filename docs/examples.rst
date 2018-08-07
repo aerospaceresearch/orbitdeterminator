@@ -101,9 +101,9 @@ Process
 - Stage the processed file in the src folder in order to avoid processing the same files multiple times.
 - Check for any untracked files in src and apply steps 2-4 again.
 
-=======================
+========================
 * Using certain modules
-=======================
+========================
 
 In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
 path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
@@ -234,7 +234,7 @@ Now create a SimParams object. For now, only set the kep, epoch and t0.::
     epoch = 1531152114
     t0 = epoch
     iss_kep = np.array([6785.6420,0.0003456,51.6418,290.0933,266.6543,212.4306])
-    
+
     params = SimParams()
     params.kep = iss_kep
     params.epoch = epoch
@@ -251,3 +251,79 @@ The program should start printing the time and the corresponding satellite coord
 
     The module ``propagation.simulator`` is similar to this module. The only difference is that it doesn't 
     add any noise. So it can be used for comparison purposes.
+
+Kalman Filter
+~~~~~~~~~~~~~~
+
+The module ``propagation.kalman_filter`` can be used to combine observation data and simulation data with a 
+Kalman Filter. This module keeps on checking a file for new observation data and applies the filter accordingly. 
+We can use the DGSN Simulator module to create observation data in real time. First, we must setup the simulator. 
+We must configure it to save the output to a file instead of printing it. For this, we will use the in-built 
+``save_r`` class.
+
+Run the simulator with the following commands.::
+
+    epoch = 1531152114
+    t0 = epoch
+    iss_kep = np.array([6785.6420,0.0003456,51.6418,290.0933,266.6543,212.4306])
+
+    params = SimParams()
+    params.kep = iss_kep
+    params.epoch = epoch
+    params.t0 = t0
+    params.r_jit = 15
+    params.op_writer = save_r('ISS_DGSN.csv')
+
+    s = DGSNSimulator(params)
+    s.simulate()
+
+Now the program will start writing observations into the file ``ISS_DGSN.csv``. Now we need to setup the Kalman 
+Filter with the same parameters. Use ``util.new_tle_kep_state`` to convert Keplerian elements into a state 
+vector. In this tutorial, it is already done. Run the filter by passing the state and the name of the file to read.::
+
+    s = np.array([2.87327861e+03,5.22872234e+03,3.23884457e+03,-3.49536799e+00,4.87267295e+00,-4.76846910e+00])
+    t0 = 1531152114
+    KalmanFilter().process(s,t0,'ISS_DGSN.csv')
+
+The program should start printing filtered values on the terminal.
+
+======================
+Using utility modules
+======================
+
+new_tle_kep_state
+~~~~~~~~~~~~~~~~~~
+
+``new_tle_kep_state`` is used to convert a TLE or a set of Keplerian elements into a state vector. To convert a TLE 
+make an array out of the 2nd line of the TLE. The array should be of the form:
+
+- tle[0] = inclination (in degrees)
+- tle[1] = right ascension of ascending node (in degrees)
+- tle[2] = eccentricity
+- tle[3] = argument of perigee (in degrees)
+- tle[4] = mean anomaly (in degrees)
+- tle[5] = mean motion (in revs per day)
+
+Now call ``tle_to_state``. For example::
+
+    tle = np.array([51.6418, 266.6543, 0.0003456, 290.0933, 212.4518, 15.54021918])
+    r = tle_to_state(tle)
+    print(r)
+
+Similarly a Keplerian set can also be converted into a state vector.
+
+teme_to_ecef
+~~~~~~~~~~~~~
+
+``teme_to_ecef`` is used to convert coordinates from TEME frame (inertial frame) to ECEF frame (rotating Earth fixed frame). 
+The module accepts a list of coordinates of the form *[t1,x,y,z]* and outputs a list of latitudes, longitudes and altitudes 
+in Earth fixed frame. These coordinates can be directly plotted on a map.
+
+For example::
+
+    ecef_coords = conv_to_ecef(np.array([[1521562500,768.281,5835.68,2438.076],
+                                         [1521562500,768.281,5835.68,2438.076],
+                                         [1521562500,768.281,5835.68,2438.076]]))
+
+The resulting latitudes and longitudes can be directly plotted on an Earth map to visualize the satellite location with respect 
+to the Earth.
