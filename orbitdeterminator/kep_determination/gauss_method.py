@@ -1212,7 +1212,17 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
     print('\n*** AVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T ***')
-    print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean/60.0, 'min')
+    # print(a_mean, 'km, ', e_mean, ', ', Time(taup_mean, format='jd').iso, 'JDUTC, ', w_mean, 'deg, ', I_mean, 'deg, ', W_mean, 'deg', 2.0*np.pi/n_mean/60.0, 'min')
+    print('Semi-major axis (a):                 ', a_mean, 'km')
+    print('Eccentricity (e):                    ', e_mean)
+    print('Time of pericenter passage (tau):    ', Time(taup_mean, format='jd').iso, 'JDUTC')
+    print('Pericenter altitude (q):             ', a_mean*(1.0-e_mean)-Re, 'km')
+    print('Apocenter altitude (Q):              ', a_mean*(1.0+e_mean)-Re, 'km')
+    print('Argument of pericenter (omega):      ', w_mean, 'deg')
+    print('Inclination (I):                     ', I_mean, 'deg')
+    print('Longitude of Ascending Node (Omega): ', W_mean, 'deg')
+    print('Orbital period (T):                  ', 2.0*np.pi/n_mean/60.0, 'min')
+
 
     npoints = 1000
     theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
