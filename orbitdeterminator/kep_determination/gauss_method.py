@@ -991,17 +991,11 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         # print('v2 = ', v2)
 
         if j==0:
-            print('***** HIIIIIIIIIIIIIIIIIIIIIII AAFLKADSJFLKASVLKADFHVALKDFHVLAKDHV*******')
             t_vec[0] = obs_t[0]
-            x_vec[0] = r1[0]
-            y_vec[0] = r1[1]
-            z_vec[0] = r1[2]
+            x_vec[0], y_vec[0], z_vec[0] = np.matmul(rot_equat_to_eclip, r1)
         if j==nobs-3:
-            print('***** HOLA AAFLKADSJFLKASVLKADFHVALKDFHVLAKDHV*******')
             t_vec[nobs-1] = obs_t[2]
-            x_vec[nobs-1] = r3[0]
-            y_vec[nobs-1] = r3[1]
-            z_vec[nobs-1] = r3[2]
+            x_vec[nobs-1], y_vec[nobs-1], z_vec[nobs-1] = np.matmul(rot_equat_to_eclip, r3)
 
         r2_eclip = np.matmul(rot_equat_to_eclip, r2)
         v2_eclip = np.matmul(rot_equat_to_eclip, v2)
