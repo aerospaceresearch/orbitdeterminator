@@ -11,19 +11,17 @@ from mpl_toolkits import mplot3d
 
 # path of file of optical IOD-formatted observations
 # the example contains tracking data for satellite USA 74
-# body_fname_str = '../example_data/iss_radec_generated_horizons.txt'
-body_fname_str = '../example_data/SATOBS-ML-19200716.txt'
+body_fname_str = '../example_data/SATOBS-ML-19200716.txt' # body_fname_str = '../example_data/iss_radec_generated_horizons.txt'
 
 #body name
 body_name_str = 'ISS (25544)'
 
 #lines of observations file to be used for orbit determination
-# obs_arr = [7, 10, 13] # simulated observations generated from HORIZONS for ISS on 2018 Aug 08
-obs_arr = [2, 3, 4, 5] # ML observations of ISS on 2016 Jul 19 and 20
+obs_arr = [2, 3, 4, 5] # ML observations of ISS on 2016 Jul 19 and 20 # obs_arr = [7, 10, 13] # simulated observations generated from HORIZONS for ISS on 2018 Aug 08
 
 # load IOD data for a given satellite
 iod_object_data = gm.load_iod_data(body_fname_str)
-print('IOD observation data:\n', iod_object_data[ np.array(obs_arr)-1 ], '\n')
+# print('IOD observation data:\n', iod_object_data[ np.array(obs_arr)-1 ], '\n')
 
 #load data of listed observatories (longitude, latitude, elevation)
 sat_observatories_data = gm.load_sat_observatories_data('sat_tracking_observatories.txt')
@@ -40,20 +38,9 @@ r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
 #q0 : a, e, taup, I, W, w, T
 q0 = np.array(gm.gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=10, plot=False))
 x0 = q0[0:6]
-# x0[0] = 
-# x0[1] = 
-# x0[2] = 
-# x0[3] = 
-# x0[4] = 
-# x0[5] = 
-# x0[6] = 
-
-# print('x0 = ', x0)
 x0[3:6] = np.deg2rad(x0[3:6])
-# print('x0 = ', x0)
 
-# obs_arr_ls = np.array(range(1, 31+1))
-obs_arr_ls = np.array(range(1, 6+1))
+obs_arr_ls = np.array(range(1, 6+1)) # obs_arr_ls = np.array(range(1, 31+1))
 print('obs_arr_ls = ', obs_arr_ls)
 # print('obs_arr_ls[0] = ', obs_arr_ls[0])
 # print('obs_arr_ls[-1] = ', obs_arr_ls[-1])
