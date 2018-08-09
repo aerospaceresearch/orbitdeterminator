@@ -29,7 +29,9 @@ earth_f = 0.003353
 Re = cts.R_earth.to(uts.Unit('km')).value
 
 # load JPL DE432s ephemeris SPK kernel
-# 'de432s.bsp' is automatically downloaded by astropy, via jplephem
+# 'de432s.bsp' is automatically loaded by astropy, via jplephem
+# 'de432s.bsp' is about 10MB in size and will be automatically downloaded if not present yet in astropy's cache
+# for more information, see astropy.coordinates.solar_system_ephemeris documentation
 solar_system_ephemeris.set('de432s')
 
 obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
