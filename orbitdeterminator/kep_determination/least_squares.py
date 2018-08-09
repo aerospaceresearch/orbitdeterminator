@@ -20,7 +20,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from scipy.optimize import least_squares
-from ellipse_fit import determine_kep, read_file
+from ellipse_fit import determine_kep, __read_file
 
 # convention:
 # a: semi-major axis
