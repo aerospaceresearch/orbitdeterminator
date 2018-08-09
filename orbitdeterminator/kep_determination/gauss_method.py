@@ -167,7 +167,7 @@ def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
 # formula taken from bottom of page 265 (Eq. 5.56), chapter 5, Orbital Mechanics book (Curtis)
 # lat: geodetic latitude (deg)
 # long: longitude (deg)
-# elev: elevation above reference ellipsoid (km)
+# elev: elevation above reference ellipsoid (m)
 # t_utc: time (UTC)
 def observerpos_sat(lat, long, elev, t_utc):
 
@@ -196,8 +196,8 @@ def observerpos_sat(lat, long, elev, t_utc):
     cos_phi_sin_theta = cos_phi*np.sin( lmst_rad )
     sin_phi = np.sin( phi_rad )
     denum = np.sqrt(1.0-(2.0*earth_f-earth_f**2)*sin_phi**2)
-    r_xy = Re/denum+elev
-    r_z = Re*((1.0-earth_f)**2)/denum+elev
+    r_xy = Re/denum+elev/1000.0
+    r_z = Re*((1.0-earth_f)**2)/denum+elev/1000.0
 
     # compute cartesian components of geocentric (non-rotating) observer position
     x_gc = r_xy*cos_phi_cos_theta
