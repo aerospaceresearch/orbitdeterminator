@@ -21,4 +21,4 @@ nobs = len(obs_arr)
 r2_root_ind_vec = zeros((nobs-2,), dtype=int)
 # r2_root_ind_vec[4] = 1 # modify as necessary if adequate root of Gauss polynomial has to be selected
 
-gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussiters=10, plot=True)
+x = gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussiters=10, plot=True)
