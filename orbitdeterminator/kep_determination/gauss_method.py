@@ -8,11 +8,11 @@
 import math
 import numpy as np
 from astropy.coordinates import Longitude, Angle, SkyCoord
+from astropy.coordinates import solar_system_ephemeris, get_body_barycentric
 from astropy import units as uts
 from astropy import constants as cts
 from astropy.time import Time
 from datetime import datetime, timedelta
-from jplephem.spk import SPK
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
@@ -27,6 +27,10 @@ mu_Earth = cts.GM_earth.to(uts.Unit('km3 / s2')).value
 c_light = cts.c.to(uts.Unit('au/day'))
 earth_f = 0.003353
 Re = cts.R_earth.to(uts.Unit('km')).value
+
+# load JPL DE432s ephemeris SPK kernel
+# 'de432s.bsp' is automatically downloaded by astropy, via jplephem
+solar_system_ephemeris.set('de432s')
 
 obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
 rot_equat_to_eclip = rotation_matrix( obliquity_j2000, 'x') #rotation matrix from equatorial to ecliptic frames
@@ -448,14 +452,21 @@ def get_observations_data_sat(iod_object_data, inds):
 
     return obs_radec, obs_t, site_codes
 
-# heliocentric position of Earth at Julian date t_tdb (TDB, days), according to SPK kernel defined by spk_kernel
+# heliocentric position of Earth at Julian date t_tdb (TDB, days), according to SPK kernel defined by solar_system_ephemeris
 # returns: cartesian position in km
-def earth_ephemeris(spk_kernel, t_tdb):
-    return spk_kernel[3,399].compute(t_tdb) + spk_kernel[0,3].compute(t_tdb) - spk_kernel[0,10].compute(t_tdb)
+def earth_ephemeris(t_tdb):
+    t = Time(t_tdb, format='jd', scale='tdb')
+    # print('t_tdb = ', t_tdb)
+    # print('t = ', t)
+    ye = get_body_barycentric('earth', t)
+    ys = get_body_barycentric('sun', t)
+    y = ye - ys
+    # print('y = ', y)
+    return y.xyz.value
 
-def observer_wrt_sun(spk_kernel, long, parallax_s, parallax_c, t_utc):
+def observer_wrt_sun(long, parallax_s, parallax_c, t_utc):
     t_jd_tdb = t_utc.tdb.jd
-    xyz_es = earth_ephemeris(spk_kernel, t_jd_tdb)
+    xyz_es = earth_ephemeris(t_jd_tdb)
     xyz_oe = observerpos_mpc(long, parallax_s, parallax_c, t_utc)
     # print('xyz_es = ', xyz_es)
     # print('xyz_oe = ', xyz_oe)
@@ -469,15 +480,15 @@ def object_wrt_sun(t_utc, a, e, taup, omega, I, Omega):
     # print('np.matmul(rot_eclip_to_equat, xyz_eclip) = ', np.matmul(rot_eclip_to_equat, xyz_eclip))
     return np.matmul(rot_eclip_to_equat, xyz_eclip)
 
-def rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
-    return object_wrt_sun(t_utc, a, e, taup, omega, I, Omega)-observer_wrt_sun(spk_kernel, long, parallax_s, parallax_c, t_utc)
+def rho_vec(long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
+    return object_wrt_sun(t_utc, a, e, taup, omega, I, Omega)-observer_wrt_sun(long, parallax_s, parallax_c, t_utc)
 
-def rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
-    r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega)
+def rhovec2radec(long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega):
+    r_v = rho_vec(long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omega)
     # print('r_v = ', r_v)
     r_v_norm = np.linalg.norm(r_v, ord=2)
     # print('r_v_norm = ', r_v_norm)
-    # r_v = rho_vec(spk_kernel, long, parallax_s, parallax_c, t_utc-r_v_norm/c_light, a, e, taup, omega, I, Omega)
+    # r_v = rho_vec(long, parallax_s, parallax_c, t_utc-r_v_norm/c_light, a, e, taup, omega, I, Omega)
     # r_v_norm = np.linalg.norm(r_v, ord=2)
     r_v_unit = r_v/r_v_norm
     # print('r_v_unit = ', r_v_unit)
@@ -501,8 +512,8 @@ def angle_diff_rad(a1_rad, a2_rad):
         r -= (2.0*np.pi)
     return r
 
-def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax_c):
-    ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime, x[0], x[1], x[2], x[3], x[4], x[5])
+def radec_residual(x, t_ra_dec_datapoint, long, parallax_s, parallax_c):
+    ra_comp, dec_comp = rhovec2radec(long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime, x[0], x[1], x[2], x[3], x[4], x[5])
     # los_comp = losvector(ra_comp, dec_comp)
     # print('los_comp = ', los_comp)
     ra_obs, dec_obs = t_ra_dec_datapoint.ra.rad, t_ra_dec_datapoint.dec.rad
@@ -519,8 +530,8 @@ def radec_residual(x, t_ra_dec_datapoint, spk_kernel, long, parallax_s, parallax
     # print('diff_dec = ', np.rad2deg(diff_dec), 'deg')
     return np.array((diff_ra,diff_dec))
 
-def radec_residual_rov(x, t, ra_obs_rad, dec_obs_rad, spk_kernel, long, parallax_s, parallax_c):
-    ra_comp, dec_comp = rhovec2radec(spk_kernel, long, parallax_s, parallax_c, t, x[0], x[1], x[2], x[3], x[4], x[5])
+def radec_residual_rov(x, t, ra_obs_rad, dec_obs_rad, long, parallax_s, parallax_c):
+    ra_comp, dec_comp = rhovec2radec(long, parallax_s, parallax_c, t, x[0], x[1], x[2], x[3], x[4], x[5])
     # los_comp = losvector(ra_comp, dec_comp)
     # print('los_comp = ', los_comp)
     # ra_obs, dec_obs = t_ra_dec_datapoint.ra.rad, t_ra_dec_datapoint.dec.rad
@@ -537,7 +548,7 @@ def radec_residual_rov(x, t, ra_obs_rad, dec_obs_rad, spk_kernel, long, parallax
     # print('diff_dec = ', np.rad2deg(diff_dec), 'deg')
     return np.array((diff_ra,diff_dec))
 
-def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes):
+def get_observer_pos_wrt_sun(mpc_observatories_data, obs_radec, site_codes):
     # astronomical unit in km
     Ea_hc_pos = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
@@ -557,9 +568,9 @@ def get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site
     # print(' jd2 (tdb) = ', t_jd2_tdb_val)
     # print(' jd3 (tdb) = ', t_jd3_tdb_val)
 
-    Ea_jd1 = earth_ephemeris(spk_kernel, t_jd1_tdb_val)
-    Ea_jd2 = earth_ephemeris(spk_kernel, t_jd2_tdb_val)
-    Ea_jd3 = earth_ephemeris(spk_kernel, t_jd3_tdb_val)
+    Ea_jd1 = earth_ephemeris(t_jd1_tdb_val)
+    Ea_jd2 = earth_ephemeris(t_jd2_tdb_val)
+    Ea_jd3 = earth_ephemeris(t_jd3_tdb_val)
 
     Ea_hc_pos[0] = Ea_jd1/au
     Ea_hc_pos[1] = Ea_jd2/au
@@ -835,7 +846,7 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
     return r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1_, g1_, f3_, g3_
 
 # Implementation of Gauss method for MPC optical observations of NEAs
-def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
+def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
 
@@ -843,7 +854,7 @@ def gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds
     obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
 
     # compute observer position vectors wrt Sun
-    R, Ea_hc_pos = get_observer_pos_wrt_sun(spk_kernel, mpc_observatories_data, obs_radec, site_codes)
+    R, Ea_hc_pos = get_observer_pos_wrt_sun(mpc_observatories_data, obs_radec, site_codes)
 
     # perform core Gauss method
     r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_ = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
@@ -926,22 +937,16 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds_, refiters=
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t
 
-def gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=0, r2_root_ind=0):
+def gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds_, refiters=0, r2_root_ind=0):
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
-    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_, obs_t = gauss_estimate_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, r2_root_ind=r2_root_ind)
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_, obs_t = gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds_, r2_root_ind=r2_root_ind)
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t
 
 def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0, plot=True):
-    # load JPL DE430 ephemeris SPK kernel, including TT-TDB difference
-    # 'de430t.bsp' may be downloaded from
-    # ftp://ssd.jpl.nasa.gov/pub/eph/planets/bsp/de430t.bsp
-    spk_kernel = SPK.open('de430t.bsp')
-    # print(spk_kernel)
-
     # load MPC data for a given NEA
     mpc_object_data = load_mpc_data(body_fname_str)
     # print('MPC observation data:\n', mpc_object_data[ inds ], '\n')
@@ -985,7 +990,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         # Apply Gauss method to three elements of data
         inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
         print('j = ', j)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t = gauss_iterator_mpc(spk_kernel, mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t = gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
 
         # print('|r1| = ', np.linalg.norm(r1,ord=2))
         # print('|r2| = ', np.linalg.norm(r2,ord=2))
@@ -1079,7 +1084,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     for i in range(0,npoints):
         x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
-        xyz_Ea_orb_vec_equat = earth_ephemeris(spk_kernel, t_Ea_vec[i])/au
+        xyz_Ea_orb_vec_equat = earth_ephemeris(t_Ea_vec[i])/au
         xyz_Ea_orb_vec_eclip = np.matmul(rot_equat_to_eclip, xyz_Ea_orb_vec_equat)
         x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
 
