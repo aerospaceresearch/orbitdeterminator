@@ -1259,3 +1259,89 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     # # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0
+
+# compute auxiliary vector of observed ra,dec values
+# inds = obs_arr
+def radec_obs_vec(inds, iod_object_data):
+    rov = np.zeros((2*len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
+        raHHMMmmm  = iod_object_data['raHH' ][indm1] + (iod_object_data['raMM' ][indm1]+iod_object_data['rammm' ][indm1]/1000.0)/60.0
+        decDDMMmmm = iod_object_data['decDD'][indm1] + (iod_object_data['decMM'][indm1]+iod_object_data['decmmm'][indm1]/1000.0)/60.0
+        obs_t_ra_dec = SkyCoord(ra=raHHMMmmm, dec=decDDMMmmm, unit=(uts.hourangle, uts.deg), obstime=timeobs)
+        rov[2*i-2], rov[2*i-1] = obs_t_ra_dec.ra.rad, obs_t_ra_dec.dec.rad
+    return rov
+
+# compute residuals vector for ra/dec observations with pre-computed observed radec values vector
+# inds = obs_arr
+def radec_res_vec_rov(x, inds, iod_object_data, sat_observatories_data, rov):
+    rv = np.zeros((2*len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
+        site_code = iod_object_data['station'][indm1]
+        obsite = get_station_data(site_code, sat_observatories_data)
+        # object position wrt to Earth
+        xyz_obj = orbel2xyz(timeobs.jd, cts.GM_earth.to(uts.Unit('km3 / day2')).value, x[0], x[1], x[2], x[3], x[4], x[5])
+        # observer position wrt to Earth
+        xyz_oe = observerpos_sat(obsite['Latitude'], obsite['Longitude'], obsite['Elev'], timeobs)
+        # object position wrt observer (unnormalized LOS vector)
+        rho_vec = xyz_obj - xyz_oe
+        # compute normalized LOS vector
+        rho_vec_norm = np.linalg.norm(rho_vec, ord=2)
+        rho_vec_unit = rho_vec/rho_vec_norm
+        # compute RA, Dec
+        cosd_cosa = rho_vec_unit[0]
+        cosd_sina = rho_vec_unit[1]
+        sind = rho_vec_unit[2]
+        # make sure computed RA (ra_comp) is always within [0.0, 2.0*np.pi]
+        ra_comp = np.mod(np.arctan2(cosd_sina, cosd_cosa), 2.0*np.pi)
+        dec_comp = np.arcsin(sind)
+        #compute angle difference, taking always the smallest difference
+        diff_ra = angle_diff_rad(rov[2*i-2], ra_comp)
+        diff_dec = angle_diff_rad(rov[2*i-1], dec_comp)
+        # compute O-C residual (O-C = "Observed minus Computed")
+        rv[2*i-2], rv[2*i-1] = diff_ra, diff_dec
+    return rv
+
+# compute residuals vector for ra/dec observations; return observation times and residual vector
+# inds = obs_arr
+def t_radec_res_vec(x, inds, iod_object_data, sat_observatories_data, rov):
+    rv = np.zeros((2*len(inds)))
+    tv = np.zeros((len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
+        t_jd = timeobs.jd
+        site_code = iod_object_data['station'][indm1]
+        obsite = get_station_data(site_code, sat_observatories_data)
+        # object position wrt to Earth
+        xyz_obj = orbel2xyz(t_jd, cts.GM_earth.to(uts.Unit('km3 / day2')).value, x[0], x[1], x[2], x[3], x[4], x[5])
+        # observer position wrt to Earth
+        xyz_oe = observerpos_sat(obsite['Latitude'], obsite['Longitude'], obsite['Elev'], timeobs)
+        # object position wrt observer (unnormalized LOS vector)
+        rho_vec = xyz_obj - xyz_oe
+        # compute normalized LOS vector
+        rho_vec_norm = np.linalg.norm(rho_vec, ord=2)
+        rho_vec_unit = rho_vec/rho_vec_norm
+        # compute RA, Dec
+        cosd_cosa = rho_vec_unit[0]
+        cosd_sina = rho_vec_unit[1]
+        sind = rho_vec_unit[2]
+        # make sure computed RA (ra_comp) is always within [0.0, 2.0*np.pi]
+        ra_comp = np.mod(np.arctan2(cosd_sina, cosd_cosa), 2.0*np.pi)
+        dec_comp = np.arcsin(sind)
+        #compute angle difference, taking always the smallest difference
+        diff_ra = angle_diff_rad(rov[2*i-2], ra_comp)
+        diff_dec = angle_diff_rad(rov[2*i-1], dec_comp)
+        # compute O-C residual (O-C = "Observed minus Computed")
+        rv[2*i-2], rv[2*i-1] = diff_ra, diff_dec
+        tv[i] = t_jd
+    return tv, rv
