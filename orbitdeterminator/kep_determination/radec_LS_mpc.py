@@ -8,7 +8,7 @@ body_fname_str = '../example_data/mpc_eros_data.txt'
 body_name_str = 'Eros'
 
 #lines of observations file to be used for preliminary orbit determination using Gauss method
-obs_arr = [7475, 7488, 7489, 7498, 7506, 7511, 7564, 7577, 7618, 7658, 7680, 7702, 7719] #2016 observations
+obs_arr = [1, 14, 15, 24, 32, 37, 68, 81, 122, 162, 184, 206, 223] #2016 observations
 
 #the total number of observations used
 nobs = len(obs_arr)
