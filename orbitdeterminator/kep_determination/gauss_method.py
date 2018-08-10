@@ -319,7 +319,7 @@ def semimajoraxis(x, y, z, u, v, w, mu):
        Returns:
            float: semimajor axis, a
     """
-myRadius=np.sqrt((x**2)+(y**2)+(z**2))
+    myRadius=np.sqrt((x**2)+(y**2)+(z**2))
     myVelSqr=(u**2)+(v**2)+(w**2)
     return 1.0/( (2.0/myRadius)-(myVelSqr/mu) )
 
