@@ -1104,13 +1104,7 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
 
     # extract observations data
     obs_radec, obs_t, site_codes = get_observations_data_sat(iod_object_data, inds)
-
     obs_t_jd = np.array((obs_radec[0].obstime.jd, obs_radec[1].obstime.jd, obs_radec[2].obstime.jd))
-
-    # print('obs_radec = ', obs_radec)
-    # print('obs_t = ', obs_t)
-    # print('obs_t_jd = ', obs_t_jd)
-    # print('site_codes = ', site_codes)
 
     # compute observer position vectors wrt Sun
     R = get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes)
@@ -1268,7 +1262,7 @@ def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
         tv[i] = timeobs.tdb.jd
     return tv, rv
 
-def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0, plot=True):
+def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
     # load MPC data for a given NEA
     mpc_object_data = load_mpc_data(body_fname_str)
     # print('MPC observation data:\n', mpc_object_data[ inds ], '\n')
@@ -1286,8 +1280,9 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     #the total number of observations used
     nobs = len(obs_arr)
 
-    print('nobs = ', nobs)
-    print('obs_arr = ', obs_arr)
+    # if r2_root_ind_vec was not specified, then use always the first positive root by default
+    if r2_root_ind_vec is None:
+        r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
 
     #auxiliary arrays
     x_vec = np.zeros((nobs,))
@@ -1300,33 +1295,25 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     W_vec = np.zeros((nobs-2,))
     w_vec = np.zeros((nobs-2,))
     n_vec = np.zeros((nobs-2,))
-    x_Ea_vec = np.zeros((nobs-2,))
-    y_Ea_vec = np.zeros((nobs-2,))
-    z_Ea_vec = np.zeros((nobs-2,))
+    x_Ea_vec = np.zeros((nobs,))
+    y_Ea_vec = np.zeros((nobs,))
+    z_Ea_vec = np.zeros((nobs,))
     t_vec = np.zeros((nobs,))
-
-    print('r2_root_ind_vec = ', r2_root_ind_vec)
-    print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
 
     for j in range (0,nobs-2):
         # Apply Gauss method to three elements of data
         inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
-        print('j = ', j)
+        print('Processing observation #', j)
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t = gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
-
-        # print('|r1| = ', np.linalg.norm(r1,ord=2))
-        # print('|r2| = ', np.linalg.norm(r2,ord=2))
-        # print('|r3| = ', np.linalg.norm(r3,ord=2))
-        # print('r2 = ', r2)
-        # print('obs_t[1] = ', obs_t[1])
-        # print('v2 = ', v2)
 
         if j==0:
             t_vec[0] = obs_t[0]
             x_vec[0], y_vec[0], z_vec[0] = np.matmul(rot_equat_to_eclip, r1)
+            x_Ea_vec[0], y_Ea_vec[0], z_Ea_vec[0] = np.matmul(rot_equat_to_eclip, earth_ephemeris(obs_t[0])/au)
         if j==nobs-3:
             t_vec[nobs-1] = obs_t[2]
             x_vec[nobs-1], y_vec[nobs-1], z_vec[nobs-1] = np.matmul(rot_equat_to_eclip, r3)
+            x_Ea_vec[nobs-1], y_Ea_vec[nobs-1], z_Ea_vec[nobs-1] = np.matmul(rot_equat_to_eclip, earth_ephemeris(obs_t[2])/au)
 
         r2_eclip = np.matmul(rot_equat_to_eclip, r2)
         v2_eclip = np.matmul(rot_equat_to_eclip, v2)
@@ -1348,29 +1335,9 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         y_vec[j+1] = r2_eclip[1]
         z_vec[j+1] = r2_eclip[2]
         Ea_hc_pos_eclip = np.matmul(rot_equat_to_eclip, Ea_hc_pos[1])
-        x_Ea_vec[j] = Ea_hc_pos_eclip[0]
-        y_Ea_vec[j] = Ea_hc_pos_eclip[1]
-        z_Ea_vec[j] = Ea_hc_pos_eclip[2]
-
-    # print(a_num/au, 'au', ', ', e_num)
-    # print(a_num, 'au', ', ', e_num)
-    # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
-
-    print('x_vec = ', x_vec)
-    # print('a_vec = ', a_vec)
-    # print('e_vec = ', e_vec)
-    print('a_vec = ', a_vec)
-    print('len(a_vec) = ', len(a_vec))
-    print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
-
-    print('e_vec = ', e_vec)
-    print('len(e_vec) = ', len(e_vec))
-    e_vec_fil1 = e_vec[e_vec<1.0]
-    e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
-    print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
-
-    # print('taup_vec = ', taup_vec)
-    print('t_vec = ', t_vec)
+        x_Ea_vec[j+1] = Ea_hc_pos_eclip[0]
+        y_Ea_vec[j+1] = Ea_hc_pos_eclip[1]
+        z_Ea_vec[j+1] = Ea_hc_pos_eclip[2]
 
     a_mean = np.mean(a_vec) #au
     e_mean = np.mean(e_vec) #dimensionless
@@ -1380,15 +1347,18 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     W_mean = np.mean(W_vec) #deg
     n_mean = np.mean(n_vec) #sec
 
-    print('\nObservational arc:')
+    print('\n*** ORBIT DETERMINATION: GAUSS METHOD ***')
+    print('Observational arc:')
     print('Number of observations: ', len(obs_arr))
     print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
-    print('\n*** AVERAGE ORBITAL ELEMENTS (ECLIPTIC, MEAN J2000.0): a, e, taup, omega, I, Omega, T ***')
+    print('\nAVERAGE ORBITAL ELEMENTS (ECLIPTIC, MEAN J2000.0): a, e, taup, omega, I, Omega, T')
     print('Semi-major axis (a):                 ', a_mean, 'au')
     print('Eccentricity (e):                    ', e_mean)
     print('Time of pericenter passage (tau):    ', Time(taup_mean, format='jd').iso, 'JDTDB')
+    print('Pericenter distance (q):             ', a_mean*(1.0-e_mean), 'au')
+    print('Apocenter distance (Q):              ', a_mean*(1.0+e_mean), 'au')
     print('Argument of pericenter (omega):      ', w_mean, 'deg')
     print('Inclination (I):                     ', I_mean, 'deg')
     print('Longitude of Ascending Node (Omega): ', W_mean, 'deg')
@@ -1396,9 +1366,9 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     # PLOT
     if plot:
-        npoints = 1000 # number of points in orbit
+        npoints = 500 # number of points in orbit
         theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
-        t_Ea_vec = np.linspace(t_vec[0], t_vec[0]+365.3, npoints)
+        t_Ea_vec = np.linspace(t_vec[0], t_vec[-1], npoints)
         x_orb_vec = np.zeros((npoints,))
         y_orb_vec = np.zeros((npoints,))
         z_orb_vec = np.zeros((npoints,))
@@ -1432,18 +1402,14 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
         plt.show()
 
-    # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
 
-def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=0, plot=True):
+def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(body_fname_str)
-    # print('IOD observation data:\n', iod_object_data, '\n')
-    # print('IOD observation data:\n', iod_object_data[ np.array(obs_arr)-1 ], '\n')
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
-    # print('sat_observatories_data = ', sat_observatories_data)
 
     # Earth's G*m value
     mu = mu_Earth
@@ -1451,8 +1417,9 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     # #the total number of observations used
     nobs = len(obs_arr)
 
-    print('nobs = ', nobs)
-    print('obs_arr = ', obs_arr)
+    # if r2_root_ind_vec was not specified, then use always the first positive root by default
+    if r2_root_ind_vec is None:
+        r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
 
     # #auxiliary arrays
     x_vec = np.zeros((nobs,))
@@ -1467,23 +1434,11 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     n_vec = np.zeros((nobs-2,))
     t_vec = np.zeros((nobs,))
 
-    print('r2_root_ind_vec = ', r2_root_ind_vec)
-    print('len(range (0,nobs-2)) = ', len(range (0,nobs-2)))
-
     for j in range (0,nobs-2):
         # Apply Gauss method to three elements of data
         inds_ = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
-        # print('inds_ = ', inds_)
-        print('j = ', j)
+        print('Processing observation #', j)
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, inds_, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
-        # print('obs_t = ', obs_t)
-
-        # print('|r1| = ', np.linalg.norm(r1,ord=2))
-        # print('|r2| = ', np.linalg.norm(r2,ord=2))
-        # print('|r3| = ', np.linalg.norm(r3,ord=2))
-        # print('r2 = ', r2)
-        # print('obs_t[1] = ', obs_t[1])
-        # print('v2 = ', v2)
 
         if j==0:
             t_vec[0] = obs_t[0]
@@ -1515,27 +1470,6 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         y_vec[j+1] = r2[1]
         z_vec[j+1] = r2[2]
 
-        # print(a_num, 'km', ', ', e_num)
-        # print('n_num = ', n_num, ' T_num = ', 2.0*np.pi/n_num)
-        # # print('j = ', j, 'obs_arr[j] = ', obs_arr[j])
-
-    # # print('x_vec = ', x_vec)
-    print('a_vec = ', a_vec)
-    print('len(a_vec) = ', len(a_vec))
-    # print('len(a_vec[a_vec>0.0]) = ', len(a_vec[a_vec>0.0]))
-
-    print('e_vec = ', e_vec)
-    print('len(e_vec) = ', len(e_vec))
-    # e_vec_fil1 = e_vec[e_vec<1.0]
-    # e_vec_fil2 = e_vec_fil1[e_vec_fil1>0.0]
-    # print('len(e_vec[e_vec<1.0]) = ', len(e_vec_fil2))
-
-    # print('w_vec = ', w_vec)
-    # print('I_vec = ', I_vec)
-    # print('W_vec = ', W_vec)
-    # print('taup_vec = ', taup_vec)
-    # print('t_vec = ', t_vec)
-
     a_mean = np.mean(a_vec) #km
     e_mean = np.mean(e_vec) #dimensionless
     taup_mean = np.mean(taup_vec) #deg
@@ -1544,12 +1478,13 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
     W_mean = np.mean(W_vec) #deg
     n_mean = np.mean(n_vec) #sec
 
-    print('\nObservational arc:')
+    print('\n*** ORBIT DETERMINATION: GAUSS METHOD ***')
+    print('Observational arc:')
     print('Number of observations: ', len(obs_arr))
     print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
 
-    print('\n*** AVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T ***')
+    print('\nAVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T')
     print('Semi-major axis (a):                 ', a_mean, 'km')
     print('Eccentricity (e):                    ', e_mean)
     print('Time of pericenter passage (tau):    ', Time(taup_mean, format='jd').iso, 'JDUTC')
@@ -1560,7 +1495,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
 
     # PLOT
     if plot:
-        npoints = 1000
+        npoints = 500
         theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
         x_orb_vec = np.zeros((npoints,))
         y_orb_vec = np.zeros((npoints,))
@@ -1587,10 +1522,9 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, re
         ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
         plt.show()
 
-    # # return x_vec, y_vec, z_vec, x_Ea_vec, y_Ea_vec, z_Ea_vec, a_vec, e_vec, I_vec, W_vec, w_vec
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0
 
-def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussiters=0, plot=True):
+def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(body_fname_str)
 
@@ -1599,45 +1533,39 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussi
 
     #get preliminary orbit using Gauss method
     #q0 : a, e, taup, I, W, w, T
-    q0 = np.array(gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=gaussiters, plot=False))
+    q0 = np.array(gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
     x0 = q0[0:6]
     x0[3:6] = np.deg2rad(x0[3:6])
 
-    obs_arr_ls = np.array(range(1, len(iod_object_data)+1))
-    print('obs_arr_ls = ', obs_arr_ls)
+    # if obs_arr_ls was not specified, then read whole data set:
+    if obs_arr_ls is None:
+        obs_arr_ls = np.array(range(1, len(iod_object_data)+1))
 
     rov = radec_obs_vec_sat(obs_arr_ls, iod_object_data)
-    print('rov = ', rov)
-    print('len(rov) = ', len(rov))
-
     rv0 = radec_res_vec_rov_sat(x0, obs_arr_ls, iod_object_data, sat_observatories_data, rov)
     Q0 = np.linalg.norm(rv0, ord=2)/len(rv0)
 
-    print('rv0 = ', rv0)
-    print('Q0 = ', Q0)
-
     Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
 
-    print('INFO: scipy.optimize.least_squares exited with code', Q_ls.status)
+    print('\n*** ORBIT DETERMINATION: LEAST-SQUARES FIT ***')
+
+    print('\nINFO: scipy.optimize.least_squares exited with code', Q_ls.status)
     print(Q_ls.message,'\n')
-    print('Q_ls.x = ', Q_ls.x)
 
     tv_star, rv_star = t_radec_res_vec_sat(Q_ls.x, obs_arr_ls, iod_object_data, sat_observatories_data, rov)
     Q_star = np.linalg.norm(rv_star, ord=2)/len(rv_star)
-    print('rv* = ', rv_star)
-    print('Q* = ', Q_star)
 
-    print('Total residual evaluated at Gauss solution: ', Q0)
+    print('Total residual evaluated at averaged Gauss solution: ', Q0)
     print('Total residual evaluated at least-squares solution: ', Q_star, '\n')
 
-    print('\nObservational arc:')
+    print('Observational arc:')
     print('Number of observations: ', len(obs_arr_ls))
     print('First observation (UTC) : ', Time(tv_star[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(tv_star[-1], format='jd').iso)
 
     n_num = meanmotion(mu_Earth, Q_ls.x[0])
 
-    print('\nOrbital elements, Gauss + least-squares solution:')
+    print('\nORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T')
     print('Semi-major axis (a):                 ', Q_ls.x[0], 'km')
     print('Eccentricity (e):                    ', Q_ls.x[1])
     print('Time of pericenter passage (tau):    ', Time(Q_ls.x[2], format='jd').iso, 'JDUTC')
@@ -1646,21 +1574,22 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussi
     print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_ls.x[5]), 'deg')
     print('Orbital period (T):                  ', 2.0*np.pi/n_num/60.0, 'min')
 
-    ra_res_vec = np.rad2deg(rv_star[0::2])*(3600.0)
-    dec_res_vec = np.rad2deg(rv_star[1::2])*(3600.0)
-
     # PLOT
     if plot:
+        ra_res_vec = np.rad2deg(rv_star[0::2])*(3600.0)
+        dec_res_vec = np.rad2deg(rv_star[1::2])*(3600.0)
+        t_plot = (tv_star-tv_star[0])*86400.0
+
         f, axarr = plt.subplots(2, sharex=True)
         axarr[0].set_title('Gauss + LS fit residuals: RA, Dec')
-        axarr[0].scatter(tv_star, ra_res_vec, s=0.75, label='delta RA (\")')
+        axarr[0].scatter(t_plot, ra_res_vec, label='delta RA (\")', marker='+')
         axarr[0].set_ylabel('RA (\")')
-        axarr[1].scatter(tv_star, dec_res_vec, s=0.75, label='delta Dec (\")')
-        axarr[1].set_xlabel('time (JDUTC)')
+        axarr[1].scatter(t_plot, dec_res_vec, label='delta Dec (\")', marker='+')
+        axarr[1].set_xlabel('time (UTC seconds since first obs)')
         axarr[1].set_ylabel('Dec (\")')
         plt.show()
 
-        npoints = 1000
+        npoints = 500
         theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
         x_orb_vec = np.zeros((npoints,))
         y_orb_vec = np.zeros((npoints,))
@@ -1688,56 +1617,48 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussi
 
     return Q_ls.x[0], Q_ls.x[1], Time(Q_ls.x[2], format='jd'), np.rad2deg(Q_ls.x[3]), np.rad2deg(Q_ls.x[4]), np.rad2deg(Q_ls.x[5]), 2.0*np.pi/n_num/60.0
 
-def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussiters=0, plot=True):
+def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
     # load MPC data for a given NEA
     mpc_object_data = load_mpc_data(body_fname_str)
 
-    #load MPC data of listed observatories (longitude, parallax constants C, S) (~7,000 observations)
+    #load MPC data of listed observatories (longitude, parallax constants C, S)
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
     #x0 : a, e, taup, I, W, w
-    x0 = np.array(gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=5, plot=False))
+    x0 = np.array(gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
 
     x0[3:6] = np.deg2rad(x0[3:6])
-    print('x0 = ', x0)
 
-    # obs_arr_ls1 = np.array(range(7475,7539))
-    # obs_arr_ls2 = np.array(range(7562,7719))
-    obs_arr_ls = np.array(range(1, len(mpc_object_data)+1))
-    print('obs_arr_ls = ', obs_arr_ls)
-    print('obs_arr_ls[0] = ', obs_arr_ls[0])
-    print('obs_arr_ls[-1] = ', obs_arr_ls[-1])
-    nobs_ls = len(obs_arr_ls)
-    print('nobs_ls = ', nobs_ls)
+    # if obs_arr_ls was not specified, then read whole data set:
+    if obs_arr_ls is None:
+        obs_arr_ls = np.array(range(1, len(mpc_object_data)+1))
 
     rov = radec_obs_vec_mpc(obs_arr_ls, mpc_object_data)
 
     rv0 = radec_res_vec_rov_mpc(x0, obs_arr_ls, mpc_object_data, mpc_observatories_data, rov)
     Q0 = np.linalg.norm(rv0, ord=2)/len(rv0)
 
-    print('Q0 = ', Q0)
+    print('\n*** ORBIT DETERMINATION: LEAST-SQUARES FIT ***')
 
     Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
 
-    print('scipy.optimize.least_squares exited with code ', Q_ls.status)
+    print('\nINFO: scipy.optimize.least_squares exited with code ', Q_ls.status)
     print(Q_ls.message,'\n')
-    print('Q_ls.x = ', Q_ls.x)
 
     tv_star, rv_star = t_radec_res_vec_mpc(Q_ls.x, obs_arr_ls, mpc_object_data, mpc_observatories_data)
     Q_star = np.linalg.norm(rv_star, ord=2)/len(rv_star)
-    print('Q* = ', Q_star)
 
-    print('Total residual evaluated at Gauss solution: ', Q0)
+    print('Total residual evaluated at averaged Gauss solution: ', Q0)
     print('Total residual evaluated at least-squares solution: ', Q_star)
 
-    print('\nObservational arc:')
+    print('Observational arc:')
     print('Number of observations: ', len(obs_arr_ls))
     print('First observation (UTC) : ', Time(tv_star[0], format='jd').iso)
     print('Last observation (UTC) : ', Time(tv_star[-1], format='jd').iso)
 
     n_num = meanmotion(mu_Sun, Q_ls.x[0])
 
-    print('\nOrbital elements, least-squares solution:')
+    print('\nORBITAL ELEMENTS (ECLIPTIC, MEAN J2000.0): a, e, taup, omega, I, Omega, T')
     print('Semi-major axis (a):                 ', Q_ls.x[0], 'au')
     print('Eccentricity (e):                    ', Q_ls.x[1])
     print('Time of pericenter passage (tau):    ', Time(Q_ls.x[2], format='jd').iso, 'JDTDB')
@@ -1753,19 +1674,47 @@ def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, gaussi
         ra_res_vec = np.rad2deg(rv_star[0::2])*(3600.0)
         dec_res_vec = np.rad2deg(rv_star[1::2])*(3600.0)
 
-        # print('len(ra_res_vec) = ', len(ra_res_vec))
-        # print('len(dec_res_vec) = ', len(dec_res_vec))
-        # print('nobs_ls = ', nobs_ls)
-        # print('len(tv_star) = ', len(tv_star))
-
         f, axarr = plt.subplots(2, sharex=True)
         axarr[0].set_title('Gauss + LS fit residuals: RA, Dec')
-        axarr[0].scatter(tv_star, ra_res_vec, s=0.75, label='delta RA (\")')
+        axarr[0].scatter(tv_star-tv_star[0], ra_res_vec, label='delta RA (\")', marker='+')
         axarr[0].set_ylabel('RA (\")')
-        axarr[1].scatter(tv_star, dec_res_vec, s=0.75, label='delta Dec (\")')
-        axarr[1].set_xlabel('time (JDTDB)')
+        axarr[1].scatter(tv_star-tv_star[0], dec_res_vec, label='delta Dec (\")', marker='+')
+        axarr[1].set_xlabel('time (TDB days since first obs)')
         axarr[1].set_ylabel('Dec (\")')
         plt.show()
 
-    return Q_ls.x[0], Q_ls.x[1], Time(Q_ls.x[2], format='jd'), np.rad2deg(Q_ls.x[3]), np.rad2deg(Q_ls.x[4]), np.rad2deg(Q_ls.x[5]), 2.0*np.pi/n_num
+        npoints = 500 # number of points in orbit
+        theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
+        t_Ea_vec = np.linspace(tv_star[0], tv_star[-1], npoints)
+        x_orb_vec = np.zeros((npoints,))
+        y_orb_vec = np.zeros((npoints,))
+        z_orb_vec = np.zeros((npoints,))
+        x_Ea_orb_vec = np.zeros((npoints,))
+        y_Ea_orb_vec = np.zeros((npoints,))
+        z_Ea_orb_vec = np.zeros((npoints,))
 
+        for i in range(0,npoints):
+            x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame_(Q_ls.x[0], Q_ls.x[1], theta_vec[i], Q_ls.x[3], Q_ls.x[4], Q_ls.x[5])
+            xyz_Ea_orb_vec_equat = earth_ephemeris(t_Ea_vec[i])/au
+            xyz_Ea_orb_vec_eclip = np.matmul(rot_equat_to_eclip, xyz_Ea_orb_vec_equat)
+            x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
+
+        ax = plt.axes(aspect='equal', projection='3d')
+
+        # Sun-centered orbits: Computed orbit and Earth's
+        ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
+        ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5, label='Earth orbit')
+        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5, label=body_name_str+' orbit')
+        plt.legend()
+        ax.set_xlabel('x (au)')
+        ax.set_ylabel('y (au)')
+        ax.set_zlabel('z (au)')
+        xy_plot_abs_max = np.max((np.amax(np.abs(ax.get_xlim())), np.amax(np.abs(ax.get_ylim()))))
+        ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
+        ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
+        ax.set_title('Angles-only orbit determ. (Gauss+LS): '+body_name_str)
+        plt.show()
+
+    return Q_ls.x[0], Q_ls.x[1], Time(Q_ls.x[2], format='jd'), np.rad2deg(Q_ls.x[3]), np.rad2deg(Q_ls.x[4]), np.rad2deg(Q_ls.x[5]), 2.0*np.pi/n_num
