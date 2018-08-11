@@ -1280,7 +1280,7 @@ def radec_res_vec_rov_sat(x, inds, iod_object_data, sat_observatories_data, rov)
         #compute angle difference, taking always the smallest difference
         diff_ra = angle_diff_rad(rov[2*i-2], ra_comp)
         diff_dec = angle_diff_rad(rov[2*i-1], dec_comp)
-        # compute O-C residual (O-C = "Observed minus Computed")
+        # store O-C residual into vector (O-C = "Observed minus Computed")
         rv[2*i-2], rv[2*i-1] = diff_ra, diff_dec
     return rv
 
@@ -1331,7 +1331,7 @@ def t_radec_res_vec_sat(x, inds, iod_object_data, sat_observatories_data, rov):
         #compute angle difference, taking always the smallest difference
         diff_ra = angle_diff_rad(rov[2*i-2], ra_comp)
         diff_dec = angle_diff_rad(rov[2*i-1], dec_comp)
-        # compute O-C residual (O-C = "Observed minus Computed")
+        # store O-C residual into vector (O-C = "Observed minus Computed")
         rv[2*i-2], rv[2*i-1] = diff_ra, diff_dec
         tv[i] = t_jd
     return tv, rv
@@ -1383,7 +1383,7 @@ def radec_res_vec_rov_mpc(x, inds, mpc_object_data, mpc_observatories_data, rov)
         obsite = get_observatory_data(site_code, mpc_observatories_data)
         # compute residuals
         radec_res = radec_residual_rov_mpc(x, timeobs, rov[2*i-2], rov[2*i-1], obsite['Long'], obsite['sin'], obsite['cos'])
-        # assign residuals to rd/dec residuals vector
+        # assign residuals to ra/dec residuals vector
         rv[2*i-2], rv[2*i-1] = radec_res
     return rv
 
