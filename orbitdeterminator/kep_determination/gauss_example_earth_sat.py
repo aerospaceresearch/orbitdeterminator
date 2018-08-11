@@ -10,15 +10,10 @@ body_name_str = '43145'
 #lines of observations file to be used for orbit determination
 obs_arr = [1, 3, 4, 6, 8] # LB observations of 21799 91 076C on 2018 Jul 22
 
-#the total number of observations used
-nobs = len(obs_arr)
+###modify r2_root_ind_vec as necessary if adequate root of Gauss polynomial has to be selected
+###if r2_root_ind_vec is not specified, then the first positive root will always be selected by default
+# r2_root_ind_vec = zeros((len(obs_arr)-2,), dtype=int)
+###select adequate index of Gauss polynomial root
+# r2_root_ind_vec[4] = 1
 
-#select adequate index of Gauss polynomial root
-r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
-# r2_root_ind_vec[0] = 1 # uncomment and modify as required if adequate root of Gauss polynomial has to be selected
-
-a, e, taup, I, W, w, T = gm.gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec, refiters=5)
-
-x = np.array((a, e, taup, I, W, w, T))
-
-print('x = ', x)
+a, e, taup, I, W, w, T = gm.gauss_method_sat(body_fname_str, body_name_str, obs_arr, refiters=5)
