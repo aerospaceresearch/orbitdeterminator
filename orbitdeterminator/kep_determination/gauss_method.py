@@ -3,6 +3,7 @@
 # TODO: evaluate Earth ephemeris only once for a given TDB instant
 # this implies saving all UTC times and their TDB equivalencies
 # TODO: allow user to specify ephemerides; currently de432s is always used
+# TODO: allow other IOD angle subformats
 
 import math
 import numpy as np
@@ -927,7 +928,6 @@ def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
 
     for i in range(0,3):
         for j in range(0,3):
-            # print('i,j=', i, j)
             D[i,j] = np.dot(R[i], p[j])
 
     A = (-D[0,1]*(tau3/tau)+D[1,1]+D[2,1]*(tau1/tau))/D0
@@ -1054,7 +1054,7 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
     return r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1_, g1_, f3_, g3_
 
 def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
-    """Gauss method implementation for MPC optical observations of NEAs
+    """Gauss method implementation for MPC Near-Earth asteroids ra/dec tracking data.
 
        Args:
            mpc_object_data (string): path to MPC-formatted observation data file
@@ -1100,6 +1100,36 @@ def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_in
 
 # Implementation of Gauss method for IOD-formatted optical observations of Earth satellites
 def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=0):
+    """Gauss method implementation for Earth-orbiting satellites ra/dec tracking data.
+    Assumes observation data uses IOD format, with angle subformat 2.
+
+       Args:
+           iod_object_data (string): file path to sat tracking observation data of object
+           sat_observatories_data (string): path to file containing COSPAR satellite tracking stations data.
+           inds (1x3 int array): line numbers in data file to be processed
+           r2_root_ind (int): index of selected Gauss polynomial root
+
+       Returns:
+           r1 (1x3 array): updated position at first observation
+           r2 (1x3 array): updated position at second observation
+           r3 (1x3 array): updated position at third observation
+           v2 (1x3 array): updated velocity at second observation
+           D (3x3 array): auxiliary matrix
+           R (1x3 array): three observer position vectors
+           rho1 (1x3 array): LOS vector at first observation
+           rho2 (1x3 array): LOS vector at second observation
+           rho3 (1x3 array): LOS vector at third observation
+           tau1 (float): time interval from second to first observation
+           tau3 (float): time interval from second to third observation
+           f1 (float): Lagrange's f function value at first observation
+           g1 (float): Lagrange's g function value at first observation
+           f3 (float): Lagrange's f function value at third observation
+           g3 (float): Lagrange's g function value at third observation
+           rho_1_ (float): slant range at first observation
+           rho_2_ (float): slant range at second observation
+           rho_3_ (float): slant range at third observation
+           obs_t_jd (1x3 array): three Julian dates of observations
+    """
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     mu = mu_Earth
 
@@ -1116,6 +1146,32 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_, obs_t_jd
 
 def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds_, refiters=0, r2_root_ind=0):
+    """Gauss method iterator for Earth-orbiting satellites ra/dec tracking data.
+    Computes a first estimate of the orbit using gauss_estimate_sat function, and
+    then refines this estimate using gauss_refinement. Assumes observation data
+    file is IOD-formatted, with angle subformat 2.
+
+       Args:
+           iod_object_data (string): file path to sat tracking observation data of object
+           sat_observatories_data (string): path to file containing COSPAR satellite tracking stations data.
+           inds_ (1x3 int array): line numbers in data file to be processed
+           refiters (int): number of refinement iterations to be performed
+           r2_root_ind (int): index of selected Gauss polynomial root
+
+       Returns:
+           r1 (1x3 array): updated position at first observation
+           r2 (1x3 array): updated position at second observation
+           r3 (1x3 array): updated position at third observation
+           v2 (1x3 array): updated velocity at second observation
+           R (1x3 array): three observer position vectors
+           rho1 (1x3 array): LOS vector at first observation
+           rho2 (1x3 array): LOS vector at second observation
+           rho3 (1x3 array): LOS vector at third observation
+           rho_1_ (float): slant range at first observation
+           rho_2_ (float): slant range at second observation
+           rho_3_ (float): slant range at third observation
+           obs_t (1x3 array): times of observations
+    """
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     mu = mu_Earth
     r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_, rho_2_, rho_3_, obs_t = gauss_estimate_sat(iod_object_data, sat_observatories_data, inds_, r2_root_ind=r2_root_ind)
@@ -1125,6 +1181,33 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds_, refiters=
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, obs_t
 
 def gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds_, refiters=0, r2_root_ind=0):
+    """Gauss method iterator for minor planets ra/dec tracking data.
+    Computes a first estimate of the orbit using gauss_estimate_sat function, and
+    then refines this estimate using gauss_refinement. Assumes observation data
+    file follows MPC format.
+
+       Args:
+           mpc_object_data (string): path to MPC-formatted observation data file
+           mpc_observatories_data (string): path to MPC observation sites data file
+           inds_ (1x3 int array): line numbers in data file to be processed
+           refiters (int): number of refinement iterations to be performed
+           r2_root_ind (int): index of selected Gauss polynomial root
+
+       Returns:
+           r1 (1x3 array): updated position at first observation
+           r2 (1x3 array): updated position at second observation
+           r3 (1x3 array): updated position at third observation
+           v2 (1x3 array): updated velocity at second observation
+           R (1x3 array): three observer position vectors
+           rho1 (1x3 array): LOS vector at first observation
+           rho2 (1x3 array): LOS vector at second observation
+           rho3 (1x3 array): LOS vector at third observation
+           rho_1_ (float): slant range at first observation
+           rho_2_ (float): slant range at second observation
+           rho_3_ (float): slant range at third observation
+           Ea_hc_pos (1x3 array): cartesian position vectors (Earth wrt Sun)
+           obs_t (1x3 array): times of observations
+    """
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
     r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_, rho_2_, rho_3_, obs_t = gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds_, r2_root_ind=r2_root_ind)
@@ -1133,9 +1216,16 @@ def gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds_, refiters=
         r1, r2, r3, v2, rho_1_, rho_2_, rho_3_, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_, rho_2_, rho_3_, Ea_hc_pos, obs_t
 
-# compute auxiliary vector of observed ra,dec values
-# inds = obs_arr
 def radec_obs_vec_sat(inds, iod_object_data):
+    """Compute vector of observed ra,dec values for satellite tracking data (IOD-formatted).
+
+       Args:
+           inds (int array): line numbers of data in file
+           iod_object_data (ndarray): observation data
+
+       Returns:
+           rov (1xlen(inds) array): vector of ra/dec observed values
+    """
     rov = np.zeros((2*len(inds)))
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
@@ -1148,9 +1238,21 @@ def radec_obs_vec_sat(inds, iod_object_data):
         rov[2*i-2], rov[2*i-1] = obs_t_ra_dec.ra.rad, obs_t_ra_dec.dec.rad
     return rov
 
-# compute residuals vector for ra/dec observations with pre-computed observed radec values vector
-# inds = obs_arr
 def radec_res_vec_rov_sat(x, inds, iod_object_data, sat_observatories_data, rov):
+    """Compute vector of observed minus computed (O-C) residuals for ra/dec Earth-orbiting satellite observations
+    with pre-computed observed radec values vector. Assumes ra/dec observed values vector
+    is contained in rov, and they are stored as rov = [ra1, dec1, ra2, dec2, ...].
+
+       Args:
+           x (1x6 float array): set of orbital elements (a, e, taup, omega, I, Omega)
+           inds (int array): line numbers of data in file
+           iod_object_data (ndarray): observation data
+           sat_observatories_data (ndarray): satellite tracking stations data
+           rov (1xlen(inds) float-like array): vector of observed ra/dec values
+
+       Returns:
+           rv (1xlen(inds) array): vector of ra/dec (O-C) residuals.
+    """
     rv = np.zeros((2*len(inds)))
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
@@ -1185,6 +1287,21 @@ def radec_res_vec_rov_sat(x, inds, iod_object_data, sat_observatories_data, rov)
 # compute residuals vector for ra/dec observations; return observation times and residual vector
 # inds = obs_arr
 def t_radec_res_vec_sat(x, inds, iod_object_data, sat_observatories_data, rov):
+    """Compute vector of observed minus computed (O-C) residuals for ra/dec Earth-orbiting satellite observations
+    with pre-computed observed radec values vector. Assumes ra/dec observed values vector
+    is contained in rov, and they are stored as rov = [ra1, dec1, ra2, dec2, ...].
+
+       Args:
+           x (1x6 float array): set of orbital elements (a, e, taup, omega, I, Omega)
+           inds (int array): line numbers of data in file
+           iod_object_data (ndarray): observation data
+           sat_observatories_data (ndarray): satellite tracking stations data
+           rov (1xlen(inds) float-like array): vector of observed ra/dec values
+
+       Returns:
+           rv (1xlen(inds) array): vector of ra/dec (O-C) residuals.
+           tv (1xlen(inds) array): vector of observation times.
+    """
     rv = np.zeros((2*len(inds)))
     tv = np.zeros((len(inds)))
     for i in range(0,len(inds)):
@@ -1221,6 +1338,15 @@ def t_radec_res_vec_sat(x, inds, iod_object_data, sat_observatories_data, rov):
 
 # compute auxiliary vector of observed ra,dec values
 def radec_obs_vec_mpc(inds, mpc_object_data):
+    """Compute vector of observed ra,dec values for MPC tracking data.
+
+       Args:
+           inds (int array): line numbers of data in file
+           mpc_object_data (ndarray): MPC observation data for object
+
+       Returns:
+           rov (1xlen(inds) array): vector of ra/dec observed values
+    """
     rov = np.zeros((2*len(inds)))
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
@@ -1232,6 +1358,22 @@ def radec_obs_vec_mpc(inds, mpc_object_data):
 
 # compute residuals vector for ra/dec observations with pre-computed observed radec values vector
 def radec_res_vec_rov_mpc(x, inds, mpc_object_data, mpc_observatories_data, rov):
+    """Compute vector of observed minus computed (O-C) residuals for ra/dec
+    MPC-formatted observations of minor planets (asteroids, comets, etc.), with
+    pre-computed observed radec values vector. Assumes ra/dec observed values
+    vector is contained in rov, and they are stored as
+    rov = [ra1, dec1, ra2, dec2, ...].
+
+       Args:
+           x (1x6 float array): set of orbital elements (a, e, taup, omega, I, Omega)
+           inds (int array): line numbers of data in file
+           mpc_object_data (ndarray): observation data
+           mpc_observatories_data (ndarray): MPC observatories data
+           rov (1xlen(inds) float-like array): vector of observed ra/dec values
+
+       Returns:
+           rv (1xlen(inds) array): vector of ra/dec (O-C) residuals.
+    """
     rv = np.zeros((2*len(inds)))
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
@@ -1247,6 +1389,23 @@ def radec_res_vec_rov_mpc(x, inds, mpc_object_data, mpc_observatories_data, rov)
 
 # compute residuals vector for ra/dec observations with pre-computed observed radec values vector; return observation times and residual vector
 def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
+    """Compute vector of observed minus computed (O-C) residuals for ra/dec
+    MPC-formatted observations of minor planets (asteroids, comets, etc.), with
+    pre-computed observed radec values vector. Assumes ra/dec observed values
+    vector is contained in rov, and they are stored as
+    rov = [ra1, dec1, ra2, dec2, ...].
+
+       Args:
+           x (1x6 float array): set of orbital elements (a, e, taup, omega, I, Omega)
+           inds (int array): line numbers of data in file
+           mpc_object_data (ndarray): observation data
+           mpc_observatories_data (ndarray): MPC observatories data
+           rov (1xlen(inds) float-like array): vector of observed ra/dec values
+
+       Returns:
+           rv (1xlen(inds) array): vector of ra/dec (O-C) residuals.
+           tv (1xlen(inds) array): vector of observation times.
+    """
     rv = np.zeros((2*len(inds)))
     tv = np.zeros((len(inds)))
     for i in range(0,len(inds)):
@@ -1264,9 +1423,25 @@ def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
     return tv, rv
 
 def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
+    """Gauss method high-level function for minor planets (asteroids, comets,
+    etc.) orbit determination from MPC-formatted ra/dec tracking data. Roots of
+    8-th order Gauss polynomial are computed using np.roots function. Note that
+    if `r2_root_ind_vec` is not specified by the user, then the first positive
+    root returned by np.roots is used by default.
+
+       Args:
+           body_fname_str (string): path to MPC-formatted observation data file
+           body_name_str (string): user-defined name of minor planet
+           obs_arr (int vector): line numbers in data file to be processed
+           refiters (int): number of refinement iterations to be performed
+           r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
+           plot (bool): if True, plots data.
+
+       Returns:
+           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+    """
     # load MPC data for a given NEA
     mpc_object_data = load_mpc_data(body_fname_str)
-    # print('MPC observation data:\n', mpc_object_data[ inds ], '\n')
 
     #load MPC data of listed observatories (longitude, parallax constants C, S)
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
@@ -1406,6 +1581,23 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
 
 def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
+    """Gauss method high-level function for orbit determination of Earth satellites
+    from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
+    Roots of 8-th order Gauss polynomial are computed using np.roots function.
+    Note that if `r2_root_ind_vec` is not specified by the user, then the first
+    positive root returned by np.roots is used by default.
+
+       Args:
+           body_fname_str (string): path to IOD-formatted observation data file
+           body_name_str (string): user-defined name of satellite
+           obs_arr (int vector): line numbers in data file to be processed
+           refiters (int): number of refinement iterations to be performed
+           r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
+           plot (bool): if True, plots data.
+
+       Returns:
+           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+    """
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(body_fname_str)
 
@@ -1459,8 +1651,6 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
 
         a_vec[j] = a_num
         e_vec[j] = e_num
-        # print('obst_t = ', obs_t)
-        # print('obs_t[1] = ', obs_t[1])
         taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num*86400)
         w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
         I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
@@ -1526,6 +1716,25 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0
 
 def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
+    """Earth satellites orbit determination high-level function from
+    IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
+    Preliminary orbit determination via Gauss method is performed.
+    Roots of 8-th order Gauss polynomial are computed using np.roots function.
+    Note that if `r2_root_ind_vec` is not specified by the user, then the first
+    positive root returned by np.roots is used by default.
+
+       Args:
+           body_fname_str (string): path to IOD-formatted observation data file
+           body_name_str (string): user-defined name of satellite
+           obs_arr (int vector): line numbers in data file to be processed in Gauss preliminary orbit determination
+           r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
+           obs_arr (int vector): line numbers in data file to be processed in least-squares fit
+           gaussiters (int): number of refinement iterations to be performed
+           plot (bool): if True, plots data.
+
+       Returns:
+           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+    """
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(body_fname_str)
 
@@ -1619,6 +1828,24 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
     return Q_ls.x[0], Q_ls.x[1], Time(Q_ls.x[2], format='jd'), np.rad2deg(Q_ls.x[3]), np.rad2deg(Q_ls.x[4]), np.rad2deg(Q_ls.x[5]), 2.0*np.pi/n_num/60.0
 
 def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
+    """Minor planets orbit determination high-level function from MPC-formatted
+    ra/dec tracking data. Preliminary orbit determination via Gauss method is
+    performed. Roots of 8-th order Gauss polynomial are computed using np.roots
+    function. Note that if `r2_root_ind_vec` is not specified by the user, then
+    the first positive root returned by np.roots is used by default.
+
+       Args:
+           body_fname_str (string): path to MPC-formatted observation data file
+           body_name_str (string): user-defined name of minor planet
+           obs_arr (int vector): line numbers in data file to be processed in Gauss preliminary orbit determination
+           r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
+           obs_arr (int vector): line numbers in data file to be processed in least-squares fit
+           gaussiters (int): number of refinement iterations to be performed
+           plot (bool): if True, plots data.
+
+       Returns:
+           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+    """
     # load MPC data for a given NEA
     mpc_object_data = load_mpc_data(body_fname_str)
 
