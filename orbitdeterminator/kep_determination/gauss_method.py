@@ -2,6 +2,7 @@
 
 # TODO: evaluate Earth ephemeris only once for a given TDB instant
 # this implies saving all UTC times and their TDB equivalencies
+# TODO: allow user to specify ephemerides; currently de432s is always used
 
 import math
 import numpy as np
