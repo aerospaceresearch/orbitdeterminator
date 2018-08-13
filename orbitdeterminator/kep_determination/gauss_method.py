@@ -15,7 +15,6 @@ from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
-from scipy.optimize import least_squares
 
 # declare astronomical constants in appropriate units
 au = cts.au.to(uts.Unit('km')).value
@@ -529,7 +528,7 @@ def argperi(x, y, z, u, v, w, mu):
     else:
         return 2.0*np.pi-np.arccos(cos_omega)
 
-def trueanomaly(x, y, z, u, v, w, mu):
+def trueanomaly5(x, y, z, u, v, w, mu):
     """Compute the true anomaly from cartesian state.
 
        Args:
@@ -1591,7 +1590,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
 
         a_num = semimajoraxis(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
         e_num = eccentricity(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
-        f_num = trueanomaly(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
+        f_num = trueanomaly5(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
         n_num = meanmotion(mu, a_num)
 
         a_vec[j] = a_num
@@ -1741,7 +1740,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
 
         a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
         e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        f_num = trueanomaly(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
+        f_num = trueanomaly5(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
         n_num = meanmotion(mu, a_num)
 
         a_vec[j] = a_num
