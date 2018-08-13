@@ -327,3 +327,156 @@ For example::
 
 The resulting latitudes and longitudes can be directly plotted on an Earth map to visualize the satellite location with respect 
 to the Earth.
+
+====================================================
+Gauss method: Earth-centered and Sun-centered orbits
+====================================================
+
+In this section, we will show a couple of examples to determine the orbit of
+Earth satellites and Sun-orbiting minor planets, from right ascension and
+declination tracking data, using the Gauss method.
+
+gauss_method_sat
+~~~~~~~~~~~~~~~~
+
+``gauss_method_sat`` allows us to determine the orbit of an Earth satellite from
+a file containing right ascension and declination ("ra/dec", for short)
+observations in IOD format. The IOD format is described at: 
+http://www.satobs.org/position/IODformat.html. For this example, we will use the
+file "SATOBS-ML-19200716.txt"in the `example_data` folder, which corresponds to ra/dec observations of the
+ISS performed in July 2016 by Marco Langbroek, who originally posted these
+observations at the mailing list of the satobs organization
+(http://www.satobs.org).
+
+First, we import the `least_squares` submodule::
+
+    from orbitdeterminator.kep_determination.gauss_method import gauss_method_sat
+
+Then, in the string `filename` we specify the path of the file where the
+IOD-formatted data has been stored. In the `bodyname` string, we type an
+user-defined identifier for the satellite:::
+
+    # path of file of ra/dec IOD-formatted observations
+    # the example contains tracking data for ISS (25544)
+    filename = '/(full path to...)/example_data/SATOBS-ML-19200716.txt'
+
+    # body name
+    bodyname = 'ISS (25544)'
+
+Next, we select the observations that we will use for our computation. Our file
+has actually six lines, but we will select only observations 2 through 5:::
+
+    #lines of observations file to be used for preliminary orbit determination via Gauss method
+    obs_arr = [1, 4, 6]
+
+Remember that the Gauss method needs at least three ra/dec observations, so if
+selecting `obs_arr` consisted of more observations, then `gauss_method_sat`
+would take consecutive triplets. For example if we had `obs_arr = [2, 3, 4, 5]`
+then Gauss method would be performed over (2,3,4), and then over (3,4,5).
+The resulting orbital elements correspond to an average over these triplets. Now,
+we are ready to call the `gauss_method_sat` function::
+
+    x = gauss_method_sat(filename, bodyname, obs_arr)
+
+The variable `x` stores the set of Keplerian orbital elements determined from
+averaging over the consecutive observation triplets as described above. The
+on-screen output is the following:::
+
+    *** ORBIT DETERMINATION: GAUSS METHOD ***
+    Observational arc:
+    Number of observations:  3
+    First observation (UTC) :  2016-07-20 01:31:32.250
+    Last observation (UTC) :  2016-07-20 01:33:42.250
+
+    AVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T
+    Semi-major axis (a):                  6693.72282229624 km
+    Eccentricity (e):                     0.011532050419770104
+    Time of pericenter passage (tau):     2016-07-20 00:45:14.648 JDUTC
+    Argument of pericenter (omega):       252.0109594208592 deg
+    Inclination (I):                      51.60513143468057 deg
+    Longitude of Ascending Node (Omega):  253.86985926046927 deg
+    Orbital period (T):                   90.83669828522193 min
+
+Besides printing the orbital elements in human-readable format,
+`gauss_method_sat` prints a plot of the orbit.
+
+.. figure:: iss_2016_gauss.jpg
+
+If the user wants to supress the plot from the output, then the optional
+argument `plot` must be set as `plot=False` in the function call.
+
+gauss_method_mpc
+~~~~~~~~~~~~~~~~
+
+``gauss_method_mpc`` allows us to determine the orbit of a Sun-orbiting body
+(e.g., asteroid, comet, etc.) from a file containing right ascension and
+declination ("ra/dec", for short) observations in the Minor Planet Center (MPC)
+format. MPC format for optical observations is described at
+https://www.minorplanetcenter.net/iau/info/OpticalObs.html. A crucial difference
+with respect to the Earth-centered orbits is that the position of the Earth with
+respect to the Sun at the time of each observation must be known. For this, we
+use internally the JPL DE432s ephemerides via the `astropy` package
+(astropy.org). For this example, we
+will use the text file "mpc_eros_data.txt" from the `example_data` folder, which
+corresponds to 223 ra/dec observations of the Near-Earth asteroid Eros performed
+from March through July, 2016 by various observatories around the world, and
+which may be retrieved from https://www.minorplanetcenter.net/db_search.
+
+First, we import the `least_squares` submodule::
+
+    from orbitdeterminator.kep_determination.gauss_method import gauss_method_mpc
+
+Then, in the string `filename` we specify the path of the file where the
+MPC-formatted data has been stored. In the `bodyname` string, we type an
+user-defined identifier for the celestial body:::
+
+    # path of file of optical MPC-formatted observations
+    filename = '/(full path to...)/example_data/mpc_eros_data.txt'
+
+    #body name
+    bodyname = 'Eros'
+
+Next, we select the observations that we will use for our computation. Our file
+has 223 lines, but we will select only 13 observations from that file:::
+
+    #lines of observations file to be used for orbit determination
+    obs_arr = [1, 14, 15, 24, 32, 37, 68, 81, 122, 162, 184, 206, 223]
+
+Remember that the Gauss method needs at least three ra/dec observations, so if
+selecting `obs_arr` consisted of more observations, then `gauss_method_mpc`
+would take consecutive triplets. In this particular case we selected 13
+observations, so the Gauss method will be performed over the triplets
+(1, 14, 15), (14, 15, 24), etc. The resulting orbital elements correspond to an
+average over these triplets. Now, we are ready to call the `gauss_method_mpc`
+function::
+
+    x = gauss_method_mpc(filename, bodyname, obs_arr)
+
+The variable `x` stores the set of heliocentric, ecliptic Keplerian orbital
+elements determined from averaging over the consecutive observation triplets as
+described above. The on-screen output is the following:::
+
+    *** ORBIT DETERMINATION: GAUSS METHOD ***
+    Observational arc:
+    Number of observations:  13
+    First observation (UTC) :  2016-03-12 02:15:09.434
+    Last observation (UTC) :  2016-08-04 21:02:26.807
+
+    AVERAGE ORBITAL ELEMENTS (ECLIPTIC, MEAN J2000.0): a, e, taup, omega, I, Omega, T
+    Semi-major axis (a):                  1.444355337851336 au
+    Eccentricity (e):                     0.23095833398719623
+    Time of pericenter passage (tau):     2015-07-29 00:08:51.758 JDTDB
+    Pericenter distance (q):              1.1107694353356776 au
+    Apocenter distance (Q):               1.7779412403669947 au
+    Argument of pericenter (omega):       178.13786236175858 deg
+    Inclination (I):                      10.857620761026277 deg
+    Longitude of Ascending Node (Omega):  304.14390758395615 deg
+    Orbital period (T):                   631.7300241576686 days
+
+Besides printing the orbital elements in human-readable format,
+`gauss_method_mpc` prints a plot of the orbit.
+
+.. figure:: eros_gauss.jpg
+
+If the user wants to supress the plot from the output, then the optional
+argument `plot` must be set as ``plot=False`` in the function call.

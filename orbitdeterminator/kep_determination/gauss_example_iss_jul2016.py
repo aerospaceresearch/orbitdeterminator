@@ -1,4 +1,3 @@
-import numpy as np
 import gauss_method as gm
 
 # path of file of optical IOD-formatted observations
@@ -19,4 +18,5 @@ obs_arr = [1, 4, 6]
 ###select adequate index of Gauss polynomial root
 # r2_root_ind_vec[4] = 1
 
-a, e, taup, I, W, w, T = gm.gauss_method_sat(body_fname_str, body_name_str, obs_arr, refiters=10)
+# x = a, e, taup, I, W, w, T
+x = gm.gauss_method_sat(body_fname_str, body_name_str, obs_arr)
