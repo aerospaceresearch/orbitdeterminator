@@ -41,12 +41,11 @@ np.set_printoptions(precision=16)
 # convention:
 # a: semi-major axis
 # e: eccentricity
-# eps: mean longitude at epoch
 # taup: time of pericenter passage
 # Euler angles:
+# omega: argument of pericenter
 # I: inclination
 # Omega: longitude of ascending node
-# omega: argument of pericenter
 
 #rotation about the z-axis about an angle `ang`
 def rotz(ang):
@@ -738,7 +737,7 @@ def get_observations_data_sat(iod_object_data, inds):
     return obs_radec, obs_t, site_codes
 
 def earth_ephemeris(t_tdb):
-    """Compute heliocentric position of Earth at Julian date t_tdb (TDB, days),
+    """Compute heliocentric position of Earth at Julian date `t_tdb` (TDB, days),
     according to SPK kernel defined by astropy.coordinates.solar_system_ephemeris.
 
        Args:
@@ -842,18 +841,19 @@ def rhovec2radec(long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omeg
     else:
         return ra_rad, dec_rad
 
-def angle_diff_rad(a1_rad, a2_rad):
-    """Compute shortest signed difference between two angles. Code adapted
-    from https://rosettacode.org/wiki/Angle_difference_between_two_bearings#Python
+def angle_diff_rad(a1, a2):
+    """Compute shortest signed difference between two angles. Input angles
+    are assumed to be in radians. Result is returned in radians. Code adapted
+    from https://rosettacode.org/wiki/Angle_difference_between_two_bearings#Python.
 
        Args:
-            a1_rad (float): angle 1 (rad)
-            aW_rad (float): angle 2 (rad)
+            a1 (float): angle 1 in radians
+            a2 (float): angle 2 in radians
 
        Returns:
-           r (float): shortest signed difference
+           r (float): shortest signed difference in radians
     """
-    r = (a2_rad - a1_rad) % (2.0*np.pi)
+    r = (a2 - a1) % (2.0*np.pi)
     # Python modulus has same sign as divisor, which is positive here,
     # so no need to consider negative case
     if r >= np.pi:
@@ -1516,7 +1516,7 @@ def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
         tv[i] = timeobs.tdb.jd
     return tv, rv
 
-def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
+def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for minor planets (asteroids, comets,
     etc.) orbit determination from MPC-formatted ra/dec tracking data. Roots of
     8-th order Gauss polynomial are computed using np.roots function. Note that
@@ -1524,8 +1524,8 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
     root returned by np.roots is used by default.
 
        Args:
-           body_fname_str (string): path to MPC-formatted observation data file
-           body_name_str (string): user-defined name of minor planet
+           filename (string): path to MPC-formatted observation data file
+           bodyname (string): user-defined name of minor planet
            obs_arr (int vector): line numbers in data file to be processed
            refiters (int): number of refinement iterations to be performed
            r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
@@ -1535,7 +1535,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
            x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
     """
     # load MPC data for a given NEA
-    mpc_object_data = load_mpc_data(body_fname_str)
+    mpc_object_data = load_mpc_data(filename)
 
     #load MPC data of listed observatories (longitude, parallax constants C, S)
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
@@ -1658,7 +1658,7 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
         ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
         ax.scatter3D(x_Ea_vec, y_Ea_vec, z_Ea_vec, color='blue', marker='.', label='Earth orbit')
         ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5)
-        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
+        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=bodyname+' orbit')
         ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
         plt.legend()
         ax.set_xlabel('x (au)')
@@ -1669,12 +1669,12 @@ def gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
         ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
-        ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
+        ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
         plt.show()
 
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
 
-def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
+def gauss_method_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for orbit determination of Earth satellites
     from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
     Roots of 8-th order Gauss polynomial are computed using np.roots function.
@@ -1682,8 +1682,8 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
     positive root returned by np.roots is used by default.
 
        Args:
-           body_fname_str (string): path to IOD-formatted observation data file
-           body_name_str (string): user-defined name of satellite
+           filename (string): path to IOD-formatted observation data file
+           bodyname (string): user-defined name of satellite
            obs_arr (int vector): line numbers in data file to be processed
            refiters (int): number of refinement iterations to be performed
            r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
@@ -1693,7 +1693,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
            x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
     """
     # load IOD data for a given satellite
-    iod_object_data = load_iod_data(body_fname_str)
+    iod_object_data = load_iod_data(filename)
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
@@ -1793,7 +1793,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
 
         # Earth-centered orbits: satellite orbit and geocenter
         ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
-        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=body_name_str+' orbit')
+        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=bodyname+' orbit')
         ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
         plt.legend()
         ax.set_xlabel('x (km)')
@@ -1804,7 +1804,7 @@ def gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=Non
         ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
-        ax.set_title('Angles-only orbit determ. (Gauss): '+body_name_str)
+        ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
         plt.show()
 
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0

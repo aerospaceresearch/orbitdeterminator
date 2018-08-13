@@ -20,8 +20,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from scipy.optimize import least_squares
-from ellipse_fit import determine_kep, __read_file
-from gauss_method import *
+from orbitdeterminator.kep_determination.ellipse_fit import determine_kep, __read_file
+from orbitdeterminator.kep_determination.gauss_method import *
 from scipy.optimize import least_squares
 
 # compute residuals vector, with Earth's grav parameter as to-be-fitted variable
@@ -60,7 +60,7 @@ def Q(x, my_data):
 def QQ(x):
     return Q(x, data)
 
-def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
+def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
     """Earth satellites orbit determination high-level function from
     IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
     Preliminary orbit determination via Gauss method is performed.
@@ -69,8 +69,8 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
     positive root returned by np.roots is used by default.
 
        Args:
-           body_fname_str (string): path to IOD-formatted observation data file
-           body_name_str (string): user-defined name of satellite
+           filename (string): path to IOD-formatted observation data file
+           bodyname (string): user-defined name of satellite
            obs_arr (int vector): line numbers in data file to be processed in Gauss preliminary orbit determination
            r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
            obs_arr (int vector): line numbers in data file to be processed in least-squares fit
@@ -81,14 +81,14 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
            x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
     """
     # load IOD data for a given satellite
-    iod_object_data = load_iod_data(body_fname_str)
+    iod_object_data = load_iod_data(filename)
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
 
     #get preliminary orbit using Gauss method
     #q0 : a, e, taup, I, W, w, T
-    q0 = np.array(gauss_method_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
+    q0 = np.array(gauss_method_sat(filename, bodyname, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
     x0 = q0[0:6]
     x0[3:6] = np.deg2rad(x0[3:6])
 
@@ -157,7 +157,7 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
 
         # Earth-centered orbits: satellite orbit and geocenter
         ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
-        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5, label=body_name_str+' orbit')
+        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5, label=bodyname+' orbit')
         plt.legend()
         ax.set_xlabel('x (km)')
         ax.set_ylabel('y (km)')
@@ -167,12 +167,12 @@ def gauss_LS_sat(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
         ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5))
-        ax.set_title('Satellite orbit (Gauss+LS): '+body_name_str)
+        ax.set_title('Satellite orbit (Gauss+LS): '+bodyname)
         plt.show()
 
     return Q_ls.x[0], Q_ls.x[1], Time(Q_ls.x[2], format='jd'), np.rad2deg(Q_ls.x[3]), np.rad2deg(Q_ls.x[4]), np.rad2deg(Q_ls.x[5]), 2.0*np.pi/n_num/60.0
 
-def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
+def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=None, gaussiters=0, plot=True):
     """Minor planets orbit determination high-level function from MPC-formatted
     ra/dec tracking data. Preliminary orbit determination via Gauss method is
     performed. Roots of 8-th order Gauss polynomial are computed using np.roots
@@ -180,8 +180,8 @@ def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
     the first positive root returned by np.roots is used by default.
 
        Args:
-           body_fname_str (string): path to MPC-formatted observation data file
-           body_name_str (string): user-defined name of minor planet
+           filename (string): path to MPC-formatted observation data file
+           bodyname (string): user-defined name of minor planet
            obs_arr (int vector): line numbers in data file to be processed in Gauss preliminary orbit determination
            r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
            obs_arr (int vector): line numbers in data file to be processed in least-squares fit
@@ -192,13 +192,13 @@ def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
            x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
     """
     # load MPC data for a given NEA
-    mpc_object_data = load_mpc_data(body_fname_str)
+    mpc_object_data = load_mpc_data(filename)
 
     #load MPC data of listed observatories (longitude, parallax constants C, S)
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
     #x0 : a, e, taup, I, W, w
-    x0 = np.array(gauss_method_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
+    x0 = np.array(gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
 
     x0[3:6] = np.deg2rad(x0[3:6])
 
@@ -277,7 +277,7 @@ def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
         # Sun-centered orbits: Computed orbit and Earth's
         ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
         ax.plot3D(x_Ea_orb_vec, y_Ea_orb_vec, z_Ea_orb_vec, color='blue', linewidth=0.5, label='Earth orbit')
-        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5, label=body_name_str+' orbit')
+        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5, label=bodyname+' orbit')
         plt.legend()
         ax.set_xlabel('x (au)')
         ax.set_ylabel('y (au)')
@@ -287,7 +287,7 @@ def gauss_LS_mpc(body_fname_str, body_name_str, obs_arr, r2_root_ind_vec=None, o
         ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
-        ax.set_title('Angles-only orbit determ. (Gauss+LS): '+body_name_str)
+        ax.set_title('Angles-only orbit determ. (Gauss+LS): '+bodyname)
         plt.show()
 
     return Q_ls.x[0], Q_ls.x[1], Time(Q_ls.x[2], format='jd'), np.rad2deg(Q_ls.x[3]), np.rad2deg(Q_ls.x[4]), np.rad2deg(Q_ls.x[5]), 2.0*np.pi/n_num

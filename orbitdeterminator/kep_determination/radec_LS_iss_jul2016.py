@@ -2,7 +2,6 @@
 # in order to compute the orbit of an Earth-orbiting satellite, from ra/dec tracking data
 
 from least_squares import gauss_LS_sat
-from numpy import zeros
 
 # body name
 body_name_str = 'ISS (25544)'
