@@ -1,4 +1,4 @@
-from gauss_method import gauss_LS_mpc
+from least_squares import gauss_LS_mpc
 from numpy import zeros, array
 
 ###path of file of optical MPC-formatted observations
