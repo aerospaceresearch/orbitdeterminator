@@ -635,8 +635,8 @@ against *all* observations in the file. The output is the following::
     Longitude of Ascending Node (Omega):  304.3310255890526 deg
     Orbital period (T):                   643.0932691074535 days
 
-.. figure:: gauss_ls_eros_radec_res.jpg
-.. figure:: gauss_ls_eros_xyz.jpg
+.. figure:: eros_ls_radec_res.jpg
+.. figure:: eros_ls_xyz.jpg
 
 The plots may be supressed from the output via the optional argument `plot=False`,
 whose default value is set to `True`.
