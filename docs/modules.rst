@@ -37,14 +37,14 @@ Ellipse Fit
 .. automodule:: orbitdeterminator.kep_determination.ellipse_fit
    :members:
 
-Least squares
-~~~~~~~~~~~~~~~~~~~~
-.. automodule:: orbitdeterminator.kep_determination.least_squares
-   :members:
-
 Gauss method
 ~~~~~~~~~~~~~~~~~~~~
 .. automodule:: orbitdeterminator.kep_determination.gauss_method
+   :members:
+
+Least squares
+~~~~~~~~~~~~~~~~~~~~
+.. automodule:: orbitdeterminator.kep_determination.least_squares
    :members:
 
 Propagation:
