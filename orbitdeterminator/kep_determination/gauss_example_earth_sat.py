@@ -1,4 +1,3 @@
-import numpy as np
 import gauss_method as gm
 
 # path of file of optical IOD-formatted observations

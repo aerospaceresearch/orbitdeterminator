@@ -2,16 +2,14 @@
 declination measurements of celestial bodies. Supports both Earth-centered and
 Sun-centered orbits."""
 
-import math
 import numpy as np
-from astropy.coordinates import Longitude, Angle, SkyCoord
+from astropy.coordinates import Longitude, SkyCoord
 from astropy.coordinates import solar_system_ephemeris, get_body_barycentric
 from astropy import units as uts
 from astropy import constants as cts
 from astropy.time import Time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
