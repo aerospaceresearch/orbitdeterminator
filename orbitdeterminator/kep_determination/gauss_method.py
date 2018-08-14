@@ -10,6 +10,7 @@ from astropy import constants as cts
 from astropy.time import Time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
@@ -1319,7 +1320,7 @@ def radec_obs_vec_sat(inds, iod_object_data):
            rov (1xlen(inds) array): vector of ra/dec observed values
     """
     rov = np.zeros((2*len(inds)))
-    for i in range(0,len(inds)):
+    for i in inds:
         indm1 = inds[i]-1
         # extract observations data
         td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
