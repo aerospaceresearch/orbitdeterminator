@@ -16,4 +16,4 @@ obs_arr = [1, 14, 15, 24, 32, 37, 68, 81, 122, 162, 184, 206, 223] #2016 subset
 # r2_root_ind_vec[4] = 1
 
 # x = a_mean, e_mean, taup_mean, I_mean, W_mean, w_mean, T_mean
-x = gm.gauss_method_mpc(filename, bodyname, obs_arr)
+x = gm.gauss_method_mpc(filename, bodyname, obs_arr, refiters=10)

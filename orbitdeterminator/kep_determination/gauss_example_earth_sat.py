@@ -1,10 +1,10 @@
 import gauss_method as gm
 
 # path of file of optical IOD-formatted observations
-body_fname_str = '../example_data/iod_data_af2.txt'
+filename = '../example_data/iod_data_af2.txt'
 
 #body name
-body_name_str = '43145'
+bodyname = '43145'
 
 #lines of observations file to be used for orbit determination
 obs_arr = [1, 3, 4, 6, 8] # LB observations of 21799 91 076C on 2018 Jul 22
@@ -15,4 +15,5 @@ obs_arr = [1, 3, 4, 6, 8] # LB observations of 21799 91 076C on 2018 Jul 22
 ###select adequate index of Gauss polynomial root
 # r2_root_ind_vec[4] = 1
 
-a, e, taup, I, W, w, T = gm.gauss_method_sat(body_fname_str, body_name_str, obs_arr, refiters=5)
+# x = a, e, taup, I, W, w, T
+x = gm.gauss_method_sat(filename, bodyname, obs_arr, refiters=10)
