@@ -18,17 +18,13 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import minimize
 from scipy.optimize import least_squares
 from orbitdeterminator.kep_determination.ellipse_fit import determine_kep, __read_file
 from orbitdeterminator.kep_determination.gauss_method import *
-from scipy.optimize import least_squares
 
 # compute residuals vector, with Earth's grav parameter as to-be-fitted variable
 def res_vec(x, my_data):
-
     rv = np.zeros((3*my_data.shape[0]))
-    
     for i in range(0,my_data.shape[0]-1):
         # observed xyz values
         xyz_obs = my_data[i,1:4]
