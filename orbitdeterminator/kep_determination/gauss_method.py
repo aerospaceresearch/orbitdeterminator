@@ -1825,7 +1825,7 @@ def read_args():
     parser.add_argument('-r', '--root_index', nargs='*', help="user selection for multiple roots of Gauss polynomial (see docs for more information)", default=None)
     parser.add_argument('-i', '--iterations', type=int, help="number of iterations of Gauss method refinement", default=0)
     # parser.add_argument('-p', '--plot', type=bool, help="True for plot displaying; False otherwise", default=True)
-    parser.add_argument('-p', '--plot', default=False, type=lambda x: (str(x).lower() == 'true'))
+    parser.add_argument('-p', '--plot', default=True, type=lambda x: (str(x).lower() == 'true'))
     return parser.parse_args()
 
 if __name__ == "__main__":
