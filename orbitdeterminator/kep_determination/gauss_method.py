@@ -1674,7 +1674,7 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
 
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
 
-def gauss_method_sat(filename, obs_arr, bodyname=None, r2_root_ind_vec=None, refiters=0, plot=True):
+def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for orbit determination of Earth satellites
     from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
     Roots of 8-th order Gauss polynomial are computed using np.roots function.
@@ -1694,6 +1694,14 @@ def gauss_method_sat(filename, obs_arr, bodyname=None, r2_root_ind_vec=None, ref
     """
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(filename)
+
+    # handle default behavior for obs_arr
+    if obs_arr is None:
+        obs_arr = list(range(1, len(iod_object_data)+1))
+    # #the total number of observations used
+    nobs = len(obs_arr)
+
+    # get object name
     if bodyname is None:
         bodyname = iod_object_data['object'][obs_arr[0]-1].decode()
 
@@ -1702,9 +1710,6 @@ def gauss_method_sat(filename, obs_arr, bodyname=None, r2_root_ind_vec=None, ref
 
     # Earth's G*m value
     mu = mu_Earth
-
-    # #the total number of observations used
-    nobs = len(obs_arr)
 
     # if r2_root_ind_vec was not specified, then use always the first positive root by default
     if r2_root_ind_vec is None:
@@ -1819,17 +1824,19 @@ def gauss_method_sat(filename, obs_arr, bodyname=None, r2_root_ind_vec=None, ref
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file_path', type=str, help="path to IOD-formatted data file", default='../example_data/SATOBS-ML-19200716.txt')
-    # parser.add_argument('-o', '--obs_array', nargs='+', help="list of lines in file to be read")
-    parser.add_argument('-o', '--obs_array', help="list of lines in file to be read", type=str, default=[1, 4, 6])
+    parser.add_argument('-o', '--obs_array', help="list of lines in file to be read", type=str, default=None)
     parser.add_argument('-b', '--body_name', type=str, help="observed object/body name", default=None)
     parser.add_argument('-r', '--root_index', nargs='*', help="user selection for multiple roots of Gauss polynomial (see docs for more information)", default=None)
     parser.add_argument('-i', '--iterations', type=int, help="number of iterations of Gauss method refinement", default=0)
-    # parser.add_argument('-p', '--plot', type=bool, help="True for plot displaying; False otherwise", default=True)
     parser.add_argument('-p', '--plot', default=True, type=lambda x: (str(x).lower() == 'true'))
     return parser.parse_args()
 
 if __name__ == "__main__":
 
     args = read_args()
-    obs_arr = [int(item) for item in args.obs_array.split(',')]
-    gauss_method_sat(args.file_path, obs_arr, bodyname=args.body_name, r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
+    if args.obs_array is None:
+        gauss_method_sat(args.file_path, bodyname=args.body_name, r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
+    else:
+        obs_arr = [int(item) for item in args.obs_array.split(',')]
+        gauss_method_sat(args.file_path, obs_arr=obs_arr, bodyname=args.body_name, r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
+
