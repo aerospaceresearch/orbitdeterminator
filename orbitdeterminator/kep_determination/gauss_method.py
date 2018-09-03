@@ -14,6 +14,7 @@ from mpl_toolkits import mplot3d
 from poliastro.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
+import argparse
 
 # declare astronomical constants in appropriate units
 au = cts.au.to(uts.Unit('km')).value
@@ -1673,7 +1674,7 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
 
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
 
-def gauss_method_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
+def gauss_method_sat(filename, obs_arr, bodyname=None, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for orbit determination of Earth satellites
     from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
     Roots of 8-th order Gauss polynomial are computed using np.roots function.
@@ -1682,8 +1683,8 @@ def gauss_method_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
 
        Args:
            filename (string): path to IOD-formatted observation data file
-           bodyname (string): user-defined name of satellite
            obs_arr (int vector): line numbers in data file to be processed
+           bodyname (string): user-defined name of satellite
            refiters (int): number of refinement iterations to be performed
            r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
            plot (bool): if True, plots data.
@@ -1693,6 +1694,8 @@ def gauss_method_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
     """
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(filename)
+    if bodyname is None:
+        bodyname = iod_object_data['object'][obs_arr[0]-1].decode()
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
@@ -1812,3 +1815,21 @@ def gauss_method_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
 #       this implies saving all UTC times and their TDB equivalencies
 # TODO: allow user to specify ephemerides; currently de432s is always used
 # TODO: allow other IOD angle subformats
+
+def read_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file_path', type=str, help="path to IOD-formatted data file", default='../example_data/SATOBS-ML-19200716.txt')
+    # parser.add_argument('-o', '--obs_array', nargs='+', help="list of lines in file to be read")
+    parser.add_argument('-o', '--obs_array', help="list of lines in file to be read", type=str, default=[1, 4, 6])
+    parser.add_argument('-b', '--body_name', type=str, help="observed object/body name", default=None)
+    parser.add_argument('-r', '--root_index', nargs='*', help="user selection for multiple roots of Gauss polynomial (see docs for more information)", default=None)
+    parser.add_argument('-i', '--iterations', type=int, help="number of iterations of Gauss method refinement", default=0)
+    # parser.add_argument('-p', '--plot', type=bool, help="True for plot displaying; False otherwise", default=True)
+    parser.add_argument('-p', '--plot', default=False, type=lambda x: (str(x).lower() == 'true'))
+    return parser.parse_args()
+
+if __name__ == "__main__":
+
+    args = read_args()
+    obs_arr = [int(item) for item in args.obs_array.split(',')]
+    gauss_method_sat(args.file_path, obs_arr, bodyname=args.body_name, r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
