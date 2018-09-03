@@ -4,7 +4,7 @@ import gauss_method as gm
 filename = '../example_data/iod_data_af2.txt'
 
 #body name
-bodyname = '43145'
+# bodyname = '21799'
 
 #lines of observations file to be used for orbit determination
 obs_arr = [1, 3, 4, 6, 8] # LB observations of 21799 91 076C on 2018 Jul 22
@@ -16,4 +16,4 @@ obs_arr = [1, 3, 4, 6, 8] # LB observations of 21799 91 076C on 2018 Jul 22
 # r2_root_ind_vec[4] = 1
 
 # x = a, e, taup, I, W, w, T
-x = gm.gauss_method_sat(filename, bodyname, obs_arr, refiters=10)
+x = gm.gauss_method_sat(filename, obs_arr, refiters=10)
