@@ -8,4 +8,24 @@
 
 __orbitdeterminator__ is a package written in python3 for determining orbit of satellites based on positional data. Various filtering and determination algorithms are available for satellite operators to choose from.  
 
-See [here](http://orbit-determinator.readthedocs.io/en/latest/) for installation instructions and documentation.
+### Installation Instructions
+Run the following commands to install orbitdeterminator:
+
+```
+# clone the repo
+git clone https://github.com/aerospaceresearch/orbitdeterminator/
+
+# cd into the repo
+cd orbitdeterminator
+
+# make a virtual environment
+virtualenv .
+
+# activate the virtual environment
+source bin/activate
+
+# install the module
+python setup.py install
+```
+
+See [here](http://orbit-determinator.readthedocs.io/en/latest/) for further documentation.
