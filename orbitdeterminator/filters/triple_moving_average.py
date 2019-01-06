@@ -62,22 +62,22 @@ def triple_moving_average(signal_array, window_size):
 
     return filtered_signal
 
-def generate_filtered_data(filename, window):
+def generate_filtered_data(in_data, window):
     '''
     Apply the filter and generate the filtered data
 
     Args:
-        filename (string): the name of the .csv file containing the positional data
+        in_data (string): numpy array containing the positional data
         window (int): window size applied into the filter
 
     Returns:
         numpy array: the final filtered array
     '''
-    averaged_x = (triple_moving_average(list(filename[:,1]), window))
-    averaged_y = triple_moving_average(list(filename[:,2]), window)
-    averaged_z = triple_moving_average(list(filename[:,3]), window)
+    averaged_x = (triple_moving_average(list(in_data[:,1]), window))
+    averaged_y = triple_moving_average(list(in_data[:,2]), window)
+    averaged_z = triple_moving_average(list(in_data[:,3]), window)
 
-    output = np.hstack(((filename[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
+    output = np.hstack(((in_data[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
         (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
 
     return output
