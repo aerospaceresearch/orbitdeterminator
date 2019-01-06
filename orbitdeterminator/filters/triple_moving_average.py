@@ -87,7 +87,16 @@ if __name__ == "__main__":
 
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
 
+    import time
+    time_start = time.clock()
     output = generate_filtered_data(signal, 2)
+    time_stop = time.clock()
+
+    print("File {} processed in {} seconds.".format(
+            sys.argv[1],
+            time_stop - time_start
+        )
+    )
     np.savetxt("filtered.csv", output, delimiter=",")
 
     print("Filtered output saved as filtered.csv")
