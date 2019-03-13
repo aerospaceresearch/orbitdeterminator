@@ -55,7 +55,7 @@ workon <venv-name>
 Install other requirements using pip package manager:
 pip install -r requirements.txt
 install python3-tk(for ubuntu users):sudo apt-get install python3-tk
-pip install <package_name(any package you want to install in this virtual environment e.g. orbitdeterminator) >
+pip install <package_name(any package you want to install in this virtual environment e.g. orbitdeterminator)>
 
 # use pytest to verify if everything has been setup correctly.
 
