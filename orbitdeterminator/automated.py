@@ -54,7 +54,7 @@ def stage(processed):
     for file in processed:
         print("staging")
         run(
-            "cd %s;git add %s" % (SOURCE_ABSOLUTE, file),
+            "cd %s;git add '%s'" % (SOURCE_ABSOLUTE, file),
             stdout=PIPE, stderr=PIPE,
             universal_newlines=True,
             shell=True
@@ -166,7 +166,7 @@ def main():
                 print("\nAll untracked files have been processed")
             print("Add new files in /src folder to process them")
             time_elapsed = 0
-            timeout = 20
+            timeout = 30
             while (time_elapsed <= timeout and not raw_files):
                 sys.stdout.write("\r")
                 sys.stdout.write("-> Timeout in - {:2d} s".format(timeout - time_elapsed))
