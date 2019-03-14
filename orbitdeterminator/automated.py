@@ -6,6 +6,8 @@ along with a plot and a filtered csv data file. Both the generated results lie i
 '''
 
 import os
+import time
+import sys
 import numpy as np
 import matplotlib as mpl
 from subprocess import (PIPE, run)
@@ -154,11 +156,28 @@ def process(data_file, error_apriori, name):
 
 def main():
 
+    number_untracked = 0
     while True:
         raw_files = untracked_files()
         if not raw_files:
+            if (number_untracked == 0):
+                print("\nNo unprocessed file found in src/folder")
+            else:
+                print("\nAll untracked files have been processed")
+            print("Add new files in /src folder to process them")
+            time_elapsed = 0
+            timeout = 20
+            while (time_elapsed <= timeout and not raw_files):
+                sys.stdout.write("\r")
+                sys.stdout.write("-> Timeout in - {:2d} s".format(timeout - time_elapsed))
+                sys.stdout.flush()
+                time.sleep(1)
+                time_elapsed += 1
+                raw_files = untracked_files()
+            sys.stdout.write("\r                        \n")
             pass
-        else:
+        if raw_files:
+            number_untracked += len(raw_files)
             for file in raw_files:
                 print("processing")
                 a = read_data.load_data(SOURCE_ABSOLUTE + "/" + file)
@@ -166,6 +185,10 @@ def main():
                 process(a, 10.0, str(file)[:-4])
                 print("File : %s has been processed \n \n" % file)
             stage(raw_files)
+            continue
+        print("No new unprocessed file was added, program is now exiting due to timeout!")
+        print("Total {} untracked files were processed".format(number_untracked))
+        break
 
 if __name__ == "__main__":
     main()
