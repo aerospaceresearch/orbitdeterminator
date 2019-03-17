@@ -26,6 +26,7 @@ def insertIntoTable(tableName,datafile,host,databaseName,userName,Password=None)
                 c='\t'
             time,x,y,z=row.split(c)
             cursor.execute("insert into "+tableName+" values (%s,%s,%s,%s,%s)",(satelliteid,time,x,y,z))
+            mydb.commit()
             print("Entered ",i,"th term successfully")
             i=i+1
             
