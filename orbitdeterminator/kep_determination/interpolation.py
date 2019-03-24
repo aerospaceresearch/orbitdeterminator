@@ -50,7 +50,7 @@ def main(data_points):
     Apply the whole process of interpolation for keplerian element computation
 
     Args:
-        data_points (numpy array): positional data set in format of (x, y, z, time)
+        data_points (numpy array): positional data set in format of (time, x, y, z)
 
     Returns:
         numpy array: computed keplerian elements for every point of the orbit
