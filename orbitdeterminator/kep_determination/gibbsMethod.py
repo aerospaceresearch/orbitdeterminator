@@ -111,7 +111,7 @@ class Gibbs(object):
                 myfile.seek(pointer)
                 break
 
-        kep = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        kep = np.zeros((6, 1))
         size = self.find_length(path)
         upto = size-2                    # size-2
         # Size might not be enough
@@ -160,7 +160,8 @@ class Gibbs(object):
             v2 = self.gibbs(r1, r2, r3)
             ele = self.orbital_elements(r2, v2)
             # Add to keplerian elements to later on find average
-            kep = [kep[i] + ele[i] for i in range(6)]
+            for j in range(6):
+                kep[j, 0] += ele[j]
             data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
             final[i,:] = data
 
@@ -169,11 +170,12 @@ class Gibbs(object):
             i = i + 1
 
         # Now find average and return data        
-        kep = [x / upto for x in kep]
-        # return kep
+        for j in range(6):
+            kep[j, 0] /= upto
+        return kep
 
         # Returning r and v array for now
-        return final
+        # return final
 
     @classmethod
     def magnitude(self, vec):
@@ -329,7 +331,13 @@ class Gibbs(object):
         vr = self.dot_product(r, v)/mag_r
         h = self.cross_product(r, v)
         mag_h = self.magnitude(h)
-        inclination = math.acos(h[2]/mag_h)*(180/pi)
+        # Requires further research, not put in try block because one set should not affect entire calculation
+        if((h[2]/mag_h) <= 1 and (h[2]/mag_h) >= -1):
+            inclination = math.acos(h[2]/mag_h)*(180/pi)
+        elif((h[2]/mag_h) > 1):
+            inclination = 0
+        else:
+            inclination = 180
 
         N = self.cross_product([0,0,1], h)
         mag_N = self.magnitude(N)
@@ -344,11 +352,23 @@ class Gibbs(object):
         eccentricity = [i/meu for i in vec]
         mag_e = self.magnitude(eccentricity)
 
-        perigee = math.acos(self.dot_product(N,eccentricity)/(mag_N*mag_e))*(180/pi)
+        # Requires further research, not put in try block because one set should not affect entire calculation
+        if((self.dot_product(N,eccentricity)/(mag_N*mag_e)) <= 1 and (self.dot_product(N,eccentricity)/(mag_N*mag_e)) >= -1):
+            perigee = math.acos(self.dot_product(N,eccentricity)/(mag_N*mag_e))*(180/pi)
+        elif((self.dot_product(N,eccentricity)/(mag_N*mag_e)) > 1):
+            perigee = 0
+        else:
+            perigee = 180
         if(eccentricity[2] < 0):
             perigee = 360 - perigee
 
-        anomaly = math.acos(self.dot_product(eccentricity,r)/(mag_e*mag_r))*(180/pi)
+        # Requires further research, not put in try block because one set should not affect entire calculation
+        if((self.dot_product(eccentricity,r)/(mag_e*mag_r)) <= 1 and (self.dot_product(eccentricity,r)/(mag_e*mag_r)) >= -1):
+            anomaly = math.acos(self.dot_product(eccentricity,r)/(mag_e*mag_r))*(180/pi)
+        elif(self.dot_product(eccentricity,r)/(mag_e*mag_r) > 1):
+            anomaly = 0
+        else:
+            anomaly = 180
         if(vr < 0):
             anomaly = 360 - anomaly
 
@@ -357,9 +377,61 @@ class Gibbs(object):
         axis = (rp+ra)/2
 
         # Following format trend from test_gibbsMethod file
-        return [axis, inclination, ascension, mag_e, perigee, anomaly]
+        # return [axis, inclination, ascension, mag_e, perigee, anomaly]
         # Following format trend from lamberts_kalman file
-        # return [axis, mag_e, inclination, perigee, ascension, anomaly]
+        return [axis, mag_e, inclination, perigee, ascension, anomaly]
+
+def gibbs_get_kep(dataset):
+    ''' 
+    Determines keplerian elements using Gibbs 3 vector method.
+
+    Args:
+        data(nx3 numpy array): A numpy array of points in the format [x y z].
+
+    Returns:
+        (kep) - The keplerian elements as 1x6 numpy array.
+
+        For the keplerian elements:
+        kep[0] - semi-major axis (in whatever units the data was provided in)
+        kep[1] - eccentricity
+        kep[2] - inclination (in degrees)
+        kep[3] - argument of periapsis (in degrees)
+        kep[4] - right ascension of ascending node (in degrees)
+        kep[5] - true anomaly of the first row in the data (in degrees)
+    '''
+    final = []
+    kep = np.zeros((6, 1))
+    r1 = [dataset[0,0], dataset[0,1], dataset[0,2]]
+    r2 = [dataset[1,0], dataset[1,1], dataset[1,2]]
+
+    i = 0
+    upto = dataset.shape[0] - 2
+    # Size might not be enough
+    try:
+        final = np.zeros((upto, 6))
+    except ValueError:
+        print("Enough data samples not present")
+
+    while(i < upto):
+        r3 = [dataset[i+2,0], dataset[i+2,1], dataset[i+2,2]]
+        obj1 = Gibbs()
+        v2 = obj1.gibbs(r1, r2, r3)
+        ele = obj1.orbital_elements(r2, v2)
+        del(obj1)
+        # Add to keplerian elements to later on find average
+        for j in range(6):
+            kep[j, 0] += ele[j]
+        data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
+        final[i,:] = data
+
+        r1 = r2
+        r2 = r3
+        i = i + 1
+
+    # Now find average and return data        
+    for j in range(6):
+        kep[j, 0] /= upto
+    return kep
 
 # if __name__ == "__main__":
 #     filename = "ISS.csv"

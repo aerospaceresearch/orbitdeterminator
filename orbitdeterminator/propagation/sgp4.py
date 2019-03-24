@@ -25,6 +25,13 @@ ge = 398600.8           # Earth gravitational constant
 CK2 = 1.0826158e-3/2.0
 CK4 = -3.0*-1.65597e-6/8.0
 
+def rev_per_day(axis):
+    # mean motion (revolution per day)
+    t = 2*pi*math.sqrt(axis**3/meu)
+    n = 1/t
+    n = n*86400                     # 86400 seconds in a day
+    return n
+
 class Error(Exception):
    '''Base class for the exceptions.'''
    pass
@@ -381,7 +388,7 @@ class SGP4(object):
         del(gibbs)
 
         # inclination
-        inc = float("{0:.4f}".format(ele[1]))
+        inc = float("{0:.4f}".format(ele[2]))
         if(inc < 10.0):
             inc = str("  ") + str(inc)
         elif(inc < 100.0):
@@ -389,7 +396,7 @@ class SGP4(object):
         line2[8:16] = str(inc)
 
         # right ascension of ascending node
-        asc = float("{0:.4f}".format(ele[2]))
+        asc = float("{0:.4f}".format(ele[4]))
         if(asc < 10.0):
             asc = str("  ") + str(asc)
         elif(asc < 100.0):
@@ -397,12 +404,12 @@ class SGP4(object):
         line2[17:25] = str(asc)
 
         # eccentricity
-        e = list("{0:.7f}".format(ele[3]))
+        e = list("{0:.7f}".format(ele[1]))
         e = str("".join(e[2:]))
         line2[26:33] = e
 
         # argument of perigee
-        per = float("{0:.4f}".format(ele[4]))
+        per = float("{0:.4f}".format(ele[3]))
         if(per < 10.0):
             per = str("  ") + str(per)
         elif(per < 100.0):
