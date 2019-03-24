@@ -31,7 +31,16 @@ class Gibbs(object):
         Returns:
             list: vector converted to float values
         '''
-        return [float(vec[1]), float(vec[2]), float(vec[3])]
+        a = 0.0
+        b = 0.0
+        c = 0.0
+        try:
+            a = float(vec[1])
+            b = float(vec[2])
+            c = float(vec[3])
+        except ValueError:
+            print("Double check file format!")
+        return([a, b, c])
 
     @classmethod
     def find_length(self, path):
@@ -51,11 +60,24 @@ class Gibbs(object):
         Returns:
             int: length of file
         '''
-        length = open(path, 'r')
-        length.readline()       # it is used to remove the header line
+        myfile = open(path, 'r')
 
+        #To remove all headers
+        while(1):
+            pointer = myfile.tell()
+            tempstr = myfile.readline()
+            # EOF reached
+            if(tempstr == ""):
+                break
+            # If it contains only those literals required to make a number then this line might be start of data
+            if(all(c.isdigit() or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
+                # Undo read and break so that this data gets included in size
+                myfile.seek(pointer)
+                break
+
+        # Now read data lines and find size
         size = 0
-        while(length.readline()):
+        while(myfile.readline()):
             size = size + 1
 
         return size
@@ -76,21 +98,69 @@ class Gibbs(object):
             numpy.ndarray: list of all pair of position and velocity vector
         '''
         myfile = open(path, 'r')
-        myfile.readline()           # it is used to remove the header line
+        #To remove all headers
+        while(1):
+            pointer = myfile.tell()
+            tempstr = myfile.readline()
+            # EOF reached
+            if(tempstr == ""):
+                break
+            # If it contains only those literals required to make a number then this line might be start of data
+            if(all(c.isdigit() or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
+                # Undo read and break so that this data gets included in size
+                myfile.seek(pointer)
+                break
 
+        kep = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         size = self.find_length(path)
         upto = size-2                    # size-2
-        final = np.zeros((upto, 6))
+        # Size might not be enough
+        try:
+            final = np.zeros((upto, 6))
+        except ValueError:
+            print("Enough data samples not present")
 
-        r1 = self.convert_list(re.split('\t|\n', myfile.readline()))
-        r2 = self.convert_list(re.split('\t|\n', myfile.readline()))
+        # Read line reads with '\n' as well which should not get split
+        str1 = myfile.readline().replace('\n', '')
+        str2 = myfile.readline().replace('\n', '')
+        # Lines end with "\r\n" in windows, so for safety measure
+        str1 = str1.replace('\r', '')
+        str2 = str2.replace('\r', '')
+
+        r1 = []
+        r2 = []
+        # Check if files are comma delimited
+        if("," in str1):
+            str1 = str1.replace(' ', '')
+            str2 = str2.replace(' ', '')
+            str1 = str1.replace('\t', '')
+            str2 = str2.replace('\t', '')
+            # Split on files delimited with comma
+            r1 = self.convert_list(re.split(',', str1))
+            r2 = self.convert_list(re.split(',', str2))
+        else:
+            # Split on files delimited with tabs and space
+            r1 = self.convert_list(re.split('\t|\s', str1))
+            r2 = self.convert_list(re.split('\t|\s', str2))
 
         i = 0
         while(i < upto):
-            r3 = self.convert_list(re.split('\t|\n', myfile.readline()))
+            str3 = myfile.readline().replace('\n', '')
+            str3 = str3.replace('\r', '')
+            r3 = []
+            # Check if files are comma delimited
+            if("," in str1):
+                str3 = str1.replace(' ', '')
+                str3 = str1.replace('\t', '')
+                # Split on files delimited with comma
+                r3 = self.convert_list(re.split(',', str3))
+            else:
+                # Split on files delimited with tabs and space
+                r3 = self.convert_list(re.split('\t|\s', str3))
             v2 = self.gibbs(r1, r2, r3)
             ele = self.orbital_elements(r2, v2)
-            print(ele)
+            # Add to keplerian elements to later on find average
+            kep = [kep[i] + ele[i] for i in range(6)]
             data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
             final[i,:] = data
 
@@ -98,6 +168,11 @@ class Gibbs(object):
             r2 = r3
             i = i + 1
 
+        # Now find average and return data        
+        kep = [x / upto for x in kep]
+        # return kep
+
+        # Returning r and v array for now
         return final
 
     @classmethod
@@ -281,12 +356,16 @@ class Gibbs(object):
         ra = mag_h**2/(meu*(1-mag_e))
         axis = (rp+ra)/2
 
+        # Following format trend from test_gibbsMethod file
         return [axis, inclination, ascension, mag_e, perigee, anomaly]
+        # Following format trend from lamberts_kalman file
+        # return [axis, mag_e, inclination, perigee, ascension, anomaly]
 
 # if __name__ == "__main__":
-#     filename = "orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv"
+#     filename = "ISS.csv"
 #     path = "../example_data/" + filename
-#
+
 #     obj = Gibbs()
 #     vector = obj.read_file(path)
+#     print(vector)
 #     del(obj)
