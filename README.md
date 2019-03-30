@@ -12,7 +12,9 @@ __orbitdeterminator__ is a package written in python3 for determining orbit of s
 
 ##### Virtual environment setup
 For this guide we will be using **miniconda**
+
 **Step 1**: Install miniconda using script and instruction [here](https://docs.conda.io/en/latest/miniconda.html)
+
 **Step 2**: After installation, create a virtualenv with python3.5 as
 ```
 conda create -n env_name python=3.5.2
@@ -24,6 +26,7 @@ conda activate env_name
 *Rest of the guide will assume that virtualenv is activated
 #### Linux Users
 Run the following commands to install orbitdeterminator:
+
 **Step 1**: Clone the repository
 ```
 git clone https://github.com/aerospaceresearch/orbitdeterminator/
@@ -51,6 +54,7 @@ pytest
 If guide is followed correctly then pytest will not show any failed test case. After this, program can be used (to learn how to use the program check orbitdeterminator tutorials [here](https://orbit-determinator.readthedocs.io/en/latest/examples.html))
 #### Windows/macOS Users
 All the steps are same except for **Step 3** from Linux Users guide
+
 For **Step 3**, instead of using pip use conda to install pykep and matplotlib
 ```
 conda install pykep==2.1
