@@ -8,10 +8,10 @@
 
 __orbitdeterminator__ is a package written in python3 for determining orbit of satellites based on positional data. Various filtering and determination algorithms are available for satellite operators to choose from.  
 
-### Installation Instructions
+## Installation Instructions
 
-##### Virtual environment setup
-For this guide we will be using **miniconda**
+### Virtual environment setup
+For this guide we will be using **miniconda**, you are free to use any virtual environment setup
 
 **Step 1**: Install miniconda using script and instruction [here](https://docs.conda.io/en/latest/miniconda.html)
 
@@ -24,7 +24,7 @@ conda create -n env_name python=3.5.2
 conda activate env_name
 ```
 *Rest of the guide will assume that virtualenv is activated
-#### Linux Users
+### Linux Users
 Run the following commands to install orbitdeterminator:
 
 **Step 1**: Clone the repository
@@ -52,10 +52,10 @@ pip install -r requirements.txt
 pytest
 ```
 If guide is followed correctly then pytest will not show any failed test case. After this, program can be used (to learn how to use the program check orbitdeterminator tutorials [here](https://orbit-determinator.readthedocs.io/en/latest/examples.html))
-#### Windows/macOS Users
+### Windows/macOS Users
 All the steps are same except for **Step 3** from Linux Users guide
 
-For **Step 3**, instead of using pip use conda to install pykep and matplotlib
+For **Step 3**, instead of using pip use conda to install **pykep** and **matplotlib**
 ```
 conda install pykep==2.1
 conda install matplotlib
@@ -64,3 +64,6 @@ Now, remove these two dependencies from requirements.txt and then run
 ```
 pip install -r requirements.txt
 ```
+#### Alternate Method for Windows/macOS Users
+
+If you don't want to use conda to install **pykep** and **matplotlib**, then you can just build pykep from source with instructions from their official website [here](https://esa.github.io/pykep/installation.html), and remove pykep as dependency from requirement file. After this you can follow guide for Linux users above.
