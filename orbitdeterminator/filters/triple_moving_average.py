@@ -47,15 +47,14 @@ def triple_moving_average(signal_array, window_size):
     '''
     filtered_signal = []
     arr_len = len(signal_array)
-    for point in signal_array:
-        if (signal_array.index(point) < window_size or signal_array.index(point) > arr_len - window_size ):
+    for index, point in enumerate(signal_array):
+        if (index < window_size or index > arr_len - window_size ):
             filtered_signal.append(point)
         else:
             A, B = [], []
-            pos = signal_array.index(point)
             for i in range(0, window_size):
-                A.append(signal_array[pos + i])
-                B.append(signal_array[pos - i])
+                A.append(signal_array[index + i])
+                B.append(signal_array[index - i])
 
             wa_A = weighted_average(A)
             wa_B = weighted_average(B)
@@ -63,22 +62,22 @@ def triple_moving_average(signal_array, window_size):
 
     return filtered_signal
 
-def generate_filtered_data(filename, window):
+def generate_filtered_data(in_data, window):
     '''
     Apply the filter and generate the filtered data
 
     Args:
-        filename (string): the name of the .csv file containing the positional data
+        in_data (string): numpy array containing the positional data
         window (int): window size applied into the filter
 
     Returns:
         numpy array: the final filtered array
     '''
-    averaged_x = (triple_moving_average(list(filename[:,1]), window))
-    averaged_y = triple_moving_average(list(filename[:,2]), window)
-    averaged_z = triple_moving_average(list(filename[:,3]), window)
+    averaged_x = (triple_moving_average(list(in_data[:,1]), window))
+    averaged_y = triple_moving_average(list(in_data[:,2]), window)
+    averaged_z = triple_moving_average(list(in_data[:,3]), window)
 
-    output = np.hstack(((filename[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
+    output = np.hstack(((in_data[:,0])[:, np.newaxis], (np.array(averaged_x))[:, np.newaxis],
         (np.array(averaged_y))[:, np.newaxis], (np.array(averaged_z))[:, np.newaxis] ))
 
     return output
@@ -87,7 +86,16 @@ if __name__ == "__main__":
 
     signal = rd.load_data(os.getcwd() + '/' + sys.argv[1])
 
+    import time
+    time_start = time.clock()
     output = generate_filtered_data(signal, 2)
+    time_stop = time.clock()
+
+    print("File {} processed in {} seconds.".format(
+            sys.argv[1],
+            time_stop - time_start
+        )
+    )
     np.savetxt("filtered.csv", output, delimiter=",")
 
     print("Filtered output saved as filtered.csv")
