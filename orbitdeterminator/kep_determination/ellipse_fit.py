@@ -313,6 +313,8 @@ def determine_kep(data):
     kep[4] = math.degrees(lan)
     kep[5] = math.degrees(true_anom)
 
+    np.savetxt("data_from_ellip.csv", kep, delimiter=", ")
+
     return kep,res
 
 def __print_kep(kep,res,unit):

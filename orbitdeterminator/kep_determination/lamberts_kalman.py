@@ -187,7 +187,7 @@ def create_kep(my_data):
         kep[i] = np.ravel(state_kep.state_kep(final_r[i], final_v[i]))
 
     kep = check_keplerian(kep)
-    # np.savetxt("kep11.csv", kep, delimiter=",")
+    np.savetxt("data_from_lamb.csv", kep, delimiter=", ")
     return kep
 
 

@@ -70,7 +70,7 @@ class Gibbs(object):
             if(tempstr == ""):
                 break
             # If it contains only those literals required to make a number then this line might be start of data
-            if(all(c.isdigit() or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
+            if(all(c.isdigit() or c == ',' or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
                 # Undo read and break so that this data gets included in size
                 myfile.seek(pointer)
                 break
@@ -106,7 +106,7 @@ class Gibbs(object):
             if(tempstr == ""):
                 break
             # If it contains only those literals required to make a number then this line might be start of data
-            if(all(c.isdigit() or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
+            if(all(c.isdigit() or c == ',' or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
                 # Undo read and break so that this data gets included in size
                 myfile.seek(pointer)
                 break
@@ -400,7 +400,7 @@ def gibbs_get_kep(dataset):
         kep[5] - true anomaly of the first row in the data (in degrees)
     '''
     final = []
-    kep = np.zeros((6, 1))
+    kep = []
     r1 = [dataset[0,0], dataset[0,1], dataset[0,2]]
     r2 = [dataset[1,0], dataset[1,1], dataset[1,2]]
 
@@ -409,6 +409,7 @@ def gibbs_get_kep(dataset):
     # Size might not be enough
     try:
         final = np.zeros((upto, 6))
+        kep = np.zeros((upto, 6))
     except ValueError:
         print("Enough data samples not present")
 
@@ -419,18 +420,14 @@ def gibbs_get_kep(dataset):
         ele = obj1.orbital_elements(r2, v2)
         del(obj1)
         # Add to keplerian elements to later on find average
-        for j in range(6):
-            kep[j, 0] += ele[j]
+        kep[i, :] = ele
         data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
         final[i,:] = data
 
         r1 = r2
         r2 = r3
         i = i + 1
-
-    # Now find average and return data        
-    for j in range(6):
-        kep[j, 0] /= upto
+    np.savetxt("data_from_gibb.csv", kep, delimiter=", ")
     return kep
 
 # if __name__ == "__main__":

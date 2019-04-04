@@ -73,7 +73,7 @@ def generate_filtered_data(in_data, window):
     Returns:
         numpy array: the final filtered array
     '''
-    averaged_x = (triple_moving_average(list(in_data[:,1]), window))
+    averaged_x = triple_moving_average(list(in_data[:,1]), window)
     averaged_y = triple_moving_average(list(in_data[:,2]), window)
     averaged_z = triple_moving_average(list(in_data[:,3]), window)
 

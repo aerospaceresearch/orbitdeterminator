@@ -38,8 +38,8 @@ def process(data_file, error_apriori, units):
 
     ## Use the golay_window.py script to find the window for the savintzky golay filter based on the error you input
     window = golay_window.window(error_apriori, data_after_filter)
-
-    # Apply the Savintzky - Golay filter with window = 31 and polynomail parameter = 6
+    
+    # Apply the Savintzky - Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
     data_after_filter = sav_golay.golay(data_after_filter, window, 3)
 
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
@@ -47,12 +47,12 @@ def process(data_file, error_apriori, units):
     sums = np.sum(res, axis=0)
     print("Displaying the sum of the residuals for each axis")
     print(sums)
-    print(" ")
+    print("\n")
 
     means = np.mean(res, axis=0)
     print("Displaying the mean of the residuals for each axis")
     print(means)
-    print(" ")
+    print("\n")
 
     # Save the filtered data into a new csv called "filtered"
     np.savetxt("filtered.csv", data_after_filter, delimiter=",")
@@ -70,7 +70,7 @@ def process(data_file, error_apriori, units):
     kep_ellip = ellipse_fit.determine_kep(data_after_filter[:,1:])[0]
 
     # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
-    # set we a estimate of measurement vatiance R = 0.01 ** 2
+    # We set an estimate of measurement variance R = 0.01 ** 2
     kep_final_lamb = lamberts_kalman.kalman(kep_lamb, 0.01 ** 2)
     kep_final_lamb = np.transpose(kep_final_lamb)
     kep_final_lamb = np.resize(kep_final_lamb, ((7, 1)))
@@ -85,7 +85,8 @@ def process(data_file, error_apriori, units):
     kep_final_ellip = np.resize(kep_final_ellip, ((7, 1)))
     kep_final_ellip[6, 0] = sgp4.rev_per_day(kep_final_ellip[0, 0])
 
-    kep_final_gibbs = np.transpose(kep_gibbs)
+    kep_final_gibbs = lamberts_kalman.kalman(kep_gibbs, 0.01 ** 2)
+    kep_final_gibbs = np.transpose(kep_final_gibbs)
     kep_final_gibbs = np.resize(kep_final_gibbs, ((7, 1)))
     kep_final_gibbs[6, 0] = sgp4.rev_per_day(kep_final_gibbs[0, 0])
 
@@ -104,13 +105,13 @@ def process(data_file, error_apriori, units):
 
     i = 0
     # Not doing Gibbs for now, some error in filtering
-    for i in range(3):
+    for i in range(4):
         print("\n******************Output for %s Method******************\n" % det_methods[i])
         j = 0
         for j in range(7):
-            print("%s: %.16f\n" % (kep_elements[j], kep_final[j, i]))
+            print("%s: %.16f" % (kep_elements[j], kep_final[j, i]))
 
-    print("Show plots? [y/n]")
+    print("\nShow plots? [y/n]")
     user_input = input()
 
     if(user_input == "y" or user_input == "Y"):
@@ -207,6 +208,39 @@ def process(data_file, error_apriori, units):
         ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
                 label='Filtered data')
         ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % det_methods[2])
+        ax.legend()
+        ax.can_zoom()
+        ax.set_xlabel('x (km)')
+        ax.set_ylabel('y (km)')
+        ax.set_zlabel('z (km)')
+        plt.show()
+
+        # First we transform the set of keplerian elements into a state vector
+        state = kep_state.kep_state(kep_final_gibbs)
+
+        # Then we produce more state vectors at varius times using a Runge Kutta algorithm
+        keep_state = np.zeros((6, 150))
+        ti = 0.0
+        tf = 1.0
+        t_hold = np.zeros((150, 1))
+        x = state
+        h = 0.1
+        tetol = 1e-04
+        for i in range(0, 150):
+            keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
+            t_hold[i, 0] = tf
+            tf = tf + 1
+
+        positions = keep_state[0:3, :]
+
+        ## Finally we plot the graph
+        mpl.rcParams['legend.fontsize'] = 10
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
+        ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
+                label='Filtered data')
+        ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % det_methods[3])
         ax.legend()
         ax.can_zoom()
         ax.set_xlabel('x (km)')
