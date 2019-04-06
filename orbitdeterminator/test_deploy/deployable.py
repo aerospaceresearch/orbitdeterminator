@@ -11,7 +11,7 @@ import os
 from subprocess import PIPE, run
 
 
-SOURCE_ABSOLUTE = os.getcwd() + "/example_data/SourceCSV"  # Absolute path of source directory
+SOURCE_ABSOLUTE = os.getcwd() + "/src"  # Absolute path of source directory
 os.system("cd %s; git init" % (SOURCE_ABSOLUTE))
 
 
