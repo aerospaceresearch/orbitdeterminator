@@ -19,7 +19,7 @@ from kep_determination import (lamberts_kalman, interpolation, gibbsMethod, elli
 from propagation import sgp4
 
 
-SOURCE_ABSOLUTE = os.getcwd() + "/src"  # Absolute path of source directory
+SOURCE_ABSOLUTE = os.getcwd() + "/example_data/SourceCSV"  # Absolute path of source directory
 print("Do you wish to reset(deinit/init) git repository? [y/n]")
 user_input1 = input()
 if(user_input1 == "y" or user_input1 == "Y"):
@@ -104,7 +104,7 @@ def process(data_file, error_apriori, name):
     print(" ")
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt(os.getcwd() + "/dst/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
+    np.savetxt(os.getcwd() + "/example_data/DestinationCSV/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
 
     # Apply Lambert's solution for the filtered data set
     kep_lamb = lamberts_kalman.create_kep(data_after_filter)
@@ -149,154 +149,56 @@ def process(data_file, error_apriori, name):
     kep_final[:, 3] = np.ravel(kep_final_gibbs)
 
     # Print the final orbital elements for all solutions
-    kep_elements = ["Semi major axis (a)(km)", "Eccentricity (e)", "Inclination (i)(deg)", "Argument of perigee (ω)(deg)", "Right acension of ascending node (Ω)(deg)", "True anomaly (v)(deg)", "Time period (T)(rev/day)"]
+    kep_elements = ["Semi major axis (a)(km)", "Eccentricity (e)", "Inclination (i)(deg)", "Argument of perigee (ω)(deg)", "Right acension of ascending node (Ω)(deg)", "True anomaly (v)(deg)", "Frequency (f)(rev/day)"]
     det_methods = ["Lamberts Kalman", "Spline Interpolation", "Ellipse Best Fit", "Gibbs 3 Vector"]
+    method_name = ["lamb", "inter", "ellip", "gibb"]
 
-    i = 0
     # Not doing Gibbs for now, some error in filtering
-    for i in range(4):
+    for i in range(0, 4):
         print("\n******************Output for %s Method******************\n" % det_methods[i])
         j = 0
-        for j in range(7):
+        for j in range(0, 7):
             print("%s: %.16f\n" % (kep_elements[j], kep_final[j, i]))
 
     print("\nSave plots? [y/n]")
     user_input = input()
 
     if(user_input == "y" or user_input == "Y"):
-        # Plot the initial data set, the filtered data set and the final orbit
-        # First we transform the set of keplerian elements into a state vector
-        state = kep_state.kep_state(kep_final_lamb)
+        for j in range(0, 4):
+            # Plot the initial data set, the filtered data set and the final orbit
+            # First we transform the set of keplerian elements into a state vector
+            state = kep_state.kep_state(np.resize(kep_final[:, j], (7, 1)))
 
-        # Then we produce more state vectors at varius times using a Runge Kutta algorithm
-        keep_state = np.zeros((6, 150))
-        ti = 0.0
-        tf = 1.0
-        t_hold = np.zeros((150, 1))
-        x = state
-        h = 0.1
-        tetol = 1e-04
-        for i in range(0, 150):
-            keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
-            t_hold[i, 0] = tf
-            tf = tf + 1
+            # Then we produce more state vectors at varius times using a Runge Kutta algorithm
+            keep_state = np.zeros((6, 150))
+            ti = 0.0
+            tf = 1.0
+            t_hold = np.zeros((150, 1))
+            x = state
+            h = 0.1
+            tetol = 1e-04
+            for i in range(0, 150):
+                keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
+                t_hold[i, 0] = tf
+                tf = tf + 1
 
-        positions = keep_state[0:3, :]
+            positions = keep_state[0:3, :]
 
-        ## Finally we plot the graph
-        mpl.rcParams['legend.fontsize'] = 10
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-        ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-                label='Filtered data')
-        ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % det_methods[0])
-        ax.legend()
-        ax.can_zoom()
-        ax.set_xlabel('x (km)')
-        ax.set_ylabel('y (km)')
-        ax.set_zlabel('z (km)')
-        plt.savefig(os.getcwd() + "/dst/" + '%s_lamb.svg' %(name), format="svg")
-
-        # First we transform the set of keplerian elements into a state vector
-        state = kep_state.kep_state(kep_final_inter)
-
-        # Then we produce more state vectors at varius times using a Runge Kutta algorithm
-        keep_state = np.zeros((6, 150))
-        ti = 0.0
-        tf = 1.0
-        t_hold = np.zeros((150, 1))
-        x = state
-        h = 0.1
-        tetol = 1e-04
-        for i in range(0, 150):
-            keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
-            t_hold[i, 0] = tf
-            tf = tf + 1
-
-        positions = keep_state[0:3, :]
-
-        ## Finally we plot the graph
-        mpl.rcParams['legend.fontsize'] = 10
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-        ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-                label='Filtered data')
-        ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % det_methods[1])
-        ax.legend()
-        ax.can_zoom()
-        ax.set_xlabel('x (km)')
-        ax.set_ylabel('y (km)')
-        ax.set_zlabel('z (km)')
-        plt.savefig(os.getcwd() + "/dst/" + '%s_intr.svg' %(name), format="svg")
-
-        # First we transform the set of keplerian elements into a state vector
-        state = kep_state.kep_state(kep_final_ellip)
-
-        # Then we produce more state vectors at varius times using a Runge Kutta algorithm
-        keep_state = np.zeros((6, 150))
-        ti = 0.0
-        tf = 1.0
-        t_hold = np.zeros((150, 1))
-        x = state
-        h = 0.1
-        tetol = 1e-04
-        for i in range(0, 150):
-            keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
-            t_hold[i, 0] = tf
-            tf = tf + 1
-
-        positions = keep_state[0:3, :]
-
-        ## Finally we plot the graph
-        mpl.rcParams['legend.fontsize'] = 10
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-        ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-                label='Filtered data')
-        ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % det_methods[2])
-        ax.legend()
-        ax.can_zoom()
-        ax.set_xlabel('x (km)')
-        ax.set_ylabel('y (km)')
-        ax.set_zlabel('z (km)')
-        plt.savefig(os.getcwd() + "/dst/" + '%s_elip.svg' %(name), format="svg")
-
-        # First we transform the set of keplerian elements into a state vector
-        state = kep_state.kep_state(kep_final_gibbs)
-
-        # Then we produce more state vectors at varius times using a Runge Kutta algorithm
-        keep_state = np.zeros((6, 150))
-        ti = 0.0
-        tf = 1.0
-        t_hold = np.zeros((150, 1))
-        x = state
-        h = 0.1
-        tetol = 1e-04
-        for i in range(0, 150):
-            keep_state[:, i] = np.ravel(rkf78.rkf78(6, ti, tf, h, tetol, x))
-            t_hold[i, 0] = tf
-            tf = tf + 1
-
-        positions = keep_state[0:3, :]
-
-        ## Finally we plot the graph
-        mpl.rcParams['legend.fontsize'] = 10
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-        ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-                label='Filtered data')
-        ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % det_methods[2])
-        ax.legend()
-        ax.can_zoom()
-        ax.set_xlabel('x (km)')
-        ax.set_ylabel('y (km)')
-        ax.set_zlabel('z (km)')
-        plt.savefig(os.getcwd() + "/dst/" + '%s_gibb.svg' %(name), format="svg")
-
+            ## Finally we plot the graph
+            mpl.rcParams['legend.fontsize'] = 10
+            fig = plt.figure()
+            ax = fig.gca(projection='3d')
+            ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
+            ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
+                    label='Filtered data')
+            ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % det_methods[j])
+            ax.legend()
+            ax.can_zoom()
+            ax.set_xlabel('x (km)')
+            ax.set_ylabel('y (km)')
+            ax.set_zlabel('z (km)')
+            plt.savefig(os.getcwd() + "/example_data/DestinationSVG/" + '%s_%s.svg'%(name, method_name[j]), format="svg")
+            print("saved %s_%s.svg"%(name, method_name[j]))
 
 def main():
 
@@ -305,10 +207,10 @@ def main():
         raw_files = untracked_files()
         if not raw_files:
             if (number_untracked == 0):
-                print("\nNo unprocessed file found in src/folder")
+                print("\nNo unprocessed file found in ./example_data/SourceCSV folder")
             else:
                 print("\nAll untracked files have been processed")
-            print("Add new files in /src folder to process them")
+            print("Add new files in ./example_data/SourceCSV folder to process them")
             time_elapsed = 0
             timeout = 30
             while (time_elapsed <= timeout and not raw_files):
