@@ -1,4 +1,4 @@
-# Contributing to Atom
+# Contributing to OrbitDeterminator
 
 :+1::tada: First off, thanks for taking the time to contribute! :tada::+1:
 
@@ -36,7 +36,7 @@ This project and everyone participating in it is governed by the [AerospaceResea
 
 We have an official [mailing list](https://lists.shackspace.de/mailman/listinfo/constellation) where you can post your question for the community.
 
-If chat is more your speed, you can join the Atom and Electron Slack team:
+If chat is more your speed, you can join the us at:
 
 * [Join the OrbitDeterminator Zulip Chat](https://aerospaceresearch.zulipchat.com/#narrow/stream/147024-OrbitDeterminator)
     * Zulip is fully open-source chat service. Although it is a chat service, sometimes it takes several hours for community members to respond &mdash; please be patient!
@@ -86,7 +86,7 @@ Explain the problem and include additional details to help maintainers reproduce
 
 ### Suggesting Enhancements
 
-This section guides you through submitting an enhancement suggestion for Atom, including completely new features and minor improvements to existing functionality. Following these guidelines helps maintainers and the community understand your suggestion :pencil: and find related suggestions :mag_right:.
+This section guides you through submitting an enhancement suggestion for OrbitDeterminator, including completely new features and minor improvements to existing functionality. Following these guidelines helps maintainers and the community understand your suggestion :pencil: and find related suggestions :mag_right:.
 
 Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com/features/issues/). You can create an issue on this repository and provide the following information:
 
