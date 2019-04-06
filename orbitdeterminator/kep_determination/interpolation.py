@@ -83,7 +83,6 @@ def main(data_points):
     # orbit = np.array(keplerians).mean(axis=0)
     keplerians = np.asarray(keplerians)
 
-    np.savetxt("data_from_inter.csv", keplerians, delimiter=", ")
     return keplerians
 
 #

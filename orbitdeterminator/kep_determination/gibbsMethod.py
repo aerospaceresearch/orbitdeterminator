@@ -74,13 +74,13 @@ class Gibbs(object):
                 # Undo read and break so that this data gets included in size
                 myfile.seek(pointer)
                 break
-
+        datastart = myfile.tell()
         # Now read data lines and find size
         size = 0
         while(myfile.readline()):
             size = size + 1
 
-        return size
+        return (size, datastart)
 
     def read_file(self, path):
         '''
@@ -98,21 +98,11 @@ class Gibbs(object):
             numpy.ndarray: list of all pair of position and velocity vector
         '''
         myfile = open(path, 'r')
-        #To remove all headers
-        while(1):
-            pointer = myfile.tell()
-            tempstr = myfile.readline()
-            # EOF reached
-            if(tempstr == ""):
-                break
-            # If it contains only those literals required to make a number then this line might be start of data
-            if(all(c.isdigit() or c == ',' or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
-                # Undo read and break so that this data gets included in size
-                myfile.seek(pointer)
-                break
 
         kep = np.zeros((6, 1))
-        size = self.find_length(path)
+        siz_point_tuple = self.find_length(path)
+        size = siz_point_tuple[0]
+        myfile.seek(siz_point_tuple[1])
         upto = size-2                    # size-2
         # Size might not be enough
         try:
@@ -129,8 +119,10 @@ class Gibbs(object):
 
         r1 = []
         r2 = []
+        iscomma = 0
         # Check if files are comma delimited
         if("," in str1):
+            iscomma = 1
             str1 = str1.replace(' ', '')
             str2 = str2.replace(' ', '')
             str1 = str1.replace('\t', '')
@@ -149,7 +141,7 @@ class Gibbs(object):
             str3 = str3.replace('\r', '')
             r3 = []
             # Check if files are comma delimited
-            if("," in str1):
+            if(iscomma is 1):
                 str3 = str1.replace(' ', '')
                 str3 = str1.replace('\t', '')
                 # Split on files delimited with comma
@@ -174,7 +166,7 @@ class Gibbs(object):
             kep[j, 0] /= upto
         return kep
 
-        # Returning r and v array for now
+        # Returning r and v array earlier
         # return final
 
     @classmethod
@@ -427,7 +419,6 @@ def gibbs_get_kep(dataset):
         r1 = r2
         r2 = r3
         i = i + 1
-    np.savetxt("data_from_gibb.csv", kep, delimiter=", ")
     return kep
 
 # if __name__ == "__main__":

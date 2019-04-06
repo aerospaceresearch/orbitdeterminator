@@ -5,7 +5,7 @@
 import time
 import numpy as np
 from functools import partial
-from orbitdeterminator.propagation.cowell import rk4
+from cowell import rk4
 
 class KalmanFilter():
     """Kalman Filter class wrapper."""

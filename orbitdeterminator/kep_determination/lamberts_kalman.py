@@ -187,7 +187,6 @@ def create_kep(my_data):
         kep[i] = np.ravel(state_kep.state_kep(final_r[i], final_v[i]))
 
     kep = check_keplerian(kep)
-    np.savetxt("data_from_lamb.csv", kep, delimiter=", ")
     return kep
 
 
@@ -214,37 +213,35 @@ def kalman(kep, R):
     # the mean value will be selected as the initial guess
 
     x_final = np.zeros((1, 6))
+    n_iter = len(kep)
     for i in range(0, 6):
 
         # intial parameters
-        n_iter = len(kep)
         sz = n_iter  # size of array
-        z = np.zeros((sz, 6))
-        z[:, i] = kep[:, i]
 
         Q = 1e-8  # process variance
 
-        xhat = np.zeros((sz, 6))  # a posteri estimate of x
-        P = np.zeros((sz, 6))  # a posteri error estimate
-        xhatminus = np.zeros((sz, 6))  # a priori estimate of x
-        Pminus = np.zeros((sz, 6))  # a priori error estimate
-        K = np.zeros((sz, 6))  # gain or blending factor
+        xhat = 0.0  # a posteri estimate of x
+        P = 0.0  # a posteri error estimate
+        xhatminus = 0.0  # a priori estimate of x
+        Pminus = 0.0  # a priori error estimate
+        K = 0.0  # gain or blending factor
 
         # intial guesses
-        xhat[0, i] = mean_kep[0, i]
-        P[0, i] = 1.0
+        xhat = mean_kep[0, i]
+        P = 1.0
 
         for k in range(1, n_iter):
             # time update
-            xhatminus[k, i] = xhat[k - 1, i]
-            Pminus[k, i] = P[k - 1, i] + Q
+            xhatminus = xhat
+            Pminus = P + Q
 
             # measurement update
-            K[k, i] = Pminus[k, i] / (Pminus[k, i] + R)
+            K = Pminus / (Pminus + R)
 
-            xhat[k, i] = xhatminus[k, i] + K[k, i] * (z[k, i] - xhatminus[k, i])
-            P[k, i] = (1 - K[k, i]) * Pminus[k, i]
+            xhat = xhatminus + K * (kep[k, i] - xhatminus)
+            P = (1 - K) * Pminus
 
-        x_final[:, i] = xhat[k, i]
+        x_final[0, i] = xhat
 
     return x_final
