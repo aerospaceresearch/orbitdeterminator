@@ -69,9 +69,15 @@ class Gibbs(object):
             # EOF reached
             if(tempstr == ""):
                 break
-            # If it contains only those literals required to make a number then this line might be start of data
-            if(all(c.isdigit() or c == ',' or c == '.' or c == ' ' or c == '\t' or c == '-' or c == '+' or c == 'e' or c == 'E' or c == '\n' or c == '\r' for c in tempstr)):
-                # Undo read and break so that this data gets included in size
+            # If it contains only those literals
+            # required to make a number then
+            # this line might be start of data
+            if(all(c.isdigit() or c == ',' or c == '.' or\
+                c == ' ' or c == '\t' or c == '-' or c == '+'\
+                or c == 'e' or c == 'E' or c == '\n' or\
+                c == '\r' for c in tempstr)):
+                # Undo read and break so that this
+                # data gets included in size
                 myfile.seek(pointer)
                 break
         datastart = myfile.tell()
@@ -142,8 +148,8 @@ class Gibbs(object):
             r3 = []
             # Check if files are comma delimited
             if(iscomma is 1):
-                str3 = str1.replace(' ', '')
-                str3 = str1.replace('\t', '')
+                str3 = str3.replace(' ', '')
+                str3 = str3.replace('\t', '')
                 # Split on files delimited with comma
                 r3 = self.convert_list(re.split(',', str3))
             else:

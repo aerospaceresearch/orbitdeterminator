@@ -204,44 +204,29 @@ def kalman(kep, R):
     Returns:
         numpy array: final set of keplerian elements describing the orbit based on kalman filtering
     '''
-    
-    # first find the mean values for every keplerian element
-    mean_kep = np.zeros((1, 6))
-    for i in range(0, 6):
-        mean_kep[0, i] = np.mean(kep[:, i])
 
     # the mean value will be selected as the initial guess
-
     x_final = np.zeros((1, 6))
     n_iter = len(kep)
     for i in range(0, 6):
-
         # intial parameters
         sz = n_iter  # size of array
-
         Q = 1e-8  # process variance
-
         xhat = 0.0  # a posteri estimate of x
         P = 0.0  # a posteri error estimate
         xhatminus = 0.0  # a priori estimate of x
         Pminus = 0.0  # a priori error estimate
         K = 0.0  # gain or blending factor
-
         # intial guesses
-        xhat = mean_kep[0, i]
+        xhat = np.mean(kep[:, i])
         P = 1.0
-
         for k in range(1, n_iter):
             # time update
             xhatminus = xhat
             Pminus = P + Q
-
             # measurement update
             K = Pminus / (Pminus + R)
-
             xhat = xhatminus + K * (kep[k, i] - xhatminus)
             P = (1 - K) * Pminus
-
         x_final[0, i] = xhat
-
     return x_final

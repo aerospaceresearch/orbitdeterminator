@@ -60,7 +60,7 @@ def main(data_points):
     keplerians = []
 
     #for index in range(len(data_points)-1):
-    for index in range(1, 100):
+    for index in range(0, min(100, len(data_points) - 1)):
         # Take a pair of points from data_points
         spline_input = data_points[index:index+2]
 
