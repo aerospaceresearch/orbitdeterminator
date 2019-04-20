@@ -139,9 +139,6 @@ def process(data_file, error_apriori, name):
     kep_final_gibbs = np.resize(kep_final_gibbs, ((7, 1)))
     kep_final_gibbs[6, 0] = sgp4.rev_per_day(kep_final_gibbs[0, 0])
 
-    # Confirmation required
-    # kep_final_lamb[5, 0] = kep_final_inter[5, 0]
-
     kep_final = np.zeros((7, 4))
     kep_final[:, 0] = np.ravel(kep_final_lamb)
     kep_final[:, 1] = np.ravel(kep_final_inter)
@@ -152,8 +149,7 @@ def process(data_file, error_apriori, name):
     kep_elements = ["Semi major axis (a)(km)", "Eccentricity (e)", "Inclination (i)(deg)", "Argument of perigee (ω)(deg)", "Right acension of ascending node (Ω)(deg)", "True anomaly (v)(deg)", "Frequency (f)(rev/day)"]
     det_methods = ["Lamberts Kalman", "Spline Interpolation", "Ellipse Best Fit", "Gibbs 3 Vector"]
     method_name = ["lamb", "inter", "ellip", "gibb"]
-
-    # Not doing Gibbs for now, some error in filtering
+    
     for i in range(0, 4):
         print("\n******************Output for %s Method******************\n" % det_methods[i])
         j = 0
