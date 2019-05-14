@@ -18,7 +18,7 @@ from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation)
 
 
-SOURCE_ABSOLUTE = os.getcwd() + "/src"  # Absolute path of source directory
+SOURCE_ABSOLUTE = os.getcwd() + "/example_data/SourceCSV"  # Absolute path of source directory
 os.system("cd %s; git init" % (SOURCE_ABSOLUTE))
 
 
@@ -98,7 +98,7 @@ def process(data_file, error_apriori, name):
 
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt(os.getcwd() + "/dst/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
+    np.savetxt(os.getcwd() + "/example_data/DestinationCSV/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
     # Apply Lambert's solution for the filtered data set
     kep_lamb = lamberts_kalman.create_kep(data_after_filter)
     # Apply the interpolation method
@@ -152,7 +152,7 @@ def process(data_file, error_apriori, name):
     ax.set_ylabel('y (km)')
     ax.set_zlabel('z (km)')
     #plt.show()
-    plt.savefig(os.getcwd() + "/dst/" + '%s.svg' %(name), format="svg")
+    plt.savefig(os.getcwd() + "/example_data/DestinationSVG/" + '%s.svg' %(name), format="svg")
 
 
 def main():
@@ -162,10 +162,10 @@ def main():
         raw_files = untracked_files()
         if not raw_files:
             if (number_untracked == 0):
-                print("\nNo unprocessed file found in src/folder")
+                print("\nNo unprocessed file found in ./example_data/SourceCSV folder")
             else:
                 print("\nAll untracked files have been processed")
-            print("Add new files in /src folder to process them")
+            print("Add new files in ./example_data/SourceCSV folder folder to process them")
             time_elapsed = 0
             timeout = 30
             while (time_elapsed <= timeout and not raw_files):
