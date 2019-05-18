@@ -31,7 +31,16 @@ class Gibbs(object):
         Returns:
             list: vector converted to float values
         '''
-        return [float(vec[1]), float(vec[2]), float(vec[3])]
+        a = 0.0
+        b = 0.0
+        c = 0.0
+        try:
+            a = float(vec[1])
+            b = float(vec[2])
+            c = float(vec[3])
+        except ValueError:
+            print("Double check file format!")
+        return([a, b, c])
 
     @classmethod
     def find_length(self, path):
@@ -51,14 +60,33 @@ class Gibbs(object):
         Returns:
             int: length of file
         '''
-        length = open(path, 'r')
-        length.readline()       # it is used to remove the header line
+        myfile = open(path, 'r')
 
+        #To remove all headers
+        while(1):
+            pointer = myfile.tell()
+            tempstr = myfile.readline()
+            # EOF reached
+            if(tempstr == ""):
+                break
+            # If it contains only those literals
+            # required to make a number then
+            # this line might be start of data
+            if(all(c.isdigit() or c == ',' or c == '.' or\
+                c == ' ' or c == '\t' or c == '-' or c == '+'\
+                or c == 'e' or c == 'E' or c == '\n' or\
+                c == '\r' for c in tempstr)):
+                # Undo read and break so that this
+                # data gets included in size
+                myfile.seek(pointer)
+                break
+        datastart = myfile.tell()
+        # Now read data lines and find size
         size = 0
-        while(length.readline()):
+        while(myfile.readline()):
             size = size + 1
 
-        return size
+        return (size, datastart)
 
     def read_file(self, path):
         '''
@@ -76,21 +104,62 @@ class Gibbs(object):
             numpy.ndarray: list of all pair of position and velocity vector
         '''
         myfile = open(path, 'r')
-        myfile.readline()           # it is used to remove the header line
 
-        size = self.find_length(path)
+        kep = np.zeros((6, 1))
+        siz_point_tuple = self.find_length(path)
+        size = siz_point_tuple[0]
+        myfile.seek(siz_point_tuple[1])
         upto = size-2                    # size-2
-        final = np.zeros((upto, 6))
+        # Size might not be enough
+        try:
+            final = np.zeros((upto, 6))
+        except ValueError:
+            print("Enough data samples not present")
 
-        r1 = self.convert_list(re.split('\t|\n', myfile.readline()))
-        r2 = self.convert_list(re.split('\t|\n', myfile.readline()))
+        # Read line reads with '\n' as well which should not get split
+        str1 = myfile.readline().replace('\n', '')
+        str2 = myfile.readline().replace('\n', '')
+        # Lines end with "\r\n" in windows, so for safety measure
+        str1 = str1.replace('\r', '')
+        str2 = str2.replace('\r', '')
+
+        r1 = []
+        r2 = []
+        iscomma = 0
+        # Check if files are comma delimited
+        if("," in str1):
+            iscomma = 1
+            str1 = str1.replace(' ', '')
+            str2 = str2.replace(' ', '')
+            str1 = str1.replace('\t', '')
+            str2 = str2.replace('\t', '')
+            # Split on files delimited with comma
+            r1 = self.convert_list(re.split(',', str1))
+            r2 = self.convert_list(re.split(',', str2))
+        else:
+            # Split on files delimited with tabs and space
+            r1 = self.convert_list(re.split('\t|\s', str1))
+            r2 = self.convert_list(re.split('\t|\s', str2))
 
         i = 0
         while(i < upto):
-            r3 = self.convert_list(re.split('\t|\n', myfile.readline()))
+            str3 = myfile.readline().replace('\n', '')
+            str3 = str3.replace('\r', '')
+            r3 = []
+            # Check if files are comma delimited
+            if(iscomma is 1):
+                str3 = str3.replace(' ', '')
+                str3 = str3.replace('\t', '')
+                # Split on files delimited with comma
+                r3 = self.convert_list(re.split(',', str3))
+            else:
+                # Split on files delimited with tabs and space
+                r3 = self.convert_list(re.split('\t|\s', str3))
             v2 = self.gibbs(r1, r2, r3)
             ele = self.orbital_elements(r2, v2)
-            print(ele)
+            # Add to keplerian elements to later on find average
+            for j in range(6):
+                kep[j, 0] += ele[j]
             data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
             final[i,:] = data
 
@@ -98,7 +167,13 @@ class Gibbs(object):
             r2 = r3
             i = i + 1
 
-        return final
+        # Now find average and return data        
+        for j in range(6):
+            kep[j, 0] /= upto
+        return kep
+
+        # Returning r and v array earlier
+        # return final
 
     @classmethod
     def magnitude(self, vec):
@@ -254,7 +329,13 @@ class Gibbs(object):
         vr = self.dot_product(r, v)/mag_r
         h = self.cross_product(r, v)
         mag_h = self.magnitude(h)
-        inclination = math.acos(h[2]/mag_h)*(180/pi)
+        # Requires further research, not put in try block because one set should not affect entire calculation
+        if((h[2]/mag_h) <= 1 and (h[2]/mag_h) >= -1):
+            inclination = math.acos(h[2]/mag_h)*(180/pi)
+        elif((h[2]/mag_h) > 1):
+            inclination = 0
+        else:
+            inclination = 180
 
         N = self.cross_product([0,0,1], h)
         mag_N = self.magnitude(N)
@@ -269,11 +350,23 @@ class Gibbs(object):
         eccentricity = [i/meu for i in vec]
         mag_e = self.magnitude(eccentricity)
 
-        perigee = math.acos(self.dot_product(N,eccentricity)/(mag_N*mag_e))*(180/pi)
+        # Requires further research, not put in try block because one set should not affect entire calculation
+        if((self.dot_product(N,eccentricity)/(mag_N*mag_e)) <= 1 and (self.dot_product(N,eccentricity)/(mag_N*mag_e)) >= -1):
+            perigee = math.acos(self.dot_product(N,eccentricity)/(mag_N*mag_e))*(180/pi)
+        elif((self.dot_product(N,eccentricity)/(mag_N*mag_e)) > 1):
+            perigee = 0
+        else:
+            perigee = 180
         if(eccentricity[2] < 0):
             perigee = 360 - perigee
 
-        anomaly = math.acos(self.dot_product(eccentricity,r)/(mag_e*mag_r))*(180/pi)
+        # Requires further research, not put in try block because one set should not affect entire calculation
+        if((self.dot_product(eccentricity,r)/(mag_e*mag_r)) <= 1 and (self.dot_product(eccentricity,r)/(mag_e*mag_r)) >= -1):
+            anomaly = math.acos(self.dot_product(eccentricity,r)/(mag_e*mag_r))*(180/pi)
+        elif(self.dot_product(eccentricity,r)/(mag_e*mag_r) > 1):
+            anomaly = 0
+        else:
+            anomaly = 180
         if(vr < 0):
             anomaly = 360 - anomaly
 
@@ -281,12 +374,64 @@ class Gibbs(object):
         ra = mag_h**2/(meu*(1-mag_e))
         axis = (rp+ra)/2
 
-        return [axis, inclination, ascension, mag_e, perigee, anomaly]
+        # Following format trend from test_gibbsMethod file
+        # return [axis, inclination, ascension, mag_e, perigee, anomaly]
+        # Following format trend from lamberts_kalman file
+        return [axis, mag_e, inclination, perigee, ascension, anomaly]
+
+def gibbs_get_kep(dataset):
+    ''' 
+    Determines keplerian elements using Gibbs 3 vector method.
+
+    Args:
+        data(nx3 numpy array): A numpy array of points in the format [x y z].
+
+    Returns:
+        (kep) - The keplerian elements as 1x6 numpy array.
+
+        For the keplerian elements:
+        kep[0] - semi-major axis (in whatever units the data was provided in)
+        kep[1] - eccentricity
+        kep[2] - inclination (in degrees)
+        kep[3] - argument of periapsis (in degrees)
+        kep[4] - right ascension of ascending node (in degrees)
+        kep[5] - true anomaly of the first row in the data (in degrees)
+    '''
+    final = []
+    kep = []
+    r1 = [dataset[0,0], dataset[0,1], dataset[0,2]]
+    r2 = [dataset[1,0], dataset[1,1], dataset[1,2]]
+
+    i = 0
+    upto = dataset.shape[0] - 2
+    # Size might not be enough
+    try:
+        final = np.zeros((upto, 6))
+        kep = np.zeros((upto, 6))
+    except ValueError:
+        print("Enough data samples not present")
+
+    while(i < upto):
+        r3 = [dataset[i+2,0], dataset[i+2,1], dataset[i+2,2]]
+        obj1 = Gibbs()
+        v2 = obj1.gibbs(r1, r2, r3)
+        ele = obj1.orbital_elements(r2, v2)
+        del(obj1)
+        # Add to keplerian elements to later on find average
+        kep[i, :] = ele
+        data = [r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]]
+        final[i,:] = data
+
+        r1 = r2
+        r2 = r3
+        i = i + 1
+    return kep
 
 # if __name__ == "__main__":
-#     filename = "orbit_simulated_a6801000.0_ecc0.000515_inc134.89461080388952_raan112.5156_aop135.0415_ta225.1155_jit0.0_dt1.0_gapno_1502628669.3819425.csv"
-#     path = "../example_data/SimulatedCSV" + filename
-#
+#     filename = "ISS.csv"
+#     path = "../example_data/" + filename
+
 #     obj = Gibbs()
 #     vector = obj.read_file(path)
+#     print(vector)
 #     del(obj)
