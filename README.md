@@ -72,6 +72,6 @@ If you don't want to use conda to install **pykep** and **matplotlib**, then you
 
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/aerospaceresearch/orbitdeterminator.svg?style=for-the-badge)](https://github.com/aerospaceresearch/orbitdeterminator/pulls)
 [![GitHub issues](https://img.shields.io/github/issues/aerospaceresearch/orbitdeterminator.svg?style=for-the-badge)](https://github.com/aerospaceresearch/orbitdeterminator/issues)
-[![Zulip](https://img.shields.io/badge/Chat-on%20Zulip-17C789.svg?style=for-the-badge)](https://aerospaceresearch.zulipchat.com/#narrow/stream/181873-visma)
+[![Zulip](https://img.shields.io/badge/Chat-on%20Zulip-17C789.svg?style=for-the-badge)](https://aerospaceresearch.zulipchat.com/#narrow/stream/147024-OrbitDeterminator)
 
 PRs are welcomed. For contributing to **orbitdeterminator** refer [CONTRIBUTING.md](CONTRIBUTING.md). If there are any issues or ideas they can be addressed through the [issues](https://github.com/aerospaceresearch/orbitdeterminator/issues) or in [chat room](https://aerospaceresearch.zulipchat.com/#narrow/stream/147024-OrbitDeterminator).
