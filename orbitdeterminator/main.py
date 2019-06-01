@@ -28,26 +28,36 @@ def process(data_file, error_apriori, units):
         Runs the whole process of the program
     '''
     # First read the csv file called "orbit" with the positional data
-    data = read_data.load_data(data_file)
+    source_path = "example_data/SourceCSV/"
+    dest_path = "example_data/DestinationCSV/"
+    data = read_data.load_data(source_path + data_file)
 
     if(units == 'm'):
         # Transform m to km
         data[:, 1:4] = data[:, 1:4] / 1000
 
-    print("***********Choose filter(s) in desired order of application***********")
+    print("***********Choose filter(s)/method(s) in desired order of application***********")
     print("(SPACE to toggle, UP/DOWN to navigate, RIGHT/LEFT to select/deselect and ENTER to submit)")
-    print("*if nothing is selected, Triple Moving Average followed by Savitzky Golay will be applied")
+    print("*Default options are selected below, if nothing is selected these options will be executed")
     questions = [
       inquirer.Checkbox('filter',
                         message="Select filter(s)",
-                        choices=['Savitzky Golay Filter', 'Triple Moving Average Filter'],
+                        choices=['Triple Moving Average Filter', 'Savitzky Golay Filter'],
+                        default=['Triple Moving Average Filter', 'Savitzky Golay Filter'],
+                        ),
+      inquirer.Checkbox('method',
+                        message="Select Method(s)",
+                        choices=['Lamberts Kalman', 'Cubic Spline Interpolation', 'Ellipse Best Fit', 'Gibbs 3 Vector'],
+                        default=['Cubic Spline Interpolation'],
                         ),
     ]
     choices = inquirer.prompt(questions)
     data_after_filter = data
 
-    if(len(choices['filter']) == 0):
+    if not choices['filter']:
         print("Applying Triple Moving Average followed by Savitzky Golay...")
+        choices['filter'].append('Triple Moving Average Filter')
+        choices['filter'].append('Savitzky Golay Filter')
         # Apply the Triple moving average filter with window = 3
         data_after_filter = triple_moving_average.generate_filtered_data(data_after_filter, 3)
 
@@ -57,6 +67,7 @@ def process(data_file, error_apriori, units):
         # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
         data_after_filter = sav_golay.golay(data_after_filter, window, 3)
     else:
+        print(choices['filter'])
         for index, choice in enumerate(choices['filter']):
             if(choice == 'Savitzky Golay Filter'):
                 print("Applying Savitzky Golay Filter...")
@@ -81,21 +92,12 @@ def process(data_file, error_apriori, units):
     print(means, "\n")
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt("filtered.csv", data_after_filter, delimiter=",")
+    np.savetxt(dest_path + data_file.strip(".csv") + "_filtered.csv", data_after_filter, delimiter=",")
 
-    print("***********Choose Method(s) for Orbit Determination***********")
-    print("(SPACE to toggle, UP/DOWN to navigate, RIGHT/LEFT to select/deselect and ENTER to submit)")
-    print("*if nothing is selected, Cubic Spline Interpolation will be used for Orbit Determination")
-    questions = [
-      inquirer.Checkbox('method',
-                        message="Select Method(s)",
-                        choices=['Lamberts Kalman', 'Cubic Spline Interpolation', 'Ellipse Best Fit', 'Gibbs 3 Vector'],
-                        ),
-    ]
-    choices = inquirer.prompt(questions)
     kep_elements = {}
 
-    if(len(choices['method']) == 0):
+    if not choices['method']:
+        choices['method'].append('Cubic Spline Interpolation')
         # Apply the interpolation method
         kep_inter = interpolation.main(data_after_filter)
         # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
@@ -152,17 +154,49 @@ def process(data_file, error_apriori, units):
         order.append(str(key))
 
     # Print the final orbital elements for all solutions
-    kep_elements = ["Semi major axis (a)(km)", "Eccentricity (e)", "Inclination (i)(deg)", "Argument of perigee (ω)(deg)", "Right acension of ascending node (Ω)(deg)", "True anomaly (v)(deg)", "Frequency (f)(rev/day)"]
+    kep_elements = ["Semi major axis (a)(km)", "Eccentricity (e)", "Inclination (i)(deg)", "Argument of perigee (ω)(deg)", \
+                    "Right acension of ascending node (Ω)(deg)", "True anomaly (v)(deg)", "Frequency (f)(rev/day)"]
     for i in range(0, len(order)):
         print("\n******************Output for %s Method******************\n" % order[i])
         for j in range(0, 7):
-            print("%s: %.16f" % (kep_elements[j], kep_final[j, i]))
+            print("%s: %.8f" % (kep_elements[j], kep_final[j, i]))
+    print("\n")
 
-    print("\nShow plots? [y/n]")
-    user_input = input()
+    order = choices['method']
+    print("***********Select if you want to plot the orbit***********")
+    print("(Press ENTER to select)")
+    questions = [
+      inquirer.List('plots',
+                        message="Plot orbit?",
+                        choices=['Yes', 'No'],
+                        ),
+    ]
+    choices = inquirer.prompt(questions)
+    if (choices['plots'] == 'No'):
+        pass
+    else:
+        print("***********Choose methods for which orbit plots are desired***********")
+        print("(SPACE to toggle, UP/DOWN to navigate, RIGHT/LEFT to select/deselect and ENTER to submit)")
+        questions = [
+          inquirer.Checkbox('plots',
+                            message="Select methods(s)",
+                            choices=order,
+                            ),
+        ]
+        choices = inquirer.prompt(questions)
 
-    if(user_input == "y" or user_input == "Y"):
-        for j in range(0, len(order)):
+        if not choices['plots']:
+            choices['plots'].append(order[0])
+        else:
+            pass
+
+        mpl.rcParams['legend.fontsize'] = 10
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
+        ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
+                label='Filtered data')
+        for j in range(len(choices['plots'])):
             # Plot the initial data set, the filtered data set and the final orbit
             # First we transform the set of keplerian elements into a state vector
             state = kep_state.kep_state(np.resize(kep_final[:, j], (7, 1)))
@@ -183,19 +217,13 @@ def process(data_file, error_apriori, units):
             positions = keep_state[0:3, :]
 
             ## Finally we plot the graph
-            mpl.rcParams['legend.fontsize'] = 10
-            fig = plt.figure()
-            ax = fig.gca(projection='3d')
-            ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-            ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-                    label='Filtered data')
-            ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % order[j])
-            ax.legend()
-            ax.can_zoom()
-            ax.set_xlabel('x (km)')
-            ax.set_ylabel('y (km)')
-            ax.set_zlabel('z (km)')
-            plt.show()
+            ax.plot(positions[0, :], positions[1, :], positions[2, :], label='Orbit using %s method' % order[j])
+        ax.legend()
+        ax.can_zoom()
+        ax.set_xlabel('x (km)')
+        ax.set_ylabel('y (km)')
+        ax.set_zlabel('z (km)')
+        plt.show()
 
 def read_args():
     parser = argparse.ArgumentParser()
