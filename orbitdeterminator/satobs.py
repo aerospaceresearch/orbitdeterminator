@@ -1,10 +1,20 @@
 import os
+import json
 import numpy as np
 import datetime as dt
 import re
 import astropy.time as at
 
-SOURCE_ABSOLUTE = os.getcwd() + "/example_data/SourceCSV"  # Absolute path of source directory
+
+'''
+Assumes that all input files are present in $PROJ_DIR$/orbitdeterminator/example_data/Source_CSV/
+'''
+SOURCE_ABSOLUTE = os.getcwd() + "/example_data"  # Absolute path of source directory
+
+'''
+A dictionary that contains details of all observation sites
+'''
+obs_site_data = {}
 
 def julian_equinox_from_date(utc_date_time):
 	'''
@@ -118,12 +128,12 @@ def coord_format_to_deg_iod(clipped_iod, pos_format):
 	coord_uncertain = 0.0
 
 	# RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
-	if(pos_format is '1'):
+	if(pos_format == '1'):
 		ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
 			+ (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
 			+ ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
-		dec_or_el = (-1 if clipped_iod[7] is '-' else 1)\
+		dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
 			* (\
 			float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
@@ -132,11 +142,11 @@ def coord_format_to_deg_iod(clipped_iod, pos_format):
 		coord_uncertain = (((1.0 / 60.0) / 60.0) * (0.0 if (len(clipped_iod[15:17].replace(' ', '')) == 0) else (int(clipped_iod[15]) * (10 ** (int(clipped_iod[16]) - 8)))))
 	
 	# RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
-	if(pos_format is '2'):
+	if(pos_format == '2'):
 		ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * (float(clipped_iod[4:7].replace(' ', '') if len(clipped_iod[4:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[4:7].replace(' ', ''))))))
-		dec_or_el = (-1 if clipped_iod[7] is '-' else 1)\
+		dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
 			* (\
 			float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
@@ -145,11 +155,11 @@ def coord_format_to_deg_iod(clipped_iod, pos_format):
 		coord_uncertain = ((1.0 / 60.0) * (0.0 if (len(clipped_iod[15:17].replace(' ', '')) == 0) else (int(clipped_iod[15]) * (10 ** (int(clipped_iod[16]) - 8)))))
 	
 	# RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
-	if(pos_format is '3'):
+	if(pos_format == '3'):
 		ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * (float(clipped_iod[4:7].replace(' ', '') if len(clipped_iod[4:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[4:7].replace(' ', ''))))))
-		dec_or_el = (-1 if clipped_iod[7] is '-' else 1)\
+		dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
 			* (\
 			float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
 			+ float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
@@ -157,11 +167,11 @@ def coord_format_to_deg_iod(clipped_iod, pos_format):
 		coord_uncertain = (0.0 if (len(clipped_iod[15:17].replace(' ', '')) == 0) else (int(clipped_iod[15]) * (10 ** (int(clipped_iod[16]) - 8))))
 	
 	# AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
-	if(pos_format is '4'):
+	if(pos_format == '4'):
 		ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
 			+ (((1.0 / 60.0) / 60.0) * float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0"))
-		dec_or_el = (-1 if clipped_iod[7] is '-' else 1)\
+		dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
 			* (\
 			float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
@@ -170,11 +180,11 @@ def coord_format_to_deg_iod(clipped_iod, pos_format):
 		coord_uncertain = (((1.0 / 60.0) / 60.0) * (0.0 if (len(clipped_iod[15:17].replace(' ', '')) == 0) else (int(clipped_iod[15]) * (10 ** (int(clipped_iod[16]) - 8)))))
 	
 	# AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
-	if(pos_format is '5'):
+	if(pos_format == '5'):
 		ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
 			+ ((1.0 / 60.0) * (float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[5:7].replace(' ', ''))))))
-		dec_or_el = (-1 if clipped_iod[7] is '-' else 1)\
+		dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
 			* (\
 			float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
@@ -183,10 +193,10 @@ def coord_format_to_deg_iod(clipped_iod, pos_format):
 		coord_uncertain = ((1.0 / 60.0) * (0.0 if (len(clipped_iod[15:17].replace(' ', '')) == 0) else (int(clipped_iod[15]) * (10 ** (int(clipped_iod[16]) - 8)))))
 	
 	# AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
-	if(pos_format is '6'):
+	if(pos_format == '6'):
 		ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
 			+ float(clipped_iod[3:7].replace(' ', '') if len(clipped_iod[3:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[3:7].replace(' ', ''))))
-		dec_or_el = (-1 if clipped_iod[7] is '-' else 1)\
+		dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
 			* (\
 			float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
 			+ float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
@@ -194,12 +204,12 @@ def coord_format_to_deg_iod(clipped_iod, pos_format):
 		coord_uncertain = (0.0 if (len(clipped_iod[15:17].replace(' ', '')) == 0) else (int(clipped_iod[15]) * (10 ** (int(clipped_iod[16]) - 8))))
 	
 	# RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
-	if(pos_format is '7'):
+	if(pos_format == '7'):
 		ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
 			+ (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
 			+ ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
-		dec_or_el = (-1 if clipped_iod[7] is '-' else 1)\
+		dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
 			* (\
 			float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
 			+ float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
@@ -261,7 +271,7 @@ def datetime_to_str(utc_date_time_uncertain):
 		A pretty string with date, time, uncertainty and units
 	'''
 	# Time might not have been reported
-	return((str(utc_date_time_uncertain[0])[0:10] + " UTC+00:00") if (utc_date_time_uncertain[2] == 0) else ((str(utc_date_time_uncertain[0])[0:23] if str(utc_date_time_uncertain[0])[19] != '+' else str(utc_date_time_uncertain[0])[0:19]) + ("" if utc_date_time_uncertain[1] is "NA" else (" " + u"\u00B1" + utc_date_time_uncertain[1] + "sec")) + " UTC+00:00"))
+	return((str(utc_date_time_uncertain[0])[0:10] + " UTC+00:00") if (utc_date_time_uncertain[2] == 0) else ((str(utc_date_time_uncertain[0])[0:23] if str(utc_date_time_uncertain[0])[19] != '+' else str(utc_date_time_uncertain[0])[0:19]) + ("" if utc_date_time_uncertain[1] == "NA" else (" " + u"\u00B1" + utc_date_time_uncertain[1] + "sec")) + " UTC+00:00"))
 
 def apparent_mag_iod(clipped_iod):
 	'''
@@ -276,7 +286,7 @@ def apparent_mag_iod(clipped_iod):
 	Returns:
 		A pretty string containing apparent magnitude and its measurement uncertainty
 	'''
-	app_mag = (-1 if clipped_iod[0] is '-' else 1)\
+	app_mag = (-1 if clipped_iod[0] == '-' else 1)\
 			* (\
 			float(clipped_iod[1:3].replace(' ', '') if len(clipped_iod[1:3].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 10.0) * float(clipped_iod[3].replace(' ', '') if len(clipped_iod[3].replace(' ', '')) > 0 else "0"))\
@@ -488,12 +498,12 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 	dec_or_el = 0.0
 	coord_uncertain = 0.0
 	# RA/DEC = HHMMSSss+DDMMSSsSSSs (seconds of arc)
-	if(pos_format is '1'):
+	if(pos_format == '1'):
 		ra_or_az = (15.0 * float(clipped_uk[0:2].replace(' ', '') if len(clipped_uk[0:2].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_uk[2:4].replace(' ', '') if len(clipped_uk[2:4].replace(' ', '')) > 0 else "0"))\
 			+ (((15.0 / 60.0) / 60.0) * float(clipped_uk[4:6].replace(' ', '') if len(clipped_uk[4:6].replace(' ', '')) > 0 else "0"))\
 			+ (((15.0 / 60.0) / 60.0) * float(clipped_uk[6:8].replace(' ', '') if len(clipped_uk[6:8].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[6:8].replace(' ', '')))))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[11:13].replace(' ', '') if len(clipped_uk[11:13].replace(' ', '')) > 0 else "0"))\
@@ -506,11 +516,11 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# RA/DEC = HHMMmmmm+DDMMmmmMMmm (minutes of arc)
-	if(pos_format is '2'):
+	if(pos_format == '2'):
 		ra_or_az = (15.0 * float(clipped_uk[0:2].replace(' ', '') if len(clipped_uk[0:2].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_uk[2:4].replace(' ', '') if len(clipped_uk[2:4].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_uk[4:8].replace(' ', '') if len(clipped_uk[4:8].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[4:8].replace(' ', '')))))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[11:13].replace(' ', '') if len(clipped_uk[11:13].replace(' ', '')) > 0 else "0"))\
@@ -522,11 +532,11 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# RA/DEC = HHMMmmmm+DDdddddDddd (degrees of arc)
-	if(pos_format is '3'):
+	if(pos_format == '3'):
 		ra_or_az = (15.0 * float(clipped_uk[0:2].replace(' ', '') if len(clipped_uk[0:2].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_uk[2:4].replace(' ', '') if len(clipped_uk[2:4].replace(' ', '')) > 0 else "0"))\
 			+ ((15.0 / 60.0) * float(clipped_uk[4:8].replace(' ', '') if len(clipped_uk[4:8].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[4:8].replace(' ', '')))))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ (float(clipped_uk[11:16].replace(' ', '') if len(clipped_uk[11:16].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[11:16].replace(' ', '')))))\
@@ -537,12 +547,12 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# AZ/EL = DDDMMSSs+DDMMSSsSSSs (seconds of arc) (elevation corrected for refraction)
-	if(pos_format is '4'):
+	if(pos_format == '4'):
 		ra_or_az = float(clipped_uk[0:3].replace(' ', '') if len(clipped_uk[0:3].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[3:5].replace(' ', '') if len(clipped_uk[3:5].replace(' ', '')) > 0 else "0"))\
 			+ (((1.0 / 60.0) / 60.0) * float(clipped_uk[5:7].replace(' ', '') if len(clipped_uk[5:7].replace(' ', '')) > 0 else "0"))\
 			+ ((((1.0 / 60.0) / 60.0) / 10.0) * float(clipped_uk[7].replace(' ', '') if len(clipped_uk[7].replace(' ', '')) > 0 else "0"))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[11:13].replace(' ', '') if len(clipped_uk[11:13].replace(' ', '')) > 0 else "0"))\
@@ -555,11 +565,11 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# AZ/EL = DDDMMmmm+DDMMmmmMMmm (minutes of arc) (elevation corrected for refraction)
-	if(pos_format is '5'):
+	if(pos_format == '5'):
 		ra_or_az = float(clipped_uk[0:3].replace(' ', '') if len(clipped_uk[0:3].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[3:5].replace(' ', '') if len(clipped_uk[3:5].replace(' ', '')) > 0 else "0"))\
 			+ ((1.0 / 60.0) * float(clipped_uk[5:8].replace(' ', '') if len(clipped_uk[5:8].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[5:8].replace(' ', '')))))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[11:13].replace(' ', '') if len(clipped_uk[11:13].replace(' ', '')) > 0 else "0"))\
@@ -571,10 +581,10 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# AZ/EL = DDDddddd+DDdddddDddd (degrees of arc) (elevation corrected for refraction)
-	if(pos_format is '6'):
+	if(pos_format == '6'):
 		ra_or_az = float(clipped_uk[0:3].replace(' ', '') if len(clipped_uk[0:3].replace(' ', '')) > 0 else "0")\
 		+ (float(clipped_uk[3:8].replace(' ', '') if len(clipped_uk[3:8].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[3:8].replace(' ', '')))))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ (float(clipped_uk[11:16].replace(' ', '') if len(clipped_uk[11:16].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[11:16].replace(' ', '')))))\
@@ -585,12 +595,12 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# AZ/EL = DDDMMSSs+DDMMSSsSSSs (seconds of arc) (elevation not corrected for refraction)
-	if(pos_format is '7'):
+	if(pos_format == '7'):
 		ra_or_az = float(clipped_uk[0:3].replace(' ', '') if len(clipped_uk[0:3].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[3:5].replace(' ', '') if len(clipped_uk[3:5].replace(' ', '')) > 0 else "0"))\
 			+ (((1.0 / 60.0) / 60.0) * float(clipped_uk[5:7].replace(' ', '') if len(clipped_uk[5:7].replace(' ', '')) > 0 else "0"))\
 			+ ((((1.0 / 60.0) / 60.0) / 10.0) * float(clipped_uk[7].replace(' ', '') if len(clipped_uk[7].replace(' ', '')) > 0 else "0"))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[11:13].replace(' ', '') if len(clipped_uk[11:13].replace(' ', '')) > 0 else "0"))\
@@ -603,11 +613,11 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# AZ/EL = DDDMMmmm+DDMMmmmMMmm (minutes of arc) (elevation not corrected for refraction)
-	if(pos_format is '8'):
+	if(pos_format == '8'):
 		ra_or_az = float(clipped_uk[0:3].replace(' ', '') if len(clipped_uk[0:3].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[3:5].replace(' ', '') if len(clipped_uk[3:5].replace(' ', '')) > 0 else "0"))\
 			+ ((1.0 / 60.0) * float(clipped_uk[5:8].replace(' ', '') if len(clipped_uk[5:8].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[5:8].replace(' ', '')))))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ ((1.0 / 60.0) * float(clipped_uk[11:13].replace(' ', '') if len(clipped_uk[11:13].replace(' ', '')) > 0 else "0"))\
@@ -619,10 +629,10 @@ def coord_format_to_deg_uk(clipped_uk, pos_format):
 			)
 
 	# AZ/EL = DDDddddd+DDdddddDddd (degrees of arc) (elevation not corrected for refraction)
-	if(pos_format is '9'):
+	if(pos_format == '9'):
 		ra_or_az = float(clipped_uk[0:3].replace(' ', '') if len(clipped_uk[0:3].replace(' ', '')) > 0 else "0")\
 		+ (float(clipped_uk[3:8].replace(' ', '') if len(clipped_uk[3:8].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[3:8].replace(' ', '')))))
-		dec_or_el = (-1 if clipped_uk[8] is '-' else 1)\
+		dec_or_el = (-1 if clipped_uk[8] == '-' else 1)\
 			* (\
 			float(clipped_uk[9:11].replace(' ', '') if len(clipped_uk[9:11].replace(' ', '')) > 0 else "0")\
 			+ (float(clipped_uk[11:16].replace(' ', '') if len(clipped_uk[11:16].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_uk[11:16].replace(' ', '')))))\
@@ -730,14 +740,21 @@ def print_iod(iod):
 	for i in range(0, len(iod)):
 		iod_data = parse_iod(iod[i])
 		for j in range(0, len(iod_data_enum)):
-			if(j is 4):
+			if(j == 4):
 				print(iod_data_enum[j] + ": " + datetime_to_str(iod_data[j]))
-			elif(j is 6):
+			elif(j == 6):
 				position_deg_str = pos_coord_to_str(iod_data[j])
 				print("Position(" + ("AZ" if (ord(iod[i][44]) > 51 and ord(iod[i][44]) < 55) else "RA") + "): " + re.split(" ", position_deg_str)[0] + ((" " + re.split(" ", position_deg_str)[1]) if len(re.split(" ", position_deg_str)) > 2 else ""))
 				print("Position(" + ("EL" if (ord(iod[i][44]) > 51 and ord(iod[i][44]) < 55) else "DEC") + "): " + re.split(" ", position_deg_str)[2 if len(re.split(" ", position_deg_str)) > 2 else 1] + ((" " + re.split(" ", position_deg_str)[3]) if len(re.split(" ", position_deg_str)) > 2 else ""))
 			else:
 				print(iod_data_enum[j] + ": " + str(iod_data[j]))
+		firstname = obs_site_data["features"][obs_site_data["index"][str(iod_data[2])]]["properties"]["firstname"]
+		middlename = obs_site_data["features"][obs_site_data["index"][str(iod_data[2])]]["properties"]["middlename"]
+		lastname = obs_site_data["features"][obs_site_data["index"][str(iod_data[2])]]["properties"]["lastname"]
+		latitude = obs_site_data["features"][obs_site_data["index"][str(iod_data[2])]]["geometry"]["coordinates"][0]
+		longitude = obs_site_data["features"][obs_site_data["index"][str(iod_data[2])]]["geometry"]["coordinates"][1]
+		altitude = obs_site_data["features"][obs_site_data["index"][str(iod_data[2])]]["geometry"]["coordinates"][2]
+		print("Reported by: " + firstname + ("" if middlename == "N/A" else (" " + middlename)) + ("" if lastname == "N/A" else (" " + lastname)) + " (" + str(latitude) + ", " + str(longitude) + ", " + str(altitude) + ")")
 		print("")
 
 def print_uk(uk):
@@ -758,16 +775,23 @@ def print_uk(uk):
 	for i in range(0, len(uk)):
 		uk_data = parse_uk(uk[i])
 		for j in range(0, len(uk_data_enum)):
-			if(j is 2):
+			if(j == 2):
 				print(uk_data_enum[j] + ": " + datetime_to_str(uk_data[j]))
-			elif(j is 5):
+			elif(j == 5):
 				position_deg_str = pos_coord_to_str(uk_data[j])
 				print("Position(" + ("AZ" if (ord(uk[i][33]) > 51) else "RA") + "): " + re.split(" ", position_deg_str)[0] + ((" " + re.split(" ", position_deg_str)[1]) if len(re.split(" ", position_deg_str)) > 2 else ""))
 				print("Position(" + ("EL" if (ord(uk[i][33]) > 51) else "DEC") + "): " + re.split(" ", position_deg_str)[2 if len(re.split(" ", position_deg_str)) > 2 else 1] + ((" " + re.split(" ", position_deg_str)[3]) if len(re.split(" ", position_deg_str)) > 2 else ""))
-			elif(j is 6):
+			elif(j == 6):
 				print(uk_data_enum[j] + ": " + range_to_str_uk(uk_data[j]))
 			else:
 				print(uk_data_enum[j] + ": " + str(uk_data[j]))
+		firstname = obs_site_data["features"][obs_site_data["index"][str(uk_data[1])]]["properties"]["firstname"]
+		middlename = obs_site_data["features"][obs_site_data["index"][str(uk_data[1])]]["properties"]["middlename"]
+		lastname = obs_site_data["features"][obs_site_data["index"][str(uk_data[1])]]["properties"]["lastname"]
+		latitude = obs_site_data["features"][obs_site_data["index"][str(uk_data[1])]]["geometry"]["coordinates"][0]
+		longitude = obs_site_data["features"][obs_site_data["index"][str(uk_data[1])]]["geometry"]["coordinates"][1]
+		altitude = obs_site_data["features"][obs_site_data["index"][str(uk_data[1])]]["geometry"]["coordinates"][2]
+		print("Reported by: " + firstname + ("" if middlename == "N/A" else (" " + middlename)) + ("" if lastname == "N/A" else (" " + lastname)) + " (" + str(latitude) + ", " + str(longitude) + ", " + str(altitude) + ")")
 		print("")
 
 def read_iod_uk_file(path):
@@ -784,17 +808,21 @@ def read_iod_uk_file(path):
 	iod_uk_file = []
 	while(1):
 		tempstr = myfile.readline().replace('\r', '').replace('\n', '')
-		if(tempstr is ""):
+		if(tempstr == ""):
 			break
 		iod_uk_file.append(tempstr)
 	myfile.close()
 	return(iod_uk_file)
 
 if(__name__ == "__main__"):
-	iod_file = read_iod_uk_file(SOURCE_ABSOLUTE + "/iod_sample.txt")
+	# Open the GeoJSON file containing observation sites details into a dictionary
+	json_file = open(SOURCE_ABSOLUTE + "/Sites.gjson")
+	obs_site_data = json.load(json_file)
+
+	iod_file = read_iod_uk_file(SOURCE_ABSOLUTE + "/SourceTXT/iod_sample.txt")
 	print_iod(iod_file)
 
-	uk_file = read_iod_uk_file(SOURCE_ABSOLUTE + "/uk_sample.txt")
+	uk_file = read_iod_uk_file(SOURCE_ABSOLUTE + "/SourceTXT/uk_sample.txt")
 	print_uk(uk_file)
 
 	# rde_file = []
