@@ -1,11 +1,14 @@
-import numpy as nu
+import os
+import numpy as np
 import datetime as dt
 import re
 import astropy.time as at
 
+SOURCE_ABSOLUTE = os.getcwd() + "/example_data/SourceCSV"  # Absolute path of source directory
+
 def julian_equinox_from_date(utc_date_time):
 	'''
-	Helper function.
+	Converts a datetime object to its equivalent julian equinox, acceptable by astropy functions.
 
 	Args:
 		utc_date_time (datetime object): A datetime object
@@ -17,7 +20,9 @@ def julian_equinox_from_date(utc_date_time):
 
 def station_status_iod(status_code):
 	'''
-	Helper function.
+	Returns a description string as per the status_code according to the definitions provided by SatObs for
+	IOD format reports. For more information, visit http://www.satobs.org/position/IODformat.html
+	and read detailed documentation (recommended).
 
 	Args:
 		status_code (char): One letter code for station status (from iod_one_line[21])
@@ -39,10 +44,12 @@ def station_status_iod(status_code):
 
 def epoch_star_chart(epoch_code):
 	'''
-	Helper function.
+	Returns one of the star chart names as per the epoch_code according to the star chart names provided by SatObs for
+	IOD/UK format reports. For more information, visit http://www.satobs.org/position/IODformat.html or
+	http://www.satobs.org/position/UKformat.html and read detailed documentation (recommended).
 
 	Args:
-		epoch_code (char): One letter code for epoch chart (from iod_one_line[45])
+		epoch_code (char): One letter code for epoch chart (from iod_one_line[45] or uk_one_line[54])
 
 	Returns:
 		Description string as per epoch_code stating epoch chart
@@ -60,7 +67,9 @@ def epoch_star_chart(epoch_code):
 
 def optical_behaviour_iod(behaviour_code):
 	'''
-	Helper function.
+	Returns a description string as per the behaviour_code according to the definitions provided by SatObs for
+	IOD format reports. For more information, visit http://www.satobs.org/position/IODformat.html
+	and read detailed documentation (recommended).
 
 	Args:
 		behaviour_code (char): One letter code for optical behaviour (from iod_one_line[65])
@@ -354,7 +363,9 @@ def parse_iod(iod):
 
 def optical_behaviour_uk(status_code):
 	'''
-	Helper function.
+	Returns a description string as per the status_code according to the definitions provided by SatObs for
+	UK format reports. For more information, visit http://www.satobs.org/position/UKformat.html
+	and read detailed documentation (recommended).
 
 	Args:
 		status_code (char): One letter code for optical behaviour (from uk_one_line[79])
@@ -374,7 +385,9 @@ def optical_behaviour_uk(status_code):
 
 def time_standard_uk(time_standard):
 	'''
-	Helper function.
+	Returns one of the time signal sources as per the time_standard according to the sources provided by SatObs for
+	UK format reports. For more information, visit http://www.satobs.org/position/UKformat.html
+	and read detailed documentation (recommended).
 
 	Args:
 		time_standard (char): One letter code for time standard (from uk_one_line[32])
@@ -757,32 +770,31 @@ def print_uk(uk):
 				print(uk_data_enum[j] + ": " + str(uk_data[j]))
 		print("")
 
+def read_iod_uk_file(path):
+	'''
+	Reads the file specified by path line by line and stores them as a list.
+
+	Args:
+		path (string): Absolute path to a file that contains IOD/UK format reports
+
+	Returns:
+		iod_uk_file (list): A list of strings containing lines of IOD/UK data in the file specified by path
+	'''
+	myfile = open(path, 'r')
+	iod_uk_file = []
+	while(1):
+		tempstr = myfile.readline().replace('\r', '').replace('\n', '')
+		if(tempstr is ""):
+			break
+		iod_uk_file.append(tempstr)
+	myfile.close()
+	return(iod_uk_file)
+
 if(__name__ == "__main__"):
-	iod_file = []
-	iod_file.append("23794 96 010A   2701 G 20040506012614270 17 25 1100114-184298 38 I+020 10 01189") # Includes everything
-	# iod_file.append("90019 03 790B   2701 G 20040506020755480 17 25 0929080-203364 48")
-	# iod_file.append("90019 03 790B   2701 G 20040506020932610 17 45 1029694-220449 67")
-	# iod_file.append("90019 03 790B   2701 G 20040506021046340 17 25 1115711-225466 37")
-	# iod_file.append("90019 03 790B   2701 G 20040506021115210 17 45 1133310-231006 78")
-	# iod_file.append("23794 96 010A   2701 P 20040506061610940 17 25 1045488+105544 19 I-010 10")
-	# iod_file.append("23794 96 010A   2701 P 20040506061636730 17 25 1252114+021122 29 I-020 10")
-	# iod_file.append("23794 96 010A   2701 P 20040506061641360 17 25 1334003-010390 58 I-020 10")
-	# iod_file.append("23794 96 010A   2701 P 20040506061735610 17 25 1909776-205541 97 I")
+	iod_file = read_iod_uk_file(SOURCE_ABSOLUTE + "/iod_sample.txt")
 	print_iod(iod_file)
 
-	uk_file = []
-	uk_file.append("9701201201803101520195542  01   12172038  +15585   1  50451923400667+6 +8   190R") # Includes everything
-	# uk_file.append("0401401267504050320170296  010  14102706  +36412   50 5")
-	# uk_file.append("0401401267504050320171054  010  12102406  +41279   50 5")
-	# uk_file.append("0401402267504050320192783  020  12100282  +21570   20 5")
-	# uk_file.append("0401402267504050320200763  020  12090786  +47320  100 5")
-	# uk_file.append("9906701267504050320381348  020  12114955  +16154   15 5")
-	# uk_file.append("9607201267504050320421970  010  12153504  +26400   60 5")
-	# uk_file.append("9607201267504050320423927  010  12162845  +41547   40 5")
-	# uk_file.append("9107603267504050320472151  010  12135798  +22002   50 5")
-	# uk_file.append("9107604267504050320473073  010  12135931  +21233   50 5")
-	# uk_file.append("9107603267504050320480282  010  12144997  +28369   10 5")
-	# uk_file.append("9107605267504050320483131  010  12152189  +32549   20 5")
+	uk_file = read_iod_uk_file(SOURCE_ABSOLUTE + "/uk_sample.txt")
 	print_uk(uk_file)
 
 	# rde_file = []
