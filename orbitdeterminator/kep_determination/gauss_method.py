@@ -11,10 +11,11 @@ from astropy.time import Time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-from poliastro.stumpff import c2, c3
+from poliastro.core.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
+import inquirer
 
 # declare astronomical constants in appropriate units
 au = cts.au.to(uts.Unit('km')).value
@@ -24,11 +25,9 @@ c_light = cts.c.to(uts.Unit('au/day'))
 earth_f = 0.003353
 Re = cts.R_earth.to(uts.Unit('km')).value
 
-# load JPL DE432s ephemeris SPK kernel
-# 'de432s.bsp' is automatically loaded by astropy, via jplephem
-# 'de432s.bsp' is about 10MB in size and will be automatically downloaded if not present yet in astropy's cache
-# for more information, see astropy.coordinates.solar_system_ephemeris documentation
-solar_system_ephemeris.set('de432s')
+x_ephem='de432s'
+solar_system_ephemeris.set(x_ephem)    
+
 
 #compute rotation matrices from equatorial to ecliptic frame and viceversa
 obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
@@ -746,6 +745,7 @@ def earth_ephemeris(t_tdb):
        Returns:
            (1x3 array): cartesian position in km
     """
+
     t = Time(t_tdb, format='jd', scale='tdb')
     ye = get_body_barycentric('earth', t)
     ys = get_body_barycentric('sun', t)
@@ -1516,7 +1516,7 @@ def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
         tv[i] = timeobs.tdb.jd
     return tv, rv
 
-def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
+def gauss_method_mpc(filename, bodyname, obs_arr=None, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for minor planets (asteroids, comets,
     etc.) orbit determination from MPC-formatted ra/dec tracking data. Roots of
     8-th order Gauss polynomial are computed using np.roots function. Note that
@@ -1532,7 +1532,8 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
            plot (bool): if True, plots data.
 
        Returns:
-           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+           x (tuple): set of Keplerian orbital elements {(a, e, taup, omega, I, omega, T),t_vec[-1]}
+           
     """
     # load MPC data for a given NEA
     mpc_object_data = load_mpc_data(filename)
@@ -1546,6 +1547,28 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
     # Sun's G*m value
     # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
     mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    # handle default behavior for obs_arr
+
+    # load JPL DE432s ephemeris SPK kernel
+    # 'de432s.bsp' is automatically loaded by astropy, via jplephem
+    # 'de432s.bsp' is about 10MB in size and will be automatically downloaded if not present yet in astropy's cache
+    # for more information, see astropy.coordinates.solar_system_ephemeris documentation
+    print("")
+    questions = [
+      inquirer.List('Ephemerides',
+                    message="Select ephemerides[de432s(default,small in size,faster)','de430(more precise)]:",
+                    choices=['de432s','de430'],
+                ),
+    ]
+    answers = inquirer.prompt(questions)
+
+    global x_ephem
+    x_ephem=answers["Ephemerides"]
+
+    solar_system_ephemeris.set(answers["Ephemerides"])    
+    
+    if obs_arr is None:
+        obs_arr = list(range(1, len(mpc_object_data)+1))
 
     #the total number of observations used
     nobs = len(obs_arr)
@@ -1672,7 +1695,8 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
         ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
         plt.show()
 
-    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
+    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean,t_vec[-1]
+
 
 def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for orbit determination of Earth satellites
@@ -1690,7 +1714,8 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
            plot (bool): if True, plots data.
 
        Returns:
-           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+           x (tuple): set of Keplerian orbital elements {(a, e, taup, omega, I, omega, T),t_vec[-1]}
+           
     """
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(filename)
@@ -1814,7 +1839,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
         ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
         plt.show()
 
-    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0
+    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0,t_vec[-1]
 
 # TODO: evaluate Earth ephemeris only once for a given TDB instant
 #       this implies saving all UTC times and their TDB equivalencies
