@@ -27,18 +27,28 @@ def get_format(data_file):
 	Detects the format of given file
 
 	Args:
-		date_file (string): Location of .txt file inside the orbitdeterminator/example_data folder
+		date_file (string): Location of the file inside the orbitdeterminator/example_data folder
 
 	Returns:
 		String :-
+			'Cartesian': If observation is in Cartesian coordinate system
 			'RDE': If observation is in R.D.E. format
 			'IOD': If observation is in I.O.D. format
 			'UK': If observation is in U.K. format
 			'Undefined format': If observation format is not among R.D.E., I.O.D. or U.K. format
+			Error message if data file extension is neither .txt nor .csv
 	'''
-	lines = [line.rstrip('\n') for line in open(data_file)]
+	Error = "Please use data in '.txt' or '.csv' file formats"
+	if data_file[-4:] == ".txt":
+		lines = [line.rstrip('\n') for line in open(data_file)]
+	elif data_file[-4:] == ".csv":
+		lines = np.genfromtxt(data_file, delimiter='\t')
+	else:
+		return Error
 	length = [(len(line)) for line in lines]
-	if length[0] == 20:
+	if length[0] == 4:
+		return 'Cartesian'
+	elif length[0] == 20:
 		return 'RDE'
 	elif length[0] <= 80:
 		if (checkdate(lines[0][23:31])):
@@ -47,8 +57,10 @@ def get_format(data_file):
 			return 'UK'
 		else:
 			return 'Undefined format'
+	else:
+		return "Undefined format"
 
 if __name__ == "__main__":
 	
-	data_file = "../example_data/test.txt"
-	get_format(data_file)
+	data_file = "../example_data/SourceTXT/uk_sample.txt"
+	print(get_format(data_file))

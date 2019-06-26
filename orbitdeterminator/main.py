@@ -3,8 +3,8 @@ Runs the whole process in one file for a .csv positional data file (time, x, y, 
 and generates the final set of keplerian elements along with a plot and a filtered.csv data file
 '''
 
-
-from util import (read_data, kep_state, rkf78, golay_window)
+import warnings
+from util import (read_data, kep_state, rkf78, golay_window, get_format, convert_format)
 from filters import (sav_golay, triple_moving_average)
 from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbsMethod)
 import automated
@@ -15,26 +15,37 @@ import matplotlib.pylab as plt
 from propagation import sgp4
 import inquirer
 
-def process(data_file, error_apriori, units):
+def process(data_file, error_apriori, units, output):
     '''
     Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
     file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
     the initial, filtered data set and the final orbit.
 
     Args:
-        data_file (string): The name of the .csv file containing the positional data
+        data_file (string): The name of the file containing the positional data
         error_apriori (float): apriori estimation of the measurements error in km
 
     Returns:
         Runs the whole process of the program
     '''
-    # First read the csv file called "orbit" with the positional data
-    source_path = "example_data/SourceCSV/"
+    source_path = "example_data/Source"
     dest_path = "example_data/DestinationCSV/"
     data_file = data_file.split(" ")
-    data = read_data.load_data(source_path + data_file[0])
-    for file in data_file[1: ]:
-        data = numpy.concatenate((data, read_data.load_data(source_path + file)), axis=0)
+    data = np.empty((0, 4))
+    for file in data_file:
+        try:
+            file_format = get_format.get_format(source_path + file[-3:].upper() + '/{}'.format(file))
+        except:
+            warnings.warn("Skiping {} file (Not a valid file type)".format(file))
+            continue
+
+        if file_format in ['IOD', 'RDE', 'UK']:
+            data = np.append(data, convert_format.convert(file, file_format), axis=0)
+        elif file_format is 'Cartesian':
+            data = np.append(data, read_data.load_data(source_path + file[-3:].upper() + "/{}".format(file)), axis=0)
+        else:
+            print("Skiping {} file (Observation format is undefined)".format(file))
+
 
 
     print("***********Choose from following options in desired order of application***********")
@@ -97,7 +108,7 @@ def process(data_file, error_apriori, units):
     print(means, "\n")
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt(dest_path + data_file.strip(".csv") + "_filtered.csv", data_after_filter, delimiter=",")
+    np.savetxt(dest_path + output + ".csv", data_after_filter, delimiter=",")
 
     kep_elements = {}
 
@@ -235,6 +246,7 @@ def read_args():
     parser.add_argument('-f', '--file_path', type=str, help="Path to .csv data file", default='orbit.csv')
     parser.add_argument('-e', '--error', type=float, help="Estimation of the measurement error", default=10.0)
     parser.add_argument('-u', '--units', type=str, help="m for metres, k for kilometres", default='k')
+    parser.add_argument('-o', '--output', type=str, help="Filename to save filtered data in DestinationCSV folder", default='filtered')
     parser.add_argument('-a', '--automate', help="Automate the orbit determination process", action='store_true')
     return parser.parse_args()
 
@@ -256,4 +268,4 @@ if __name__ == "__main__":
     if args.automate:
         automated.main()
     else:
-        process(args.file_path, args.error, args.units)
+        process(args.file_path, args.error, args.units, args.output)

@@ -9,7 +9,7 @@ import astropy.time as at
 '''
 Assumes that all input files are present in $PROJ_DIR$/orbitdeterminator/example_data/Source_CSV/
 '''
-SOURCE_ABSOLUTE = os.getcwd() + "/example_data"  # Absolute path of source directory
+SOURCE_ABSOLUTE = os.getcwd() + "/../example_data"  # Absolute path of source directory
 
 '''
 A dictionary that contains details of all observation sites
@@ -814,6 +814,67 @@ def read_iod_uk_file(path):
 	myfile.close()
 	return(iod_uk_file)
 
+def geographic_to_ecef(geographic):
+	'''
+	Converts the given Geographic coordinates to ECEG (X, Y and Z) coordinates
+
+	Args:
+		geographic observation (numoy array): Array of data points in geographic coordinates (Latitude (degrees), Longitute (degrees) and Altitude (meters)) 
+
+	Returns:
+		observation (numpy array): Array of data points in ECEF (X, Y and Z (in meters)) coordinates
+	'''
+	cosLat = np.cos(geographic[:, 0] * np.PI / 180.0)
+	sinLat = np.sin(geographic[:, 0] * np.PI / 180.0)
+	cosLon = np.cos(geographic[:, 1] * np.PI / 180.0)
+	sinLon = np.sin(geographic[:, 1] * np.PI / 180.0)
+	radius = 6378137.0
+	f = 1.0 / 298.257224
+	C = 1.0 / np.sqrt(cosLat * cosLat + (1 - f) * (1 - f) * sinLat * sinLat)
+	S = (1.0 - f) * (1.0 - f) * C
+	h = 0.0
+	x = (radius * C + geographic[:, 2]) * cosLat * cosLon
+	y = (radius * C + geographic[:, 2]) * cosLat * sinLon
+	z = (radius * S + geographic[:, 2]) * sinLat
+	ECEF = np.concatenate((x, y, z), axis=1)
+	return ECEF
+
+def convert_format(file, file_format):
+	'''
+	Converts the given observation format into cartesian coordinate system
+
+	Args:
+		path (string): Path to a file in example_data folder
+		observation format (string): Observation format of file (I.O.D., R.D.E. or U.K.)
+
+	Returns:
+		observation (numpy array): A array of floats containing observation in [t, x, y, z] format
+	'''
+	data = read_iod_uk_file(SOURCE_ABSOLUTE + "/Source" + file[-3:].upper() + "/{}".format(file))
+	data_parsed = np.empty((0, 4))
+	for line in data:
+		if file_format == "UK":
+			uk_data = parse_uk(line)
+			position_deg = pos_coord_to_str(uk_data[5])
+			R = range_to_str_uk(uk_data[6])
+			latitude = float(re.split(" ", position_deg)[2 if len(re.split(" ", position_deg)) > 2 else 1])
+			longitude = float(re.split(" ", position_deg)[0])
+			radius = float(6378137.0 if R == 'NA' else R)
+			timestamp = datetime.datetime.strptime(datetime_to_str(uk_data[2]), "%Y-%m-%d %H:%M:%S.%f").timestamp()
+		elif file_format == "IOD":
+			iod_data = parse_iod(line)
+			position_deg = pos_coord_to_str(iod_data[6])
+			latitude = float(re.split(" ", position_deg_str)[2 if len(re.split(" ", position_deg_str)) > 2 else 1])
+			longitude = float(re.split(" ", position_deg)[0])
+			radius = float(6378137.0)
+			timestamp = datetime.datetime.strptime(datetime_to_str(iod_data[4]), "%Y-%m-%d %H:%M:%S.%f").timestamp()
+		data_parsed = np.append(data_parsed, np.array([timestamp, latitude, longitude, radius]))
+	data_parsed[:, 1:] = geographic_to_ecef(data_parsed[:, 1:])
+	return data_parsed
+
+
+
+
 if(__name__ == "__main__"):
 	# Open the GeoJSON file containing observation sites details into a dictionary
 	json_file = open(SOURCE_ABSOLUTE + "/Sites.gjson")
@@ -824,15 +885,3 @@ if(__name__ == "__main__"):
 
 	uk_file = read_iod_uk_file(SOURCE_ABSOLUTE + "/SourceTXT/uk_sample.txt")
 	print_uk(uk_file)
-
-	# rde_file = []
-	# rde_file.append("2420 0309 0.211 1204")
-	# rde_file.append("03")
-	# rde_file.append("0300203 195141.71 005932+313611 4.4 4.4 0 S")
-	# rde_file.append("8502002 195853.74 010744+311633 5.1 5.1 0 S")
-	# rde_file.append("04")
-	# rde_file.append("7704401 015519.00 212317+765245 6.3 7.5 4 R")
-	# rde_file.append("7704401 015559.35 221342+565110 6.0 7.2 4 R")
-	# rde_file.append("8700602 020411.32 151747+741235 4.8 4.8 0 S")
-	# rde_file.append("8205102 021426.21 021503+282843 4.2 4.2 0 S")
-	# rde_file.append("999")
