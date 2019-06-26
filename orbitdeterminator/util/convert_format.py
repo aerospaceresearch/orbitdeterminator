@@ -872,9 +872,6 @@ def convert_format(file, file_format):
 	data_parsed[:, 1:] = geographic_to_ecef(data_parsed[:, 1:])
 	return data_parsed
 
-
-
-
 if(__name__ == "__main__"):
 	# Open the GeoJSON file containing observation sites details into a dictionary
 	json_file = open(SOURCE_ABSOLUTE + "/Sites.gjson")
