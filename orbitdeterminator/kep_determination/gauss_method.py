@@ -17,6 +17,8 @@ from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
 import inquirer
 import ephem
+import sys
+
 
 # declare astronomical constants in appropriate units
 au = cts.au.to(uts.Unit('km')).value
@@ -1260,7 +1262,7 @@ def rhovec2radec(long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omeg
         return ra_rad, dec_rad
 
 def angle_diff_rad(a1, a2):
-    """Compute shortest signed difference between two angles. Input angles
+    """Computes signed difference between two angles. Input angles
     are assumed to be in radians. Result is returned in radians. Code adapted
     from https://rosettacode.org/wiki/Angle_difference_between_two_bearings#Python.
 
@@ -1274,8 +1276,18 @@ def angle_diff_rad(a1, a2):
     r = (a2 - a1) % (2.0*np.pi)
     # Python modulus has same sign as divisor, which is positive here,
     # so no need to consider negative case
-    if r >= np.pi:
-        r -= (2.0*np.pi)
+    print("Use shorter value of signed difference?[y/n]")
+    ch=input()    
+    if(ch=='y'):
+         if r >= np.pi:
+             r -= (2.0*np.pi)
+    elif(ch=='n'):
+         if r <= np.pi:
+             r -= (2.0*np.pi) 
+    else:
+         print("Invalid input.Exiting...\n")
+         sys.exit()                                 
+
     return r
 
 def radec_residual_mpc(x, t_ra_dec_datapoint, long, parallax_s, parallax_c):
