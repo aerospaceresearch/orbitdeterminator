@@ -21,9 +21,35 @@ import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
 from orbitdeterminator.kep_determination.ellipse_fit import determine_kep, __read_file
 from orbitdeterminator.kep_determination.gauss_method import *
+import sys
+
+def get_weights(resid):
+    """
+    This function calculates the weights per (x,y,z) by using the inverse of the squared residuals divided by the total sum of the inverse of the squared residuals. 
+    """
+    total = sum([abs(resid[i]) for i in range(len(resid))])
+    fract = np.array([resid[i]/total for i in range(len(resid))])
+    return fract
 
 # compute residuals vector, with Earth's grav parameter as to-be-fitted variable
-def res_vec(x, my_data):
+def res_vec(x, my_data,weights):
+    rv = np.zeros((3*my_data.shape[0]))
+    for i in range(0,my_data.shape[0]-1):
+        # observed xyz values
+        xyz_obs = my_data[i,1:4]
+        # predicted )computed xyz values
+        xyz_com = orbel2xyz(my_data[i,0], x[6], x[0], x[1], x[2], x[3], x[4], x[5])
+        # observed minus computed residual:
+        rv[3*i-3] = xyz_obs[0]-xyz_com[0]
+        rv[3*i-2] = xyz_obs[1]-xyz_com[1]
+        rv[3*i-1] = xyz_obs[2]-xyz_com[2]
+
+        rv[3*i-3] = weights[i]*rv[3*i-3]
+        rv[3*i-2] = weights[i]*rv[3*i-2]
+        rv[3*i-1] = weights[i]*rv[3*i-1]
+    return rv
+
+def res_vec_1(x, my_data):
     rv = np.zeros((3*my_data.shape[0]))
     for i in range(0,my_data.shape[0]-1):
         # observed xyz values
@@ -338,7 +364,30 @@ if __name__ == "__main__":
     #Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
     #Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
     #Q_ls = least_squares(res_vec, x0, args=(data, mu_Earth), method='lm')
-    Q_ls = least_squares(res_vec, x0, args=(data,), method='lm')
+    print("What action do you want to perform?")
+    print("1.Least squares.")
+    print("2.Weighted Least squares.")
+    chk=input()
+
+
+    if(chk=='2'):
+             Q_ls = least_squares(res_vec_1, x0, args=(data,), method='lm')
+             residuals=Q_ls.fun
+             #print("--")
+             #print(residuals)
+             #print("--")
+             weights=get_weights(residuals)
+             #print("--")
+             #print(weights)
+             #print("--")
+             Q_ls = least_squares(res_vec, x0, args=(data,weights), method='lm')
+             
+    elif(chk=='1'):
+             Q_ls = least_squares(res_vec_1, x0, args=(data,), method='lm')
+    else:
+             print("Invalid input.Exiting...")
+             sys.exit()          
+
     print('scipy.optimize.least_squares exited with code ', Q_ls.status)
     print(Q_ls.message,'\n')
     #display least-squares solution
