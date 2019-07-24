@@ -1,0 +1,347 @@
+{
+    "__comment": null,
+    "meta_data": {
+        "file_name": "00_jena_iss_test.json",
+        "gs_count": 1,
+        "sat_count": 1
+    },
+    "ground_station": {
+        "gs_id": "JENA",
+        "lat": 50.9271,
+        "lon": 11.5892,
+        "alt": 143,
+        "monitored": "ISS"
+    },
+    "satellites": [
+        {
+            "sat_id": 25544,
+            "f_c": 630000000.0,
+            "data_stream": [
+                {
+                    "time_unix": "1562810340.000",
+                    "time_gnss": null,
+                    "f_m": "629991146.55",
+                    "gs_distance": "2317.41"
+                },
+                {
+                    "time_unix": "1562810350.000",
+                    "time_gnss": null,
+                    "f_m": "629991438.73",
+                    "gs_distance": "2275.97"
+                },
+                {
+                    "time_unix": "1562810360.000",
+                    "time_gnss": null,
+                    "f_m": "629991748.03",
+                    "gs_distance": "2235.96"
+                },
+                {
+                    "time_unix": "1562810370.000",
+                    "time_gnss": null,
+                    "f_m": "629992075.01",
+                    "gs_distance": "2197.46"
+                },
+                {
+                    "time_unix": "1562810380.000",
+                    "time_gnss": null,
+                    "f_m": "629992420.17",
+                    "gs_distance": "2160.56"
+                },
+                {
+                    "time_unix": "1562810390.000",
+                    "time_gnss": null,
+                    "f_m": "629992783.93",
+                    "gs_distance": "2125.35"
+                },
+                {
+                    "time_unix": "1562810400.000",
+                    "time_gnss": null,
+                    "f_m": "629993166.57",
+                    "gs_distance": "2091.91"
+                },
+                {
+                    "time_unix": "1562810410.000",
+                    "time_gnss": null,
+                    "f_m": "629993568.25",
+                    "gs_distance": "2060.34"
+                },
+                {
+                    "time_unix": "1562810420.000",
+                    "time_gnss": null,
+                    "f_m": "629993988.94",
+                    "gs_distance": "2030.73"
+                },
+                {
+                    "time_unix": "1562810430.000",
+                    "time_gnss": null,
+                    "f_m": "629994428.45",
+                    "gs_distance": "2003.17"
+                },
+                {
+                    "time_unix": "1562810440.000",
+                    "time_gnss": null,
+                    "f_m": "629994886.37",
+                    "gs_distance": "1977.74"
+                },
+                {
+                    "time_unix": "1562810450.000",
+                    "time_gnss": null,
+                    "f_m": "629995362.05",
+                    "gs_distance": "1954.53"
+                },
+                {
+                    "time_unix": "1562810460.000",
+                    "time_gnss": null,
+                    "f_m": "629995854.60",
+                    "gs_distance": "1933.62"
+                },
+                {
+                    "time_unix": "1562810470.000",
+                    "time_gnss": null,
+                    "f_m": "629996362.88",
+                    "gs_distance": "1915.10"
+                },
+                {
+                    "time_unix": "1562810480.000",
+                    "time_gnss": null,
+                    "f_m": "629996885.48",
+                    "gs_distance": "1899.03"
+                },
+                {
+                    "time_unix": "1562810490.000",
+                    "time_gnss": null,
+                    "f_m": "629997420.76",
+                    "gs_distance": "1885.48"
+                },
+                {
+                    "time_unix": "1562810500.000",
+                    "time_gnss": null,
+                    "f_m": "629997966.82",
+                    "gs_distance": "1874.50"
+                },
+                {
+                    "time_unix": "1562810510.000",
+                    "time_gnss": null,
+                    "f_m": "629998521.57",
+                    "gs_distance": "1866.14"
+                },
+                {
+                    "time_unix": "1562810520.000",
+                    "time_gnss": null,
+                    "f_m": "629999082.72",
+                    "gs_distance": "1860.44"
+                },
+                {
+                    "time_unix": "1562810530.000",
+                    "time_gnss": null,
+                    "f_m": "629999647.86",
+                    "gs_distance": "1857.42"
+                },
+                {
+                    "time_unix": "1562810540.000",
+                    "time_gnss": null,
+                    "f_m": "630000214.50",
+                    "gs_distance": "1857.09"
+                },
+                {
+                    "time_unix": "1562810550.000",
+                    "time_gnss": null,
+                    "f_m": "630000780.11",
+                    "gs_distance": "1859.46"
+                },
+                {
+                    "time_unix": "1562810560.000",
+                    "time_gnss": null,
+                    "f_m": "630001342.17",
+                    "gs_distance": "1864.51"
+                },
+                {
+                    "time_unix": "1562810570.000",
+                    "time_gnss": null,
+                    "f_m": "630001898.25",
+                    "gs_distance": "1872.22"
+                },
+                {
+                    "time_unix": "1562810580.000",
+                    "time_gnss": null,
+                    "f_m": "630002446.04",
+                    "gs_distance": "1882.56"
+                },
+                {
+                    "time_unix": "1562810590.000",
+                    "time_gnss": null,
+                    "f_m": "630002983.41",
+                    "gs_distance": "1895.48"
+                },
+                {
+                    "time_unix": "1562810600.000",
+                    "time_gnss": null,
+                    "f_m": "630003508.42",
+                    "gs_distance": "1910.94"
+                },
+                {
+                    "time_unix": "1562810610.000",
+                    "time_gnss": null,
+                    "f_m": "630004019.36",
+                    "gs_distance": "1928.85"
+                },
+                {
+                    "time_unix": "1562810620.000",
+                    "time_gnss": null,
+                    "f_m": "630004514.79",
+                    "gs_distance": "1949.16"
+                },
+                {
+                    "time_unix": "1562810630.000",
+                    "time_gnss": null,
+                    "f_m": "630004993.51",
+                    "gs_distance": "1971.79"
+                },
+                {
+                    "time_unix": "1562810640.000",
+                    "time_gnss": null,
+                    "f_m": "630005454.58",
+                    "gs_distance": "1996.66"
+                },
+                {
+                    "time_unix": "1562810650.000",
+                    "time_gnss": null,
+                    "f_m": "630005897.31",
+                    "gs_distance": "2023.68"
+                },
+                {
+                    "time_unix": "1562810660.000",
+                    "time_gnss": null,
+                    "f_m": "630006321.24",
+                    "gs_distance": "2052.76"
+                },
+                {
+                    "time_unix": "1562810670.000",
+                    "time_gnss": null,
+                    "f_m": "630006726.13",
+                    "gs_distance": "2083.81"
+                },
+                {
+                    "time_unix": "1562810680.000",
+                    "time_gnss": null,
+                    "f_m": "630007111.94",
+                    "gs_distance": "2116.74"
+                },
+                {
+                    "time_unix": "1562810690.000",
+                    "time_gnss": null,
+                    "f_m": "630007478.78",
+                    "gs_distance": "2151.46"
+                },
+                {
+                    "time_unix": "1562810700.000",
+                    "time_gnss": null,
+                    "f_m": "630007826.92",
+                    "gs_distance": "2187.89"
+                },
+                {
+                    "time_unix": "1562810710.000",
+                    "time_gnss": null,
+                    "f_m": "630008156.74",
+                    "gs_distance": "2225.93"
+                },
+                {
+                    "time_unix": "1562810720.000",
+                    "time_gnss": null,
+                    "f_m": "630008468.74",
+                    "gs_distance": "2265.49"
+                },
+                {
+                    "time_unix": "1562810730.000",
+                    "time_gnss": null,
+                    "f_m": "630008763.46",
+                    "gs_distance": "2306.50"
+                },
+                {
+                    "time_unix": "1562810740.000",
+                    "time_gnss": null,
+                    "f_m": "630009041.54",
+                    "gs_distance": "2348.87"
+                },
+                {
+                    "time_unix": "1562810750.000",
+                    "time_gnss": null,
+                    "f_m": "630009303.63",
+                    "gs_distance": "2392.52"
+                },
+                {
+                    "time_unix": "1562810760.000",
+                    "time_gnss": null,
+                    "f_m": "630009550.41",
+                    "gs_distance": "2437.39"
+                },
+                {
+                    "time_unix": "1562810770.000",
+                    "time_gnss": null,
+                    "f_m": "630009782.59",
+                    "gs_distance": "2483.39"
+                },
+                {
+                    "time_unix": "1562810780.000",
+                    "time_gnss": null,
+                    "f_m": "630010000.87",
+                    "gs_distance": "2530.47"
+                },
+                {
+                    "time_unix": "1562810790.000",
+                    "time_gnss": null,
+                    "f_m": "630010205.94",
+                    "gs_distance": "2578.55"
+                },
+                {
+                    "time_unix": "1562810800.000",
+                    "time_gnss": null,
+                    "f_m": "630010398.49",
+                    "gs_distance": "2627.58"
+                },
+                {
+                    "time_unix": "1562810810.000",
+                    "time_gnss": null,
+                    "f_m": "630010579.18",
+                    "gs_distance": "2677.50"
+                },
+                {
+                    "time_unix": "1562810820.000",
+                    "time_gnss": null,
+                    "f_m": "630010748.67",
+                    "gs_distance": "2728.25"
+                },
+                {
+                    "time_unix": "1562810830.000",
+                    "time_gnss": null,
+                    "f_m": "630010907.58",
+                    "gs_distance": "2779.78"
+                },
+                {
+                    "time_unix": "1562810840.000",
+                    "time_gnss": null,
+                    "f_m": "630011056.49",
+                    "gs_distance": "2832.04"
+                },
+                {
+                    "time_unix": "1562810850.000",
+                    "time_gnss": null,
+                    "f_m": "630011195.98",
+                    "gs_distance": "2884.99"
+                },
+                {
+                    "time_unix": "1562810860.000",
+                    "time_gnss": null,
+                    "f_m": "630011326.58",
+                    "gs_distance": "2938.58"
+                },
+                {
+                    "time_unix": "1562810870.000",
+                    "time_gnss": null,
+                    "f_m": "630011448.81",
+                    "gs_distance": "2992.77"
+                }
+            ]
+        }
+    ]
+}
