@@ -2026,11 +2026,32 @@ def gauss_method_mpc(filename, bodyname, obs_arr=None, r2_root_ind_vec=None, ref
     z_Ea_vec = np.zeros((nobs,))
     t_vec = np.zeros((nobs,))
 
+    # Speed of light constant
+    c= 299792.458
+
+    print("Consider light propogation time?[y/n]")
+    check=input()
+
+    if(check!='y' and check!='n'):
+         print("Invalid input.Exiting...\n")
+         sys.exit()     
+
     for j in range (0,nobs-2):
         # Apply Gauss method to three elements of data
         inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
         print('Processing observation #', j)
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, Ea_hc_pos, obs_t = gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+
+        # Consider light propagation time
+        if(check=='y'):
+            #print(obs_t[0])
+            #print(obs_t[1])
+            obs_t[0]= obs_t[0]-(rho_1_sr/c)
+            obs_t[1]= obs_t[1]-(rho_2_sr/c)
+            obs_t[2]= obs_t[2]-(rho_3_sr/c)
+            #print(rho_1_sr)
+
+
 
         if j==0:
             t_vec[0] = obs_t[0]
@@ -2133,7 +2154,7 @@ def gauss_method_mpc(filename, bodyname, obs_arr=None, r2_root_ind_vec=None, ref
 
 def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for orbit determination of Earth satellites
-    from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
+    from IOD-formatted ra/dec tracking data. 
     Roots of 8-th order Gauss polynomial are computed using np.roots function.
     Note that if `r2_root_ind_vec` is not specified by the user, then the first
     positive root returned by np.roots is used by default.
@@ -2186,18 +2207,41 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
     w_vec = np.zeros((nobs-2,))
     n_vec = np.zeros((nobs-2,))
     t_vec = np.zeros((nobs,))
+    
+    # Speed of light constant
+    c= 299792.458
+
+    print("Consider light propogation time?[y/n]")
+    check=input()
+
+    if(check!='y' and check!='n'):
+         print("Invalid input.Exiting...\n")
+         sys.exit()   
+
 
     for j in range (0,nobs-2):
+
         # Apply Gauss method to three elements of data
         inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
         print('Processing observation #', j)
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+      
+        # Consider light propagation time
+        if(check=='y'):
+            #print(obs_t[0])
+            #print(obs_t[1])
+            obs_t[0]= obs_t[0]-(rho_1_sr/c)
+            obs_t[1]= obs_t[1]-(rho_2_sr/c)
+            obs_t[2]= obs_t[2]-(rho_3_sr/c)
+            #print(rho_1_sr)
+
 
         if j==0:
             t_vec[0] = obs_t[0]
             x_vec[0] = r1[0]
             y_vec[0] = r1[1]
             z_vec[0] = r1[2]
+
         if j==nobs-3:
             t_vec[nobs-1] = obs_t[2]
             x_vec[nobs-1] = r3[0]
