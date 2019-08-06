@@ -851,9 +851,19 @@ if __name__ == "__main__":
                 f_time=f_time.timestamp()
 
                 kep = state_kep(np.asarray(initial_state_r),np.asarray(initial_state_v))
-                f_v = propagate_state(np.asarray(initial_state_r),np.asarray(initial_state_v),time,f_time,bstar=0.21109E-4)
-
+                f_r,f_v = propagate_state(np.asarray(initial_state_r),np.asarray(initial_state_v),time,f_time,bstar=0.21109E-4)
+                
+                #r= [float(f_v[0]),float(initial_state[1, 0]),float(initial_state[2, 0])]
+                f_r= np.asarray(f_r)
+                f_v= np.asarray(f_v)
+                #f_orbit= Orbit.from_vectors(Earth, r, v)
+ 
+                #f_orbit.plot()
+                print("Orbital elements:")    
+                print(state_kep(f_r,f_v))
+                print("")
                 print("Position and velocity vectors are(r,v):")
+                print(f_r)
                 print(f_v)
                 print("")
 
@@ -905,6 +915,10 @@ if __name__ == "__main__":
                  p_t_o= Time(p_t_s, format='iso', scale='utc')
                  print("")
                  final=initial.propagate(p_t_o)
+                 #final.plot()
+                 print("Orbital elements:")    
+                 print(final.classical())
+                 print("")                 
                  print("Final co-ordinates:")
                  final.rv()                                 
  
@@ -917,10 +931,10 @@ if __name__ == "__main__":
                  
                  x0 = gauss_method_mpc(args.file_path, obs_arr=obs_arr, bodyname=args.body_name,
                                        r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=False)
-
+                 
                  time=Time(x0[7], format='jd').iso
-                                  
-                 x0=np.asarray(x0)                      
+                 x0=np.asarray(x0)                
+                                       
                                 
                  #x0[3:6] = np.deg2rad(x0[3:6])
                  mean_motion=meanmotion(mu_Sun,x0[0])
@@ -940,6 +954,10 @@ if __name__ == "__main__":
                  p_t_o= Time(p_t_s, format='iso', scale='utc')
                  print("")
                  final=initial.propagate(p_t_o)
+                 #final.plot()
+                 print("Orbital elements:")    
+                 print(final.classical())
+                 print("")                 
                  print("Final co-ordinates:")
                  print(final.rv())                                 
  
@@ -963,6 +981,10 @@ if __name__ == "__main__":
                 p_t_o= Time(p_t_s, format='iso', scale='utc')
                 print("")
                 final=orbit.propagate(p_t_o)
+                #final.plot()
+                print("Orbital elements:")    
+                print(final.classical())
+                print("")
                 print("Final co-ordinates:")
                 print(final.rv())                                 
  
@@ -983,6 +1005,10 @@ if __name__ == "__main__":
                 p_t_o= Time(p_t_s, format='iso', scale='utc')
                 print("")
                 final=orbit.propagate(p_t_o)
+                #final.plot()
+                print("Orbital elements:")    
+                print(final.classical())
+                print("")                
                 print("Final co-ordinates:")
                 print(final.rv())                                 
 
