@@ -1,3 +1,7 @@
+'''
+Checks and return the format (Cartesian, U.K., I.O.D. or R.D.E) used in the file given as argument
+'''
+
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))

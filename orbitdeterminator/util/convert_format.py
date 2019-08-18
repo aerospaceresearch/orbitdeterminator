@@ -9,7 +9,7 @@ import astropy.time as at
 '''
 Assumes that all input files are present in $PROJ_DIR$/orbitdeterminator/example_data/Source_CSV/
 '''
-SOURCE_ABSOLUTE = os.getcwd() + "/../example_data"  # Absolute path of source directory
+SOURCE_ABSOLUTE = os.getcwd() + "/example_data"  # Absolute path of source directory
 
 '''
 A dictionary that contains details of all observation sites
@@ -816,10 +816,25 @@ def read_iod_uk_file(path):
 
 def geographic_to_ecef(geographic):
 	'''
-	Converts the given Geographic coordinates to ECEG (X, Y and Z) coordinates
+	Converts the given Geographic coordinates to ECEF (X, Y and Z) coordinates considering earth as Spherical object
 
 	Args:
-		geographic observation (numoy array): Array of data points in geographic coordinates (Latitude (degrees), Longitute (degrees) and Altitude (meters)) 
+		geographic observation (numpy array): Array of data points in geographic coordinates (Latitude (degrees), Longitute (degrees) and Altitude (meters)) 
+
+	Returns:
+		observation (numpy array): Array of data points in ECEF (X, Y and Z (in meters)) coordinates
+	'''
+	x = geographic[:, 2]*np.cos(np.deg2rad(geographic[:, 1]))*np.sin(np.deg2rad(geographic[:, 0]))
+	y = geographic[:, 2]*np.sin(np.deg2rad(geographic[:, 1]))
+	z = -geographic[:, 2]*np.cos(np.deg2rad(geographic[:, 1]))*np.cos(np.deg2rad(geographic[:, 0]))
+	return np.array((x, y, z)).T
+
+def geographic_to_ecef_WSG84(geographic):
+	'''
+	Converts the given Geographic coordinates to ECEF (X, Y and Z) coordinates taking earth as a WGS84 Object.
+
+	Args:
+		geographic observation (numpy array): Array of data points in geographic coordinates (Latitude (degrees), Longitute (degrees) and Altitude (meters)) 
 
 	Returns:
 		observation (numpy array): Array of data points in ECEF (X, Y and Z (in meters)) coordinates
@@ -828,15 +843,15 @@ def geographic_to_ecef(geographic):
 	sinLat = np.sin(geographic[:, 0] * np.PI / 180.0)
 	cosLon = np.cos(geographic[:, 1] * np.PI / 180.0)
 	sinLon = np.sin(geographic[:, 1] * np.PI / 180.0)
-	radius = 6378137.0
+	altitude = geographic[:, 2]
 	f = 1.0 / 298.257224
 	C = 1.0 / np.sqrt(cosLat * cosLat + (1 - f) * (1 - f) * sinLat * sinLat)
 	S = (1.0 - f) * (1.0 - f) * C
 	h = 0.0
-	x = (radius * C + geographic[:, 2]) * cosLat * cosLon
-	y = (radius * C + geographic[:, 2]) * cosLat * sinLon
-	z = (radius * S + geographic[:, 2]) * sinLat
-	ECEF = np.concatenate((x, y, z), axis=1)
+	x = (altitude * C + geographic[:, 2]) * cosLat * cosLon
+	y = (altitude * C + geographic[:, 2]) * cosLat * sinLon
+	z = (altitude * S + geographic[:, 2]) * sinLat
+	ECEF = np.array((x, y, z)).T
 	return ECEF
 
 def convert_format(file, file_format):
@@ -856,19 +871,24 @@ def convert_format(file, file_format):
 		if file_format == "UK":
 			uk_data = parse_uk(line)
 			position_deg = pos_coord_to_str(uk_data[5])
-			R = range_to_str_uk(uk_data[6])
+			R = (float(uk_data[6][0]) if range_to_str_uk(uk_data[6]) != "NA" else range_to_str_uk(uk_data[6]))
 			latitude = float(re.split(" ", position_deg)[2 if len(re.split(" ", position_deg)) > 2 else 1])
 			longitude = float(re.split(" ", position_deg)[0])
-			radius = float(6378137.0 if R == 'NA' else R)
-			timestamp = datetime.datetime.strptime(datetime_to_str(uk_data[2]), "%Y-%m-%d %H:%M:%S.%f").timestamp()
+			altitude = float(6378137.0 if R == 'NA' else R)
+			date = datetime_to_str(uk_data[2]).split("\u00B1")[0][:-1]
+			timestamp = dt.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f").timestamp()
 		elif file_format == "IOD":
 			iod_data = parse_iod(line)
 			position_deg = pos_coord_to_str(iod_data[6])
 			latitude = float(re.split(" ", position_deg_str)[2 if len(re.split(" ", position_deg_str)) > 2 else 1])
 			longitude = float(re.split(" ", position_deg)[0])
-			radius = float(6378137.0)
-			timestamp = datetime.datetime.strptime(datetime_to_str(iod_data[4]), "%Y-%m-%d %H:%M:%S.%f").timestamp()
-		data_parsed = np.append(data_parsed, np.array([timestamp, latitude, longitude, radius]))
+			altitude = float(6378137.0)
+			s = "2017-07-19 14:11:22.678 ±0.0000sec UTC+00:00"
+			a = s.split("\u00B1")
+			a = a[0][:-1]
+			date = datetime_to_str(iod_data[4]).split("\u00B1")[0][:-1]
+			timestamp = dt.datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f").timestamp()
+		data_parsed = np.append(data_parsed, np.array([[timestamp, longitude, latitude, altitude]]), axis=0)
 	data_parsed[:, 1:] = geographic_to_ecef(data_parsed[:, 1:])
 	return data_parsed
 
