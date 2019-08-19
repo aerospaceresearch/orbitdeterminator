@@ -96,7 +96,7 @@ def process(data_file, error_apriori, name):
     print(" ")
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt(os.getcwd() + "/example_data/DestinationCSV/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
+    np.savetxt(os.getcwd() + "/obs_data/DestinationCSV/" + "%s_filtered.csv" % (name), data_after_filter, delimiter=",")
 
     # Apply Lambert's solution for the filtered data set
     kep_lamb = lamberts_kalman.create_kep(data_after_filter)
@@ -185,12 +185,12 @@ def process(data_file, error_apriori, name):
             ax.set_xlabel('x (km)')
             ax.set_ylabel('y (km)')
             ax.set_zlabel('z (km)')
-            plt.savefig(os.getcwd() + "/example_data/DestinationSVG/" + '%s_%s.svg'%(name, method_name[j]), format="svg")
+            plt.savefig(os.getcwd() + "/obs_data/DestinationSVG/" + '%s_%s.svg'%(name, method_name[j]), format="svg")
             print("saved %s_%s.svg"%(name, method_name[j]))
 
 def main():
     global SOURCE_ABSOLUTE
-    SOURCE_ABSOLUTE = os.getcwd() + "/example_data/SourceCSV"  # Absolute path of source directory
+    SOURCE_ABSOLUTE = os.getcwd() + "/obs_data/SourceCSV"  # Absolute path of source directory
     print("Do you wish to reset(deinit/init) git repository? [y/n]")
     user_input1 = input()
     if(user_input1 == "y" or user_input1 == "Y"):
@@ -202,10 +202,10 @@ def main():
         raw_files = untracked_files()
         if not raw_files:
             if (number_untracked == 0):
-                print("\nNo unprocessed file found in ./example_data/SourceCSV folder")
+                print("\nNo unprocessed file found in ./obs_data/SourceCSV folder")
             else:
                 print("\nAll untracked files have been processed")
-            print("Add new files in /example_data/SourceCSV folder to process them")
+            print("Add new files in /obs_data/SourceCSV folder to process them")
             time_elapsed = 0
             timeout = 30
             while (time_elapsed <= timeout and not raw_files):
