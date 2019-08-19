@@ -7,9 +7,9 @@ import astropy.time as at
 
 
 '''
-Assumes that all input files are present in $PROJ_DIR$/orbitdeterminator/example_data/Source_CSV/
+Assumes that all input files are present in $PROJ_DIR$/orbitdeterminator/obs_data/Source_CSV/
 '''
-SOURCE_ABSOLUTE = os.getcwd() + "/example_data"  # Absolute path of source directory
+SOURCE_ABSOLUTE = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)) + "/obs_data"  # Absolute path of source directory
 
 '''
 A dictionary that contains details of all observation sites
@@ -859,7 +859,7 @@ def convert_format(file, file_format):
 	Converts the given observation format into cartesian coordinate system
 
 	Args:
-		path (string): Path to a file in example_data folder
+		path (string): Path to a file in obs_data folder
 		observation format (string): Observation format of file (I.O.D., R.D.E. or U.K.)
 
 	Returns:

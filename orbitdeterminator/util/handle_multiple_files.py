@@ -6,7 +6,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import warnings
 import numpy as np
-from util import (read_data, get_format, convert_format)
+from util import read_data, get_format, convert_format
 
 
 def handle_multiple_files(file_list):
@@ -19,7 +19,7 @@ def handle_multiple_files(file_list):
     Returns:
         Combined data (Numpy Array): Array of combined data from all files in cartesian format
     '''
-    source_path = "example_data/Source"
+    source_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir)) + "/obs_data/Source"
     data = np.empty((0, 4))
     for file in file_list:
         try:

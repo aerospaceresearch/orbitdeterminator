@@ -31,7 +31,7 @@ def get_format(data_file):
 	Detects the format of given file
 
 	Args:
-		date_file (string): Location of the file inside the orbitdeterminator/example_data folder
+		date_file (string): Location of the file inside the orbitdeterminator/obs_data folder
 
 	Returns:
 		String :-
@@ -66,5 +66,5 @@ def get_format(data_file):
 
 if __name__ == "__main__":
 	
-	data_file = "../example_data/SourceTXT/uk_sample.txt"
+	data_file = "../obs_data/SourceTXT/uk_sample.txt"
 	print(get_format(data_file))

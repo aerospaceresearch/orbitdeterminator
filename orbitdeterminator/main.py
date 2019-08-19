@@ -32,8 +32,8 @@ def process(file_list, error_apriori, units, output):
     Returns:
         Runs the whole process of the program
     '''
-    source_path = "example_data/Source"
-    dest_path = "example_data/DestinationCSV/"
+    source_path = "obs_data/Source"
+    dest_path = "obs_data/DestinationCSV/"
     data = handle_multiple_files.handle_multiple_files(file_list)
 
     print("***********Choose from following options in desired order of application***********")
