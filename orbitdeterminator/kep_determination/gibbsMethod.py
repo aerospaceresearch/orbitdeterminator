@@ -429,7 +429,7 @@ def gibbs_get_kep(dataset):
 
 # if __name__ == "__main__":
 #     filename = "ISS.csv"
-#     path = "../example_data/" + filename
+#     path = "../obs_data/" + filename
 
 #     obj = Gibbs()
 #     vector = obj.read_file(path)
