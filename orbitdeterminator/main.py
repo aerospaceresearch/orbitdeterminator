@@ -30,7 +30,7 @@ def process(data_file, error_apriori, units):
     # First read the csv file called "orbit" with the positional data
     data = read_data.load_data(data_file)
 
-    if(units == 'm'):
+    if(units is 'm'):
         # Transform m to km
         data[:, 1:4] = data[:, 1:4] / 1000
 
@@ -46,7 +46,7 @@ def process(data_file, error_apriori, units):
     choices = inquirer.prompt(questions)
     data_after_filter = data
 
-    if(len(choices['filter']) == 0):
+    if(len(choices['filter']) is 0):
         print("Applying Triple Moving Average followed by Savitzky Golay...")
         # Apply the Triple moving average filter with window = 3
         data_after_filter = triple_moving_average.generate_filtered_data(data_after_filter, 3)
@@ -58,7 +58,7 @@ def process(data_file, error_apriori, units):
         data_after_filter = sav_golay.golay(data_after_filter, window, 3)
     else:
         for index, choice in enumerate(choices['filter']):
-            if(choice == 'Savitzky Golay Filter'):
+            if(choice is 'Savitzky Golay Filter'):
                 print("Applying Savitzky Golay Filter...")
                 # Use the golay_window.py script to find the window for the Savitzky Golay filter based on the error you input
                 window = golay_window.window(error_apriori, data_after_filter)
@@ -95,7 +95,7 @@ def process(data_file, error_apriori, units):
     choices = inquirer.prompt(questions)
     kep_elements = {}
 
-    if(len(choices['method']) == 0):
+    if(len(choices['method']) is 0):
         # Apply the interpolation method
         kep_inter = interpolation.main(data_after_filter)
         # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
@@ -107,7 +107,7 @@ def process(data_file, error_apriori, units):
         kep_elements['Cubic Spline Interpolation'] = kep_final_inter
     else:
         for index, choice in enumerate(choices['method']):
-            if(choice == 'Lamberts Kalman'):
+            if(choice is 'Lamberts Kalman'):
                 # Apply Lambert Kalman method for the filtered data set
                 kep_lamb = lamberts_kalman.create_kep(data_after_filter)
                 # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
@@ -117,7 +117,7 @@ def process(data_file, error_apriori, units):
                 kep_final_lamb = np.resize(kep_final_lamb, ((7, 1)))
                 kep_final_lamb[6, 0] = sgp4.rev_per_day(kep_final_lamb[0, 0])
                 kep_elements['Lamberts Kalman'] = kep_final_lamb
-            elif(choice == 'Cubic Spline Interpolation'):
+            elif(choice is 'Cubic Spline Interpolation'):
                 # Apply the interpolation method
                 kep_inter = interpolation.main(data_after_filter)
                 # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
@@ -127,7 +127,7 @@ def process(data_file, error_apriori, units):
                 kep_final_inter = np.resize(kep_final_inter, ((7, 1)))
                 kep_final_inter[6, 0] = sgp4.rev_per_day(kep_final_inter[0, 0])
                 kep_elements['Cubic Spline Interpolation'] = kep_final_inter
-            elif(choice == 'Ellipse Best Fit'):
+            elif(choice is 'Ellipse Best Fit'):
                 # Apply the ellipse best fit method
                 kep_ellip = ellipse_fit.determine_kep(data_after_filter[:, 1:])[0]
                 kep_final_ellip = np.transpose(kep_ellip)
@@ -161,7 +161,7 @@ def process(data_file, error_apriori, units):
     print("\nShow plots? [y/n]")
     user_input = input()
 
-    if(user_input == "y" or user_input == "Y"):
+    if(user_input is "y" or user_input is "Y"):
         for j in range(0, len(order)):
             # Plot the initial data set, the filtered data set and the final orbit
             # First we transform the set of keplerian elements into a state vector

@@ -14,7 +14,7 @@ from kep_determination.gibbsMethod import *
 
 pi = np.pi
 meu = 398600.4418
-two_pi = 2*pi;
+two_pi = 2*pi
 min_per_day = 1440
 ae = 1
 tothrd = 2.0/3.0
