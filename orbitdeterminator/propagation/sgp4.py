@@ -26,11 +26,18 @@ CK2 = 1.0826158e-3/2.0
 CK4 = -3.0*-1.65597e-6/8.0
 
 def rev_per_day(axis):
-    # mean motion (revolution per day)
-    t = 2*pi*math.sqrt(axis**3/meu)
-    n = 1/t
-    n = n*86400                     # 86400 seconds in a day
-    return n
+	try:
+		# mean motion (revolution per day)
+
+		t = 2*pi*math.sqrt(axis**3/meu)
+		n = 1/t
+		n = n*86400                     # 86400 seconds in a day
+		return n
+	except:
+		t = 2*pi*math.sqrt(-1*axis**3/meu)
+		n = 1/t
+		n = n*86400                     # 86400 seconds in a day
+		return n
 
 class Error(Exception):
    '''Base class for the exceptions.'''
