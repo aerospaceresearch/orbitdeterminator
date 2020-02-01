@@ -5,7 +5,7 @@ and generates the final set of keplerian elements along with a plot and a filter
 
 
 from util import (read_data, kep_state, rkf78, golay_window)
-from filters import (sav_golay, triple_moving_average)
+from filters import (sav_golay, triple_moving_average,wiener)
 from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbsMethod)
 import argparse
 import numpy as np
@@ -40,7 +40,7 @@ def process(data_file, error_apriori, units):
     questions = [
       inquirer.Checkbox('filter',
                         message="Select filter(s)",
-                        choices=['Savitzky Golay Filter', 'Triple Moving Average Filter'],
+                        choices=['Savitzky Golay Filter', 'Triple Moving Average Filter','Wiener Filter'],
                         ),
     ]
     choices = inquirer.prompt(questions)
@@ -65,10 +65,18 @@ def process(data_file, error_apriori, units):
 
                 # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
                 data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+            elif(choice == 'Wiener Filter'):
+                print("Applying Wiener Filter...")
+                # Apply the Wiener filter
+                data_after_filter = wiener.wiener_new(data_after_filter,3)
+                
             else:
                 print("Applying Triple Moving Average Filter...")
                 # Apply the Triple moving average filter with window = 3
                 data_after_filter = triple_moving_average.generate_filtered_data(data_after_filter, 3)
+
+              
+            
 
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
     res = data_after_filter[:, 1:4] - data[:, 1:4]
