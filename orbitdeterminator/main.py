@@ -13,6 +13,8 @@ import matplotlib as mpl
 import matplotlib.pylab as plt
 from propagation import sgp4
 import inquirer
+import animate
+
 
 def process(data_file, error_apriori, units):
     '''
@@ -204,6 +206,7 @@ def process(data_file, error_apriori, units):
             ax.set_ylabel('y (km)')
             ax.set_zlabel('z (km)')
             plt.show()
+         
 
 def read_args():
     parser = argparse.ArgumentParser()
@@ -228,3 +231,13 @@ if __name__ == "__main__":
     print("\n" + workflow)
     args = read_args()
     process(args.file_path, args.error, args.units)
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    u = np.linspace(0, 2 * np.pi, 100)
+    v = np.linspace(0, np.pi, 100)
+    x = 6400 * np.outer(np.cos(u), np.sin(v))
+    y = 6400 * np.outer(np.sin(u), np.sin(v))
+    z = 6400 * np.outer(np.ones(np.size(u)), np.cos(v))
+    ax.plot_surface(x, y, z, color='r')
+    animate.main(args.file_path)
+    
