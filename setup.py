@@ -17,5 +17,6 @@ setup(
 		"matplotlib",
 		"pykep",
 		"pytest",
+		"inquirer",
 	]
 )
