@@ -13,7 +13,9 @@ import matplotlib as mpl
 import matplotlib.pylab as plt
 from propagation import sgp4
 import inquirer
-import animate
+from vpython import *
+import animate_orbit
+
 
 
 def process(data_file, error_apriori, units):
@@ -231,13 +233,5 @@ if __name__ == "__main__":
     print("\n" + workflow)
     args = read_args()
     process(args.file_path, args.error, args.units)
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    u = np.linspace(0, 2 * np.pi, 100)
-    v = np.linspace(0, np.pi, 100)
-    x = 6400 * np.outer(np.cos(u), np.sin(v))
-    y = 6400 * np.outer(np.sin(u), np.sin(v))
-    z = 6400 * np.outer(np.ones(np.size(u)), np.cos(v))
-    ax.plot_surface(x, y, z, color='r')
-    animate.main(args.file_path)
-    
+    animate_orbit.animate(args.file_path,6400)
+  
