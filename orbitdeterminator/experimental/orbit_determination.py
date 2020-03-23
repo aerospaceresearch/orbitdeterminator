@@ -440,7 +440,7 @@ def main():
     # settings
     loops = 12
     walks = 70
-    mode = 3
+    mode = 1
 
     counter = 0
 
@@ -558,12 +558,11 @@ def main():
                 T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
                 tp0 = np.random.randint(0, int(T_orbitperiod))
-                #tp = np.random.randint(481-100, 481+100)/1.0
                 pos.append([r_p0, r_a0, AoP0, inc0, raan0, tp0])
 
     td = np.zeros(len(station_gnss))
-    td = np.array([0.0,-0.4591271368592835,-1.3677239795184182])
-    print("tdddd", td)
+
+
     parameters = {
         "r_p": 0,
         "r_a": 0,
