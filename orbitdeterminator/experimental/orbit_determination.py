@@ -440,7 +440,7 @@ def main():
     # settings
     loops = 12
     walks = 70
-    mode = 1
+    mode = 3
 
     counter = 0
 
@@ -551,18 +551,6 @@ def main():
                 AoP0 = float(360.0 / 10.0 * index_aop)
                 inc0 = float(180.0 / 7.0 * index_inclination)
                 raan0 = float(360.0 / 10.0 * index_raan)
-                #raan = np.random.randint(0, 12000) / 100.0
-                #raan = raan + 180.0*random_01()
-
-
-                r_p0 = np.random.randint(6830548 - 10000, 6830548 + 10000) / 1000.0
-                r_a0 = np.random.randint(r_p0 * 1000.0, 6907167 + 10000) / 1000.0
-                AoP0 = float(360.0 / 10.0 * index_aop)
-                #AoP = np.random.randint(81000 - 10000, 81000 + 10000) / 1000.0
-                inc0 = np.random.randint(51036 - 10000, 51036 + 10000) / 1000.0
-                # raan = float(360.0 / 10.0 * index_raan)
-                raan0 = np.random.randint(90046 - 10000, 90046 + 10000) / 1000.0
-                # raan = raan + 180.0*random_01()
 
 
                 eccentricity = (r_a0 - r_p0) / (r_a0 + r_p0)
