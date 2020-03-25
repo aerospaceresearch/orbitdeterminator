@@ -12,7 +12,6 @@ from functools import partial
 
 def __read_args():
     """Reads command line arguments.
-
        Returns:
            object: Parsed arguments.
     """
@@ -25,10 +24,8 @@ def __read_args():
 
 def __cross_sum(data):
     """Returns the normalized sum of the cross products between consecutive vectors.
-
     Args:
         data(nx3 numpy array): A matrix where each column represents the x,y,z coordinates of each position vector.
-
     Returns:
         float: The normalized sum of the cross products between consecutive vectors.
     """
@@ -44,15 +41,12 @@ def __cross_sum(data):
 
 def __plane_err(data,coeffs):
     """Calculates the total squared error of the data wrt a plane.
-
        The data should be a list of points. coeffs is an array of
        3 elements - the coefficients a,b,c in the plane equation
        ax+by+c = 0.
-
        Args:
            data(nx3 numpy array): A numpy array of points.
            coeffs(1x3 array): The coefficients of the plane ax+by+c=0.
-
        Returns:
            float: The total squared error wrt the plane defined by ax+by+cz = 0.
     """
@@ -63,14 +57,11 @@ def __plane_err(data,coeffs):
 
 def __project_to_plane(points,coeffs):
     """Projects points onto a plane.
-
        Projects a list of points onto the plane ax+by+c=0,
        where a,b,c are elements of coeffs.
-
        Args:
            points(nx3 numpy array): A numpy array of points.
            coeffs(1x3 array): The coefficients of the plane ax+by+c=0.
-
        Returns:
            nx3 numpy array: A list of projected points.
     """
@@ -86,16 +77,13 @@ def __project_to_plane(points,coeffs):
 
 def __conv_to_2D(points,x,y):
     """Finds coordinates of points in a plane wrt a basis.
-
        Given a list of points in a plane, and a basis of the plane,
        this function returns the coordinates of those points
        wrt this basis.
-
        Args:
            points(numpy array): A numpy array of points.
            x(3x1 numpy array): One vector of the basis.
            y(3x1 numpy array): Another vector of the basis.
-
        Returns:
            nx2 numpy array: Coordinates of the points wrt the basis [x,y].
     """
@@ -108,10 +96,8 @@ def __conv_to_2D(points,x,y):
 
 def __cart_to_pol(points):
     """Converts a list of cartesian coordinates into polar ones.
-
        Args:
            points(nx2 numpy array): The list of points in the format [x,y].
-
        Returns:
            nx2 numpy array: A list of polar coordinates in the format [radius,angle].
     """
@@ -124,24 +110,18 @@ def __cart_to_pol(points):
 
 def __ellipse_err(polar_coords,params):
     """Calculates the total squared error of the data wrt an ellipse.
-
        params is a 3 element array used to define an ellipse.
        It contains 3 elements a,e, and t0.
-
        a is the semi-major axis
        e is the eccentricity
        t0 is the angle of the major axis wrt the x-axis.
-
        These 3 elements define an ellipse with one focus at origin.
        Equation of the ellipse is r = a(1-e^2)/(1+ecos(t-t0))
-
        The function calculates r for every theta in the data.
        It then takes the square of the difference and sums it.
-
        Args:
            polar_coords(nx2 numpy array): A list of polar coordinates in the format [radius,angle].
            params(1x3 numpy array): The array [a,e,t0].
-
        Returns:
            float: The total squared error of the data wrt the ellipse.
     """
@@ -156,22 +136,17 @@ def __ellipse_err(polar_coords,params):
 
 def __residuals(data,params,polar_coords,basis):
     """Calculates the residuals after fitting the ellipse.
-
        Residuals are the difference between the fitted points and
        the actual points.
-
        res_x = fitted_x - initial_x
        res_y = fitted_y - initial_y
        res_z = fitted_z - initial_z
-
        where fitted_x,y,z is the closest point on the ellipse to initial_x,y,z.
-
        However, it is computationally expensive to find the true nearest point.
        So we take an approximation. We consider the point on the ellipse with
        the same true anomaly as the initial point to be the nearest point to it.
        Since the eccentricities of the orbits involved are small, this approximation
        holds.
-
        Args:
            data(nx3 numpy array): The list of original points.
            params(1x3 numpy array): The array [semi-major axis, eccentricity, argument of periapsis]
@@ -179,7 +154,6 @@ def __residuals(data,params,polar_coords,basis):
            polar_coords(nx2 numpy array): The list of 2D polar coordinates of the original points after
                                           projecting them onto the best-fit plane.
            basis(3x2 numpy array): The basis of the best-fit plane.
-
        Returns:
             nx3 numpy array: Returns the residuals
     """
@@ -202,10 +176,8 @@ def __residuals(data,params,polar_coords,basis):
 
 def __read_file(file_name):
     """Reads a space separated csv file with 4 columns in the format t x y z.
-
        Args:
            file_name(string): the path to the file
-
        Returns:
            nx3 numpy array: A numpy array with the columns [x y z]. Note that the t coloumn is discarded.
     """
@@ -216,15 +188,12 @@ def __read_file(file_name):
 
 def determine_kep(data):
     """Determines keplerian elements that fit a set of points.
-
        Args:
            data(nx3 numpy array): A numpy array of points in the format [x y z].
-
        Returns:
            (kep,res) - The keplerian elements and the residuals as a tuple.
            kep: 1x6 numpy array
            res: nx3 numpy array
-
            For the keplerian elements:
            kep[0] - semi-major axis (in whatever units the data was provided in)
            kep[1] - eccentricity
@@ -232,7 +201,6 @@ def determine_kep(data):
            kep[3] - argument of periapsis (in degrees)
            kep[4] - right ascension of ascending node (in degrees)
            kep[5] - true anomaly of the first row in the data (in degrees)
-
            For the residuals: (in whatever units the data was provided in)
            res[0] - residuals in x axis
            res[1] - residuals in y axis
@@ -317,12 +285,10 @@ def determine_kep(data):
 
 def __print_kep(kep,res,unit):
     """Prints the keplerian elements and some information on residuals.
-
        Args:
            kep(1x6 numpy array): keplerian elements
            res(nx3 numpy array): residuals
            unit(string): units of distance used
-
        Returns:
            NIL
     """
@@ -353,11 +319,9 @@ def __print_kep(kep,res,unit):
 
 def plot_kep(kep,data):
     """Plots the original data and the orbit defined by the keplerian elements.
-
        Args:
            kep(1x6 numpy array): keplerian elements
            data(nx3 numpy array): original data
-
        Returns:
            nothing
     """
@@ -385,7 +349,18 @@ def plot_kep(kep,data):
 
     fig = plt.figure()
     ax = Axes3D(fig)
-    ax.axis('equal')
+    try:
+      ax.set_aspect('equal')
+    except NotImplementedError:
+      print("Warning: The equal aspect ratio of 3d plots in matplotlib is currently an issue within the library.")
+      (__x_min, __x_max) = (data[:,0].min(), data[:,0].max())
+      (__y_min, __y_max) = (data[:,1].min(), data[:,1].max())
+      (__z_min, __z_max) = (data[:,2].min(), data[:,2].max())
+      __overall_min = min(__x_min, __y_min, __z_min)
+      __overall_max = max(__x_max, __y_max, __z_max)
+      ax.set_xlim(__overall_min, __overall_max)
+      ax.set_ylim(__overall_min, __overall_max)
+      ax.set_zlim(__overall_min, __overall_max)
 
     # plot
     ax.plot3D(coords_3D[0],coords_3D[1],coords_3D[2],c = 'red',label='Fitted Ellipse')
