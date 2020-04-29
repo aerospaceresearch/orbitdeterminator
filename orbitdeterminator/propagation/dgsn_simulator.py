@@ -184,7 +184,7 @@ class save_r(OpWriter):
             self.f.write("{} {} {} {}\r\n".format(t,*r))
             self.f.close()
             self.t = t
-            print("\rIteration:",self.iter,end=' '*10)
+            print("\r Iteration: " + str(self.iter),end=' '*10)
             self.iter+=1
 
     def close(self):
@@ -234,8 +234,8 @@ if __name__ == "__main__":
     params.epoch = epoch
     params.period = 1
     params.speed = 10
-
     params.r_jit = 15
+    #params.t0 = epoch
     #params.dgsn_period = 1350
     #params.dgsn_thresh = 0.7
 

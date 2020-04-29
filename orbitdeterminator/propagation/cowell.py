@@ -1,6 +1,7 @@
 """Numerical orbit propagator based on RK4. Takes into account J2 and drag perturbations."""
 
 import numpy as np
+import sys, time, threading
 
 mu = 398600.4418  # gravitational parameter mu
 J2 = 1.08262668e-3 # J2 coefficient
@@ -179,8 +180,21 @@ def time_period(s,h=30):
 
 def propagate_state(s,t0,tf):
     """Equivalent to the rk4 function."""
+    thread = threading.Thread(target=rk4, args=(s, t0, tf))
+    thread.daemon = True
+    thread.start()
+    
+    while(thread.is_alive()):
+      animated_loading()
 
     return rk4(s,t0,tf)
+
+def animated_loading():
+    chars = "/—\|" 
+    for char in chars:
+        sys.stdout.write('\r'+ char)
+        time.sleep(.1)
+        sys.stdout.flush() 
 
 if __name__ == "__main__":
     s = np.array([2.87393871e+03,5.22992358e+03,3.23958865e+03,-3.49496655e+00,4.87211332e+00,-4.76792145e+00])
