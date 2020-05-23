@@ -232,19 +232,169 @@ def load_iod_data(fname):
         x (numpy array): array of satellite position observations following the
         IOD format, with angle format code = 2.
     """
+
     # dt is the dtype for IOD-formatted text files
-    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S1, S1'
+    dt1 = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S8, S7, i8, i8, S1, S1, i8, i8, i8'
+
     # iod_names correspond to the dtype names of each field
-    iod_names = ['object', 'station', 'stationstatus', 'yr', 'month', 'day',
-        'hr', 'min', 'sec', 'msec', 'timeM', 'timeX', 'angformat', 'epoch', 'raHH',
-        'raMM','rammm','decDD','decMM','decmmm','radecM','radecX','optical','vismag']
-    # TODO: read first line, get sub-format, construct iod_delims from there
-    # as it is now, it only works for the given test file iod_data.txt
-    # iod_delims are the fixed-width column delimiter followinf IOD format description
-    iod_delims = [15, 5, 2, 5, 2, 2,
-        2, 2, 2, 3, 2, 1, 2, 1, 3,
-        2, 3, 3, 2, 2, 2, 1, 2, 1]
-    return np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+    iod_names1 = ['object', 'station', 'stationstatus',
+                  'yr', 'month', 'day',
+                  'hr', 'min', 'sec', 'msec', 'timeM', 'timeX',
+                  'angformat', 'epoch',
+                  'raaz', 'decel', 'radecazelM', 'radecazelX',
+                  'optical', 'vismagsign', 'vismag', 'vismaguncertainty', 'flashperiod']
+
+    # iod_delims corresponds to the delimiter for cutting the right variable from each input string
+    iod_delims1 = [15, 5, 2,
+                   5, 2, 2,
+                   2, 2, 2, 3, 2, 1,
+                   2, 1,
+                   8, 7, 2, 1,
+                   2, 1, 3, 3, 9]
+
+    iod_input_lines = np.genfromtxt(fname, dtype=dt1, names=iod_names1, delimiter=iod_delims1, autostrip=True)
+
+    right_ascension = []
+    declination = []
+    azimuth = []
+    elevation = []
+
+    for i in range(len(iod_input_lines)):
+
+        RA = -1.0
+        DEC = -1.0
+        AZ = -1.0
+        EL = -1.0
+
+        if iod_input_lines["angformat"][i] == 1:
+            # 1: RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            SS = float(RAAZ[4:6])
+            s = float(RAAZ[6])
+            RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            SS = float(DECEL[5:7])
+            DEC = DD + (MM + SS / 60.0) / 60.0
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 2:
+            # 2: RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            mmm = float(RAAZ[4:7])
+            RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            mm = float(DECEL[5:7])
+            DEC = DD + (MM + mm / 100.0) / 60.0
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 3:
+            # 3: RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            mmm = float(RAAZ[4:7])
+            RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            dddd = float(DECEL[3:7])
+            DEC = (DD + (dddd / 1000.0))
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 4:
+            # 4: AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            DDD = float(RAAZ[0:3])
+            MM = float(RAAZ[3:5])
+            SS = float(RAAZ[5:7])
+            AZ = DDD + (MM + SS / 60.0) / 60.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            SS = float(DECEL[5:7])
+            EL = DD + (MM + SS / 60.0) / 60.0
+            if DECEL[0] == "-":
+                EL = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 5:
+            # 5: AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            DDD = float(RAAZ[0:3])
+            MM = float(RAAZ[3:5])
+            SS = float(RAAZ[5:7])
+            AZ = DDD + (MM + SS / 60.0) / 60.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            mm = float(DECEL[5:7])
+            EL = DD + (MM + mm / 100.0) / 60.0
+            if DECEL[0] == "-":
+                EL = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 6:
+            # 6: AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            DDD = float(RAAZ[0:3])
+            dddd = float(RAAZ[3:7])
+            AZ = DDD + dddd / 1000.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            dddd = float(DECEL[3:7])
+            EL = DD + dddd / 1000.0
+            if DECEL[0] == "-":
+                EL = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 7:
+            # 7: RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            SS = float(RAAZ[4:6])
+            s = float(RAAZ[6])
+            RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            dddd = float(DECEL[3:7])
+            DEC = (DD + (dddd / 1000.0))
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        #else:
+        #    # TODO: when not defined, we assume it is RA/DEC
+
+        right_ascension.append(RA)
+        declination.append(DEC)
+        azimuth.append(AZ)
+        elevation.append(EL)
+
+    # expanding the input iod data with the position data in different formats
+    iod = {}
+    for name in iod_names1:
+         iod[name] = iod_input_lines[name].tolist()
+
+    iod["right_ascension"] = right_ascension
+    iod["declination"] = declination
+    iod["azimuth"] = azimuth
+    iod["elevation"] = elevation
+
+    return iod
 
 def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
     """Compute geocentric observer position at UTC instant t_utc, for Sun-centered orbits,
@@ -715,17 +865,17 @@ def get_observations_data_sat(iod_object_data, inds):
     timeobs[1] = Time( datetime(iod_object_data['yr'][inds[1]], iod_object_data['month'][inds[1]], iod_object_data['day'][inds[1]]) + td2 )
     timeobs[2] = Time( datetime(iod_object_data['yr'][inds[2]], iod_object_data['month'][inds[2]], iod_object_data['day'][inds[2]]) + td3 )
 
-    raHHMMmmm0 = iod_object_data['raHH'][inds[0]] + (iod_object_data['raMM'][inds[0]]+iod_object_data['rammm'][inds[0]]/1000.0)/60.0
-    raHHMMmmm1 = iod_object_data['raHH'][inds[1]] + (iod_object_data['raMM'][inds[1]]+iod_object_data['rammm'][inds[1]]/1000.0)/60.0
-    raHHMMmmm2 = iod_object_data['raHH'][inds[2]] + (iod_object_data['raMM'][inds[2]]+iod_object_data['rammm'][inds[2]]/1000.0)/60.0
+    ra_ha0 = iod_object_data['right_ascension'][inds[0]] / 360.0 * 24.0
+    ra_ha1 = iod_object_data['right_ascension'][inds[1]] / 360.0 * 24.0
+    ra_ha2 = iod_object_data['right_ascension'][inds[2]] / 360.0 * 24.0
 
-    decDDMMmmm0 = iod_object_data['decDD'][inds[0]] + (iod_object_data['decMM'][inds[0]]+iod_object_data['decmmm'][inds[0]]/1000.0)/60.0
-    decDDMMmmm1 = iod_object_data['decDD'][inds[1]] + (iod_object_data['decMM'][inds[1]]+iod_object_data['decmmm'][inds[1]]/1000.0)/60.0
-    decDDMMmmm2 = iod_object_data['decDD'][inds[2]] + (iod_object_data['decMM'][inds[2]]+iod_object_data['decmmm'][inds[2]]/1000.0)/60.0
+    dec0 = iod_object_data['declination'][inds[0]]
+    dec1 = iod_object_data['declination'][inds[1]]
+    dec2 = iod_object_data['declination'][inds[2]]
 
-    obs_radec[0] = SkyCoord(ra=raHHMMmmm0, dec=decDDMMmmm0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
-    obs_radec[1] = SkyCoord(ra=raHHMMmmm1, dec=decDDMMmmm1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
-    obs_radec[2] = SkyCoord(ra=raHHMMmmm2, dec=decDDMMmmm2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
+    obs_radec[0] = SkyCoord(ra=ra_ha0, dec=dec0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+    obs_radec[1] = SkyCoord(ra=ra_ha1, dec=dec1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+    obs_radec[2] = SkyCoord(ra=ra_ha2, dec=dec2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
 
     # construct vector of observation time (continous variable)
     obs_t[0] = (timeobs[0]-timeobs[0]).sec
@@ -1321,14 +1471,16 @@ def radec_obs_vec_sat(inds, iod_object_data):
            rov (1xlen(inds) array): vector of ra/dec observed values
     """
     rov = np.zeros((2*len(inds)))
-    for i in inds:
+    for i in range(len(inds)):
         indm1 = inds[i]-1
         # extract observations data
         td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
         timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
-        raHHMMmmm  = iod_object_data['raHH' ][indm1] + (iod_object_data['raMM' ][indm1]+iod_object_data['rammm' ][indm1]/1000.0)/60.0
-        decDDMMmmm = iod_object_data['decDD'][indm1] + (iod_object_data['decMM'][indm1]+iod_object_data['decmmm'][indm1]/1000.0)/60.0
-        obs_t_ra_dec = SkyCoord(ra=raHHMMmmm, dec=decDDMMmmm, unit=(uts.hourangle, uts.deg), obstime=timeobs)
+
+        ra_ha = iod_object_data['right_ascension'][indm1] / 360.0 * 24.0
+        dec = iod_object_data['declination'][indm1]
+
+        obs_t_ra_dec = SkyCoord(ra=ra_ha, dec=dec, unit=(uts.hourangle, uts.deg), obstime=timeobs)
         rov[2*i-2], rov[2*i-1] = obs_t_ra_dec.ra.rad, obs_t_ra_dec.dec.rad
     return rov
 
