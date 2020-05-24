@@ -234,10 +234,10 @@ def load_iod_data(fname):
     """
 
     # dt is the dtype for IOD-formatted text files
-    dt1 = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S8, S7, i8, i8, S1, S1, i8, i8, i8'
+    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S8, S7, i8, i8, S1, S1, i8, i8, i8'
 
     # iod_names correspond to the dtype names of each field
-    iod_names1 = ['object', 'station', 'stationstatus',
+    iod_names = ['object', 'station', 'stationstatus',
                   'yr', 'month', 'day',
                   'hr', 'min', 'sec', 'msec', 'timeM', 'timeX',
                   'angformat', 'epoch',
@@ -245,14 +245,14 @@ def load_iod_data(fname):
                   'optical', 'vismagsign', 'vismag', 'vismaguncertainty', 'flashperiod']
 
     # iod_delims corresponds to the delimiter for cutting the right variable from each input string
-    iod_delims1 = [15, 5, 2,
+    iod_delims = [15, 5, 2,
                    5, 2, 2,
                    2, 2, 2, 3, 2, 1,
                    2, 1,
                    8, 7, 2, 1,
                    2, 1, 3, 3, 9]
 
-    iod_input_lines = np.genfromtxt(fname, dtype=dt1, names=iod_names1, delimiter=iod_delims1, autostrip=True)
+    iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
 
     right_ascension = []
     declination = []
@@ -386,7 +386,7 @@ def load_iod_data(fname):
 
     # expanding the input iod data with the position data in different formats
     iod = {}
-    for name in iod_names1:
+    for name in iod_names:
          iod[name] = iod_input_lines[name].tolist()
 
     iod["right_ascension"] = right_ascension
