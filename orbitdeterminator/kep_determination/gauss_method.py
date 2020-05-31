@@ -774,13 +774,19 @@ def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
         z_i = alpha0*(xi2)
         a_i = (r0*vr0)/np.sqrt(mu)
         b_i = 1.0-alpha0*r0
+
         C_z_i = c2(z_i)
         S_z_i = c3(z_i)
+
+        if np.isinf(C_z_i) == True or np.isinf(S_z_i) == True:
+            return np.nan
+
         f_i = a_i*xi2*C_z_i + b_i*(xi**3)*S_z_i + r0*xi - np.sqrt(mu)*dt
         g_i = a_i*xi*(1.0-z_i*S_z_i) + b_i*xi2*C_z_i+r0
         ratio_i = f_i/g_i
         xi = xi - ratio_i
         i += 1
+
     return xi
 
 def lagrangef_(xi, z, r):
@@ -1290,8 +1296,14 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
            f_3_new (float): updated Lagrange's f function value at third observation
            g_3_new (float): updated Lagrange's g function value at third observation
     """
+    refinement_success = 1
+
     xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
     xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
+
+    if np.isnan(xi1) == True or np.isnan(xi3) == True:
+        refinement_success = 0
+        return np.nan, r2, np.nan, v2, rho1, rho2, rho3, f_1, g_1, f_3, g_3, refinement_success
 
     r0_ = np.sqrt((r2[0]**2)+(r2[1]**2)+(r2[2]**2))
     v20_ = (v2[0]**2)+(v2[1]**2)+(v2[2]**2)
@@ -1306,6 +1318,10 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
     g_3_new = (g_3+lagrangeg_(tau3, xi3, z3_, mu))/2
 
     denum = f_1_new*g_3_new-f_3_new*g_1_new
+    if np.isinf(np.abs(denum)) == True:
+        # one of the terms in denum became really big :(
+        refinement_success = 0
+        return np.nan, r2, np.nan, v2, rho1, rho2, rho3, f_1, g_1, f_3, g_3, refinement_success
 
     c1_ = g_3_new/denum
     c3_ = -g_1_new/denum
@@ -1322,7 +1338,7 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
 
     v2 = (-f_3_new*r1+f_1_new*r3)/denum
 
-    return r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f_1_new, g_1_new, f_3_new, g_3_new
+    return r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f_1_new, g_1_new, f_3_new, g_3_new, refinement_success
 
 def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
     """Gauss method implementation for MPC Near-Earth asteroids ra/dec tracking data.
@@ -1448,15 +1464,26 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=0
     """
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     mu = mu_Earth
-    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = \
+    r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est = \
         gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=r2_root_ind)
 
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est
+
+
     # Apply refinement to Gauss' method, `refiters` iterations
+    refinement_success = 0
+
     for i in range(0,refiters):
-        r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3 = \
+        r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3, refinement_success = \
             gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
 
-    return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t
+
+    if refinement_success == 1:
+        # refinement worked
+        return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t, refinement_success
+
+    else:
+        return r1_est, r2_est, r3_est, v2_est, R_est, rho1_est, rho2_est, rho3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est, refinement_success
 
 def gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=0, r2_root_ind=0):
     """Gauss method iterator for minor planets ra/dec tracking data.
@@ -1887,7 +1914,7 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
 
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
 
-def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=0, plot=True):
+def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=10, plot=False, mode_of_observationsequence = 0):
     """Gauss method high-level function for orbit determination of Earth satellites
     from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
     Roots of 8-th order Gauss polynomial are computed using np.roots function.
@@ -1928,95 +1955,151 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
     if r2_root_ind_vec is None:
         r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
 
-    # #auxiliary arrays
-    x_vec = np.zeros((nobs,))
-    y_vec = np.zeros((nobs,))
-    z_vec = np.zeros((nobs,))
-    a_vec = np.zeros((nobs-2,))
-    e_vec = np.zeros((nobs-2,))
-    taup_vec = np.zeros((nobs-2,))
-    I_vec = np.zeros((nobs-2,))
-    W_vec = np.zeros((nobs-2,))
-    w_vec = np.zeros((nobs-2,))
-    n_vec = np.zeros((nobs-2,))
-    t_vec = np.zeros((nobs,))
 
-    for j in range (0,nobs-2):
-        # Apply Gauss method to three elements of data
-        inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
-        print('Processing observation #', j)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = \
-            gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+    time_vec_list = []
+    radius_vec_list = []
+    velovity2_vec_list = []
+    index_vec_list = []
 
-        if j==0:
-            t_vec[0] = obs_t[0]
-            x_vec[0] = r1[0]
-            y_vec[0] = r1[1]
-            z_vec[0] = r1[2]
-        if j==nobs-3:
-            t_vec[nobs-1] = obs_t[2]
-            x_vec[nobs-1] = r3[0]
-            y_vec[nobs-1] = r3[1]
-            z_vec[nobs-1] = r3[2]
 
-        a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        f_num = trueanomaly5(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        n_num = meanmotion(mu, a_num)
+    counter_process = 0
+    end_obs_1 = nobs-2
+    for i in range (0, end_obs_1):
 
-        a_vec[j] = a_num
-        e_vec[j] = e_num
-        taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num*86400)
-        w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
-        I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-        W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-        n_vec[j] = n_num
-        t_vec[j+1] = obs_t[1]
-        x_vec[j+1] = r2[0]
-        y_vec[j+1] = r2[1]
-        z_vec[j+1] = r2[2]
+        if mode_of_observationsequence == 0:
+            end_obs_2 = i + 2
+        else:
+            end_obs_2 = nobs - 1
 
-    a_mean = np.mean(a_vec) #km
-    e_mean = np.mean(e_vec) #dimensionless
-    taup_mean = np.mean(taup_vec) #deg
-    w_mean = np.mean(w_vec) #deg
-    I_mean = np.mean(I_vec) #deg
-    W_mean = np.mean(W_vec) #deg
-    n_mean = np.mean(n_vec) #sec
+        for j in range(i+1, end_obs_2):
 
-    print('\n*** ORBIT DETERMINATION: GAUSS METHOD ***')
-    print('Observational arc:')
-    print('Number of observations: ', len(obs_arr))
-    print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
-    print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
+            if mode_of_observationsequence == 0:
+                end_obs_3 = j + 2
+            else:
+                end_obs_3 = nobs
 
-    print('\nAVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T')
-    print('Semi-major axis (a):                 ', a_mean, 'km')
-    print('Eccentricity (e):                    ', e_mean)
-    print('Time of pericenter passage (tau):    ', Time(taup_mean, format='jd').iso, 'JDUTC')
-    print('Argument of pericenter (omega):      ', w_mean, 'deg')
-    print('Inclination (I):                     ', I_mean, 'deg')
-    print('Longitude of Ascending Node (Omega): ', W_mean, 'deg')
-    print('Orbital period (T):                  ', 2.0*np.pi/n_mean/60.0, 'min')
+            for k in range(j+1, end_obs_3):
+
+                # Apply Gauss method to three elements of data
+                inds = [obs_arr[i]-1, obs_arr[j]-1, obs_arr[k]-1]
+                print('Processing observation #', counter_process)
+                r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t , refinement_success = \
+                    gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[i])
+
+
+                # storing all solutions now
+                # todo: checking if solutions with radii inside the earth surface can be filtered out?
+                # todo: checking if solutuins with v2 velocities higher than escape velocities of earth can be filtered out?
+                radius_vec_list.append([r1, r2, r3])
+                velovity2_vec_list.append(v2)
+                time_vec_list.append(obs_t)
+                index_vec_list.append(inds)
+                print(inds, np.linalg.norm(v2))
+
+                counter_process += 1
+
+
+    # serialize results
+    time_series = []
+    radius_abs_series = []
+    radius_vec_series = []
+
+    for measurment in range(len(radius_vec_list)):
+        # for r1
+        time_series.append(time_vec_list[measurment][0])
+        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurment][0]))
+        radius_vec_series.append(radius_vec_list[measurment][0])
+
+        # for r2
+        time_series.append(time_vec_list[measurment][1])
+        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurment][1]))
+        radius_vec_series.append(radius_vec_list[measurment][1])
+
+        # for r3
+        time_series.append(time_vec_list[measurment][2])
+        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurment][2]))
+        radius_vec_series.append(radius_vec_list[measurment][2])
+        
+        
+
+    time_unique = np.unique(time_series)
+    radius_mean_vec = []
+    radius_mean_abs = []
+
+    for i in range(len(time_unique)):
+        timesteps_index = np.where(time_series==time_unique[i])[0]
+        radius_x_bytime = [radius_vec_series[i][0] for i in timesteps_index]
+        radius_y_bytime = [radius_vec_series[i][1] for i in timesteps_index]
+        radius_z_bytime = [radius_vec_series[i][2] for i in timesteps_index]
+
+        radius_x_bytime_mean = np.mean(radius_x_bytime)
+        radius_y_bytime_mean = np.mean(radius_y_bytime)
+        radius_z_bytime_mean = np.mean(radius_z_bytime)
+
+        radius_mean_vec.append([radius_x_bytime_mean, radius_y_bytime_mean, radius_z_bytime_mean])
+        radius_mean_abs.append(np.linalg.norm([radius_x_bytime_mean, radius_y_bytime_mean, radius_z_bytime_mean]))
+
+
+
+    # finding the center of points per unique time step, based on the radius length.
+    # the polyfitter radius length per time step will be used to scale the directions of the radius vectors.
+    # this way the mean direction is kept by all measurements, and the altitude is edjusted by the new radius of the
+    # polyfit
+
+    order = 2 # higher than a line (order=1), better number should be discussed
+    print(time_series, radius_abs_series)
+    p = np.polyfit(time_series, radius_abs_series, order)
+    f = np.poly1d(p)
+
+    radius_poly_abs = f(time_series)
+    radius_poly_vec =[]
+    for i in range(len(radius_mean_vec)):
+        radius_poly_vec.append(np.multiply(np.divide(radius_mean_vec[i], radius_mean_abs[i]), radius_poly_abs[i]))
+
+
 
     # PLOT
     if plot:
-        npoints = 500
-        theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
-        x_orb_vec = np.zeros((npoints,))
-        y_orb_vec = np.zeros((npoints,))
-        z_orb_vec = np.zeros((npoints,))
 
-        for i in range(0,npoints):
-            x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame2(a_mean, e_mean, theta_vec[i],
-                                                                  np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
+        v = []
+        t = []
+        for i in range(len(velovity2_vec_list)):
+            v.append(np.linalg.norm(velovity2_vec_list[i]))
+            t.append(time_vec_list[i][0])
+        plt.plot(t, v, "o", label="all measurements")
+        plt.title("Velocity over Time: "+bodyname)
+        plt.xlabel("Time [JD]")
+        plt.ylabel("Velocity [km/s]")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+
+        plt.plot(time_series, np.add(radius_abs_series, -Re), "o", label="all measurements")
+        plt.plot(time_unique, np.add(radius_mean_abs, -Re), "o-", label="mean")
+        plt.plot(time_series, np.add(radius_poly_abs, -Re), "*-", label="polyfitted")
+        plt.title("Altitude over Time: "+bodyname)
+        plt.xlabel("Time [JD]")
+        plt.ylabel("Altitude (above SL) [km]")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+
+        x_vec = []
+        y_vec = []
+        z_vec = []
+
+        for i in range(len(radius_poly_vec)):
+            x_vec.append(radius_poly_vec[i][0])
+            y_vec.append(radius_poly_vec[i][1])
+            z_vec.append(radius_poly_vec[i][2])
 
         ax = plt.axes(aspect='equal', projection='3d')
 
         # Earth-centered orbits: satellite orbit and geocenter
         ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
         ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=bodyname+' orbit')
-        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
         plt.legend()
         ax.set_xlabel('x (km)')
         ax.set_ylabel('y (km)')
@@ -2029,7 +2112,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
         ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
         plt.show()
 
-    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0
+    return time_vec_list, radius_vec_list, velovity2_vec_list, index_vec_list, time_unique, radius_poly_vec
 
 # TODO: evaluate Earth ephemeris only once for a given TDB instant
 #       this implies saving all UTC times and their TDB equivalencies
