@@ -15,5 +15,5 @@ obs_arr = [1, 3, 4, 6, 8] # LB observations of 21799 91 076C on 2018 Jul 22
 ###select adequate index of Gauss polynomial root
 # r2_root_ind_vec[4] = 1
 
-# x = a, e, taup, I, W, w, T
-x = gm.gauss_method_sat(filename, obs_arr, refiters=10)
+time_vec_list, radius_vec_list, velovity2_vec_list, index_vec_list, time_unique, radius_poly_vec =\
+    gm.gauss_method_sat(filename, obs_arr, refiters=10, plot=True, mode_of_observationsequence = 1)

@@ -18,5 +18,5 @@ obs_arr = [1, 4, 6]
 ###select adequate index of Gauss polynomial root
 # r2_root_ind_vec[4] = 1
 
-# x = a, e, taup, I, W, w, T
-x = gm.gauss_method_sat(filename, obs_arr)
+time_vec_list, radius_vec_list, velovity2_vec_list, index_vec_list, time_unique, radius_poly_vec =\
+    gm.gauss_method_sat(filename, obs_arr, refiters=100, plot=True, mode_of_observationsequence = 1)
