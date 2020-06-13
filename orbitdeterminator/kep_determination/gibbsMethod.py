@@ -1,5 +1,5 @@
 '''
-Converts a set of three psoition vectors into state vector using Gibb's method
+Converts a set of three position vectors into state vector using Gibb's method
 from which orbital elements can be found easily.
 '''
 
@@ -13,7 +13,7 @@ import re
 
 sqrt = np.sqrt
 pi = np.pi
-meu = 398600.4418
+mu = 398600.4418
 
 class Gibbs(object):
 
@@ -300,7 +300,7 @@ class Gibbs(object):
         vec3 = [(mag_r1-mag_r2)*i for i in r3]
         S = self.operate_vector(vec1, self.operate_vector(vec2, vec3, 1), 1)
 
-        term1 = math.sqrt(meu/(mag_N*mag_D))
+        term1 = math.sqrt(mu / (mag_N * mag_D))
         var1 = self.cross_product(D, r2)
         var2 = [i/mag_r2 for i in var1]
         term2 = self.operate_vector(var2, S, 1)
@@ -344,10 +344,10 @@ class Gibbs(object):
         if(N[1] < 0):
             ascension = 360 - ascension
 
-        var1 = [(mag_v**2 - meu/mag_r)*i for i in r]
+        var1 = [(mag_v ** 2 - mu / mag_r) * i for i in r]
         var2 = [self.dot_product(r, v)*i for i in v]
         vec = self.operate_vector(var1, var2, 0)
-        eccentricity = [i/meu for i in vec]
+        eccentricity = [i / mu for i in vec]
         mag_e = self.magnitude(eccentricity)
 
         # Requires further research, not put in try block because one set should not affect entire calculation
@@ -370,8 +370,8 @@ class Gibbs(object):
         if(vr < 0):
             anomaly = 360 - anomaly
 
-        rp = mag_h**2/(meu*(1+mag_e))
-        ra = mag_h**2/(meu*(1-mag_e))
+        rp = mag_h**2/(mu * (1 + mag_e))
+        ra = mag_h**2/(mu * (1 - mag_e))
         axis = (rp+ra)/2
 
         # Following format trend from test_gibbsMethod file
@@ -426,6 +426,34 @@ def gibbs_get_kep(dataset):
         r2 = r3
         i = i + 1
     return kep
+
+def gibbs_method(R1, R2, R3):
+    mu = 398600.4418#mu_Earth
+    tol = 1e-4
+    ierr = 0
+
+    r1 = np.linalg.norm(R1)
+    r2 = np.linalg.norm(R2)
+    r3 = np.linalg.norm(R3)
+
+    c12 = np.cross(R1, R2)
+    c23 = np.cross(R2, R3)
+    c31 = np.cross(R3, R1)
+
+    # Check that R1, R2 and R3 are coplanar.
+    # if not set error flag
+    if np.abs(np.dot(R1, c23) / r1 / np.linalg.norm(c23)) > tol:
+        ierr = 1
+
+    N = r1 * c23 + r2 * c31 + r3 * c12
+
+    D = c12 + c23 + c31
+
+    S = np.multiply(R1, (r2 - r3)) + np.multiply(R2, (r3 - r1)) + np.multiply(R3, (r1 - r2))
+
+    v2 = np.sqrt(mu / np.linalg.norm(N) / np.linalg.norm(D)) * (np.cross(D, R2) / r2 + S)
+
+    return v2, ierr
 
 # if __name__ == "__main__":
 #     filename = "ISS.csv"
