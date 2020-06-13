@@ -428,7 +428,6 @@ def gibbs_get_kep(dataset):
     return kep
 
 def gibbs_method(R1, R2, R3):
-    mu = 398600.4418#mu_Earth
     tol = 1e-4
     ierr = 0
 
