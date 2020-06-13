@@ -2051,8 +2051,8 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
     p = np.polyfit(time_series, radius_abs_series, order)
     f = np.poly1d(p)
 
-    radius_poly_abs = f(time_series)
-    radius_poly_vec =[]
+    radius_poly_abs = f(time_unique)
+    radius_poly_vec = []
     for i in range(len(radius_mean_vec)):
         radius_poly_vec.append(np.multiply(np.divide(radius_mean_vec[i], radius_mean_abs[i]), radius_poly_abs[i]))
 
@@ -2077,7 +2077,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
 
         plt.plot(time_series, np.add(radius_abs_series, -Re), "o", label="all measurements")
         plt.plot(time_unique, np.add(radius_mean_abs, -Re), "o-", label="mean")
-        plt.plot(time_series, np.add(radius_poly_abs, -Re), "*-", label="polyfitted")
+        plt.plot(time_unique, np.add(radius_poly_abs, -Re), "*-", label="polyfitted")
         plt.title("Altitude over Time: "+bodyname)
         plt.xlabel("Time [JD]")
         plt.ylabel("Altitude (above SL) [km]")
