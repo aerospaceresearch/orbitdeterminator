@@ -1958,7 +1958,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
 
     time_vec_list = []
     radius_vec_list = []
-    velovity2_vec_list = []
+    velocity2_vec_list = []
     index_vec_list = []
 
 
@@ -1991,7 +1991,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
                 # todo: checking if solutions with radii inside the earth surface can be filtered out?
                 # todo: checking if solutuins with v2 velocities higher than escape velocities of earth can be filtered out?
                 radius_vec_list.append([r1, r2, r3])
-                velovity2_vec_list.append(v2)
+                velocity2_vec_list.append(v2)
                 time_vec_list.append(obs_t)
                 index_vec_list.append(inds)
                 print(inds, np.linalg.norm(v2))
@@ -2063,8 +2063,8 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
 
         v = []
         t = []
-        for i in range(len(velovity2_vec_list)):
-            v.append(np.linalg.norm(velovity2_vec_list[i]))
+        for i in range(len(velocity2_vec_list)):
+            v.append(np.linalg.norm(velocity2_vec_list[i]))
             t.append(time_vec_list[i][0])
         plt.plot(t, v, "o", label="all measurements")
         plt.title("Velocity over Time: "+bodyname)
@@ -2112,7 +2112,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
         ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
         plt.show()
 
-    return time_vec_list, radius_vec_list, velovity2_vec_list, index_vec_list, time_unique, radius_poly_vec
+    return time_vec_list, radius_vec_list, velocity2_vec_list, index_vec_list, time_unique, radius_poly_vec
 
 # TODO: evaluate Earth ephemeris only once for a given TDB instant
 #       this implies saving all UTC times and their TDB equivalencies
