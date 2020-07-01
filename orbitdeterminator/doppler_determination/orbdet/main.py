@@ -21,8 +21,10 @@ def save_images(x_sat_orbdyn_stm, x_obs_multiple, t_sec=None, prefix="", path=""
     fig_2 = plot_range_range_rate(x_sat_orbdyn_stm, x_obs_multiple, t_sec)
     fig_2.savefig(os.path.join(path, f"{prefix}_range_range_rate"))
 
-def save_images_batch_results(x_0, x_0r, x_br, x_berr, x_sat_orbdyn_stm, n_samples, prefix="", path=""):
-    fig_3 = plot_batch_results(x_0, x_0r, x_br, x_berr, x_sat_orbdyn_stm, n_samples)
+def save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, prefix="", path=""):
+    """ Auxiliary function to save the batch results.
+    """
+    fig_3 = plot_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr)
     fig_3.savefig(os.path.join(path, f"{prefix}_range_range_rate"))
 
 if __name__ == '__main__':
@@ -93,6 +95,7 @@ if __name__ == '__main__':
     #####   Batch Test 1 - Range rate, groundtruth #####
     run_batch_1 = True
     if run_batch_1 == True:
+
         x_b, output = batch(
             np.copy(x_0), 
             P_small, 
@@ -110,7 +113,6 @@ if __name__ == '__main__':
             print(f"\nBatch 1 Output: \t{x_b.T}")
             print(f"Error: \t{(x_0 - x_b).T}\n")
 
-    
     #####   Batch Test 2 - Range rate, random samples     #####
     start_time = time.time()
     run_batch_2 = True
@@ -148,7 +150,7 @@ if __name__ == '__main__':
     
     print(f"Elapsed batch 2 {(time.time()-start_time):.2f} s")
 
-    save_images_batch_results(x_0, x_0r, x_br, x_berr, x_sat_orbdyn_stm, args.n_samples, 
+    save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
         prefix="batch_2", path="images/")
 
     # Random sampling
@@ -194,5 +196,5 @@ if __name__ == '__main__':
 
     print(f"Elapsed batch 2_1 {(time.time()-start_time):.2f} s")
 
-    save_images_batch_results(x_0, x_0r, x_br, x_berr, x_sat_orbdyn_stm, args.n_samples, 
+    save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
         prefix="batch_2_1", path="images/")

@@ -149,8 +149,8 @@ def get_example_scenario(id=0, frame='teme'):
         f_downlink (float): downlink frequency of the satellite.
     """
     f_downlink = [435.103, 145.980, 137.620]
-    epoch_start = [Time('2020-05-27 23:46:00'), Time('2020-06-25 06:28:00'), Time('2020-07-02 22:45:00')]
-    epoch_end   = [Time('2020-05-27 23:50:00'), Time('2020-06-25 06:38:00'), Time('2020-07-02 23:55:00')]
+    epoch_start = [Time('2020-05-27 23:46:00'), Time('2020-06-25 06:30:00'), Time('2020-07-01 05:00:00')]
+    epoch_end   = [Time('2020-05-27 23:50:00'), Time('2020-06-25 06:37:00'), Time('2020-07-01 05:45:00')]
 
     tle = dict.fromkeys(range(3), [])
     # Scenario 0 - FALCONSAT-3, Sites: Atlanta, Jacksonville, Charlotte
@@ -160,8 +160,8 @@ def get_example_scenario(id=0, frame='teme'):
     tle[1] = [  '1 40967U 15058D   20175.33659500 +.00000007 +00000+0 +20124-4 0   687',
                 '2 40967  64.7742 112.9087 0170632  72.3744 289.5913 14.76130447162443']
     # Scenario 1 - FOX-1A (AO-85), Sites: Santiago, La Serena, ~La Silla
-    tle[2] = [  '1 25544U 98067A   20176.97949255  .00000516  00000-0  17286-4 0  9996',
-                '2 25544  51.6446 309.8972 0002538  80.4322  66.5560 15.49457702233227']
+    tle[2] = [  '1 40069U 14037A   20182.71359025 -.00000046  00000-0 -19083-5 0  9997',
+                '2 40069  98.5008 219.7482 0004702 237.2338 122.8403 14.20673317310092']
     
     x_sat, t = get_satellite(tle[id], epoch_start[id], epoch_end[id], 1.0/86400.0, frame=frame)
 
@@ -196,6 +196,6 @@ def get_example_scenario(id=0, frame='teme'):
         x_obs_1 = get_site(51.1483578, -1.4384458, 100, obstime=t, frame=frame)   # Santiago
         x_obs_2 = get_site(44.075, 5.5346, 50, obstime=t, frame=frame)   # Vicuna
         x_obs_3 = get_site(48.835, 2.280, 50, obstime=t, frame=frame)   # ~La Silla
-    #x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3]]), (1,2,0))
+        x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3]]), (1,2,0))
     
     return x_0, t_sec, x_sat_orbdyn_stm, x_obs_multiple, f_downlink[id]
