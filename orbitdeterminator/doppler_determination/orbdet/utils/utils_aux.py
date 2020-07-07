@@ -148,20 +148,26 @@ def get_example_scenario(id=0, frame='teme'):
         x_obs_multiple (np.ndarray): multiple observer positions.
         f_downlink (float): downlink frequency of the satellite.
     """
-    f_downlink = [435.103, 145.980, 137.620]
-    epoch_start = [Time('2020-05-27 23:46:00'), Time('2020-06-25 06:30:00'), Time('2020-07-01 05:00:00')]
-    epoch_end   = [Time('2020-05-27 23:50:00'), Time('2020-06-25 06:37:00'), Time('2020-07-01 05:45:00')]
+    f_downlink = [435.103, 145.980, 137.620, 435.103]
+    epoch_start = [Time('2020-05-27 23:46:00'), Time('2020-06-25 06:30:00'), Time('2020-07-01 05:00:00'), 
+        Time('2020-05-27 23:46:00')]
+    epoch_end   = [Time('2020-05-27 23:50:00'), Time('2020-06-25 06:37:00'), Time('2020-07-01 05:45:00'), 
+        Time('2020-05-27 23:50:00')]
 
-    tle = dict.fromkeys(range(3), [])
+    tle = dict.fromkeys(range(4), [])
     # Scenario 0 - FALCONSAT-3, Sites: Atlanta, Jacksonville, Charlotte
     tle[0] = [  '1 30776U 07006E   20146.24591950  .00002116  00000-0  57170-4 0  9998',
                 '2 30776  35.4350  68.4822 0003223 313.1473  46.8985 15.37715972733265']
     # Scenario 1 - FOX-1A (AO-85), Sites: Santiago, La Serena, ~La Silla
     tle[1] = [  '1 40967U 15058D   20175.33659500 +.00000007 +00000+0 +20124-4 0   687',
                 '2 40967  64.7742 112.9087 0170632  72.3744 289.5913 14.76130447162443']
-    # Scenario 1 - FOX-1A (AO-85), Sites: Santiago, La Serena, ~La Silla
+    # Scenario 2 - 
     tle[2] = [  '1 40069U 14037A   20182.71359025 -.00000046  00000-0 -19083-5 0  9997',
                 '2 40069  98.5008 219.7482 0004702 237.2338 122.8403 14.20673317310092']
+
+    # Scenario 3 = Scenario 1, 4 stations
+    tle[3] = [  '1 30776U 07006E   20146.24591950  .00002116  00000-0  57170-4 0  9998',
+                '2 30776  35.4350  68.4822 0003223 313.1473  46.8985 15.37715972733265']
     
     x_sat, t = get_satellite(tle[id], epoch_start[id], epoch_end[id], 1.0/86400.0, frame=frame)
 
@@ -174,16 +180,12 @@ def get_example_scenario(id=0, frame='teme'):
     x_sat_orbdyn_stm, _ = get_x_sat_odeint_stm(x_0, t_sec)
     
     # Set observer position
+    # Ids 0, 1, 2 - batch
     if id==0:
         x_obs_1 = get_site(33.7743331, -84.3970209, 288, obstime=t, frame=frame)   # Atlanta
         x_obs_2 = get_site(30.3449153, -81.8231881, 100, obstime=t, frame=frame)   # Jacksonville
         x_obs_3 = get_site(35.2030728, -80.9799098, 100, obstime=t, frame=frame)   # Charlotte
-        
-        x_obs_4 = get_site(36.1755204, -86.8595446, 100, obstime=t, frame=frame)   # Test
-
-        #x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2]]), (1,2,0))
         x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3]]), (1,2,0))
-        #x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3], [x_obs_4]]), (1,2,0))
 
     elif id==1:
         x_obs_1 = get_site(-33.43, -70.61, 500, obstime=t, frame=frame)   # Santiago
@@ -197,5 +199,16 @@ def get_example_scenario(id=0, frame='teme'):
         x_obs_2 = get_site(44.075, 5.5346, 50, obstime=t, frame=frame)   # Vicuna
         x_obs_3 = get_site(48.835, 2.280, 50, obstime=t, frame=frame)   # ~La Silla
         x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3]]), (1,2,0))
+
+    # TDoA simulation
+    elif id==3:
+        x_obs_1 = get_site(33.7743331, -84.3970209, 288, obstime=t, frame=frame)   # Atlanta
+        x_obs_2 = get_site(30.3449153, -81.8231881, 100, obstime=t, frame=frame)   # Jacksonville
+        x_obs_3 = get_site(35.2030728, -80.9799098, 100, obstime=t, frame=frame)   # Charlotte
+        x_obs_4 = get_site(36.1755204, -86.8595446, 100, obstime=t, frame=frame)   # Test
+        x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3], [x_obs_4]]), (1,2,0))
+
+
+    
     
     return x_0, t_sec, x_sat_orbdyn_stm, x_obs_multiple, f_downlink[id]

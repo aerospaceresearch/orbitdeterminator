@@ -206,6 +206,26 @@ def get_matrix_range_rate_H(x_sat:np.ndarray, x_obs:np.ndarray):
         H = np.transpose(H, (2, 0, 1))
     return H      # Transpose before return (H is a single row matrix)
 
+def get_tdoa_simulated_approx(x_sat:np.ndarray, x_obs:np.ndarray, ):
+    """ Get simulated Time Differential of Arrival measurements.
+
+    Args:
+        x_sat (np.ndarray): set of satellite positions.
+        x_obs (np.ndarray): set of observer positions.
+    Returns:
+        tdoa (np.ndarra): set of simulated TDoA measurements.
+    """
+
+    r, _ = range_range_rate(x_sat, x_obs)
+    tof = r / C
+
+    tdoa = np.copy(tof)
+
+    for i in range(r.shape[0]-1):
+        tdoa[i,:] = tof[0,:] - tof[i,:]
+
+    return tdoa
+
 def batch(
     x_0: np.ndarray, 
     P_bar_0: np.ndarray, 
