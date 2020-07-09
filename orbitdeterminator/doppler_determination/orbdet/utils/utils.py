@@ -226,6 +226,53 @@ def get_tdoa_simulated_approx(x_sat:np.ndarray, x_obs:np.ndarray, ):
 
     return tdoa
 
+def verify_sat_orbital(x_sat:np.ndarray, range_pos:np.ndarray, range_vel:np.ndarray):
+    """ Verifies whether given state vectors represent a valid orbital state.
+    This function is used to eliminate possible states that violate orbital constraints.
+
+    Args:
+        x_sat (np.ndarray): set of satellite positions.
+        range_r (np.ndarray): set of valid position vector norms.
+        range_v (np.ndarray): set of valid velocity vector norms.
+
+    Returns:
+        x_sat_ok (np.ndarray): set of satellite positions.
+        x_mask (np.ndarray): boolean array indicating the validity of satellite vector.
+    """
+    r = np.linalg.norm(x_sat[0:3,], axis=0)     # Norm of the position
+    v = np.linalg.norm(x_sat[3:6,], axis=0)     # Norm of the velocity
+
+    r_mask = (r >= range_pos[0]) & (r <= range_pos[1])
+    v_mask = (v >= range_vel[0]) & (v <= range_vel[1])
+    x_mask = r_mask & v_mask
+    
+    # x_mask = np.logical_and.reduce(r >= range_pos[0], r <= range_pos[1], 
+    #                                v >= range_vel[0], v <= range_vel[1])
+
+    x_sat_ok = x_sat[:,x_mask]
+
+    return x_sat_ok, x_mask
+
+def verify_sat_observer(x_sat:np.ndarray, x_obs:np.ndarray, range_range:np.ndarray):
+    """ Verifies whether the satellite is within the valid range from the observer.
+    This function is used to eliminate possible states that violate satellite-observer constraints.
+
+    Args:
+        x_sat (np.ndarray): set of satellite positions.
+        x_obs (np.ndarray): set of observer positions.
+    Returns:
+        x_sat_ok (np.ndarray): set of satellite positions.
+        x_mask (np.ndarray): boolean array indicating the validity of satellite vector.
+    """
+
+    r, rr = range_range_rate(x_sat, x_obs)
+
+    x_mask = (r >= range_range[0]) & (r <= range_range[1])
+    
+    x_sat_ok = x_sat[:,x_mask]
+
+    return x_sat_ok, x_mask
+
 def batch(
     x_0: np.ndarray, 
     P_bar_0: np.ndarray, 
