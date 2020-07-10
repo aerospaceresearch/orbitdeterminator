@@ -338,5 +338,66 @@ class TestTransformations(unittest.TestCase):
         np.testing.assert_equal(test_x_sat_arr, self.x_sat_arr)
         np.testing.assert_equal(H_arr, np.repeat(H_ref, 2, axis=2))
 
+    def test_verify_sat_orbital(self):
+        """ Unit test for verifying the validity of the state vector.
+        """
+
+        range_pos_1 = np.array([0, 1e9])
+        range_vel_1 = np.array([0, 1e5])
+
+        # Test 1 - Valid state vector
+        x_sat_ok_1, x_mask_1 = verify_sat_orbital(self.x_sat_1, range_pos_1, range_vel_1)
+
+        np.testing.assert_equal(self.x_sat_1, x_sat_ok_1)
+        np.testing.assert_equal(x_mask_1, [True])
+
+        # Test 2 - Invalid state vector
+        x_sat_invalid = np.copy(self.x_sat_1)*1e3
+
+        x_sat_ok_2, x_mask_2 = verify_sat_orbital(x_sat_invalid, range_pos_1, range_vel_1)
+
+        np.testing.assert_equal(x_sat_ok_2.shape, (6,0))
+        np.testing.assert_equal(x_mask_2, [False])
+
+        # Test 3 - Array
+        x_arr = np.concatenate([self.x_sat_1, x_sat_invalid, self.x_sat_1, x_sat_invalid], axis = 1)
+        x_arr_valid = np.concatenate([self.x_sat_1, self.x_sat_1], axis = 1)
+
+        x_sat_ok_arr, x_mask_arr = verify_sat_orbital(x_arr, range_pos_1, range_vel_1)
+
+        np.testing.assert_equal(x_sat_ok_arr, x_arr_valid)
+        np.testing.assert_equal(x_mask_arr, [True, False, True, False])
+
+    def test_verify_sat_observer(self):
+        """ Unit test for verifying the validity of the satellite-observer position.
+        """
+
+        # Check within the range between 300 and 3000 km for LEO
+        range_range = np.array([3e5, 3e8])
+
+        # Test 1 - Valid range
+        x_sat_ok_1, x_mask_1 = verify_sat_observer(self.x_sat_1, self.x_obs_1, range_range)
+
+        np.testing.assert_equal(self.x_sat_1, x_sat_ok_1)
+        np.testing.assert_equal(x_mask_1, [True])
+
+        # Test 2 - Invalid range
+        x_sat_invalid = np.copy(self.x_sat_1)*1e3
+
+        x_sat_ok_2, x_mask_2 = verify_sat_observer(x_sat_invalid, self.x_obs_1, range_range)
+
+        np.testing.assert_equal(x_sat_ok_2.shape, (6,0))
+        np.testing.assert_equal(x_mask_2, [False])
+
+        # Test 3 - Array
+        x_arr = np.concatenate([self.x_sat_1, x_sat_invalid, self.x_sat_1, x_sat_invalid], axis = 1)
+        x_arr_valid = np.concatenate([self.x_sat_1, self.x_sat_1], axis = 1)
+
+        x_sat_ok_arr, x_mask_arr = verify_sat_observer(x_arr, self.x_obs_1, range_range)
+
+        np.testing.assert_equal(x_sat_ok_arr, x_arr_valid)
+        np.testing.assert_equal(x_mask_arr, [True, False, True, False])
+
+
 if __name__ == "__main__":
     unittest.main()
