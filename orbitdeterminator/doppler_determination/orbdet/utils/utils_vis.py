@@ -94,6 +94,38 @@ def plot_range_range_rate(x_sat_orbdyn_stm:np.ndarray, x_obs_multiple:np.ndarray
 
     return fig
 
+def plot_pos_vel_norms(x_sat:np.ndarray, t_sec: np.array):
+    """ Plots range and range relative to the station
+
+    Args:
+        x_sat_orbdyn_stm (np.ndarray): satellite trajectory array.
+        x_obs_multiple (np.ndarray): observer positions.
+        t_sec (np.ndarray): array of timesteps.
+    """
+
+    r = np.linalg.norm(x_sat[0:3,], axis=0)     # Norm of the position
+    v = np.linalg.norm(x_sat[3:6,], axis=0)     # Norm of the velocity
+
+    fig = plt.figure(figsize=(14,7))
+
+    ax1 = fig.add_subplot(1, 2, 1)
+    ax1.plot(t_sec, r)
+    ax1.set_xlabel('Time (s)')
+    ax1.set_ylabel('Satellite position norm (m)')
+    ax1.grid(':')
+    ax1.title.set_text('Position Norm')
+
+    ax2 = fig.add_subplot(1, 2, 2)
+    ax2.plot(t_sec, v)
+    ax2.set_xlabel('Time (s)')
+    ax2.set_ylabel('Satellite velocity norm (m/s)')
+    ax2.grid(':')
+    ax2.title.set_text('Velocity Norm')
+
+    fig.subplots_adjust(hspace=0.25)
+
+    return fig
+
 def plot_batch_results(
         x_sat_orbdyn_stm:np.ndarray, 
         x_0r:np.ndarray, 

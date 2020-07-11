@@ -313,6 +313,7 @@ def batch(
 
     error = 1
     i = 0
+    singular = False
 
     while(np.abs(error) > tolerance and i < max_iterations):
         i += 1
@@ -344,8 +345,13 @@ def batch(
         N += np.einsum('ijl,jkl,kml->im', H_kt, W_vec, dy)
 
         temp = np.copy(x_hat_0)
-
-        x_hat_0 = np.linalg.inv(L).dot(N)
+        
+        try:
+            x_hat_0 = np.linalg.inv(L).dot(N)
+        except np.linalg.LinAlgError:
+            print("Singular matrix exception.")
+            singular = True
+            break
 
         x_0 += + x_hat_0
         x_bar_0 -= x_hat_0
@@ -354,6 +360,6 @@ def batch(
 
         np.set_printoptions(precision=2)
 
-    output = {'num_it': i}
+    output = {'num_it': i, 'singular': singular}
 
     return x_0, output

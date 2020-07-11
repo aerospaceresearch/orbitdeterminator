@@ -59,13 +59,19 @@ if __name__ == '__main__':
     x_0err = x_0r - x_0
 
     verbose = True
-    max_iterations=250
+    max_iterations=200
 
     save_images(x_sat_orbdyn_stm, x_obs_multiple, t_sec=t_sec, prefix="00", path="images/")
 
+    run_batch_0 = True      # True satellite position as measurement
+    run_batch_1 = True      # Doppler, single station, true initial position
+    run_batch_2 = True      # Doppler, single station, 
+    run_batch_3 = True      # Doppler, multiple stations
+    run_batch_4 = False      # Doppler, multiple stations, huge uncertainty, 
+                            # also checks for valid state vector in the end
+
     #####   Batch Test 0 - True satellite position as measurement, 
     #####   should converge with a very small error
-    run_batch_0 = True
     if run_batch_0 == True:
 
         x_br = np.zeros(x_0r.shape)
@@ -93,7 +99,6 @@ if __name__ == '__main__':
             print(f"err_end: \t{ (x_0 - x_b).T}, Norm {np.linalg.norm( (x_0 - x_b).T)}")
 
     #####   Batch Test 1 - Range rate, groundtruth #####
-    run_batch_1 = True
     if run_batch_1 == True:
 
         x_b, output = batch(
@@ -115,7 +120,6 @@ if __name__ == '__main__':
 
     #####   Batch Test 2 - Range rate, random samples     #####
     start_time = time.time()
-    run_batch_2 = True
     if run_batch_2 == True:     
         x_br = np.zeros(x_0r.shape)
         x_berr = np.zeros(x_0r.shape)
@@ -147,11 +151,11 @@ if __name__ == '__main__':
                     Norm vel Norm pos {np.linalg.norm(x_0err[3:6,i])}")
                 print(f"err_end: \t{x_berr1}, Norm pos {np.linalg.norm(x_berr1[0:3])}, \
                     Norm vel {np.linalg.norm(x_berr1[3:6])}")
+            
+            save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
+                prefix="batch_2", path="images/")
     
     print(f"Elapsed batch 2 {(time.time()-start_time):.2f} s")
-
-    save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
-        prefix="batch_2", path="images/")
 
     # Random sampling
     P = np.diag([1, 1, 1, 1, 1, 1])*1e6             # Initial uncertainty - random guess
@@ -160,8 +164,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     #####   Batch Test 2_1 - Range rate, random samples, multiple measurements     #####
-    run_batch_2_1 = True
-    if run_batch_2_1 == True:     
+    if run_batch_3 == True:     
 
         x_br = np.zeros(x_0r.shape)
         x_berr = np.zeros(x_0r.shape)
@@ -193,8 +196,69 @@ if __name__ == '__main__':
                     Norm vel {np.linalg.norm(x_0err[3:6,i])}")
                 print(f"err_end: \t{x_berr1}, Norm pos {np.linalg.norm(x_berr1[0:3])}, \
                     Norm vel {np.linalg.norm(x_berr1[3:6])}")
+            
+            save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
+                prefix="batch_3", path="images/")
 
-    print(f"Elapsed batch 2_1 {(time.time()-start_time):.2f} s")
+    print(f"Elapsed batch 3 {(time.time()-start_time):.2f} s")
+
+    P_bar_0 = np.diag([1e12, 1e12, 1e12, 1e10, 1e10, 1e10])
+    x_0r = np.random.multivariate_normal(x_0.squeeze(), P_bar_0, args.n_samples).T
+    x_0err = x_0r - x_0
+
+    start_time = time.time()
+    #####   Batch Test 4 - Range rate, random samples, multiple measurements     #####
+    if run_batch_4 == True:     
+
+        x_br = np.zeros(x_0r.shape)
+        x_berr = np.zeros(x_0r.shape)
+
+        # Array to check whether it didn't converge due to matrix being non-singular
+        singular = np.zeros(x_0r.shape[1], dtype=bool)
+
+        if verbose:
+            print(f"Batch 4 Output:")
+            print(f"\nBatch 4 - three stations, range rate measurements, large initial uncertainty")
+
+        for i in range(args.n_samples):
+
+            x_b, output = batch(
+                    np.copy(np.expand_dims(x_0r[:,i], axis=1)), 
+                    P_bar_0, 
+                    R_rr, 
+                    z=z_rr_multiple, 
+                    t=t_sec, 
+                    x_obs=x_obs_multiple, 
+                    f_obs=f_obs_range_rate, 
+                    tolerance=1e-8,
+                    max_iterations=max_iterations
+                )
+
+            x_br[:,i] = x_b.squeeze()
+            x_berr[:,i] = (x_0 - x_b).squeeze()
+            x_berr1 = (x_0 - x_b).T
+            singular[i] = output['singular']
+
+            if verbose:
+                print(f"Sample {i} Number of iterations", output['num_it'])
+                print(f"err_start: \t{x_0err[:,i]}, Norm pos {np.linalg.norm(x_0err[0:3,i])}, \
+                        Norm vel {np.linalg.norm(x_0err[3:6,i])}")
+                if not singular[i]:
+                    print(f"err_end: \t{x_berr1}, Norm pos {np.linalg.norm(x_berr1[0:3])}, \
+                        Norm vel {np.linalg.norm(x_berr1[3:6])}")
+                else:
+                    print(f"Singular matrix")
+                
+        test_valid_pos = np.array([6.7e6, 8e6])
+        test_valid_vel = np.array([7e3, 8e3])
+
+        # TODO: Test validity
+        x_sat_valid, x_sat_mask = verify_sat_orbital(x_br, test_valid_pos, test_valid_vel)
+
+
+    print(f"Elapsed batch 4 {(time.time()-start_time):.2f} s")
 
     save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
-        prefix="batch_2_1", path="images/")
+        prefix="batch_4", path="images/")
+
+
