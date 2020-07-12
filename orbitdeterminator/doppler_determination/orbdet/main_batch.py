@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 import argparse
 import os
 
@@ -15,17 +16,24 @@ np.set_printoptions(precision=2)
 def save_images(x_sat_orbdyn_stm, x_obs_multiple, t_sec=None, prefix="", path=""):
     """ Auxiliary function to save the images.
     """
+
     fig_1 = plot_example_3d(x_sat_orbdyn_stm, x_obs_multiple)
     fig_1.savefig(os.path.join(path, f"{prefix}_scenario"))
+    plt.clf()
+    plt.close()
 
     fig_2 = plot_range_range_rate(x_sat_orbdyn_stm, x_obs_multiple, t_sec)
     fig_2.savefig(os.path.join(path, f"{prefix}_range_range_rate"))
+    plt.clf()
+    plt.close()
 
 def save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, prefix="", path=""):
     """ Auxiliary function to save the batch results.
     """
     fig_3 = plot_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr)
     fig_3.savefig(os.path.join(path, f"{prefix}_range_range_rate"))
+    plt.clf()
+    plt.close()
 
 if __name__ == '__main__':
 
@@ -152,8 +160,8 @@ if __name__ == '__main__':
                 print(f"err_end: \t{x_berr1}, Norm pos {np.linalg.norm(x_berr1[0:3])}, \
                     Norm vel {np.linalg.norm(x_berr1[3:6])}")
             
-            save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
-                prefix="batch_2", path="images/")
+        save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
+            prefix="batch_2", path="images/")
     
     print(f"Elapsed batch 2 {(time.time()-start_time):.2f} s")
 
@@ -197,8 +205,8 @@ if __name__ == '__main__':
                 print(f"err_end: \t{x_berr1}, Norm pos {np.linalg.norm(x_berr1[0:3])}, \
                     Norm vel {np.linalg.norm(x_berr1[3:6])}")
             
-            save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
-                prefix="batch_3", path="images/")
+        save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
+            prefix="batch_3", path="images/")
 
     print(f"Elapsed batch 3 {(time.time()-start_time):.2f} s")
 
@@ -255,10 +263,11 @@ if __name__ == '__main__':
         # TODO: Test validity
         x_sat_valid, x_sat_mask = verify_sat_orbital(x_br, test_valid_pos, test_valid_vel)
 
+        save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
+            prefix="batch_4", path="images/")
 
     print(f"Elapsed batch 4 {(time.time()-start_time):.2f} s")
 
-    save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, 
-        prefix="batch_4", path="images/")
+    
 
 

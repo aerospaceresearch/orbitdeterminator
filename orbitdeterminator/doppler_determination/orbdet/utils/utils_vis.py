@@ -151,6 +151,7 @@ def plot_batch_results(
     #norm_mask = x_berr_norm < 1000
 
     traj = ax1.plot(x_sat_orbdyn_stm[0,:2], x_sat_orbdyn_stm[1,:2], x_sat_orbdyn_stm[2,:2], c='r')
+    traj_proxy = ax1.scatter(x_sat_orbdyn_stm[0,0], x_sat_orbdyn_stm[1,0], x_sat_orbdyn_stm[2,0], c='r', s=1)
 
     # Batch results
     for i in range(x_0r.shape[1]):
@@ -158,6 +159,9 @@ def plot_batch_results(
             s1 = ax1.scatter(x_0r[0, i], x_0r[1, i], x_0r[2, i], c='b', s=1, marker='x')
             s2 = ax1.scatter(x_br[0, i], x_br[1, i], x_br[2, i], c='g', s=1)
 
-    ax1.legend((traj, s1, s2), ('Groundtruth trajectory', 'Pre-batch positions', 'Post-batch positions'))
+    s1_proxy = ax1.scatter(x_0r[0, 0], x_0r[1, 0], x_0r[2, 0], c='b', s=1, marker='x')
+    s2_proxy = ax1.scatter(x_br[0, 1], x_br[1, 1], x_br[2, 1], c='g', s=1)
+
+    ax1.legend((traj_proxy, s1_proxy, s2_proxy), ('Groundtruth trajectory', 'Pre-batch positions', 'Post-batch positions'))
 
     return fig
