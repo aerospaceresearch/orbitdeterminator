@@ -15,6 +15,8 @@ from poliastro.core.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
+import lamberts_method as lm
+import orbital_elements as oe
 
 # declare astronomical constants in appropriate units
 au = cts.au.to(uts.Unit('km')).value
@@ -1995,6 +1997,14 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
                 time_vec_list.append(obs_t)
                 index_vec_list.append(inds)
                 print(inds, np.linalg.norm(v2))
+
+                dt = (obs_t[1] - obs_t[0]) * 24.0 * 3600.0
+                v1_lamberts, v2_lamberts = lm.lamberts_method(r1, r2, dt)
+
+                # getting orbital elements, but only for one vector.
+                # there are more vectors when using the result of gauss method. they can be used as well.
+                inclination, raan, true_anomaly, AoP, eccentricity, h_angularmomentuum = \
+                    oe.get_orbital_elemts_from_statevector(r2, v2_lamberts)
 
                 counter_process += 1
 
