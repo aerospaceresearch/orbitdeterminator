@@ -1,3 +1,6 @@
+""" Implements lambert's method for two topocentric radius vectors at different times. Supports both Earth-centered."""
+
+
 import numpy as np
 from poliastro.core.stumpff import c2, c3
 from astropy import units as uts
@@ -8,17 +11,40 @@ mu_Earth = cts.GM_earth.to(uts.Unit('km3 / s2')).value
 
 
 def F_z_i(z, t, r1, r2, A):
+    """ Function F for Newton's method
+
+    :param z:
+    :param t:
+    :param r1:
+    :param r2:
+    :param A:
+    :return:
+
+    F: function
+
+    """
     mu = mu_Earth
     C_z_i = c2(z)
     S_z_i = c3(z)
     y_z = r1 + r2 + A * (z * S_z_i - 1.0) / np.sqrt(C_z_i)
-    #print("qqq",z, y_z, C_z_i, S_z_i)
+
     F = (y_z / C_z_i) ** 1.5 * S_z_i + A * np.sqrt(np.abs(y_z)) - np.sqrt(mu) * t
 
     return F
 
 
 def dFdz(z, r1, r2, A):
+    """ Derivative of Function F for Netwon's Method
+
+    :param z:
+    :param r1:
+    :param r2:
+    :param A:
+    :return:
+
+    df: derivative for Netwon's method.
+
+    """
     mu = mu_Earth
 
     if z == 0:
@@ -41,6 +67,18 @@ def dFdz(z, r1, r2, A):
 
 
 def lamberts_method(R1, R2, delta_time):
+    """ lamberts method that generates velocity vectors for each radius vectors that are put in here.
+
+    :param R1: radius vector of measuements #1
+    :param R2: radius vector of measuements #2
+    :param delta_time: delta time between R1 and R2 measurements, in seconds. Only works for same pass
+    :return:
+
+    V1: velocity vector of R1
+    V2: velocity vector of R2
+
+    """
+
     r1 = np.linalg.norm(R1)
     r2 = np.linalg.norm(R2)
 
@@ -48,6 +86,7 @@ def lamberts_method(R1, R2, delta_time):
 
     theta = np.arccos(np.dot(R1, R2) / r1 / r2)
 
+    # todo: automatic check for pro or retrograde orbits is needed. currently set to prograde
     trajectory = "prograde"
     inclination = 0.0
     if inclination >= 0.0 and inclination < 90.0:

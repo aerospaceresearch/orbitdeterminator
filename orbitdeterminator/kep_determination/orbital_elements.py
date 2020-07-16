@@ -1,3 +1,5 @@
+""" Implements simple keplerian orbital elements calculations. """
+
 import numpy as np
 from astropy import units as uts
 from astropy import constants as cts
@@ -19,7 +21,6 @@ def get_orbital_elemts_from_statevector(R, V):
     v_abs = np.linalg.norm(V)
 
     v_radial = np.dot(R,V) / r_abs
-    #print("v", v_radial)
 
     h = np.cross(R, V)
     h_abs = np.linalg.norm(h)
