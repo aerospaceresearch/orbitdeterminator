@@ -11,7 +11,7 @@ from astropy.time import Time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-from poliastro.stumpff import c2, c3
+from poliastro.core.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
@@ -2095,7 +2095,8 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
             y_vec.append(radius_poly_vec[i][1])
             z_vec.append(radius_poly_vec[i][2])
 
-        ax = plt.axes(aspect='equal', projection='3d')
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
 
         # Earth-centered orbits: satellite orbit and geocenter
         ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
