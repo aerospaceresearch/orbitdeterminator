@@ -2004,21 +2004,21 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
     radius_abs_series = []
     radius_vec_series = []
 
-    for measurment in range(len(radius_vec_list)):
+    for measurement in range(len(radius_vec_list)):
         # for r1
-        time_series.append(time_vec_list[measurment][0])
-        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurment][0]))
-        radius_vec_series.append(radius_vec_list[measurment][0])
+        time_series.append(time_vec_list[measurement][0])
+        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurement][0]))
+        radius_vec_series.append(radius_vec_list[measurement][0])
 
         # for r2
-        time_series.append(time_vec_list[measurment][1])
-        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurment][1]))
-        radius_vec_series.append(radius_vec_list[measurment][1])
+        time_series.append(time_vec_list[measurement][1])
+        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurement][1]))
+        radius_vec_series.append(radius_vec_list[measurement][1])
 
         # for r3
-        time_series.append(time_vec_list[measurment][2])
-        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurment][2]))
-        radius_vec_series.append(radius_vec_list[measurment][2])
+        time_series.append(time_vec_list[measurement][2])
+        radius_abs_series.append(np.linalg.norm(radius_vec_list[measurement][2]))
+        radius_vec_series.append(radius_vec_list[measurement][2])
         
         
 
