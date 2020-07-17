@@ -2003,8 +2003,16 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
 
                 # getting orbital elements, but only for one vector.
                 # there are more vectors when using the result of gauss method. they can be used as well.
-                inclination, raan, true_anomaly, AoP, eccentricity, h_angularmomentuum = \
-                    oe.get_orbital_elemts_from_statevector(r2, v2_lamberts)
+                state = oe.orbital_parameters()
+                state.get_orbital_elemts_from_statevector(r2, v2_lamberts)
+                print("incl", state.inclination * 180.0 / np.pi)
+                print("raan", state.raan * 180.0 / np.pi)
+                print("ecce", state.eccentricity)
+                print("AoP", state.AoP * 180.0 / np.pi)
+                print("mean anomaly", state.mean_anomaly * 180.0 / np.pi)
+                print("mean motion", state.n_mean_motion_perday)
+
+                #print(dt, dt2, n_mean_motion_perday, eccentricity_abs, inclination, raan, AoP, mean_anomaly)
 
                 counter_process += 1
 
