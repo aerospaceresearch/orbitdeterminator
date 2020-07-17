@@ -63,13 +63,13 @@ def get_satellite(tle, epoch_start, epoch_end, step, frame='itrs'):
     v_teme = CartesianDifferential(v[:,0], v[:,1], v[:,2], unit=u.km/u.s)
     teme = TEME(r_teme.with_differentials(v_teme), obstime=t)
 
-    if frame=='teme':
-        x_sat = np.array([teme.x.value, teme.y.value, teme.z.value, 
-                                teme.v_x.value, teme.v_y.value, teme.v_z.value])
-    elif frame=='itrs':
-        itrs = teme.transform_to(ITRS(obstime=t))
-        x_sat = np.array([itrs.x.value, itrs.y.value, itrs.z.value, 
-                                itrs.v_x.value, itrs.v_y.value, itrs.v_z.value])
+    # if frame=='teme':
+    #     x_sat = np.array([teme.x.value, teme.y.value, teme.z.value, 
+    #                             teme.v_x.value, teme.v_y.value, teme.v_z.value])
+    # elif frame=='itrs':
+    #     itrs = teme.transform_to(ITRS(obstime=t))
+    #     x_sat = np.array([itrs.x.value, itrs.y.value, itrs.z.value, 
+    #                             itrs.v_x.value, itrs.v_y.value, itrs.v_z.value])
 
     return x_sat, t
 
@@ -114,7 +114,6 @@ def get_site(lat, lon, height, obstime, frame='teme'):
 
     return x_obs
 
-
 def get_x_sat_odeint_stm(x_0, t):
     """ Auxiliary function to get odeint propagations of state vector and state transition matrix.
         
@@ -132,6 +131,31 @@ def get_x_sat_odeint_stm(x_0, t):
     Phi = x_Phi[6:,].reshape((x_0.shape[0], x_0.shape[0],  t.shape[0])) 
 
     return x_sat_orbdyn_stm, Phi
+
+def get_6_oe_from_tle(tle):
+    """ Get six orbital elements from given TLE.
+    This function is used in the process of generating possible orbital configurations.
+
+    Args:
+        tle (list[str]): Two-line element set
+    Returns:
+        oe (np.ndarray): Array containing eccentricity, semi-major axis, inclination, 
+                            right ascension of the ascending node, argument of perigee and mean anomaly
+    """
+    
+    sat = Satrec.twoline2rv(tle[0], tle[1])
+
+    # Orbitral elements
+    oe = np.array([sat.ecco,   # Eccentricity
+                sat.a,         # Semi-major axis
+                sat.inclo,     # Inclination
+                sat.nodeo,     # Right ascension of the ascending node
+                sat.argpo,     # Argument of perigee
+                sat.mo])       # Mean anomaly
+
+    return oe
+
+
 
 def get_example_scenario(id=0, frame='teme'):
     """ Auxiliary function to obtain example scenario variables. 
@@ -207,8 +231,5 @@ def get_example_scenario(id=0, frame='teme'):
         x_obs_3 = get_site(35.2030728, -80.9799098, 100, obstime=t, frame=frame)   # Charlotte
         x_obs_4 = get_site(36.1755204, -86.8595446, 100, obstime=t, frame=frame)   # Test
         x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3], [x_obs_4]]), (1,2,0))
-
-
-    
     
     return x_0, t_sec, x_sat_orbdyn_stm, x_obs_multiple, f_downlink[id]

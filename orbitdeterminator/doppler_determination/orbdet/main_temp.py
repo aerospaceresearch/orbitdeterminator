@@ -38,15 +38,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.scenario_id = 3
 
-    x_0, t_sec, x_sat_orbdyn_stm, x_obs_multiple, _ = get_example_scenario(id=args.scenario_id, frame=args.frame)
-    r, rr = range_range_rate(x_sat_orbdyn_stm, x_obs_multiple)
-    tof = r / C
+    tle = [  '1 30776U 07006E   20146.24591950  .00002116  00000-0  57170-4 0  9998',
+            '2 30776  35.4350  68.4822 0003223 313.1473  46.8985 15.37715972733265']
 
-    print(r.shape)
-    print(tof.shape)
+    sat = get_6_oe_from_tle(tle)
 
-    for i in range(r.shape[0]-1):
-        tof[i,:] -= tof[0,:]
-
-    # TDoA
-
+    print(sat)
