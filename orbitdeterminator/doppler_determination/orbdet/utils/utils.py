@@ -206,7 +206,7 @@ def get_matrix_range_rate_H(x_sat:np.ndarray, x_obs:np.ndarray):
         H = np.transpose(H, (2, 0, 1))
     return H      # Transpose before return (H is a single row matrix)
 
-def get_tdoa_simulated_approx(x_sat:np.ndarray, x_obs:np.ndarray, ):
+def get_tdoa_simulated_approx(x_sat:np.ndarray, x_obs:np.ndarray):
     """ Get simulated Time Differential of Arrival measurements.
 
     Args:
@@ -218,13 +218,9 @@ def get_tdoa_simulated_approx(x_sat:np.ndarray, x_obs:np.ndarray, ):
 
     r, _ = range_range_rate(x_sat, x_obs)
     tof = r / C
+    tdoa = tof - tof[0,:]
 
-    tdoa = np.copy(tof)
-
-    for i in range(r.shape[0]-1):
-        tdoa[i,:] = tof[0,:] - tof[i,:]
-
-    return tdoa
+    return tdoa, tof
 
 def verify_sat_orbital(x_sat:np.ndarray, range_pos:np.ndarray, range_vel:np.ndarray):
     """ Verifies whether given state vectors represent a valid orbital state.

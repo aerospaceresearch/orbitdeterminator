@@ -63,13 +63,13 @@ def get_satellite(tle, epoch_start, epoch_end, step, frame='itrs'):
     v_teme = CartesianDifferential(v[:,0], v[:,1], v[:,2], unit=u.km/u.s)
     teme = TEME(r_teme.with_differentials(v_teme), obstime=t)
 
-    # if frame=='teme':
-    #     x_sat = np.array([teme.x.value, teme.y.value, teme.z.value, 
-    #                             teme.v_x.value, teme.v_y.value, teme.v_z.value])
-    # elif frame=='itrs':
-    #     itrs = teme.transform_to(ITRS(obstime=t))
-    #     x_sat = np.array([itrs.x.value, itrs.y.value, itrs.z.value, 
-    #                             itrs.v_x.value, itrs.v_y.value, itrs.v_z.value])
+    if frame=='teme':
+        x_sat = np.array([teme.x.value, teme.y.value, teme.z.value, 
+                                teme.v_x.value, teme.v_y.value, teme.v_z.value])
+    elif frame=='itrs':
+        itrs = teme.transform_to(ITRS(obstime=t))
+        x_sat = np.array([itrs.x.value, itrs.y.value, itrs.z.value, 
+                                itrs.v_x.value, itrs.v_y.value, itrs.v_z.value])
 
     return x_sat, t
 
