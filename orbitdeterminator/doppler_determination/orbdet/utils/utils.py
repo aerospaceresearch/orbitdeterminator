@@ -269,6 +269,57 @@ def verify_sat_observer(x_sat:np.ndarray, x_obs:np.ndarray, range_range:np.ndarr
 
     return x_sat_ok, x_mask
 
+def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray):
+    """ Herrick-Gibbs Initial Orbit Determination Method. Takes three positional observations and corresponding
+        timesteps and outpus full state vector estimate (position and velocity) for the middle measurement.
+
+    Reference: D. A. Vallado - Fundamentals of Astrodynamics and Applications, 4th ed., p.461, 7.5.2 Herrick-Gibbs
+
+    Args:
+        p_sat (np.ndarray): set of satellite positions. Three close positions are required for the method to work.
+        t (np.ndarray): observation times
+    Returns:
+        x_2 (np.ndarray): estimated satellite state (position + velocity for the second observation)
+    """
+
+    error =''
+    tolerance_angle = 10.0/180.0*np.pi
+
+    r = np.linalg.norm(p_sat, axis=0)   # Magnitude of the observed positions
+    r3 = r**3
+
+    dt_21 = t[1]-t[0]
+    dt_31 = t[3]-t[0]
+    dt_32 = t[3]-t[1]
+
+    # Sanity checks
+    p = np.cross(p_sat[:,1], p_sat[:,2])
+    p_n = p / np.linalg.norm(p)
+    x_sat_1n = p_sat[:,0] / r[0]
+
+    copa = np.arcsin(np.dot(p_n, x_sat_1n))
+
+    if np.abs(np.dot(x_sat_1n, p_n)) > tolerance_angle:
+        error = "not coplanar"
+
+    theta_12 = np.dot(p_sat[:,0], p_sat[:,1])
+    theta_23 = np.dot(p_sat[:,1], p_sat[:,2])
+
+    if min(theta_12, theta_23) > tolerance_angle:
+        error = f"angle > {tolerance_angle}"
+
+    # Herrick-Gibbs
+    term = np.array([-dt_32 * (1.0/(dt_21*dt_31))       + MU/(12.0*r3[0]),
+                    (dt_32-dt_21) * (1.0/(dt_21*dt_32)) + MU/(12.0*r3[1]),
+                    dt_21 * (1.0/(dt_32*dt_31))         + MU/(12.0*r3[2]), 
+                    ])
+
+    v_sat_1 = np.sum(term*r, axis=1)
+    x_sat_1 = np.concatenate(p_sat[:,1], v_sat_1)
+
+    return x_sat_1
+
+
 def batch(
     x_0: np.ndarray, 
     P_bar_0: np.ndarray, 
