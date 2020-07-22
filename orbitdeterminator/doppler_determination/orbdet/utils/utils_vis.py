@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -165,3 +166,39 @@ def plot_batch_results(
     ax1.legend((traj_proxy, s1_proxy, s2_proxy), ('Groundtruth trajectory', 'Pre-batch positions', 'Post-batch positions'))
 
     return fig
+
+def save_images(x_sat, x_obs, t_sec=None, prefix="", path=""):
+    """ Auxiliary function to save the images.
+
+    Args:
+        x_sat (np.ndarray): satellite state vectors (6,n).
+        x_obs (np.ndarray): observer state vectors (6,n,n_ons).
+        t_sec (np.ndarray): time array (n,).
+        prefix (str): filename prefix.
+        path (str): save path.
+    Returns:
+        None
+    """
+
+    fig_1 = plot_example_3d(x_sat, x_obs)
+    fig_1.savefig(os.path.join(path, f"{prefix}_scenario"))
+
+    fig_2 = plot_range_range_rate(x_sat, x_obs, t_sec)
+    fig_2.savefig(os.path.join(path, f"{prefix}_range_range_rate"))
+
+def save_images_batch_results(x_sat, x_0r, x_br, x_berr, prefix="", path=""):
+    """ Auxiliary function to save the batch result images.
+
+    Args:
+        x_sat (np.ndarray): satellite state vectors (6,n). 
+        x_0r  (np.ndarray): vector of pre-batch initial positions (6,n).
+        x_br  (np.ndarray): vector if post-batch estimated initial positions (6,n).
+        x_berr(np.ndarray): vector of errors (6,n).
+        prefix (str): filename prefix.
+        path (str): save path.
+    Returns:
+        None
+    """
+
+    fig_3 = plot_batch_results(x_sat, x_0r, x_br, x_berr)
+    fig_3.savefig(os.path.join(path, f"{prefix}_range_range_rate"))

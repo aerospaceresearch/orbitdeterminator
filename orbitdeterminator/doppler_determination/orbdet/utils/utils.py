@@ -206,21 +206,86 @@ def get_matrix_range_rate_H(x_sat:np.ndarray, x_obs:np.ndarray):
         H = np.transpose(H, (2, 0, 1))
     return H      # Transpose before return (H is a single row matrix)
 
-def get_tdoa_simulated_approx(x_sat:np.ndarray, x_obs:np.ndarray):
-    """ Get simulated Time Differential of Arrival measurements.
+def tdoa_objective_function(vars, *data):
+    """ Objective function for solving Time Differential of Arrival (TDoA).
+
+        0 = C * (TDoA * tau) - || x_sat-x_obs ||
 
     Args:
-        x_sat (np.ndarray): set of satellite positions.
-        x_obs (np.ndarray): set of observer positions.
+        vars (tuple): a tuple of unknowns - xyz satellite position and time offset
+                        (x, y, z, t)
+        data (tuple): additional arguments - observer positions and TDoA measurements
+                        (x_obs, tdoa)
     Returns:
-        tdoa (np.ndarra): set of simulated TDoA measurements.
+              (tuple): tuple of objective function values 
     """
 
-    r, _ = range_range_rate(x_sat, x_obs)
-    tof = r / C
-    tdoa = tof - tof[0,:]
+    x, y, z, tau = vars
+    x_sat = np.array([[x], [y], [z]], dtype=np.float64)
+
+    x_obs, tdoa = data
+
+    r = C*(tdoa + tau) - np.linalg.norm(x_obs - x_sat, axis=0)
+
+    return (r.item(0), r.item(1), r.item(2), r.item(3))
+
+def get_tdoa_simulated(x_sat:np.ndarray, x_obs:np.ndarray, flag_tof:bool=False):
+    """ Get simulated Time Differential of Arrival measurements.
+
+    TODO: Take into account time of flight, right now it is instantaneous.
+
+    Args:
+        x_sat (np.ndarray): set of satellite state vectors.
+        x_obs (np.ndarray): set of observer positions.
+        tof (bool): flag whether to simulate using time of flight (not currently implemented).
+    Returns:
+        tdoa (np.ndarray): set of simulated TDoA measurements.
+        tof (np.ndarray):  set of simulate time of flights between the observer and the satellite.
+    """
+
+    if flag_tof:
+        assert False, "Time of flight not implemented!"
+    else:
+        r, _ = range_range_rate(x_sat, x_obs)
+        tof = r / C
+        tdoa = tof - tof[0,:]
 
     return tdoa, tof
+
+def solve_tdoa(x_sat:np.ndarray, x_obs:np.ndarray, tdoa:np.ndarray):
+    """ Function to solve Time Differential of Arrival (TDoA) measurements.
+
+    Args:
+        x_sat (np.ndarray): array of satellite state vectors (6, n).  TODO: Remove
+        x_obs (np.ndarray): array of observer positions (6, n, n_obs).
+        tdoa (np.ndarray):  array of TDoA measurements. TODO: Array dimensions.
+                            TDoA array must include time differential for the reference station
+                            even being zero.
+    Returns:
+        p_sat (np.ndarray): array of multilaterated satellite positions.
+        tau   (np.ndarray): array of time offsets for reference station
+    """
+
+    n = x_obs.shape[1]
+
+    p_sat = np.zeros((6, n))
+    tau = np.zeros(n)
+    
+    for i in range(n):
+        # Temporary variables
+        t_x_sat = np.expand_dims(x_sat[0:3, i], axis=1)
+        t_x_obs = x_obs[0:3, i, :]
+
+        # Initial guess
+        vars_0  = [x_sat.item(0)+10000, x_sat.item(1)+10000, x_sat.item(2)+10000, 1]
+        data    = (x_obs, tdoa[:, i])
+
+        result = fsolve(tdoa_objective_function, vars_0, args=data)
+
+        p_sat[:,i] = result[0:3]
+        tau[i] = result[3]
+    
+    return p_sat, tau
 
 def verify_sat_orbital(x_sat:np.ndarray, range_pos:np.ndarray, range_vel:np.ndarray):
     """ Verifies whether given state vectors represent a valid orbital state.
@@ -286,32 +351,32 @@ def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray):
     tolerance_angle = 10.0/180.0*np.pi
 
     r = np.linalg.norm(p_sat, axis=0)   # Magnitude of the observed positions
-    r3 = r**3
-
-    dt_21 = t[1]-t[0]
-    dt_31 = t[3]-t[0]
-    dt_32 = t[3]-t[1]
 
     # Sanity checks
-    p = np.cross(p_sat[:,1], p_sat[:,2])
-    p_n = p / np.linalg.norm(p)
-    x_sat_1n = p_sat[:,0] / r[0]
+    sanity_checks = True
+    if sanity_checks:
+        
+        p = np.cross(p_sat[:,1], p_sat[:,2])
+        p_n = p / np.linalg.norm(p)
+        x_sat_1n = p_sat[:,0] / r[0]
 
-    copa = np.arcsin(np.dot(p_n, x_sat_1n))
+        copa = np.arcsin(np.dot(p_n, x_sat_1n))
 
-    if np.abs(np.dot(x_sat_1n, p_n)) > tolerance_angle:
-        error = "not coplanar"
+        if np.abs(np.dot(x_sat_1n, p_n)) > tolerance_angle:
+            error = "not coplanar"
 
-    theta_12 = np.dot(p_sat[:,0], p_sat[:,1])
-    theta_23 = np.dot(p_sat[:,1], p_sat[:,2])
+        theta_01 = np.dot(p_sat[:,0], p_sat[:,1])
+        theta_12 = np.dot(p_sat[:,1], p_sat[:,2])
 
-    if min(theta_12, theta_23) > tolerance_angle:
-        error = f"angle > {tolerance_angle}"
+        if min(theta_01, theta_12) > tolerance_angle:
+            error = f"angle > {tolerance_angle}"
 
     # Herrick-Gibbs
-    term = np.array([-dt_32 * (1.0/(dt_21*dt_31))       + MU/(12.0*r3[0]),
-                    (dt_32-dt_21) * (1.0/(dt_21*dt_32)) + MU/(12.0*r3[1]),
-                    dt_21 * (1.0/(dt_32*dt_31))         + MU/(12.0*r3[2]), 
+    dt_10, dt_20, dt_21 = t[1]-t[0],  t[3]-t[0], t[3]-t[1]
+
+    term = np.array([ -dt_21 * (1.0/(dt_10*dt_20))        + MU/(12.0*r[0]**3),
+                      (dt_21-dt_10) * (1.0/(dt_10*dt_21)) + MU/(12.0*r[1]**3),
+                      dt_10 * (1.0/(dt_21*dt_20))         + MU/(12.0*r[2]**3), 
                     ])
 
     v_sat_1 = np.sum(term*r, axis=1)
