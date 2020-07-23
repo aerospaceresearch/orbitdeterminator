@@ -33,7 +33,15 @@ if __name__ == '__main__':
     x_sat = np.expand_dims(x_sat_orbdyn_stm[0:3, idx], axis=1)
     x_obs = x_obs_multiple[0:3, idx, :]
 
-    vars_0  = [x_sat.item(0)+10000, x_sat.item(1)+10000, x_sat.item(2)+10000, 1]
+    print(x_obs)
+
+    x_obs_mean = np.mean(x_obs, axis=1)
+
+
+
+    #vars_0  = [x_sat.item(0)+10000, x_sat.item(1)+10000, x_sat.item(2)+10000, 1]
+    vars_0  = [x_obs_mean[0]*1.1, x_obs_mean[1]*1.1, x_obs_mean[2]*1.1, 1]
+
     vars_gt = [x_sat.item(0), x_sat.item(1), x_sat.item(2), r[0,idx]/C]
     data    = (x_obs, tdoa[:, idx])
 
