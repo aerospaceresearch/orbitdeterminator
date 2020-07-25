@@ -45,6 +45,7 @@ def plot_example_3d(x_sat_orbdyn_stm:np.ndarray, x_obs_multiple:np.ndarray):
     l = []      # Legends
 
     for i in range(x_obs_multiple.shape[2]):
+        # TODO: Check first argument
         st = ax1.scatter(x_obs_multiple[0,:,0], x_obs_multiple[1,:,i], x_obs_multiple[2,:,i], marker='o')
         s.append(st)
         l.append(f"Observer {i}")
