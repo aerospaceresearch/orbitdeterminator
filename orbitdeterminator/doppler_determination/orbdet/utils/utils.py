@@ -8,6 +8,8 @@ from astropy.coordinates import EarthLocation, ITRS, ICRS, TEME, CartesianDiffer
 
 from orbdet.utils.constants import *
 
+from scipy.optimize import fsolve
+
 def range_range_rate(x_sat:np.ndarray, x_obs:np.ndarray):
     """ Get range and slant range rate (radial relative velocity component). 
         Vectorized.
@@ -252,15 +254,14 @@ def get_tdoa_simulated(x_sat:np.ndarray, x_obs:np.ndarray, flag_tof:bool=False):
 
     return tdoa, tof
 
-def solve_tdoa(x_sat:np.ndarray, x_obs:np.ndarray, tdoa:np.ndarray):
+def solve_tdoa(tdoa:np.ndarray, x_obs:np.ndarray):
     """ Function to solve Time Differential of Arrival (TDoA) measurements.
 
     Args:
-        x_sat (np.ndarray): array of satellite state vectors (6, n).  TODO: Remove
-        x_obs (np.ndarray): array of observer positions (6, n, n_obs).
         tdoa (np.ndarray):  array of TDoA measurements. TODO: Array dimensions.
                             TDoA array must include time differential for the reference station
                             even being zero.
+        x_obs (np.ndarray): array of observer positions (6, n, n_obs).
     Returns:
         p_sat (np.ndarray): array of multilaterated satellite positions.
         tau   (np.ndarray): array of time offsets for reference station
@@ -268,18 +269,15 @@ def solve_tdoa(x_sat:np.ndarray, x_obs:np.ndarray, tdoa:np.ndarray):
 
     n = x_obs.shape[1]
 
-    p_sat = np.zeros((6, n))
+    p_sat = np.zeros((3, n))
     tau = np.zeros(n)
+
+    x_obs_mean = np.mean(x_obs, axis=2)
     
     for i in range(n):
-        # Temporary variables
-        t_x_sat = np.expand_dims(x_sat[0:3, i], axis=1)
-        t_x_obs = x_obs[0:3, i, :]
 
-        # Initial guess
-        vars_0  = [x_sat.item(0)+10000, x_sat.item(1)+10000, x_sat.item(2)+10000, 1]
-        data    = (x_obs, tdoa[:, i])
-
+        vars_0 = [x_obs_mean[0,i]*1.01, x_obs_mean[1,i]*1.01, x_obs_mean[2,i]*1.01, 5e-3]
+        data = (x_obs[0:3, i, :], tdoa[:, i])
         result = fsolve(tdoa_objective_function, vars_0, args=data)
 
         p_sat[:,i] = result[0:3]

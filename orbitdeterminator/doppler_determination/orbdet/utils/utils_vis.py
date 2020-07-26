@@ -141,6 +141,8 @@ def plot_batch_results(
         x_0r (np.ndarray): array of random initial sampled positions.
         x_br (np.ndarray): array of batch estimates of initial positions.
         x_berr (np.ndarray): array of errors relative to x_0
+    Returns:
+        fig
     """
 
     fig = plt.figure(figsize=(14,14))
@@ -165,6 +167,108 @@ def plot_batch_results(
     s2_proxy = ax1.scatter(x_br[0, 1], x_br[1, 1], x_br[2, 1], c='g', s=1)
 
     ax1.legend((traj_proxy, s1_proxy, s2_proxy), ('Groundtruth trajectory', 'Pre-batch positions', 'Post-batch positions'))
+
+    return fig
+
+def plot_tdoa(tdoa:np.ndarray, tof:np.ndarray, t_sec:np.ndarray):
+    """ Plot TDoA measurements.
+
+    Args:
+        tdoa (np.ndarray): time differential of arrival array (n_obs, n).
+        tof (np.ndarray): time of flight array (n_obs, n).
+        t_sec (np.ndarray): time array, seconds (n,).
+    Returns:
+        fig ():
+    """
+    fig = plt.figure(figsize=(14,7))
+    fig.suptitle("Reference station time of flight (ToF) and time differential of arrival (TDoA) for other stations")
+    # Reference station time of flight
+    ax = fig.add_subplot(2, 2, 1)
+    ax.plot(t_sec, tof[0,:])
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Time of flight (s)')
+    ax.grid(':')
+    ax.title.set_text(f"Station 0 ToF")
+
+    # Time differential of arrival for the rest of three stations
+    for i in range(tdoa.shape[0]-1):
+        ax = fig.add_subplot(2, 2, i+2)
+        ax.plot(t_sec, tdoa[i,:])
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('Time differential (s)')
+        ax.grid(':')
+        ax.title.set_text(f"Station {i+1}-0 TDoA")
+        plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+
+    fig.subplots_adjust(hspace=0.35)
+
+    return fig
+
+def plot_tdoa_results(p_sat:np.ndarray, x_obs:np.ndarray, x_sat:np.ndarray):
+    """ Plot results of TDoA multilateration.
+
+    Args:
+        p_sat (np.ndarray): multilaterated satellite position (3, n).
+        x_obs (np.ndarray): observer positions (6, n, n_obs).
+        x_sat (np.ndarray): groundtruth satellite position (6, n).
+    Returns:
+        fig ():
+    """ 
+    x_obs_mean = np.mean(x_obs,axis=2)
+
+    txtp, txtn = 1.002, 0.998    # Temporary variables - text location
+
+    fig = plt.figure(figsize=(14,14))
+
+    ax = fig.add_subplot(111, projection='3d')
+    ax.title.set_text("TDoA Example")
+    #plot_sphere(ax, d=R_EQ, n=40)
+
+    # Observer
+    obs = ax.scatter(x_obs[0,:,:], x_obs[1,:,:], x_obs[2,:,:], marker='o', s=1)
+    for j in range(x_obs.shape[2]):
+        ax.text(x_obs[0,0,j]*txtp, x_obs[1,0,j]*txtp, x_obs[2,0,j]*txtp, f"Observer {j}",c='b')
+        ax.scatter(x_obs[0,:,:], x_obs[1,:,:], x_obs[2,:,:], marker='o', s=1)
+
+    # Mean observer position
+    ax.scatter(x_obs_mean[0, :], x_obs_mean[1, :], x_obs_mean[2, :], marker='.', s=1, alpha=0.1)
+    ax.text(x_obs_mean[0, 0]*txtn, x_obs_mean[1, 0]*txtn, x_obs_mean[2, 0]*txtn, f"Observer (mean)")
+
+    # Satellite
+    sat = ax.scatter(x_sat[0,:], x_sat[1,:], x_sat[2,:], s=1)
+    sat_0 = ax.scatter(x_sat[0,0], x_sat[1,0], x_sat[2,0], marker='x')
+    ax.text(x_sat[0,0]*txtp, x_sat[1,0]*txtp, x_sat[2,0]*txtp, "Satellite")
+
+    # Result trajectory
+    res = ax.scatter(p_sat[0,:], p_sat[1,:], p_sat[2,:],alpha=0.1)
+
+    ax.legend([res, sat, sat_0, obs],["Result Trajectory", "Groundtruth", "Start", "Observers"])
+
+    return fig
+
+def plot_tdoa_errors(p_sat, x_sat):
+    """ Plots TDoA multilateration errors compared to groundtruth trajectory.
+
+    Args:
+        p_sat (np.ndarray): multilaterated satellite position (3, n).
+        x_sat (np.ndarray): groundtruth satellite position (6, n).
+    Returns:
+        fig ():
+    """
+    tdoa_error = x_sat[0:3,:] - p_sat[0:3,:]
+
+    fig = plt.figure(figsize=(14,7))
+    ax = fig.add_subplot(111)
+    ax.grid(':')
+    ax.title.set_text("TDoA Multilateration Error, 4 stations, LEO Pass")
+    xx = ax.plot(tdoa_error[0,:], linewidth=1)
+    yy = ax.plot(tdoa_error[1,:], linewidth=1)
+    zz = ax.plot(tdoa_error[2,:], linewidth=1)
+
+    ax.set_xlabel("Time (seconds)")
+    ax.set_ylabel("Error (m)")
+
+    ax.legend(["x","y","z"],loc=0)
 
     return fig
 
