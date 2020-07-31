@@ -2,8 +2,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from orbdet.utils.constants import *
-from orbdet.utils.utils import *
+from orbitdeterminator.doppler.utils.constants import *
+from orbitdeterminator.doppler.utils.utils import *
 
 from mpl_toolkits.mplot3d import Axes3D
 

@@ -6,8 +6,8 @@ from astropy.time import Time
 from astropy import units as u
 from astropy.coordinates import EarthLocation, ITRS, ICRS, TEME, CartesianDifferential, CartesianRepresentation
 
-from orbdet.utils.constants import *
-from orbdet.utils.utils import *
+from orbitdeterminator.doppler.utils.constants import *
+from orbitdeterminator.doppler.utils.utils import *
 
 def get_satellite_sgp4(tle, epoch_start, epoch_end, step):
     """ Auxiliary function to obtain SGP4-propagated satellite coordinates

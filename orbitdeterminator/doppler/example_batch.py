@@ -6,34 +6,12 @@ import os
 
 from astropy.time import Time   # Astropy 4.1rc1 is used
 
-from orbdet.utils.utils import *
-from orbdet.utils.utils_aux import *
-from orbdet.utils.utils_vis import *
+from orbitdeterminator.doppler.utils.utils import *
+from orbitdeterminator.doppler.utils.utils_aux import *
+from orbitdeterminator.doppler.utils.utils_vis import *
 
 np.random.seed(100)
 np.set_printoptions(precision=2)
-
-def save_images(x_sat_orbdyn_stm, x_obs_multiple, t_sec=None, prefix="", path=""):
-    """ Auxiliary function to save the images.
-    """
-
-    fig_1 = plot_example_3d(x_sat_orbdyn_stm, x_obs_multiple)
-    fig_1.savefig(os.path.join(path, f"{prefix}_scenario"))
-    plt.clf()
-    plt.close()
-
-    fig_2 = plot_range_range_rate(x_sat_orbdyn_stm, x_obs_multiple, t_sec)
-    fig_2.savefig(os.path.join(path, f"{prefix}_range_range_rate"))
-    plt.clf()
-    plt.close()
-
-def save_images_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr, prefix="", path=""):
-    """ Auxiliary function to save the batch results.
-    """
-    fig_3 = plot_batch_results(x_sat_orbdyn_stm, x_0r, x_br, x_berr)
-    fig_3.savefig(os.path.join(path, f"{prefix}_range_range_rate"))
-    plt.clf()
-    plt.close()
 
 if __name__ == '__main__':
 
@@ -67,13 +45,13 @@ if __name__ == '__main__':
     x_0err = x_0r - x_0
 
     verbose = True
-    max_iterations=200
+    max_iterations=200\
 
     save_images(x_sat_orbdyn_stm, x_obs_multiple, t_sec=t_sec, prefix="00", path="images/")
 
-    run_batch_0 = True      # True satellite position as measurement
-    run_batch_1 = True      # Doppler, single station, true initial position
-    run_batch_2 = True      # Doppler, single station, 
+    run_batch_0 = False      # True satellite position as measurement
+    run_batch_1 = False      # Doppler, single station, true initial position
+    run_batch_2 = False      # Doppler, single station, 
     run_batch_3 = True      # Doppler, multiple stations
     run_batch_4 = False      # Doppler, multiple stations, huge uncertainty, 
                             # also checks for valid state vector in the end

@@ -3,9 +3,9 @@ import numpy as np
 import argparse
 import os
 
-from orbdet.utils.utils import *
-from orbdet.utils.utils_aux import *
-from orbdet.utils.utils_vis import *
+from orbitdeterminator.doppler.utils.utils import *
+from orbitdeterminator.doppler.utils.utils_aux import *
+from orbitdeterminator.doppler.utils.utils_vis import *
 
 from scipy.optimize import fsolve
 
