@@ -16,12 +16,11 @@ if __name__ == '__main__':
 
     # Parser
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scenario_id", type=int, default=0, help="Scenario id (0, 1).")
-    parser.add_argument("--frame", type=str, default="teme", help="Tracking frame (teme, itrf)")    # Use TEME
-    parser.add_argument("--n_samples", type=int, default=100, help="Number of sample points")
+    parser.add_argument("--scenario_id", type=int, default=3, help="Scenario id (3). Only 3 has 4 stations")
+    #parser.add_argument("--frame", type=str, default="teme", help="Tracking frame (teme, itrf)")    # Use TEME
+    #parser.add_argument("--n_samples", type=int, default=100, help="Number of sample points")
 
     args = parser.parse_args()
-    args.scenario_id = 3
 
     x_0, t_sec, x_sat, x_obs, _ = get_example_scenario(id=args.scenario_id, frame='teme')
     tdoa, tof = get_tdoa_simulated(x_sat, x_obs)
@@ -30,3 +29,15 @@ if __name__ == '__main__':
     # Solve Time Differential of Arrival multilateration
     p_sat, tau = solve_tdoa(tdoa, x_obs)
 
+    path = "images/"
+    prefix = ""
+
+    fig_1 = plot_tdoa(tdoa, tof, t_sec)
+    fig_1.savefig(os.path.join(path, f"{prefix}_tdoa_measurements"))
+
+    fig_2 = plot_tdoa_results(p_sat, x_obs, x_sat)
+    fig_2.savefig(os.path.join(path, f"{prefix}_tdoa_results"))
+    
+    fig_3 = plot_tdoa_errors(p_sat, x_sat)
+    fig_3.savefig(os.path.join(path, f"{prefix}_tdoa_errors"))
+    

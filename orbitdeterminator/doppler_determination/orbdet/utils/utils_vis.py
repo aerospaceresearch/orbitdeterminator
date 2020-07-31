@@ -193,7 +193,7 @@ def plot_tdoa(tdoa:np.ndarray, tof:np.ndarray, t_sec:np.ndarray):
     # Time differential of arrival for the rest of three stations
     for i in range(tdoa.shape[0]-1):
         ax = fig.add_subplot(2, 2, i+2)
-        ax.plot(t_sec, tdoa[i,:])
+        ax.plot(t_sec, tdoa[i+1,:])
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Time differential (s)')
         ax.grid(':')
