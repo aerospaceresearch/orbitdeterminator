@@ -5,7 +5,7 @@ from orbitdeterminator.doppler.utils.utils import *
 from orbitdeterminator.doppler.utils.utils_aux import *
 from orbitdeterminator.doppler.utils.utils_vis import *
 
-np.set_printoptions(precision=20)
+np.set_printoptions(precision=4)
 
 class TestTransformations(unittest.TestCase):
     """ Unit test for utils.py. Mosto of it tested compared to Vallado's MATLAB implementation.
@@ -36,9 +36,9 @@ class TestTransformations(unittest.TestCase):
         cls.f_ref = 435.103 
 
         ###### Tests - multiple observers #####
-        x_0, t_sec, cls.x_sat_orbdyn_stm, cls.x_obs_arr_t, _ = get_example_scenario(id=0, frame='itrs')
+        x_0, cls.t_sec, cls.x_sat_orbdyn_stm, cls.x_obs_arr_t, _ = get_example_scenario(id=0, frame='itrs')
 
-        cls.nt = len(t_sec)
+        cls.nt = len(cls.t_sec)
 
         # Set observer position
         cls.x_obs_0_t = cls.x_obs_arr_t[:,:,0]
@@ -398,6 +398,27 @@ class TestTransformations(unittest.TestCase):
 
         np.testing.assert_equal(x_sat_ok_arr, x_arr_valid)
         np.testing.assert_equal(x_mask_arr, [True, False, True, False])
+
+    def test_herrick_gibbs(self):
+        """ Unit test for Herrick-Gibbs initial orbit determination (3 position and corresponding times) method.
+        """
+        
+        # Test 1
+        idx_1 = [0, 9, 19]
+
+        p_sat_1 = self.x_sat_orbdyn_stm[0:3,idx_1]
+        t_sat_1 = self.t_sec[idx_1]
+
+        x_sat_result_1, error = herrick_gibbs(p_sat_1, t_sat_1)
+
+        print(self.x_sat_orbdyn_stm[:,idx_1[1]])
+        print(x_sat_result_1)
+        print(self.x_sat_orbdyn_stm[:,idx_1[1]] - x_sat_result_1)
+
+        np.testing.assert_allclose(x_sat_result_1[3:6], self.x_sat_orbdyn_stm[3:6,idx_1[1]], rtol=10)
+
+        print("Herrick-Gibbs Test")
+
 
 
 if __name__ == "__main__":

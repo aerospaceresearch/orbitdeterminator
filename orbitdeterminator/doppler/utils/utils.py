@@ -345,6 +345,7 @@ def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray):
         x_2 (np.ndarray): estimated satellite state (position + velocity for the second observation)
     """
 
+    #print(f"Herrick-Gibbs")
     error =''
     tolerance_angle = 10.0/180.0*np.pi
 
@@ -362,25 +363,28 @@ def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray):
 
         if np.abs(np.dot(x_sat_1n, p_n)) > tolerance_angle:
             error = "not coplanar"
+            print(f"Not coplanar {np.abs(np.dot(x_sat_1n, p_n))} > {tolerance_angle}")
 
-        theta_01 = np.dot(p_sat[:,0], p_sat[:,1])
-        theta_12 = np.dot(p_sat[:,1], p_sat[:,2])
+        theta_01 = np.arccos(np.dot(p_sat[:,0], p_sat[:,1]) / (np.linalg.norm(p_sat[:,0])*np.linalg.norm(p_sat[:,1])))
+        theta_12 = np.arccos(np.dot(p_sat[:,1], p_sat[:,2]) / (np.linalg.norm(p_sat[:,1])*np.linalg.norm(p_sat[:,2])))
 
         if min(theta_01, theta_12) > tolerance_angle:
             error = f"angle > {tolerance_angle}"
+            print(f"{min(theta_01, theta_12)} > {tolerance_angle}")
 
     # Herrick-Gibbs
-    dt_10, dt_20, dt_21 = t[1]-t[0],  t[3]-t[0], t[3]-t[1]
+    dt_10, dt_20, dt_21 = t[1]-t[0],  t[2]-t[0], t[2]-t[1]
 
     term = np.array([ -dt_21 * (1.0/(dt_10*dt_20))        + MU/(12.0*r[0]**3),
                       (dt_21-dt_10) * (1.0/(dt_10*dt_21)) + MU/(12.0*r[1]**3),
                       dt_10 * (1.0/(dt_21*dt_20))         + MU/(12.0*r[2]**3), 
                     ])
 
-    v_sat_1 = np.sum(term*r, axis=1)
-    x_sat_1 = np.concatenate(p_sat[:,1], v_sat_1)
+    #v_sat_1 = np.sum(term*r, axis=1)
+    v_sat_1 = term[0]*p_sat[:,0] + term[1]*p_sat[:,1] + term[2]*p_sat[:,2]
+    x_sat_1 = np.concatenate([p_sat[:,1], v_sat_1])
 
-    return x_sat_1
+    return x_sat_1, error
 
 
 def batch(
