@@ -402,24 +402,48 @@ class TestTransformations(unittest.TestCase):
     def test_herrick_gibbs(self):
         """ Unit test for Herrick-Gibbs initial orbit determination (3 position and corresponding times) method.
         """
-        
-        # Test 1
-        idx_1 = [0, 9, 19]
 
+        rtol=10 # 10 m/s error 
+        
+        # Test 1 - 10 seconds separation
+        idx_1 = [0, 10, 20]
         p_sat_1 = self.x_sat_orbdyn_stm[0:3,idx_1]
         t_sat_1 = self.t_sec[idx_1]
 
-        x_sat_result_1, error = herrick_gibbs(p_sat_1, t_sat_1)
+        x_sat_result_1, error_1 = herrick_gibbs(p_sat_1, t_sat_1)
 
-        print(self.x_sat_orbdyn_stm[:,idx_1[1]])
-        print(x_sat_result_1)
-        print(self.x_sat_orbdyn_stm[:,idx_1[1]] - x_sat_result_1)
+        self.assertIsNone(error_1)
+        np.testing.assert_allclose(x_sat_result_1[3:6], self.x_sat_orbdyn_stm[3:6, idx_1[1]], rtol=rtol)
 
-        np.testing.assert_allclose(x_sat_result_1[3:6], self.x_sat_orbdyn_stm[3:6,idx_1[1]], rtol=10)
+        # Test 2 - 20 seconds separation
+        idx_2 = [0, 20, 40]
+        p_sat_2 = self.x_sat_orbdyn_stm[0:3,idx_2]
+        t_sat_2 = self.t_sec[idx_2]
 
-        print("Herrick-Gibbs Test")
+        x_sat_result_2, error_2 = herrick_gibbs(p_sat_2, t_sat_2)
 
+        self.assertIsNone(error_2)
+        np.testing.assert_allclose(x_sat_result_2[3:6], self.x_sat_orbdyn_stm[3:6, idx_2[1]], rtol=rtol)
 
+        # Test 3 - 30 seconds separation 
+        idx_3 = [0, 30, 60]
+        p_sat_3 = self.x_sat_orbdyn_stm[0:3,idx_3]
+        t_sat_3 = self.t_sec[idx_3]
+
+        x_sat_result_3, error_3 = herrick_gibbs(p_sat_3, t_sat_3)
+
+        self.assertIsNone(error_3)
+        np.testing.assert_allclose(x_sat_result_3[3:6], self.x_sat_orbdyn_stm[3:6, idx_3[1]], rtol=rtol)
+
+        # Test 4 - 60 seconds
+        idx_4 = [0, 60, 120]
+        p_sat_4 = self.x_sat_orbdyn_stm[0:3, idx_4]
+        t_sat_4 = self.t_sec[idx_4]
+
+        x_sat_result_4, error_4 = herrick_gibbs(p_sat_4, t_sat_4)
+
+        self.assertIsNone(error_4)
+        np.testing.assert_allclose(x_sat_result_4[3:6], self.x_sat_orbdyn_stm[3:6, idx_4[1]], rtol=rtol)
 
 if __name__ == "__main__":
     unittest.main()

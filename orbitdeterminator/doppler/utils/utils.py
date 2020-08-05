@@ -332,7 +332,7 @@ def verify_sat_observer(x_sat:np.ndarray, x_obs:np.ndarray, range_range:np.ndarr
 
     return x_sat_ok, x_mask
 
-def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray):
+def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray, angle_checks=True):
     """ Herrick-Gibbs Initial Orbit Determination Method. Takes three positional observations and corresponding
         timesteps and outpus full state vector estimate (position and velocity) for the middle measurement.
 
@@ -341,47 +341,47 @@ def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray):
     Args:
         p_sat (np.ndarray): set of satellite positions. Three close positions are required for the method to work.
         t (np.ndarray): observation times
+        angle_checks (bool): flag whether on not to perform angle checks between position vectors
     Returns:
         x_2 (np.ndarray): estimated satellite state (position + velocity for the second observation)
     """
 
     #print(f"Herrick-Gibbs")
-    error =''
+    error = None
     tolerance_angle = 10.0/180.0*np.pi
 
     r = np.linalg.norm(p_sat, axis=0)   # Magnitude of the observed positions
 
     # Sanity checks
-    sanity_checks = True
-    if sanity_checks:
+    #angle_checks = True
+    if angle_checks:
         
         p = np.cross(p_sat[:,1], p_sat[:,2])
         p_n = p / np.linalg.norm(p)
         x_sat_1n = p_sat[:,0] / r[0]
 
-        copa = np.arcsin(np.dot(p_n, x_sat_1n))
+        #copa = np.arcsin(np.dot(p_n, x_sat_1n))
 
+        # Check whether the vectors are coplanar
         if np.abs(np.dot(x_sat_1n, p_n)) > tolerance_angle:
-            error = "not coplanar"
-            print(f"Not coplanar {np.abs(np.dot(x_sat_1n, p_n))} > {tolerance_angle}")
+            error = f"Error: not coplanar {np.abs(np.dot(x_sat_1n, p_n))} > {tolerance_angle}"
 
+        # Calculate angle between vectors
         theta_01 = np.arccos(np.dot(p_sat[:,0], p_sat[:,1]) / (np.linalg.norm(p_sat[:,0])*np.linalg.norm(p_sat[:,1])))
         theta_12 = np.arccos(np.dot(p_sat[:,1], p_sat[:,2]) / (np.linalg.norm(p_sat[:,1])*np.linalg.norm(p_sat[:,2])))
 
         if min(theta_01, theta_12) > tolerance_angle:
-            error = f"angle > {tolerance_angle}"
-            print(f"{min(theta_01, theta_12)} > {tolerance_angle}")
+            error = f"Error: angles {min(theta_01, theta_12)} > {tolerance_angle}"
 
-    # Herrick-Gibbs
+    # Herrick-Gibbs Initial Orbit Determination
     dt_10, dt_20, dt_21 = t[1]-t[0],  t[2]-t[0], t[2]-t[1]
-
     term = np.array([ -dt_21 * (1.0/(dt_10*dt_20))        + MU/(12.0*r[0]**3),
                       (dt_21-dt_10) * (1.0/(dt_10*dt_21)) + MU/(12.0*r[1]**3),
                       dt_10 * (1.0/(dt_21*dt_20))         + MU/(12.0*r[2]**3), 
                     ])
 
-    #v_sat_1 = np.sum(term*r, axis=1)
-    v_sat_1 = term[0]*p_sat[:,0] + term[1]*p_sat[:,1] + term[2]*p_sat[:,2]
+    #v_sat_1 = term[0]*p_sat[:,0] + term[1]*p_sat[:,1] + term[2]*p_sat[:,2]
+    v_sat_1 = np.sum(term*p_sat, axis=1)
     x_sat_1 = np.concatenate([p_sat[:,1], v_sat_1])
 
     return x_sat_1, error
