@@ -272,6 +272,47 @@ def plot_tdoa_errors(p_sat, x_sat):
 
     return fig
 
+def plot_tdoa_hg_errors(x_sat, t_sec, x_sat_hg, w):
+    """ Plots TDoA multilateration errors compared to groundtruth trajectory.
+
+    Args:
+        x_sat (np.ndarray): groundtruth satellite state vector (6, n).
+        t_sec (np.ndarray): time array (n,).
+        x_sat_hg (np.ndarray): estimated satellite state vector (TDoA+Herrick-Gibbs).
+        w (np.ndarray): estimated window size.
+    Returns:
+        fig ():
+    """
+
+    t_sat_hg = t_sec[w:-w]
+    diff = x_sat[:,w:-w] - x_sat_hg
+
+    fig = plt.figure(figsize=(14,7))
+
+    ax_1 = fig.add_subplot(1,2,1)
+    xx = ax_1.plot(t_sat_hg, diff[0,:], linewidth=1)
+    yy = ax_1.plot(t_sat_hg, diff[1,:], linewidth=1)
+    zz = ax_1.plot(t_sat_hg, diff[2,:], linewidth=1)
+
+    ax_1.grid(':')
+    ax_1.legend(["x","y","z"],loc=0)
+    ax_1.set_xlabel("Time (seconds)")
+    ax_1.set_ylabel("Error (m)")
+    ax_1.title.set_text("Position Error, TDoA + Herrick-Gibbs")
+
+    ax_2 = fig.add_subplot(1,2,2)
+    v_xx = ax_2.plot(t_sat_hg, diff[3,:], linewidth=1)
+    v_yy = ax_2.plot(t_sat_hg, diff[4,:], linewidth=1)
+    v_zz = ax_2.plot(t_sat_hg, diff[5,:], linewidth=1)
+
+    ax_2.grid(':')
+    ax_2.legend(["x","y","z"], loc=0)
+    ax_2.set_xlabel("Time (seconds)")
+    ax_2.set_ylabel("Error (m/s)")
+    ax_2.title.set_text("Velocity Error, TDoA + Herrick-Gibbs")
+
+    return fig
+
 def save_images(x_sat, x_obs, t_sec=None, prefix="", path=""):
     """ Auxiliary function to save the images.
 

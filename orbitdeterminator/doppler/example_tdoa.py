@@ -40,4 +40,20 @@ if __name__ == '__main__':
     
     fig_3 = plot_tdoa_errors(p_sat, x_sat)
     fig_3.savefig(os.path.join(path, f"{prefix}_tdoa_errors"))
+
+    # For example, take a 10-second sliding window for the simulation and apply Herrick-Gibbs method:
+
+    w = 10  # window size
+
+    x_sat_hg = np.zeros((x_sat.shape[0], x_sat.shape[1]-w))
+    t_sat_hg = t_sec[0:-w]
+    error_hg = [None] * int(x_sat.shape[1]-w)
+
+    # Perform Herrick_Gibbs
+    for i in range(p_sat.shape[1]-2*w):
+        idx = np.array([i, i+w, i+2*w])
+        x_sat_hg[:,i], error_hg[i] = herrick_gibbs(p_sat[:, idx], t_sec[idx], angle_checks=True)
+    
+    print(x_sat_hg.shape)
+    
     
