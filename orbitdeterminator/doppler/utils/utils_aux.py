@@ -3,8 +3,12 @@ import numpy as np
 from scipy.integrate import odeint
 from sgp4.api import Satrec
 from astropy.time import Time
+import astropy
 from astropy import units as u
-from astropy.coordinates import EarthLocation, ITRS, ICRS, TEME, CartesianDifferential, CartesianRepresentation
+from astropy.coordinates import EarthLocation, ITRS, FK5, CartesianDifferential, CartesianRepresentation
+
+if float(astropy.__version__[0:3]) > 4.1:
+    from astropy.coordinates import TEME
 
 from orbitdeterminator.doppler.utils.constants import *
 from orbitdeterminator.doppler.utils.utils import *
@@ -61,13 +65,35 @@ def get_satellite(tle, epoch_start, epoch_end, step, frame='itrs'):
 
     r_teme = CartesianRepresentation(r[:,0], r[:,1], r[:,2], unit=u.km)
     v_teme = CartesianDifferential(v[:,0], v[:,1], v[:,2], unit=u.km/u.s)
-    teme = TEME(r_teme.with_differentials(v_teme), obstime=t)
 
+    # Temporary workaround until astropy version 4.1 that supports TEME
+    astropy_version = float(astropy.__version__[0:3])
+
+    if astropy_version < 4.1:
+        print(f"Warning: astropy version {astropy_version} < 4.1, treating SGP4 output (TEME) as FK5")
+        eci = FK5(r_teme.with_differentials(v_teme), obstime=t)
+        frame = 'fk5'
+    else:
+        eci = TEME(r_teme.with_differentials(v_teme), obstime=t)
+
+    # Coordinate frame transformations
     if frame=='teme':
-        x_sat = np.array([teme.x.value, teme.y.value, teme.z.value, 
-                                teme.v_x.value, teme.v_y.value, teme.v_z.value])
+        x_sat = np.array([eci.x.value, eci.y.value, eci.z.value, 
+                                eci.v_x.value, eci.v_y.value, eci.v_z.value])
+
+    if frame=='fk5':
+        # If the astropy version < 4.1, keep it there
+        if astropy_version < 4.1:
+            x_sat = np.array([eci.x.value, eci.y.value, eci.z.value, 
+                                eci.v_x.value, eci.v_y.value, eci.v_z.value])
+        # If the astropy vesion >= 4.1, transform TEME to FK5
+        else:
+            fk5 = eci.transform_to(FK5(obstime=t))
+            x_sat = np.array([fk5.x.value, fk5.y.value, fk5.z.value, 
+                                fk5.v_x.value, fk5.v_y.value, fk5.v_z.value])
+
     elif frame=='itrs':
-        itrs = teme.transform_to(ITRS(obstime=t))
+        itrs = eci.transform_to(ITRS(obstime=t))
         x_sat = np.array([itrs.x.value, itrs.y.value, itrs.z.value, 
                                 itrs.v_x.value, itrs.v_y.value, itrs.v_z.value])
 
@@ -88,18 +114,34 @@ def get_site(lat, lon, height, obstime, frame='teme'):
 
     v = np.zeros(obstime.shape[0])      # Temporary variable
 
-    if frame == 'itrs':
-        site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height*u.m)
-        site_itrs_temp = site.get_itrs(obstime=obstime)
+    # Switch to FK5 if astropy version doesn't support TEME frame
+    if float(astropy.__version__[0:3]) < 4.1:
+        frame='fk5'
 
+    site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height*u.m)
+    site_itrs_temp = site.get_itrs(obstime=obstime)
+
+    if frame == 'itrs':
         x_obs = np.array([site_itrs_temp.x.value, site_itrs_temp.y.value, site_itrs_temp.z.value,
             v, v, v])
-            
-    elif frame == 'teme':
-        # Need some workaround conversions for TEME frame
-        site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height/1e3*u.km)
-        site_itrs_temp = site.get_itrs(obstime=obstime)
+    elif frame == 'fk5':
 
+        # Need some workaround conversions for TEME frame
+        r_itrs = CartesianRepresentation(
+            site_itrs_temp.data.xyz.value[0,:], 
+            site_itrs_temp.data.xyz.value[1,:], 
+            site_itrs_temp.data.xyz.value[2,:], unit=u.km)
+        v_itrs = CartesianDifferential(v, v, v, unit=u.km/u.s)
+        
+        site_itrs = ITRS(r_itrs.with_differentials(v_itrs), obstime=obstime)
+        site_fk5 = site_itrs.transform_to(FK5(obstime=obstime))
+
+        x_obs = np.array([site_fk5.x.value, site_fk5.y.value, site_fk5.z.value,
+            site_fk5.v_x.value, site_fk5.v_y.value, site_fk5.v_z.value])*1e3     # Meters
+
+    elif frame == 'teme':
+
+        # Need some workaround conversions for TEME frame
         r_itrs = CartesianRepresentation(
             site_itrs_temp.data.xyz.value[0,:], 
             site_itrs_temp.data.xyz.value[1,:], 
