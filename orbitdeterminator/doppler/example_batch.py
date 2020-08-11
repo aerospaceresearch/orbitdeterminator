@@ -1,8 +1,5 @@
-import time
+import os, argparse, time
 import numpy as np
-import matplotlib.pyplot as plt
-import argparse
-import os
 
 from astropy.time import Time   # Astropy 4.1rc1 is used
 
@@ -10,7 +7,7 @@ from orbitdeterminator.doppler.utils.utils import *
 from orbitdeterminator.doppler.utils.utils_aux import *
 from orbitdeterminator.doppler.utils.utils_vis import *
 
-np.random.seed(100)
+np.random.seed(100)     # Fixing the seed for sampling from normal distribution around satellite groundtruth
 np.set_printoptions(precision=2)
 
 if __name__ == '__main__':
@@ -30,11 +27,11 @@ if __name__ == '__main__':
     _, rr_1 = range_range_rate(x_sat_orbdyn_stm, x_obs_1)
     z_rr_1 = np.expand_dims(rr_1, axis=0)       # Range rate measurements
     _, z_rr_multiple = range_range_rate(x_sat_orbdyn_stm, x_obs_multiple)
-    z_x_sat = x_sat_orbdyn_stm                  # Full state measurements
+    z_x_sat = x_sat_orbdyn_stm                  # Full state measurements (batch filter sanity check)
 
-    # Uncvertainties
-    R_rr_1 = np.eye(1)*1e-5                         # Measurement uncertainty range rate (1x1)
-    R_rr = np.eye(x_obs_multiple.shape[2])*1e-6     # Measurement uncertainty range rate (array)
+    # Uncertainties
+    R_rr_1 = np.eye(1)*1e-5                         # Measurement uncertainty range rate (1x1, single station)
+    R_rr = np.eye(x_obs_multiple.shape[2])*1e-6     # Measurement uncertainty range rate (array, multiple station)
     R_x_sat = np.eye(6)*1e-12                       # Measurement uncertainty full state
 
     P_small = np.eye(6)*1e-6                        # Initial state uncertainty - small
@@ -45,19 +42,19 @@ if __name__ == '__main__':
     x_0err = x_0r - x_0
 
     verbose = True
-    max_iterations=200\
+    max_iterations=200
 
     save_images(x_sat_orbdyn_stm, x_obs_multiple, t_sec=t_sec, prefix="00", path="images/")
 
     run_batch_0 = False      # True satellite position as measurement
     run_batch_1 = False      # Doppler, single station, true initial position
     run_batch_2 = False      # Doppler, single station, 
-    run_batch_3 = True      # Doppler, multiple stations
+    run_batch_3 = True       # Doppler, multiple stations
     run_batch_4 = False      # Doppler, multiple stations, huge uncertainty, 
-                            # also checks for valid state vector in the end
+                             # also checks for valid state vector in the end
 
-    #####   Batch Test 0 - True satellite position as measurement, 
-    #####   should converge with a very small error
+    #####   Batch Test 0 - True satellite position as measurement (e.g. GPS)
+    #####   Sanity check - should converge with a very small error
     if run_batch_0 == True:
 
         x_br = np.zeros(x_0r.shape)
@@ -149,7 +146,7 @@ if __name__ == '__main__':
     x_0err = x_0r - x_0
 
     start_time = time.time()
-    #####   Batch Test 2_1 - Range rate, random samples, multiple measurements     #####
+    #####   Batch Test 2_1 - Range rate, random samples, multiple stations     #####
     if run_batch_3 == True:     
 
         x_br = np.zeros(x_0r.shape)
@@ -194,6 +191,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     #####   Batch Test 4 - Range rate, random samples, multiple measurements     #####
+    #####   Huge error, also checks for invalid converged state vectors          #####
     if run_batch_4 == True:     
 
         x_br = np.zeros(x_0r.shape)

@@ -32,13 +32,11 @@ class TestTransformations(unittest.TestCase):
 
         cls.x_sat_arr = np.concatenate([cls.x_sat_1, cls.x_sat_2], axis=1)
 
-        # Falconsat reference frequency
-        cls.f_ref = 435.103 
-
         ###### Tests - multiple observers #####
         x_0, cls.t_sec, cls.x_sat_orbdyn_stm, cls.x_obs_arr_t, _ = get_example_scenario(id=0, frame='itrs')
 
-        cls.nt = len(cls.t_sec)
+        cls.nt = len(cls.t_sec)     # Number of measurements
+        cls.f_ref = 435.103     # Falconsat reference frequency
 
         # Set observer position
         cls.x_obs_0_t = cls.x_obs_arr_t[:,:,0]
@@ -353,14 +351,14 @@ class TestTransformations(unittest.TestCase):
         np.testing.assert_equal(x_mask_1, [True])
 
         # Test 2 - Invalid state vector
-        x_sat_invalid = np.copy(self.x_sat_1)*1e3
+        x_sat_invalid = np.copy(self.x_sat_1)*1e3   # Multiply by large number to bring it further
 
         x_sat_ok_2, x_mask_2 = verify_sat_orbital(x_sat_invalid, range_pos_1, range_vel_1)
 
         np.testing.assert_equal(x_sat_ok_2.shape, (6,0))
         np.testing.assert_equal(x_mask_2, [False])
 
-        # Test 3 - Array
+        # Test 3 - Array: [valid, invalid, valid, invalid]
         x_arr = np.concatenate([self.x_sat_1, x_sat_invalid, self.x_sat_1, x_sat_invalid], axis = 1)
         x_arr_valid = np.concatenate([self.x_sat_1, self.x_sat_1], axis = 1)
 
@@ -402,21 +400,25 @@ class TestTransformations(unittest.TestCase):
     def test_herrick_gibbs(self):
         """ Unit test for Herrick-Gibbs initial orbit determination (3 position and corresponding times) method.
         """
-
+        # TODO: Clarify
+        # Herrick-Gibbs is a first-order method, so it will not converge to exact value 
+        # even if groundtruth values are provided. Should still provide reasonably close
+        # velocity estimate.
         rtol=10 # 10 m/s error 
         
         # Test 1 - 10 seconds separation
-        idx_1 = [0, 10, 20]
+        idx_1 = [0, 10, 20]     # Each timestep is ~1sec
         p_sat_1 = self.x_sat_orbdyn_stm[0:3,idx_1]
         t_sat_1 = self.t_sec[idx_1]
 
         x_sat_result_1, error_1 = herrick_gibbs(p_sat_1, t_sat_1)
 
+        # Check whether velocity estimate for the middle vector is reasonably close to the groundtruth
         self.assertIsNone(error_1)
         np.testing.assert_allclose(x_sat_result_1[3:6], self.x_sat_orbdyn_stm[3:6, idx_1[1]], rtol=rtol)
 
         # Test 2 - 20 seconds separation
-        idx_2 = [0, 20, 40]
+        idx_2 = [0, 20, 40]     # Each timestep is ~1sec
         p_sat_2 = self.x_sat_orbdyn_stm[0:3,idx_2]
         t_sat_2 = self.t_sec[idx_2]
 
@@ -426,7 +428,7 @@ class TestTransformations(unittest.TestCase):
         np.testing.assert_allclose(x_sat_result_2[3:6], self.x_sat_orbdyn_stm[3:6, idx_2[1]], rtol=rtol)
 
         # Test 3 - 30 seconds separation 
-        idx_3 = [0, 30, 60]
+        idx_3 = [0, 30, 60]     # Each timestep is ~1sec
         p_sat_3 = self.x_sat_orbdyn_stm[0:3,idx_3]
         t_sat_3 = self.t_sec[idx_3]
 
@@ -436,7 +438,7 @@ class TestTransformations(unittest.TestCase):
         np.testing.assert_allclose(x_sat_result_3[3:6], self.x_sat_orbdyn_stm[3:6, idx_3[1]], rtol=rtol)
 
         # Test 4 - 60 seconds
-        idx_4 = [0, 60, 120]
+        idx_4 = [0, 60, 120]    # Each timestep is ~1sec
         p_sat_4 = self.x_sat_orbdyn_stm[0:3, idx_4]
         t_sat_4 = self.t_sec[idx_4]
 

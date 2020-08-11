@@ -1,14 +1,13 @@
 import numpy as np
 
-from scipy.integrate import odeint
+from scipy.integrate import odeint  # Orbit propagation
+from scipy.optimize import fsolve   # For solving TDoA 
 from sgp4.api import Satrec
-from astropy.time import Time
 from astropy import units as u
+from astropy.time import Time
 from astropy.coordinates import EarthLocation, ITRS, ICRS, TEME, CartesianDifferential, CartesianRepresentation
 
 from orbitdeterminator.doppler.utils.constants import *
-
-from scipy.optimize import fsolve   # For solving TDoA 
 
 def range_range_rate(x_sat:np.ndarray, x_obs:np.ndarray):
     """ Get range and slant range rate (radial relative velocity component). 
@@ -224,9 +223,7 @@ def tdoa_objective_function(vars, *data):
 
     x, y, z, tau = vars
     x_sat = np.array([[x], [y], [z]], dtype=np.float64)
-
     x_obs, tdoa = data
-
     r = C*(tdoa + tau) - np.linalg.norm(x_obs - x_sat, axis=0)
 
     return (r.item(0), r.item(1), r.item(2), r.item(3))
@@ -324,10 +321,8 @@ def verify_sat_observer(x_sat:np.ndarray, x_obs:np.ndarray, range_range:np.ndarr
         x_mask (np.ndarray): boolean array indicating the validity of satellite vector.
     """
 
-    r, rr = range_range_rate(x_sat, x_obs)
-
+    r, _ = range_range_rate(x_sat, x_obs)
     x_mask = (r >= range_range[0]) & (r <= range_range[1])
-    
     x_sat_ok = x_sat[:,x_mask]
 
     return x_sat_ok, x_mask
@@ -360,7 +355,7 @@ def herrick_gibbs(p_sat:np.ndarray, t:np.ndarray, angle_checks=True):
         p_n = p / np.linalg.norm(p)
         x_sat_1n = p_sat[:,0] / r[0]
 
-        #copa = np.arcsin(np.dot(p_n, x_sat_1n))
+        #copa = np.arcsin(np.dot(p_n, x_sat_1n))    # Variable unused in original code
 
         # Check whether the vectors are coplanar
         if np.abs(np.dot(x_sat_1n, p_n)) > tolerance_angle:
