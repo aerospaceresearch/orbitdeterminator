@@ -118,30 +118,19 @@ def get_site(lat, lon, height, obstime, frame='teme'):
     if float(astropy.__version__[0:3]) < 4.1:
         frame='fk5'
 
-    site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height*u.m)
-    site_itrs_temp = site.get_itrs(obstime=obstime)
 
     if frame == 'itrs':
+        site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height*u.m)
+        site_itrs_temp = site.get_itrs(obstime=obstime)
+
         x_obs = np.array([site_itrs_temp.x.value, site_itrs_temp.y.value, site_itrs_temp.z.value,
             v, v, v])
-    elif frame == 'fk5':
-
-        # Need some workaround conversions for TEME frame
-        r_itrs = CartesianRepresentation(
-            site_itrs_temp.data.xyz.value[0,:], 
-            site_itrs_temp.data.xyz.value[1,:], 
-            site_itrs_temp.data.xyz.value[2,:], unit=u.km)
-        v_itrs = CartesianDifferential(v, v, v, unit=u.km/u.s)
-        
-        site_itrs = ITRS(r_itrs.with_differentials(v_itrs), obstime=obstime)
-        site_fk5 = site_itrs.transform_to(FK5(obstime=obstime))
-
-        x_obs = np.array([site_fk5.x.value, site_fk5.y.value, site_fk5.z.value,
-            site_fk5.v_x.value, site_fk5.v_y.value, site_fk5.v_z.value])*1e3     # Meters
-
+            
     elif frame == 'teme':
-
         # Need some workaround conversions for TEME frame
+        site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height/1e3*u.km)
+        site_itrs_temp = site.get_itrs(obstime=obstime)
+
         r_itrs = CartesianRepresentation(
             site_itrs_temp.data.xyz.value[0,:], 
             site_itrs_temp.data.xyz.value[1,:], 
@@ -153,6 +142,25 @@ def get_site(lat, lon, height, obstime, frame='teme'):
         site_teme = site_itrs.transform_to(TEME(obstime=obstime))
         x_obs = np.array([site_teme.x.value, site_teme.y.value, site_teme.z.value,
             site_teme.v_x.value, site_teme.v_y.value, site_teme.v_z.value])*1e3     # Meters
+
+    elif frame == 'fk5':
+
+        # Need some workaround conversions for TEME frame
+        # TODO: Check units for FK5(m/km)
+        site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height/1e3*u.km)
+        site_itrs_temp = site.get_itrs(obstime=obstime)
+
+        r_itrs = CartesianRepresentation(
+            site_itrs_temp.data.xyz.value[0,:], 
+            site_itrs_temp.data.xyz.value[1,:], 
+            site_itrs_temp.data.xyz.value[2,:], unit=u.km)
+        v_itrs = CartesianDifferential(v, v, v, unit=u.km/u.s)
+        
+        site_itrs = ITRS(r_itrs.with_differentials(v_itrs), obstime=obstime)
+        site_fk5 = site_itrs.transform_to(FK5(obstime=obstime))
+
+        x_obs = np.array([site_fk5.x.value, site_fk5.y.value, site_fk5.z.value,
+            site_fk5.v_x.value, site_fk5.v_y.value, site_fk5.v_z.value])*1e3     # Meters
 
     return x_obs
 
