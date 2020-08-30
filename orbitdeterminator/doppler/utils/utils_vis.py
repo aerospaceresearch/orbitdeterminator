@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from orbitdeterminator.doppler.utils.constants import *
@@ -23,15 +24,48 @@ def plot_sphere(ax, d:np.ndarray, n:np.ndarray) -> None:
     y = d * np.outer(np.sin(u), np.cos(v))
     z = d * np.outer(np.cos(u), np.ones_like(v))
 
-    ax.plot_wireframe(x, y, z, alpha=0.25, linewidth=1, color='gray')
+    ax.plot_wireframe(x, y, z, alpha=0.2, linewidth=1, color='gray')
 
-def plot_example_3d(x_sat_orbdyn_stm:np.ndarray, x_obs_multiple:np.ndarray):
+def plot_earth(ax, d:np.ndarray, filename:str, angle=0):
+    """ Plots Earth.
+        Source: https://stackoverflow.com/questions/53074908/map-an-image-onto-a-sphere-and-plot-3d-trajectories
+    """
+    img = plt.imread(filename)
+
+    # define a grid matching the map size, subsample along with pixels
+    u = np.linspace(0, np.pi, img.shape[0])
+    v = np.linspace(0+angle, 2*np.pi+angle, img.shape[1])
+
+    count = 180 # keep 180 points along theta and phi
+    u_idx = np.linspace(0, img.shape[0] - 1, count).round().astype(int)
+    v_idx = np.linspace(0, img.shape[1] - 1, count).round().astype(int)
+    u, v = u[u_idx], v[v_idx]
+    img = img[np.ix_(u_idx, v_idx)]
+
+    u,v = np.meshgrid(u, v)
+
+    # sphere
+    x = d * np.sin(u) * np.cos(v)
+    y = d * np.sin(u) * np.sin(v)
+    z = d * np.cos(u)
+
+    # create 3d Axes
+    ax.plot_surface(x.T, y.T, z.T, facecolors=img/255, cstride=1, rstride=1) # we've already pruned ourselves
+
+    # make the plot more spherical
+    #ax.axis('scaled')
+
+def plot_example_3d(x_sat_orbdyn_stm:np.ndarray, x_obs_multiple:np.ndarray, title=None):
     """ Plots a sphere, site position and satellite trajectory.
 
     Args:
         x_sat_orbdyn_stm (np.array): satellite trajectory array.
         x_obs_multiple (np.array): observer positions.
     """
+
+    font = {'size': 16}
+    matplotlib.rc('font', **font)
+
     fig = plt.figure(figsize=(14,14))
     ax1 = fig.add_subplot(111, projection='3d')
 
@@ -39,23 +73,31 @@ def plot_example_3d(x_sat_orbdyn_stm:np.ndarray, x_obs_multiple:np.ndarray):
     if len(x_obs_multiple.shape) == 2:
         x_obs_multiple = np.expand_dims(x_obs_multiple)
     
-    plot_sphere(ax1, d=R_EQ, n=40)
+    #plot_sphere(ax1, d=R_EQ, n=40)
 
     s = []      # Scatter instances
     l = []      # Legends
 
     for i in range(x_obs_multiple.shape[2]):
         # TODO: Check first argument
-        st = ax1.scatter(x_obs_multiple[0,:,0], x_obs_multiple[1,:,i], x_obs_multiple[2,:,i], marker='o')
+        ss = ax1.scatter(x_obs_multiple[0,:,i], x_obs_multiple[1,:,i], x_obs_multiple[2,:,i], marker='.', s=4)
+        st = ax1.scatter(x_obs_multiple[0,0,i], x_obs_multiple[1,0,i], x_obs_multiple[2,0,i], c=ss.get_facecolors())
         s.append(st)
         l.append(f"Observer {i}")
 
-    s4 = ax1.scatter(x_sat_orbdyn_stm[0,:], x_sat_orbdyn_stm[1,:], x_sat_orbdyn_stm[2,:], marker='.', c='k',s=1)
+    ax1.set_xlabel("x ECI (m)", fontsize=16, labelpad=10)
+    ax1.set_ylabel("y ECI (m)", fontsize=16, labelpad=10)
+    ax1.set_zlabel("z ECI (m)", fontsize=16, labelpad=10)
+
+    s4 = ax1.scatter(x_sat_orbdyn_stm[0,0], x_sat_orbdyn_stm[1,0], x_sat_orbdyn_stm[2,0], c='k')
+    ax1.scatter(x_sat_orbdyn_stm[0,:], x_sat_orbdyn_stm[1,:], x_sat_orbdyn_stm[2,:], marker='.', c='k', s=1)
     s.append(s4)
     l.append('Satellite')
 
-    ax1.title.set_text('Scenario example')
-    ax1.legend((s), (l), loc=2)
+    if title is not None:
+        ax1.title.set_text('Scenario example')
+        
+    ax1.legend((s), (l), loc=2, bbox_to_anchor=(0.15,0.9))
 
     return fig
 
@@ -92,7 +134,7 @@ def plot_range_range_rate(x_sat_orbdyn_stm:np.ndarray, x_obs_multiple:np.ndarray
         ax2.grid(':')
         ax2.title.set_text('Station 1 - Range Rate')
 
-    fig.subplots_adjust(hspace=0.25)
+    fig.subplots_adjust(hspace=0.3)
 
     return fig
 
@@ -148,29 +190,40 @@ def plot_batch_results(
     fig = plt.figure(figsize=(14,14))
     ax1 = fig.add_subplot(111, projection='3d')
 
+    font = {'size': 16}
+    matplotlib.rc('font', **font)
+
+    plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+
     # Groundtruth
     ax1.scatter(x_sat_orbdyn_stm[0,0], x_sat_orbdyn_stm[1,0], x_sat_orbdyn_stm[2,0], s=10, marker='x', c = 'r')
 
     x_berr_norm = np.linalg.norm(x_berr, axis=0)
-    #norm_mask = x_berr_norm < 1000
+    norm_mask = x_berr_norm < 5000
 
-    traj = ax1.plot(x_sat_orbdyn_stm[0,:2], x_sat_orbdyn_stm[1,:2], x_sat_orbdyn_stm[2,:2], c='r')
-    traj_proxy = ax1.scatter(x_sat_orbdyn_stm[0,0], x_sat_orbdyn_stm[1,0], x_sat_orbdyn_stm[2,0], c='r', s=1)
+    traj = ax1.plot(x_sat_orbdyn_stm[0,:4], x_sat_orbdyn_stm[1,:4], x_sat_orbdyn_stm[2,:4], c='k')
+    traj_proxy = ax1.scatter(x_sat_orbdyn_stm[0,0], x_sat_orbdyn_stm[1,0], x_sat_orbdyn_stm[2,0], c='k', s=10)
 
     # Batch results
     for i in range(x_0r.shape[1]):
-        if x_berr_norm[i] < 1000:
-            s1 = ax1.scatter(x_0r[0, i], x_0r[1, i], x_0r[2, i], c='b', s=1, marker='x')
-            s2 = ax1.scatter(x_br[0, i], x_br[1, i], x_br[2, i], c='g', s=1)
+        if x_berr_norm[i] < 100000:
+            s1 = ax1.scatter(x_0r[0, i], x_0r[1, i], x_0r[2, i], c='b', s=40, marker='x')
+            s2 = ax1.scatter(x_br[0, i], x_br[1, i], x_br[2, i], c='r', s=20)
 
-    s1_proxy = ax1.scatter(x_0r[0, 0], x_0r[1, 0], x_0r[2, 0], c='b', s=1, marker='x')
-    s2_proxy = ax1.scatter(x_br[0, 1], x_br[1, 1], x_br[2, 1], c='g', s=1)
+    ax1.set_xlabel("x ECI (m)", fontsize=16, labelpad=15)
+    ax1.set_ylabel("y ECI (m)", fontsize=16, labelpad=15)
+    ax1.set_zlabel("z ECI (m)", fontsize=16, labelpad=15)
 
-    ax1.legend((traj_proxy, s1_proxy, s2_proxy), ('Groundtruth trajectory', 'Pre-batch positions', 'Post-batch positions'))
+    s1_proxy = ax1.scatter(x_0r[0, 0], x_0r[1, 0], x_0r[2, 0], c='b', s=40, marker='x')
+    s2_proxy = ax1.scatter(x_br[0, 1], x_br[1, 1], x_br[2, 1], c='r', s=20)
+
+    ax1.legend((traj_proxy, s1_proxy, s2_proxy), 
+        ('Groundtruth trajectory', 'Pre-batch positions', 'Post-batch positions'),
+        loc=2, bbox_to_anchor=(0.15,0.9))
 
     return fig
 
-def plot_tdoa(tdoa:np.ndarray, tof:np.ndarray, t_sec:np.ndarray):
+def plot_tdoa(tdoa:np.ndarray, tof:np.ndarray, t_sec:np.ndarray, title=None):
     """ Plot TDoA measurements.
 
     Args:
@@ -181,30 +234,38 @@ def plot_tdoa(tdoa:np.ndarray, tof:np.ndarray, t_sec:np.ndarray):
         fig ():
     """
     fig = plt.figure(figsize=(14,7))
-    fig.suptitle("Reference station time of flight (ToF) and time differential of arrival (TDoA) for other stations")
+
+    font = {'size': 16}
+    matplotlib.rc('font', **font)
+
+    if title is not None:
+        fig.suptitle(title)
+
     # Reference station time of flight
     ax = fig.add_subplot(2, 2, 1)
+    
     ax.plot(t_sec, tof[0,:])
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Time of flight (s)')
+    ax.set_xlabel('Time (s)', fontsize=16, labelpad=10)
+    ax.set_ylabel('Time of flight (s)', fontsize=16, labelpad=10)
     ax.grid(':')
     ax.title.set_text(f"Station 0 ToF")
+    plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
     # Time differential of arrival for the rest of three stations
     for i in range(tdoa.shape[0]-1):
         ax = fig.add_subplot(2, 2, i+2)
         ax.plot(t_sec, tdoa[i+1,:])
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Time differential (s)')
+        ax.set_xlabel('Time (s)', fontsize=16, labelpad=10)
+        ax.set_ylabel('Time differential (s)', fontsize=16, labelpad=10)
         ax.grid(':')
         ax.title.set_text(f"Station {i+1}-0 TDoA")
         plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 
-    fig.subplots_adjust(hspace=0.35)
+    fig.subplots_adjust(hspace=0.5)
 
     return fig
 
-def plot_tdoa_results(p_sat:np.ndarray, x_obs:np.ndarray, x_sat:np.ndarray):
+def plot_tdoa_results(p_sat:np.ndarray, x_obs:np.ndarray, x_sat:np.ndarray=None, angle=None):
     """ Plot results of TDoA multilateration.
 
     Args:
@@ -216,37 +277,59 @@ def plot_tdoa_results(p_sat:np.ndarray, x_obs:np.ndarray, x_sat:np.ndarray):
     """ 
     x_obs_mean = np.mean(x_obs,axis=2)
 
+    font = {'size': 16}
+    matplotlib.rc('font', **font)
+
     txtp, txtn = 1.002, 0.998    # Temporary variables - text location
 
-    fig = plt.figure(figsize=(14,14))
+    fig = plt.figure(figsize=(10,10))
 
     ax = fig.add_subplot(111, projection='3d')
     ax.title.set_text("TDoA Example")
     #plot_sphere(ax, d=R_EQ, n=40)
 
     # Observer
-    obs = ax.scatter(x_obs[0,:,:], x_obs[1,:,:], x_obs[2,:,:], marker='o', s=1)
+    obs = ax.scatter(x_obs[0,0,:], x_obs[1,0,:], x_obs[2,0,:], c='b')
     for j in range(x_obs.shape[2]):
-        ax.text(x_obs[0,0,j]*txtp, x_obs[1,0,j]*txtp, x_obs[2,0,j]*txtp, f"Observer {j}",c='b')
-        ax.scatter(x_obs[0,:,:], x_obs[1,:,:], x_obs[2,:,:], marker='o', s=1)
+        ax.text(x_obs[0,0,j]*txtp, x_obs[1,0,j]*txtp, x_obs[2,0,j]*txtp, f"Obs_1 {j}",c='k',fontsize=10)
+        ax.scatter(x_obs[0,:,:], x_obs[1,:,:], x_obs[2,:,:], marker='.', s=0.5, c='b')
 
-    # Mean observer position
-    ax.scatter(x_obs_mean[0, :], x_obs_mean[1, :], x_obs_mean[2, :], marker='.', s=1, alpha=0.1)
-    ax.text(x_obs_mean[0, 0]*txtn, x_obs_mean[1, 0]*txtn, x_obs_mean[2, 0]*txtn, f"Observer (mean)")
+    # # Mean observer position
+    # ax.scatter(x_obs_mean[0, :], x_obs_mean[1, :], x_obs_mean[2, :], marker='.', s=1, alpha=0.1)
+    # ax.text(x_obs_mean[0, 0]*txtn, x_obs_mean[1, 0]*txtn, x_obs_mean[2, 0]*txtn, f"Observer (mean)")
 
-    # Satellite
-    sat = ax.scatter(x_sat[0,:], x_sat[1,:], x_sat[2,:], s=1)
-    sat_0 = ax.scatter(x_sat[0,0], x_sat[1,0], x_sat[2,0], marker='x')
-    ax.text(x_sat[0,0]*txtp, x_sat[1,0]*txtp, x_sat[2,0]*txtp, "Satellite")
+    if x_sat is not None:
+        # Satellite
+        sat = ax.scatter(x_sat[0,:], x_sat[1,:], x_sat[2,:])
+        sat_0 = ax.scatter(x_sat[0,0], x_sat[1,0], x_sat[2,0], marker='x')
+        ax.text(x_sat[0,0]*txtp, x_sat[1,0]*txtp, x_sat[2,0]*txtp, "Satellite")
 
     # Result trajectory
-    res = ax.scatter(p_sat[0,:], p_sat[1,:], p_sat[2,:],alpha=0.1)
+    ax.scatter(p_sat[0,:], p_sat[1,:], p_sat[2,:],alpha=0.4,s=0.5,c='k')
+    res = ax.scatter(p_sat[0,0], p_sat[1,0], p_sat[2,0],c='k')
 
-    ax.legend([res, sat, sat_0, obs],["Result Trajectory", "Groundtruth", "Start", "Observers"])
+    o = ax.scatter(0,0,0,c='teal')
+
+    # Temp legend workaround
+    if x_sat is not None:
+        ax.legend([res, sat, sat_0, obs, o],["Result Trajectory", "Groundtruth", "Start", "Observers", "Origin"], loc=2, bbox_to_anchor=(0.15,0.9))
+    else:
+        ax.legend([res, obs, o],["Result Trajectory", "Observers", "Origin"], loc=2, bbox_to_anchor=(0.15,0.9))
+
+    ax.ticklabel_format(axis="x", style="sci", scilimits=(0,0))
+    ax.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+    ax.ticklabel_format(axis="z", style="sci", scilimits=(0,0))
+
+    ax.set_xlabel("x ECI (m)", fontsize=16, labelpad=15)
+    ax.set_ylabel("y ECI (m)", fontsize=16, labelpad=15)
+    ax.set_zlabel("z ECI (m)", fontsize=16, labelpad=15)
+
+    if angle is not None:
+        ax.view_init(angle[0], angle[1])
 
     return fig
 
-def plot_tdoa_errors(p_sat, x_sat):
+def plot_tdoa_errors(p_sat, x_sat, title=None):
     """ Plots TDoA multilateration errors compared to groundtruth trajectory.
 
     Args:
@@ -258,15 +341,24 @@ def plot_tdoa_errors(p_sat, x_sat):
     tdoa_error = x_sat[0:3,:] - p_sat[0:3,:]
 
     fig = plt.figure(figsize=(14,7))
+
+    plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
+
+    font = {'size': 16}
+    matplotlib.rc('font', **font)
+
     ax = fig.add_subplot(111)
     ax.grid(':')
-    ax.title.set_text("TDoA Multilateration Error, 4 stations, LEO Pass")
+
+    if title is not None:
+        ax.title.set_text(title)
+
     xx = ax.plot(tdoa_error[0,:], linewidth=1)
     yy = ax.plot(tdoa_error[1,:], linewidth=1)
     zz = ax.plot(tdoa_error[2,:], linewidth=1)
 
-    ax.set_xlabel("Time (seconds)")
-    ax.set_ylabel("Error (m)")
+    ax.set_xlabel("Time (seconds)", fontsize=16, labelpad=10)
+    ax.set_ylabel("Error (m)", fontsize=16, labelpad=10)
 
     ax.legend(["x","y","z"],loc=0)
 

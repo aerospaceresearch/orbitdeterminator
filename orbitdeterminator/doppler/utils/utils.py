@@ -210,7 +210,7 @@ def get_matrix_range_rate_H(x_sat:np.ndarray, x_obs:np.ndarray):
 def tdoa_objective_function(vars, *data):
     """ Objective function for solving Time Differential of Arrival (TDoA).
 
-        0 = C * (TDoA * tau) - || x_sat-x_obs ||
+        0 = C * (TDoA + tau) - || x_sat-x_obs ||
 
     Args:
         vars (tuple): a tuple of unknowns - xyz satellite position and time offset
@@ -232,6 +232,7 @@ def get_tdoa_simulated(x_sat:np.ndarray, x_obs:np.ndarray, flag_tof:bool=False):
     """ Get simulated Time Differential of Arrival measurements.
 
     TODO: Take into account time of flight, right now it is instantaneous.
+    TODO: Flip range and tdoa arrays dimensions to be (n_measurements, n_stations)
 
     Args:
         x_sat (np.ndarray): set of satellite state vectors.
@@ -249,6 +250,22 @@ def get_tdoa_simulated(x_sat:np.ndarray, x_obs:np.ndarray, flag_tof:bool=False):
         tof = r / C
         tdoa = tof - tof[0,:]
 
+    return tdoa, tof
+
+def get_tdoa_simulated_r(r:np.ndarray):
+    """ Same as get_tdoa_simulated_r, but only range as argument.
+
+    TODO: Flip range and tdoa arrays dimensions to be (n_measurements, n_stations)
+
+    Args: 
+        range(np.ndarray): set of observed ranges per station (n_stations, n_measurements).
+    Returns:
+        tdoa (np.ndarray): set of simulated TDoA measurements.
+        tof (np.ndarray):  set of simulate time of flights between the observer and the satellite.
+    """
+
+    tof = r / C
+    tdoa = tof - tof[0,:]
     return tdoa, tof
 
 def solve_tdoa(tdoa:np.ndarray, x_obs:np.ndarray):

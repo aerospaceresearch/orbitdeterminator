@@ -8,7 +8,7 @@ from orbitdeterminator.doppler.utils.utils_vis import *
 np.set_printoptions(precision=4)
 
 class TestTransformations(unittest.TestCase):
-    """ Unit test for utils.py. Mosto of it tested compared to Vallado's MATLAB implementation.
+    """ Unit test for utils.py. Most of it tested compared to Vallado's MATLAB implementation.
     """
 
     @classmethod

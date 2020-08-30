@@ -13,6 +13,8 @@ if float(astropy.__version__[0:3]) > 4.1:
 from orbitdeterminator.doppler.utils.constants import *
 from orbitdeterminator.doppler.utils.utils import *
 
+import json
+
 def get_satellite_sgp4(tle, epoch_start, epoch_end, step):
     """ Auxiliary function to obtain SGP4-propagated satellite coordinates
         within the specified epoch.
@@ -205,8 +207,6 @@ def get_6_oe_from_tle(tle):
 
     return oe
 
-
-
 def get_example_scenario(id=0, frame='teme'):
     """ Auxiliary function to obtain example scenario variables. 
         Scenario 1 or 2 works.
@@ -283,3 +283,124 @@ def get_example_scenario(id=0, frame='teme'):
         x_obs_multiple = np.transpose(np.concatenate([[x_obs_1], [x_obs_2], [x_obs_3], [x_obs_4]]), (1,2,0))
     
     return x_0, t_sec, x_sat_orbdyn_stm, x_obs_multiple, f_downlink[id]
+    
+def parse_json_data(filename:str):
+    """ Temporary function to process the data from json file (end of project simulation.)
+
+    Args:
+        filename (str): path to the file that contains simulation data for the final evaluation
+    """
+
+    json_file = open(filename)
+    data_json = json.load(json_file)
+
+    n_s = len(data_json['observation'])      # Number of stations
+
+    t_start = np.zeros(n_s)                         # First observation time (per station)
+    t_end = np.zeros(n_s)                           # Last observation time (per station)
+    
+    t_start_idx = np.zeros(n_s, dtype=int)
+    t_end_idx = np.zeros(n_s, dtype=int)
+
+    # Temporary workaround
+    for i, d in zip(range(n_s), data_json['observation']):
+        print(f"{len(d['data']['doppler'])}, {d['data']['gpstime_unix'][0]}, {d['data']['gpstime_unix'][-1]}" )
+        # Get start and end times
+        t_start[i] = d['data']['gpstime_unix'][0]
+        t_end[i] = d['data']['gpstime_unix'][-1]
+
+    # Interval
+    t_start_max = np.max(t_start)
+    t_end_min = np.min(t_end)
+
+    #
+    for i, d in zip(range(n_s), data_json['observation']):
+        temp = np.array(d['data']['gpstime_unix'])
+        t_start_idx[i] = np.argwhere(temp==t_start_max)
+        t_end_idx[i] = np.argwhere(temp==t_end_min)
+
+    diff = t_end_idx - t_start_idx
+    print(f"Start indices: \t{t_start_idx}")
+    print(f"End indices: \t{t_end_idx}")
+    print(f"Difference: \t{diff}")
+    print(t_start_max, t_end_min)
+
+    #t_start_idx = np
+
+    #n_m = len(data_json['observation'][0]['data']['gpstime_unix'])       # Number of measurements (first station)
+    n_m = int(diff[0])
+
+    data_tle = []                                   # Satellite
+    data_station_name = []                          # Station name
+    data_gpstime_unix = np.zeros((n_m, n_s))        # Time
+    data_range = np.zeros((n_m, n_s))  
+    data_doppler = np.zeros((n_m, n_s))             # Mesurement (?)
+    data_station_pos = np.zeros((3, n_m, n_s))      # Position
+    data_station_vel = np.zeros((3, n_m, n_s))      # Velocity
+    #data_station_vec = np.zeros((6, n_m, n_s))      # State vector
+
+    # Temporary
+
+    for i, d in zip(range(n_s), data_json['observation']):
+        #print (f"{i} {d['station']}")
+        data_tle.append([d['orbit']['tle1'], d['orbit']['tle2']])
+        data_station_name.append(d['station'])
+
+        temp_data_doppler = np.array(d['data']['doppler'])
+        temp_data_range = np.array(d['data']['range'])
+        temp_gpstime_unix = np.array(d['data']['gpstime_unix'])
+        temp_station_pos = np.array(d['data']['station_pos']).T
+        temp_station_vel = np.array(d['data']['station_vel']).T
+
+        data_doppler[:,i] = temp_data_doppler[t_start_idx[i]:t_end_idx[i]]
+        data_range[:,i] = temp_data_range[t_start_idx[i]:t_end_idx[i]]
+        data_gpstime_unix[:,i] = temp_gpstime_unix[t_start_idx[i]:t_end_idx[i]]
+        data_station_pos[:,:,i] = temp_station_pos[:,t_start_idx[i]:t_end_idx[i]]
+        data_station_vel[:,:,i] = temp_station_vel[:,t_start_idx[i]:t_end_idx[i]]
+
+    #data_station_vec[0:3, :, :] = data_station_pos
+    #data_station_vec[3:6, :, :] = data_station_vel
+
+    # Return dictionary
+    # Measurements are trimmed to start and end at the same time.
+
+    data_trunc = dict()
+    data_trunc['tle'] = data_tle
+    data_trunc['station_name'] = data_station_name
+    data_trunc['gpstime_unix'] = data_gpstime_unix
+    data_trunc['doppler'] = data_doppler
+    data_trunc['range'] = data_range * 1e3      # Temp conversion from km to m
+    data_trunc['station_pos'] = data_station_pos
+    data_trunc['station_vel'] = data_station_vel
+    data_trunc['n_s'] = n_s
+    data_trunc['n_m'] = n_m
+        
+    return data_json, data_trunc
+
+def get_site_temp(data_station_pos, obstime):
+
+    _, n_m, n_s = data_station_pos.shape
+
+    x_obs = np.zeros((6, n_m, n_s))
+
+    v = np.zeros(obstime.shape[0])
+
+    for i in range(n_s):
+        site = EarthLocation(lat=data_station_pos[0,:,i]*u.deg, lon=data_station_pos[1,:,i]*u.deg, height = data_station_pos[2,:,i]/1000*u.km)
+        site_itrs_temp = site.get_itrs(obstime=obstime)
+
+        r_itrs = CartesianRepresentation(
+            site_itrs_temp.data.xyz.value[0,:], 
+            site_itrs_temp.data.xyz.value[1,:], 
+            site_itrs_temp.data.xyz.value[2,:], unit=u.km)
+        v_itrs = CartesianDifferential(v, v, v, unit=u.km/u.s)
+
+        site_itrs = ITRS(r_itrs.with_differentials(v_itrs), obstime=obstime)
+        site_teme = site_itrs.transform_to(TEME(obstime=obstime))
+
+        x_obs_temp = np.array([site_teme.x.value, site_teme.y.value, site_teme.z.value,
+                site_teme.v_x.value, site_teme.v_y.value, site_teme.v_z.value])*1e3
+
+        x_obs[:,:,i] = x_obs_temp
+
+    return x_obs
