@@ -133,10 +133,7 @@ def get_site(lat, lon, height, obstime, frame='teme'):
         site = EarthLocation(lat=lat*u.deg, lon=lon*u.deg, height=height/1e3*u.km)
         site_itrs_temp = site.get_itrs(obstime=obstime)
 
-        r_itrs = CartesianRepresentation(
-            site_itrs_temp.data.xyz.value[0,:], 
-            site_itrs_temp.data.xyz.value[1,:], 
-            site_itrs_temp.data.xyz.value[2,:], unit=u.km)
+        r_itrs = site_itrs_temp.cartesian
         v_itrs = CartesianDifferential(v, v, v, unit=u.km/u.s)
 
         site_itrs = ITRS(r_itrs.with_differentials(v_itrs), obstime=obstime)
