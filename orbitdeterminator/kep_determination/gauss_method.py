@@ -818,6 +818,27 @@ def lagrangeg_(tau, xi, z, mu):
     """
     return tau-(xi**3)*c3(z)/np.sqrt(mu)
 
+def get_time_of_observation(year, month, day, hour, minute, second, msecond):
+    """ creates time variable
+
+    :param year:
+    :param month:
+    :param day:
+    :param hour:
+    :param minute:
+    :param second:
+    :param msecond:
+    :return:
+    """
+    td = timedelta(hours = 1.0 * hour,
+                   minutes = 1.0 * minute,
+                   seconds = (second + msecond / 1000.0))
+
+    timeobs = Time(datetime(year, month, day) + td)
+
+    return timeobs
+
+
 def get_observations_data(mpc_object_data, inds):
     """Extract three ra/dec observations from MPC observation data file.
 
@@ -877,25 +898,29 @@ def get_observations_data_sat(iod_object_data, inds):
     obs_radec = np.zeros((3,), dtype=SkyCoord)
     obs_t = np.zeros((3,))
 
-    td1 = timedelta(hours=1.0*iod_object_data['hr'][inds[0]],
-                    minutes=1.0*iod_object_data['min'][inds[0]],
-                    seconds=(iod_object_data['sec'][inds[0]]+iod_object_data['msec'][inds[0]]/1000.0))
-    td2 = timedelta(hours=1.0*iod_object_data['hr'][inds[1]],
-                    minutes=1.0*iod_object_data['min'][inds[1]],
-                    seconds=(iod_object_data['sec'][inds[1]]+iod_object_data['msec'][inds[1]]/1000.0))
-    td3 = timedelta(hours=1.0*iod_object_data['hr'][inds[2]],
-                    minutes=1.0*iod_object_data['min'][inds[2]],
-                    seconds=(iod_object_data['sec'][inds[2]]+iod_object_data['msec'][inds[2]]/1000.0))
+    timeobs[0] = get_time_of_observation(iod_object_data['yr'][inds[0]],
+                                         iod_object_data['month'][inds[0]],
+                                         iod_object_data['day'][inds[0]],
+                                         iod_object_data['hr'][inds[0]],
+                                         iod_object_data['min'][inds[0]],
+                                         iod_object_data['sec'][inds[0]],
+                                         iod_object_data['msec'][inds[0]])
 
-    timeobs[0] = Time( datetime(iod_object_data['yr'][inds[0]],
-                                iod_object_data['month'][inds[0]],
-                                iod_object_data['day'][inds[0]]) + td1 )
-    timeobs[1] = Time( datetime(iod_object_data['yr'][inds[1]],
-                                iod_object_data['month'][inds[1]],
-                                iod_object_data['day'][inds[1]]) + td2 )
-    timeobs[2] = Time( datetime(iod_object_data['yr'][inds[2]],
-                                iod_object_data['month'][inds[2]],
-                                iod_object_data['day'][inds[2]]) + td3 )
+    timeobs[1] = get_time_of_observation(iod_object_data['yr'][inds[1]],
+                                         iod_object_data['month'][inds[1]],
+                                         iod_object_data['day'][inds[1]],
+                                         iod_object_data['hr'][inds[1]],
+                                         iod_object_data['min'][inds[1]],
+                                         iod_object_data['sec'][inds[1]],
+                                         iod_object_data['msec'][inds[1]])
+
+    timeobs[2] = get_time_of_observation(iod_object_data['yr'][inds[2]],
+                                         iod_object_data['month'][inds[2]],
+                                         iod_object_data['day'][inds[2]],
+                                         iod_object_data['hr'][inds[2]],
+                                         iod_object_data['min'][inds[2]],
+                                         iod_object_data['sec'][inds[2]],
+                                         iod_object_data['msec'][inds[2]])
 
     ra_ha0 = iod_object_data['right_ascension'][inds[0]] / 360.0 * 24.0
     ra_ha1 = iod_object_data['right_ascension'][inds[1]] / 360.0 * 24.0
