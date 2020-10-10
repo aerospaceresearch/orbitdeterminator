@@ -136,7 +136,7 @@ def process(data_file, error_apriori, units):
                 kep_elements['Ellipse Best Fit'] = kep_final_ellip
             else:
                 # Apply the Gibbs method
-                kep_gibbs = gibbsMethod.gibbs_get_kep(data_after_filter[:,1:])
+                kep_gibbs = gibbs_method.gibbs_get_kep(data_after_filter[:,1:])
                 # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
                 # We set an estimate of measurement variance R = 0.01 ** 2
                 kep_final_gibbs = lamberts_kalman.kalman(kep_gibbs, 0.01 ** 2)
