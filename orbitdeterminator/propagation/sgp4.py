@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 import numpy as np
 import math
-from kep_determination.gibbsMethod import *
+from kep_determination.gibbs_method import *
 
 pi = np.pi
 meu = 398600.4418
