@@ -15,7 +15,7 @@ import matplotlib.pylab as plt
 
 from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average)
-from kep_determination import (lamberts_kalman, interpolation, gibbsMethod, ellipse_fit)
+from kep_determination import (lamberts_kalman, interpolation, gibbs_method, ellipse_fit)
 from propagation import sgp4
 
 
@@ -113,7 +113,7 @@ def process(data_file, error_apriori, name):
     kep_inter = interpolation.main(data_after_filter)
 
     # Apply the Gibbs method
-    kep_gibbs = gibbsMethod.gibbs_get_kep(data_after_filter[:,1:])
+    kep_gibbs = gibbs_method.gibbs_get_kep(data_after_filter[:,1:])
 
     # Apply the ellipse best fit method
     kep_ellip = ellipse_fit.determine_kep(data_after_filter[:,1:])[0]
