@@ -218,7 +218,12 @@ def kalman(kep, R):
         Pminus = 0.0  # a priori error estimate
         K = 0.0  # gain or blending factor
         # intial guesses
-        xhat = np.mean(kep[:, i])
+        try:
+            xhat = np.mean(kep[:, i])
+        except IndexError as err:
+            print('Error: {0} \n ** Switching units to metres might help **'.format(err))
+            quit()
+            
         P = 1.0
         for k in range(1, n_iter):
             # time update

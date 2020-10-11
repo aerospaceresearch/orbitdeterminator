@@ -84,13 +84,13 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
 
     #get preliminary orbit using Gauss method
     #q0 : a, e, taup, I, W, w, T
-    q0 = np.array(gauss_method_sat(filename, bodyname, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
+    q0 = np.array(gauss_method_sat(filename, obs_arr=obs_arr, bodyname=bodyname, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
     x0 = q0[0:6]
     x0[3:6] = np.deg2rad(x0[3:6])
 
     # if obs_arr_ls was not specified, then read whole data set:
     if obs_arr_ls is None:
-        obs_arr_ls = np.array(range(1, len(iod_object_data)+1))
+        obs_arr_ls = np.array(range(1, len(iod_object_data["yr"])+1))
 
     rov = radec_obs_vec_sat(obs_arr_ls, iod_object_data)
     rv0 = radec_res_vec_rov_sat(x0, obs_arr_ls, iod_object_data, sat_observatories_data, rov)

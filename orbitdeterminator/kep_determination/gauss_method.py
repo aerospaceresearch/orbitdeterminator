@@ -11,10 +11,12 @@ from astropy.time import Time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-from poliastro.stumpff import c2, c3
+from poliastro.core.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
+import lamberts_method as lm
+import orbital_elements as oe
 
 # declare astronomical constants in appropriate units
 au = cts.au.to(uts.Unit('km')).value
@@ -216,14 +218,12 @@ def load_mpc_data(fname):
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
 
 def load_iod_data(fname):
-    """Loads satellite position observation data files following the Interactive
+    """ Loads satellite position observation data files following the Interactive
     Orbit Determination format (IOD). Currently, the only supported angle format
-    is 2, as specified in IOD format. IOD format is described at
-    http://www.satobs.org/position/IODformat.html.
+    are 1,2,3&7, as specified in IOD format.
+    IOD format is described at http://www.satobs.org/position/IODformat.html.
 
-    TODO: add other IOD angle sub-formats; construct numpy array according to different
-    angle formats. Possible solution: read angle subformat; if angle subformat
-    equals 2, continue; otherwise, convert data to angle subformat 2.
+    TODO: convert IOD angle formats 4,5&6 from AZ/EL to RA/DEC.
 
     Args:
         fname (string): name of the IOD-formatted text file to be parsed
@@ -232,19 +232,175 @@ def load_iod_data(fname):
         x (numpy array): array of satellite position observations following the
         IOD format, with angle format code = 2.
     """
+
     # dt is the dtype for IOD-formatted text files
-    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S1, S1'
+    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S8, S7, i8, i8, S1, S1, i8, i8, i8'
+
     # iod_names correspond to the dtype names of each field
-    iod_names = ['object', 'station', 'stationstatus', 'yr', 'month', 'day',
-        'hr', 'min', 'sec', 'msec', 'timeM', 'timeX', 'angformat', 'epoch', 'raHH',
-        'raMM','rammm','decDD','decMM','decmmm','radecM','radecX','optical','vismag']
-    # TODO: read first line, get sub-format, construct iod_delims from there
-    # as it is now, it only works for the given test file iod_data.txt
-    # iod_delims are the fixed-width column delimiter followinf IOD format description
-    iod_delims = [15, 5, 2, 5, 2, 2,
-        2, 2, 2, 3, 2, 1, 2, 1, 3,
-        2, 3, 3, 2, 2, 2, 1, 2, 1]
-    return np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+    iod_names = ['object', 'station', 'stationstatus',
+                  'yr', 'month', 'day',
+                  'hr', 'min', 'sec', 'msec', 'timeM', 'timeX',
+                  'angformat', 'epoch',
+                  'raaz', 'decel', 'radecazelM', 'radecazelX',
+                  'optical', 'vismagsign', 'vismag', 'vismaguncertainty', 'flashperiod']
+
+    # iod_delims corresponds to the delimiter for cutting the right variable from each input string
+    iod_delims = [15, 5, 2,
+                   5, 2, 2,
+                   2, 2, 2, 3, 2, 1,
+                   2, 1,
+                   8, 7, 2, 1,
+                   2, 1, 3, 3, 9]
+
+    iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+
+    right_ascension = []
+    declination = []
+    azimuth = []
+    elevation = []
+
+    for i in range(len(iod_input_lines)):
+
+        RA = -1.0
+        DEC = -1.0
+        AZ = -1.0
+        EL = -1.0
+
+        if iod_input_lines["angformat"][i] == 1:
+            # 1: RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            SS = float(RAAZ[4:6])
+            s = float(RAAZ[6])
+            RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            SS = float(DECEL[5:7])
+            DEC = DD + (MM + SS / 60.0) / 60.0
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 2:
+            # 2: RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            mmm = float(RAAZ[4:7])
+            RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            mm = float(DECEL[5:7])
+            DEC = DD + (MM + mm / 100.0) / 60.0
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 3:
+            # 3: RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            mmm = float(RAAZ[4:7])
+            RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            dddd = float(DECEL[3:7])
+            DEC = (DD + (dddd / 1000.0))
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        elif iod_input_lines["angformat"][i] == 4:
+            # 4: AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            DDD = float(RAAZ[0:3])
+            MM = float(RAAZ[3:5])
+            SS = float(RAAZ[5:7])
+            AZ = DDD + (MM + SS / 60.0) / 60.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            SS = float(DECEL[5:7])
+            EL = DD + (MM + SS / 60.0) / 60.0
+            if DECEL[0] == "-":
+                EL = -1.0 * EL
+
+            # TODO: convert from AZ/EL to RA/DEC
+
+        elif iod_input_lines["angformat"][i] == 5:
+            # 5: AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            DDD = float(RAAZ[0:3])
+            MM = float(RAAZ[3:5])
+            SS = float(RAAZ[5:7])
+            AZ = DDD + (MM + SS / 60.0) / 60.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            MM = float(DECEL[3:5])
+            mm = float(DECEL[5:7])
+            EL = DD + (MM + mm / 100.0) / 60.0
+            if DECEL[0] == "-":
+                EL = -1.0 * EL
+
+            # TODO: convert from AZ/EL to RA/DEC
+
+        elif iod_input_lines["angformat"][i] == 6:
+            # 6: AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            DDD = float(RAAZ[0:3])
+            dddd = float(RAAZ[3:7])
+            AZ = DDD + dddd / 1000.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            dddd = float(DECEL[3:7])
+            EL = DD + dddd / 1000.0
+            if DECEL[0] == "-":
+                EL = -1.0 * EL
+
+            # TODO: convert from AZ/EL to RA/DEC
+
+        elif iod_input_lines["angformat"][i] == 7:
+            # 7: RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
+            RAAZ = iod_input_lines["raaz"][i].decode()
+            HH = float(RAAZ[0:2])
+            MM = float(RAAZ[2:4])
+            SS = float(RAAZ[4:6])
+            s = float(RAAZ[6])
+            RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
+
+            DECEL = iod_input_lines["decel"][i].decode()
+            DD = float(DECEL[1:3])
+            dddd = float(DECEL[3:7])
+            DEC = (DD + (dddd / 1000.0))
+            if DECEL[0] == "-":
+                DEC = -1.0 * DEC
+
+        #else:
+        #    # TODO: when not defined, we assume it is RA/DEC
+
+        right_ascension.append(RA)
+        declination.append(DEC)
+        azimuth.append(AZ)
+        elevation.append(EL)
+
+    # expanding the input iod data with the position data in different formats
+    iod = {}
+    for name in iod_names:
+         iod[name] = iod_input_lines[name].tolist()
+
+    iod["right_ascension"] = right_ascension
+    iod["declination"] = declination
+    iod["azimuth"] = azimuth
+    iod["elevation"] = elevation
+
+    return iod
 
 def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
     """Compute geocentric observer position at UTC instant t_utc, for Sun-centered orbits,
@@ -620,13 +776,19 @@ def univkepler(dt, x, y, z, u, v, w, mu, iters=5, atol=1e-15):
         z_i = alpha0*(xi2)
         a_i = (r0*vr0)/np.sqrt(mu)
         b_i = 1.0-alpha0*r0
+
         C_z_i = c2(z_i)
         S_z_i = c3(z_i)
+
+        if np.isinf(C_z_i) == True or np.isinf(S_z_i) == True:
+            return np.nan
+
         f_i = a_i*xi2*C_z_i + b_i*(xi**3)*S_z_i + r0*xi - np.sqrt(mu)*dt
         g_i = a_i*xi*(1.0-z_i*S_z_i) + b_i*xi2*C_z_i+r0
         ratio_i = f_i/g_i
         xi = xi - ratio_i
         i += 1
+
     return xi
 
 def lagrangef_(xi, z, r):
@@ -656,6 +818,27 @@ def lagrangeg_(tau, xi, z, mu):
     """
     return tau-(xi**3)*c3(z)/np.sqrt(mu)
 
+def get_time_of_observation(year, month, day, hour, minute, second, msecond):
+    """ creates time variable
+
+    :param year:
+    :param month:
+    :param day:
+    :param hour:
+    :param minute:
+    :param second:
+    :param msecond:
+    :return:
+    """
+    td = timedelta(hours = 1.0 * hour,
+                   minutes = 1.0 * minute,
+                   seconds = (second + msecond / 1000.0))
+
+    timeobs = Time(datetime(year, month, day) + td)
+
+    return timeobs
+
+
 def get_observations_data(mpc_object_data, inds):
     """Extract three ra/dec observations from MPC observation data file.
 
@@ -673,9 +856,15 @@ def get_observations_data(mpc_object_data, inds):
     obs_radec = np.zeros((3,), dtype=SkyCoord)
     obs_t = np.zeros((3,))
 
-    timeobs[0] = Time( datetime(mpc_object_data['yr'][inds[0]], mpc_object_data['month'][inds[0]], mpc_object_data['day'][inds[0]]) + timedelta(days=mpc_object_data['utc'][inds[0]]) )
-    timeobs[1] = Time( datetime(mpc_object_data['yr'][inds[1]], mpc_object_data['month'][inds[1]], mpc_object_data['day'][inds[1]]) + timedelta(days=mpc_object_data['utc'][inds[1]]) )
-    timeobs[2] = Time( datetime(mpc_object_data['yr'][inds[2]], mpc_object_data['month'][inds[2]], mpc_object_data['day'][inds[2]]) + timedelta(days=mpc_object_data['utc'][inds[2]]) )
+    timeobs[0] = Time( datetime(mpc_object_data['yr'][inds[0]],
+                                mpc_object_data['month'][inds[0]],
+                                mpc_object_data['day'][inds[0]]) + timedelta(days=mpc_object_data['utc'][inds[0]]) )
+    timeobs[1] = Time( datetime(mpc_object_data['yr'][inds[1]],
+                                mpc_object_data['month'][inds[1]],
+                                mpc_object_data['day'][inds[1]]) + timedelta(days=mpc_object_data['utc'][inds[1]]) )
+    timeobs[2] = Time( datetime(mpc_object_data['yr'][inds[2]],
+                                mpc_object_data['month'][inds[2]],
+                                mpc_object_data['day'][inds[2]]) + timedelta(days=mpc_object_data['utc'][inds[2]]) )
 
     obs_radec[0] = SkyCoord(mpc_object_data['radec'][inds[0]], unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
     obs_radec[1] = SkyCoord(mpc_object_data['radec'][inds[1]], unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
@@ -686,7 +875,9 @@ def get_observations_data(mpc_object_data, inds):
     obs_t[1] = obs_radec[1].obstime.tdb.jd
     obs_t[2] = obs_radec[2].obstime.tdb.jd
 
-    site_codes = [mpc_object_data['observatory'][inds[0]], mpc_object_data['observatory'][inds[1]], mpc_object_data['observatory'][inds[2]]]
+    site_codes = [mpc_object_data['observatory'][inds[0]],
+                  mpc_object_data['observatory'][inds[1]],
+                  mpc_object_data['observatory'][inds[2]]]
 
     return obs_radec, obs_t, site_codes
 
@@ -707,32 +898,50 @@ def get_observations_data_sat(iod_object_data, inds):
     obs_radec = np.zeros((3,), dtype=SkyCoord)
     obs_t = np.zeros((3,))
 
-    td1 = timedelta(hours=1.0*iod_object_data['hr'][inds[0]], minutes=1.0*iod_object_data['min'][inds[0]], seconds=(iod_object_data['sec'][inds[0]]+iod_object_data['msec'][inds[0]]/1000.0))
-    td2 = timedelta(hours=1.0*iod_object_data['hr'][inds[1]], minutes=1.0*iod_object_data['min'][inds[1]], seconds=(iod_object_data['sec'][inds[1]]+iod_object_data['msec'][inds[1]]/1000.0))
-    td3 = timedelta(hours=1.0*iod_object_data['hr'][inds[2]], minutes=1.0*iod_object_data['min'][inds[2]], seconds=(iod_object_data['sec'][inds[2]]+iod_object_data['msec'][inds[2]]/1000.0))
+    timeobs[0] = get_time_of_observation(iod_object_data['yr'][inds[0]],
+                                         iod_object_data['month'][inds[0]],
+                                         iod_object_data['day'][inds[0]],
+                                         iod_object_data['hr'][inds[0]],
+                                         iod_object_data['min'][inds[0]],
+                                         iod_object_data['sec'][inds[0]],
+                                         iod_object_data['msec'][inds[0]])
 
-    timeobs[0] = Time( datetime(iod_object_data['yr'][inds[0]], iod_object_data['month'][inds[0]], iod_object_data['day'][inds[0]]) + td1 )
-    timeobs[1] = Time( datetime(iod_object_data['yr'][inds[1]], iod_object_data['month'][inds[1]], iod_object_data['day'][inds[1]]) + td2 )
-    timeobs[2] = Time( datetime(iod_object_data['yr'][inds[2]], iod_object_data['month'][inds[2]], iod_object_data['day'][inds[2]]) + td3 )
+    timeobs[1] = get_time_of_observation(iod_object_data['yr'][inds[1]],
+                                         iod_object_data['month'][inds[1]],
+                                         iod_object_data['day'][inds[1]],
+                                         iod_object_data['hr'][inds[1]],
+                                         iod_object_data['min'][inds[1]],
+                                         iod_object_data['sec'][inds[1]],
+                                         iod_object_data['msec'][inds[1]])
 
-    raHHMMmmm0 = iod_object_data['raHH'][inds[0]] + (iod_object_data['raMM'][inds[0]]+iod_object_data['rammm'][inds[0]]/1000.0)/60.0
-    raHHMMmmm1 = iod_object_data['raHH'][inds[1]] + (iod_object_data['raMM'][inds[1]]+iod_object_data['rammm'][inds[1]]/1000.0)/60.0
-    raHHMMmmm2 = iod_object_data['raHH'][inds[2]] + (iod_object_data['raMM'][inds[2]]+iod_object_data['rammm'][inds[2]]/1000.0)/60.0
+    timeobs[2] = get_time_of_observation(iod_object_data['yr'][inds[2]],
+                                         iod_object_data['month'][inds[2]],
+                                         iod_object_data['day'][inds[2]],
+                                         iod_object_data['hr'][inds[2]],
+                                         iod_object_data['min'][inds[2]],
+                                         iod_object_data['sec'][inds[2]],
+                                         iod_object_data['msec'][inds[2]])
 
-    decDDMMmmm0 = iod_object_data['decDD'][inds[0]] + (iod_object_data['decMM'][inds[0]]+iod_object_data['decmmm'][inds[0]]/1000.0)/60.0
-    decDDMMmmm1 = iod_object_data['decDD'][inds[1]] + (iod_object_data['decMM'][inds[1]]+iod_object_data['decmmm'][inds[1]]/1000.0)/60.0
-    decDDMMmmm2 = iod_object_data['decDD'][inds[2]] + (iod_object_data['decMM'][inds[2]]+iod_object_data['decmmm'][inds[2]]/1000.0)/60.0
+    ra_ha0 = iod_object_data['right_ascension'][inds[0]] / 360.0 * 24.0
+    ra_ha1 = iod_object_data['right_ascension'][inds[1]] / 360.0 * 24.0
+    ra_ha2 = iod_object_data['right_ascension'][inds[2]] / 360.0 * 24.0
 
-    obs_radec[0] = SkyCoord(ra=raHHMMmmm0, dec=decDDMMmmm0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
-    obs_radec[1] = SkyCoord(ra=raHHMMmmm1, dec=decDDMMmmm1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
-    obs_radec[2] = SkyCoord(ra=raHHMMmmm2, dec=decDDMMmmm2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
+    dec0 = iod_object_data['declination'][inds[0]]
+    dec1 = iod_object_data['declination'][inds[1]]
+    dec2 = iod_object_data['declination'][inds[2]]
+
+    obs_radec[0] = SkyCoord(ra=ra_ha0, dec=dec0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+    obs_radec[1] = SkyCoord(ra=ra_ha1, dec=dec1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+    obs_radec[2] = SkyCoord(ra=ra_ha2, dec=dec2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
 
     # construct vector of observation time (continous variable)
     obs_t[0] = (timeobs[0]-timeobs[0]).sec
     obs_t[1] = (timeobs[1]-timeobs[0]).sec
     obs_t[2] = (timeobs[2]-timeobs[0]).sec
 
-    site_codes = [iod_object_data['station'][inds[0]], iod_object_data['station'][inds[1]], iod_object_data['station'][inds[2]]]
+    site_codes = [iod_object_data['station'][inds[0]],
+                  iod_object_data['station'][inds[1]],
+                  iod_object_data['station'][inds[2]]]
 
     return obs_radec, obs_t, site_codes
 
@@ -874,7 +1083,8 @@ def radec_residual_mpc(x, t_ra_dec_datapoint, long, parallax_s, parallax_c):
        Returns:
            (1x2 array): right ascension difference, declination difference
     """
-    ra_comp, dec_comp = rhovec2radec(long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime, x[0], x[1], x[2], x[3], x[4], x[5])
+    ra_comp, dec_comp = rhovec2radec(long, parallax_s, parallax_c, t_ra_dec_datapoint.obstime,
+                                     x[0], x[1], x[2], x[3], x[4], x[5])
     ra_obs, dec_obs = t_ra_dec_datapoint.ra.rad, t_ra_dec_datapoint.dec.rad
     #"unsigned" distance between points in torus
     diff_ra = angle_diff_rad(ra_obs, ra_comp)
@@ -1113,8 +1323,14 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
            f_3_new (float): updated Lagrange's f function value at third observation
            g_3_new (float): updated Lagrange's g function value at third observation
     """
+    refinement_success = 1
+
     xi1 = univkepler(tau1, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
     xi3 = univkepler(tau3, r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu, iters=10, atol=atol)
+
+    if np.isnan(xi1) == True or np.isnan(xi3) == True:
+        refinement_success = 0
+        return np.nan, r2, np.nan, v2, rho1, rho2, rho3, f_1, g_1, f_3, g_3, refinement_success
 
     r0_ = np.sqrt((r2[0]**2)+(r2[1]**2)+(r2[2]**2))
     v20_ = (v2[0]**2)+(v2[1]**2)+(v2[2]**2)
@@ -1129,6 +1345,10 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
     g_3_new = (g_3+lagrangeg_(tau3, xi3, z3_, mu))/2
 
     denum = f_1_new*g_3_new-f_3_new*g_1_new
+    if np.isinf(np.abs(denum)) == True:
+        # one of the terms in denum became really big :(
+        refinement_success = 0
+        return np.nan, r2, np.nan, v2, rho1, rho2, rho3, f_1, g_1, f_3, g_3, refinement_success
 
     c1_ = g_3_new/denum
     c3_ = -g_1_new/denum
@@ -1145,7 +1365,7 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
 
     v2 = (-f_3_new*r1+f_1_new*r3)/denum
 
-    return r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f_1_new, g_1_new, f_3_new, g_3_new
+    return r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f_1_new, g_1_new, f_3_new, g_3_new, refinement_success
 
 def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
     """Gauss method implementation for MPC Near-Earth asteroids ra/dec tracking data.
@@ -1188,9 +1408,11 @@ def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_in
     R, Ea_hc_pos = get_observer_pos_wrt_sun(mpc_observatories_data, obs_radec, site_codes)
 
     # perform core Gauss method
-    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
+    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr = \
+        gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
 
-    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_sr, rho_2_sr, rho_3_sr, obs_t
+    return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3,\
+           f1, g1, f3, g3, Ea_hc_pos, rho_1_sr, rho_2_sr, rho_3_sr, obs_t
 
 # Implementation of Gauss method for IOD-formatted optical observations of Earth satellites
 def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=0):
@@ -1235,7 +1457,8 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
     R = get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes)
 
     # perform core Gauss method
-    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr = gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
+    r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr = \
+        gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
 
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t_jd
 
@@ -1268,11 +1491,26 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=0
     """
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
     mu = mu_Earth
-    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=r2_root_ind)
+    r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est = \
+        gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=r2_root_ind)
+
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est
+
+
     # Apply refinement to Gauss' method, `refiters` iterations
+    refinement_success = 0
+
     for i in range(0,refiters):
-        r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
-    return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t
+        r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3, refinement_success = \
+            gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+
+
+    if refinement_success == 1:
+        # refinement worked
+        return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t, refinement_success
+
+    else:
+        return r1_est, r2_est, r3_est, v2_est, R_est, rho1_est, rho2_est, rho3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est, refinement_success
 
 def gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=0, r2_root_ind=0):
     """Gauss method iterator for minor planets ra/dec tracking data.
@@ -1304,10 +1542,14 @@ def gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=0
     """
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
     mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
-    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=r2_root_ind)
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_sr, rho_2_sr, rho_3_sr, obs_t =\
+        gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=r2_root_ind)
+
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
-        r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3 = gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+        r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3, refinement_success= \
+            gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, Ea_hc_pos, obs_t
 
 def radec_obs_vec_sat(inds, iod_object_data):
@@ -1321,14 +1563,20 @@ def radec_obs_vec_sat(inds, iod_object_data):
            rov (1xlen(inds) array): vector of ra/dec observed values
     """
     rov = np.zeros((2*len(inds)))
-    for i in inds:
+    for i in range(len(inds)):
         indm1 = inds[i]-1
         # extract observations data
-        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
-        timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
-        raHHMMmmm  = iod_object_data['raHH' ][indm1] + (iod_object_data['raMM' ][indm1]+iod_object_data['rammm' ][indm1]/1000.0)/60.0
-        decDDMMmmm = iod_object_data['decDD'][indm1] + (iod_object_data['decMM'][indm1]+iod_object_data['decmmm'][indm1]/1000.0)/60.0
-        obs_t_ra_dec = SkyCoord(ra=raHHMMmmm, dec=decDDMMmmm, unit=(uts.hourangle, uts.deg), obstime=timeobs)
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1],
+                       minutes=1.0*iod_object_data['min'][indm1],
+                       seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        timeobs = Time( datetime(iod_object_data['yr'][indm1],
+                                 iod_object_data['month'][indm1],
+                                 iod_object_data['day'][indm1]) + td )
+
+        ra_ha = iod_object_data['right_ascension'][indm1] / 360.0 * 24.0
+        dec = iod_object_data['declination'][indm1]
+
+        obs_t_ra_dec = SkyCoord(ra=ra_ha, dec=dec, unit=(uts.hourangle, uts.deg), obstime=timeobs)
         rov[2*i-2], rov[2*i-1] = obs_t_ra_dec.ra.rad, obs_t_ra_dec.dec.rad
     return rov
 
@@ -1351,12 +1599,18 @@ def radec_res_vec_rov_sat(x, inds, iod_object_data, sat_observatories_data, rov)
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
         # extract observations data
-        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
-        timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1],
+                       minutes=1.0*iod_object_data['min'][indm1],
+                       seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        timeobs = Time( datetime(iod_object_data['yr'][indm1],
+                                 iod_object_data['month'][indm1],
+                                 iod_object_data['day'][indm1]) + td )
         site_code = iod_object_data['station'][indm1]
         obsite = get_station_data(site_code, sat_observatories_data)
         # object position wrt to Earth
-        xyz_obj = orbel2xyz(timeobs.jd, cts.GM_earth.to(uts.Unit('km3 / day2')).value, x[0], x[1], x[2], x[3], x[4], x[5])
+        xyz_obj = orbel2xyz(timeobs.jd,
+                            cts.GM_earth.to(uts.Unit('km3 / day2')).value,
+                            x[0], x[1], x[2], x[3], x[4], x[5])
         # observer position wrt to Earth
         xyz_oe = observerpos_sat(obsite['Latitude'], obsite['Longitude'], obsite['Elev'], timeobs)
         # object position wrt observer (unnormalized LOS vector)
@@ -1401,8 +1655,12 @@ def t_radec_res_vec_sat(x, inds, iod_object_data, sat_observatories_data, rov):
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
         # extract observations data
-        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
-        timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1],
+                       minutes=1.0*iod_object_data['min'][indm1],
+                       seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        timeobs = Time( datetime(iod_object_data['yr'][indm1],
+                                 iod_object_data['month'][indm1],
+                                 iod_object_data['day'][indm1]) + td )
         t_jd = timeobs.jd
         site_code = iod_object_data['station'][indm1]
         obsite = get_station_data(site_code, sat_observatories_data)
@@ -1445,7 +1703,9 @@ def radec_obs_vec_mpc(inds, mpc_object_data):
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
         # extract observations data
-        timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
+        timeobs = Time( datetime(mpc_object_data['yr'][indm1],
+                                 mpc_object_data['month'][indm1],
+                                 mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
         obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
         rov[2*i-2], rov[2*i-1] = obs_t_ra_dec.ra.rad, obs_t_ra_dec.dec.rad
     return rov
@@ -1472,7 +1732,9 @@ def radec_res_vec_rov_mpc(x, inds, mpc_object_data, mpc_observatories_data, rov)
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
         # extract observations data
-        timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
+        timeobs = Time( datetime(mpc_object_data['yr'][indm1],
+                                 mpc_object_data['month'][indm1],
+                                 mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
         site_code = mpc_object_data['observatory'][indm1]
         obsite = get_observatory_data(site_code, mpc_observatories_data)
         # compute residuals
@@ -1481,7 +1743,8 @@ def radec_res_vec_rov_mpc(x, inds, mpc_object_data, mpc_observatories_data, rov)
         rv[2*i-2], rv[2*i-1] = radec_res
     return rv
 
-# compute residuals vector for ra/dec observations with pre-computed observed radec values vector; return observation times and residual vector
+# compute residuals vector for ra/dec observations with pre-computed observed radec values vector;
+# return observation times and residual vector
 def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
     """Compute vector of observed minus computed (O-C) residuals for ra/dec
     MPC-formatted observations of minor planets (asteroids, comets, etc.), with
@@ -1505,7 +1768,9 @@ def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
         # extract observations data
-        timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
+        timeobs = Time( datetime(mpc_object_data['yr'][indm1],
+                                 mpc_object_data['month'][indm1],
+                                 mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
         site_code = mpc_object_data['observatory'][indm1]
         obs_t_ra_dec = SkyCoord(mpc_object_data['radec'][indm1], unit=(uts.hourangle, uts.deg), obstime=timeobs)
         obsite = get_observatory_data(site_code, mpc_observatories_data)
@@ -1574,7 +1839,8 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
         # Apply Gauss method to three elements of data
         inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
         print('Processing observation #', j)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, Ea_hc_pos, obs_t = gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, Ea_hc_pos, obs_t = \
+            gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
 
         if j==0:
             t_vec[0] = obs_t[0]
@@ -1647,7 +1913,8 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
         z_Ea_orb_vec = np.zeros((npoints,))
 
         for i in range(0,npoints):
-            x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame2(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
+            x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame2(a_mean, e_mean, theta_vec[i],
+                                                                  np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
             xyz_Ea_orb_vec_equat = earth_ephemeris(t_Ea_vec[i])/au
             xyz_Ea_orb_vec_eclip = np.matmul(rot_equat_to_eclip, xyz_Ea_orb_vec_equat)
             x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
@@ -1673,6 +1940,129 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
         plt.show()
 
     return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
+
+def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=10, plot=False):
+    """Gauss method high-level function for orbit determination of Earth satellites
+    from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
+    Roots of 8-th order Gauss polynomial are computed using np.roots function.
+    Note that if `r2_root_ind_vec` is not specified by the user, then the first
+    positive root returned by np.roots is used by default.
+
+       Args:
+           filename (string): path to IOD-formatted observation data file
+           obs_arr (int vector): line numbers in data file to be processed
+           bodyname (string): user-defined name of satellite
+           refiters (int): number of refinement iterations to be performed
+           r2_root_ind_vec (1xlen(obs_arr) int array): indices of Gauss polynomial roots.
+           plot (bool): if True, plots data.
+
+       Returns:
+           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+    """
+    # load IOD data for a given satellite
+    iod_object_data = load_iod_data(filename)
+
+    # handle default behavior for obs_arr
+    if obs_arr is None:
+        obs_arr = list(range(1, len(iod_object_data)+1))
+    # #the total number of observations used
+    nobs = len(obs_arr)
+
+    # get object name
+    if bodyname is None:
+        bodyname = iod_object_data['object'][obs_arr[0]-1].decode()
+
+    #load data of listed observatories (longitude, latitude, elevation)
+    sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
+
+    # Earth's G*m value
+    mu = mu_Earth
+
+    # if r2_root_ind_vec was not specified, then use always the first positive root by default
+    if r2_root_ind_vec is None:
+        r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
+
+
+    counter_process = 0
+    sequence = np.zeros(nobs)
+    groupmark = 1
+
+    for j in range (0,nobs-2):
+
+        # Apply Gauss method to three elements of data
+        inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
+        print('Processing observation #', counter_process)
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t , refinement_success = \
+            gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+
+
+        # storing all solutions now
+        # todo: checking if solutions with radii inside the earth surface can be filtered out?
+        # todo: checking if solutuins with v2 velocities higher than escape velocities of earth can be filtered out?
+
+
+        dt1 = (obs_t[1] - obs_t[0]) * 24.0 * 3600.0
+        dt2 = (obs_t[2] - obs_t[1]) * 24.0 * 3600.0
+
+        state = oe.orbital_parameters()
+        state.get_orbital_elemts_from_statevector(r2, v2)
+
+        if state.T_orbitperiod > dt1 and state.T_orbitperiod > dt2:
+
+            sequence[j+0] = groupmark
+            sequence[j+1] = groupmark
+            sequence[j+2] = groupmark
+
+            print("T_period", state.T_orbitperiod)
+
+            v1_lamberts, v2_lamberts = lm.lamberts_method(r1, r2, dt1)
+            print(dt1, dt2, v2, v2_lamberts)
+
+
+            # getting orbital elements, but only for one vector.
+            # there are more vectors when using the result of gauss method. they can be used as well.
+            state.get_orbital_elemts_from_statevector(r2, v2_lamberts)
+            print("T_period", state.T_orbitperiod)
+            print("incl", state.inclination * 180.0 / np.pi)
+            print("raan", state.raan * 180.0 / np.pi)
+            print("ecce", state.eccentricity)
+            print("AoP", state.AoP * 180.0 / np.pi)
+            print("mean anomaly", state.mean_anomaly * 180.0 / np.pi)
+            print("mean motion", state.n_mean_motion_perday)
+
+        else:
+            groupmark += 1
+
+
+        counter_process += 1
+
+
+    seq_start = [0]
+    for i in range(len(sequence)-1):
+        if sequence[i] != sequence[i+1]:
+            seq_start.append(i+1)
+
+
+    obs_arr_seq = []
+    for i in range(len(seq_start)):
+        if sequence[seq_start[i]] != 0:
+            obs_arr = []
+            j = 0
+            b4 = sequence[seq_start[i] + j]
+
+            while sequence[seq_start[i] + j] == b4 and seq_start[i] + j < len(sequence)-1:
+                obs_arr.append(seq_start[i] + j + 1)
+
+                b4 = sequence[seq_start[i] + j]
+                j += 1
+
+                if seq_start[i] + j == len(sequence)-1 and sequence[seq_start[i] + j] == b4:
+                    obs_arr.append(seq_start[i] + j +1)
+
+            obs_arr_seq.append(obs_arr)
+
+    return obs_arr_seq
+
 
 def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for orbit determination of Earth satellites
@@ -1715,93 +2105,160 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
     if r2_root_ind_vec is None:
         r2_root_ind_vec = np.zeros((nobs-2,), dtype=int)
 
-    # #auxiliary arrays
-    x_vec = np.zeros((nobs,))
-    y_vec = np.zeros((nobs,))
-    z_vec = np.zeros((nobs,))
-    a_vec = np.zeros((nobs-2,))
-    e_vec = np.zeros((nobs-2,))
-    taup_vec = np.zeros((nobs-2,))
-    I_vec = np.zeros((nobs-2,))
-    W_vec = np.zeros((nobs-2,))
-    w_vec = np.zeros((nobs-2,))
-    n_vec = np.zeros((nobs-2,))
-    t_vec = np.zeros((nobs,))
 
-    for j in range (0,nobs-2):
+    counter_process = 0
+
+    index = []
+    radius = []
+    velocity = []
+    inclination = []
+    raan = []
+    eccentricity = []
+    AoP = []
+    mean_anomaly = []
+    n_mean_motion_perday = []
+    T_orbitperiod = []
+
+
+
+    for j in range(0, nobs - 2):
+
         # Apply Gauss method to three elements of data
-        inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
-        print('Processing observation #', j)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+        inds = [obs_arr[j] - 1, obs_arr[j + 1] - 1, obs_arr[j + 2] - 1]
+        print('Processing observation #', counter_process)
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t, refinement_success = \
+            gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=refiters,
+                               r2_root_ind=r2_root_ind_vec[j])
 
-        if j==0:
-            t_vec[0] = obs_t[0]
-            x_vec[0] = r1[0]
-            y_vec[0] = r1[1]
-            z_vec[0] = r1[2]
-        if j==nobs-3:
-            t_vec[nobs-1] = obs_t[2]
-            x_vec[nobs-1] = r3[0]
-            y_vec[nobs-1] = r3[1]
-            z_vec[nobs-1] = r3[2]
+        # storing all solutions now
+        # todo: checking if solutions with radii inside the earth surface can be filtered out?
+        # todo: checking if solutuins with v2 velocities higher than escape velocities of earth can be filtered out?
 
-        a_num = semimajoraxis(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        e_num = eccentricity(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        f_num = trueanomaly5(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu)
-        n_num = meanmotion(mu, a_num)
+        dt1 = (obs_t[1] - obs_t[0]) * 24.0 * 3600.0
+        dt2 = (obs_t[2] - obs_t[1]) * 24.0 * 3600.0
 
-        a_vec[j] = a_num
-        e_vec[j] = e_num
-        taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num*86400)
-        w_vec[j] = np.rad2deg( argperi(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2], mu) )
-        I_vec[j] = np.rad2deg( inclination(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-        W_vec[j] = np.rad2deg( longascnode(r2[0], r2[1], r2[2], v2[0], v2[1], v2[2]) )
-        n_vec[j] = n_num
-        t_vec[j+1] = obs_t[1]
-        x_vec[j+1] = r2[0]
-        y_vec[j+1] = r2[1]
-        z_vec[j+1] = r2[2]
+        state = oe.orbital_parameters()
+        state.get_orbital_elemts_from_statevector(r2, v2)
 
-    a_mean = np.mean(a_vec) #km
-    e_mean = np.mean(e_vec) #dimensionless
-    taup_mean = np.mean(taup_vec) #deg
-    w_mean = np.mean(w_vec) #deg
-    I_mean = np.mean(I_vec) #deg
-    W_mean = np.mean(W_vec) #deg
-    n_mean = np.mean(n_vec) #sec
+        if state.T_orbitperiod > dt1 and state.T_orbitperiod > dt2:
 
-    print('\n*** ORBIT DETERMINATION: GAUSS METHOD ***')
-    print('Observational arc:')
-    print('Number of observations: ', len(obs_arr))
-    print('First observation (UTC) : ', Time(t_vec[0], format='jd').iso)
-    print('Last observation (UTC) : ', Time(t_vec[-1], format='jd').iso)
+            print("T_period", state.T_orbitperiod)
+            # getting orbital elements, but only for one vector.
+            # there are more vectors when using the result of gauss method. they can be used as well.
 
-    print('\nAVERAGE ORBITAL ELEMENTS (EQUATORIAL): a, e, taup, omega, I, Omega, T')
-    print('Semi-major axis (a):                 ', a_mean, 'km')
-    print('Eccentricity (e):                    ', e_mean)
-    print('Time of pericenter passage (tau):    ', Time(taup_mean, format='jd').iso, 'JDUTC')
-    print('Argument of pericenter (omega):      ', w_mean, 'deg')
-    print('Inclination (I):                     ', I_mean, 'deg')
-    print('Longitude of Ascending Node (Omega): ', W_mean, 'deg')
-    print('Orbital period (T):                  ', 2.0*np.pi/n_mean/60.0, 'min')
+            print()
+
+            state_radius = np.zeros((3,3))
+            state_velocity = np.zeros((3,3))
+            state_inclination = np.zeros(3)
+            state_raan = np.zeros(3)
+            state_eccentricity = np.zeros(3)
+            state_AoP = np.zeros(3)
+            state_mean_anomaly = np.zeros(3)
+            state_n_mean_motion_perday = np.zeros(3)
+            state_T_orbitperiod = np.zeros(3)
+
+
+            v1_lamberts, v2_lamberts = lm.lamberts_method(r1, r2, dt1)
+            state.get_orbital_elemts_from_statevector(r1, v1_lamberts)
+            print("v1", v1_lamberts, dt1)
+
+            state_radius[0] = r1
+            state_velocity[0] = v1_lamberts
+            state_inclination[0] = state.inclination * 180.0 / np.pi
+            state_raan[0] = state.raan * 180.0 / np.pi
+            state_eccentricity[0] = state.eccentricity
+            state_AoP[0] = state.AoP * 180.0 / np.pi
+            state_mean_anomaly[0] = state.mean_anomaly * 180.0 / np.pi
+            state_n_mean_motion_perday[0] = state.n_mean_motion_perday
+            state_T_orbitperiod[0] = state.T_orbitperiod
+
+
+            state.get_orbital_elemts_from_statevector(r2, v2_lamberts)
+            print("v2", v2_lamberts, dt1)
+
+            state_radius[1] = r2
+            state_velocity[1] = v2_lamberts
+            state_inclination[1] = state.inclination * 180.0 / np.pi
+            state_raan[1] = state.raan * 180.0 / np.pi
+            state_eccentricity[1] = state.eccentricity
+            state_AoP[1] = state.AoP * 180.0 / np.pi
+            state_mean_anomaly[1] = state.mean_anomaly * 180.0 / np.pi
+            state_n_mean_motion_perday[1] = state.n_mean_motion_perday
+            state_T_orbitperiod[1] = state.T_orbitperiod
+
+
+            v2_lamberts, v3_lamberts = lm.lamberts_method(r2, r3, dt2)
+            state.get_orbital_elemts_from_statevector(r2, v2_lamberts)
+            print("v2", v2_lamberts, dt2)
+
+            state_velocity[1] = (state_velocity[1] + v2_lamberts) / 2.0
+            state_inclination[1] = (state_inclination[1] + state.inclination * 180.0 / np.pi) / 2.0
+            state_raan[1] = (state_raan[1] + state.raan * 180.0 / np.pi) / 2.0
+            state_eccentricity[1] = (state_eccentricity[1] + state.eccentricity) / 2.0
+            state_AoP[1] = (state_AoP[1] + state.AoP * 180.0 / np.pi) / 2.0
+            state_mean_anomaly[1] = (state_mean_anomaly[1] + state.mean_anomaly * 180.0 / np.pi) / 2.0
+            state_n_mean_motion_perday[1] = (state_n_mean_motion_perday[1] + state.n_mean_motion_perday) / 2.0
+            state_T_orbitperiod[1] = (state_T_orbitperiod[1] + state.T_orbitperiod) / 2.0
+
+            state.get_orbital_elemts_from_statevector(r3, v3_lamberts)
+            print("v3", v3_lamberts, dt2)
+
+            state_radius[2] = r3
+            state_velocity[2] = v3_lamberts
+            state_inclination[2] = state.inclination * 180.0 / np.pi
+            state_raan[2] = state.raan * 180.0 / np.pi
+            state_eccentricity[2] = state.eccentricity
+            state_AoP[2] = state.AoP * 180.0 / np.pi
+            state_mean_anomaly[2] = state.mean_anomaly * 180.0 / np.pi
+            state_n_mean_motion_perday[2] = state.n_mean_motion_perday
+            state_T_orbitperiod[2] = state.T_orbitperiod
+
+
+            # filling to the result lists
+            index.append(inds)
+            radius.append(state_radius)
+            velocity.append(state_velocity)
+            inclination.append(state_inclination)
+            raan.append(state_raan)
+            eccentricity.append(state_eccentricity)
+            AoP.append(state_AoP)
+            mean_anomaly.append(state_mean_anomaly)
+            n_mean_motion_perday.append(state_n_mean_motion_perday)
+            T_orbitperiod.append(state_T_orbitperiod)
+
+
+        counter_process += 1
+
 
     # PLOT
     if plot:
-        npoints = 500
-        theta_vec = np.linspace(0.0, 2.0*np.pi, npoints)
-        x_orb_vec = np.zeros((npoints,))
-        y_orb_vec = np.zeros((npoints,))
-        z_orb_vec = np.zeros((npoints,))
 
-        for i in range(0,npoints):
-            x_orb_vec[i], y_orb_vec[i], z_orb_vec[i] = xyz_frame2(a_mean, e_mean, theta_vec[i], np.deg2rad(w_mean), np.deg2rad(I_mean), np.deg2rad(W_mean))
+        x_vec = []
+        y_vec = []
+        z_vec = []
 
-        ax = plt.axes(aspect='equal', projection='3d')
+        for n in range(len(radius)):
+            if n == 0:
+                x_vec.append(radius[n][0][0])
+                y_vec.append(radius[n][0][1])
+                z_vec.append(radius[n][0][2])
+
+            x_vec.append(radius[n][1][0])
+            y_vec.append(radius[n][1][1])
+            z_vec.append(radius[n][1][2])
+
+            if n == len(radius)-1:
+                x_vec.append(radius[n][2][0])
+                y_vec.append(radius[n][2][1])
+                z_vec.append(radius[n][2][2])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
 
         # Earth-centered orbits: satellite orbit and geocenter
         ax.scatter3D(0.0, 0.0, 0.0, color='blue', label='Earth')
-        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=bodyname+' orbit')
-        ax.plot3D(x_orb_vec, y_orb_vec, z_orb_vec, 'red', linewidth=0.5)
+        ax.scatter3D(x_vec, y_vec, z_vec, color='red', marker='+', label=bodyname + ' orbit')
         plt.legend()
         ax.set_xlabel('x (km)')
         ax.set_ylabel('y (km)')
@@ -1810,16 +2267,18 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
         ax.set_xlim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.set_ylim(-xy_plot_abs_max, xy_plot_abs_max)
         ax.set_zlim(-xy_plot_abs_max, xy_plot_abs_max)
-        ax.legend(loc='center left', bbox_to_anchor=(1.04,0.5)) #, ncol=3)
-        ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
+        ax.legend(loc='center left', bbox_to_anchor=(1.04, 0.5))  # , ncol=3)
+        ax.set_title('Angles-only orbit determ. (Gauss): ' + bodyname)
         plt.show()
 
-    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean/60.0
+
+    return index, radius, velocity, inclination, raan, eccentricity, AoP, mean_anomaly, n_mean_motion_perday,\
+           T_orbitperiod
+
 
 # TODO: evaluate Earth ephemeris only once for a given TDB instant
 #       this implies saving all UTC times and their TDB equivalencies
 # TODO: allow user to specify ephemerides; currently de432s is always used
-# TODO: allow other IOD angle subformats
 
 def read_args():
     parser = argparse.ArgumentParser()
@@ -1835,8 +2294,10 @@ if __name__ == "__main__":
 
     args = read_args()
     if args.obs_array is None:
-        gauss_method_sat(args.file_path, bodyname=args.body_name, r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
+        gauss_method_sat(args.file_path, bodyname=args.body_name,
+                         r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
     else:
         obs_arr = [int(item) for item in args.obs_array.split(',')]
-        gauss_method_sat(args.file_path, obs_arr=obs_arr, bodyname=args.body_name, r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
+        gauss_method_sat(args.file_path, obs_arr=obs_arr, bodyname=args.body_name,
+                         r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
 
