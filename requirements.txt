@@ -1,21 +1,22 @@
-attrs==17.4.0
-colorama==0.3.9
-cycler==0.10.0
-matplotlib==2.1.2
-numpy==1.14.0
-pluggy==0.6.0
-py==1.5.2
-pykep==2.1
-pymap3d==1.8.0
-pyparsing==2.2.0
-pytest==3.4.0
-python-dateutil==2.6.1
-pytz==2018.3
-scipy==1.0.0
-sgp4==1.4
-six==1.11.0
-beautifulsoup4==4.6
+astropy >=3.0.3
+attrs >= 17.4.0
+colorama >= 0.3.9
+cycler >= 0.10.0
+matplotlib >= 2.1.2
+numpy >= 1.14.0
+pluggy >= 0.6.0
+poliastro >= 0.9.1
+py >= 1.5.2
+pykep >= 2.1
+pymap3d >= 1.8.0
+pyparsing >= 2.2.0
+pytest >= 3.4.0
+python-dateutil >= 2.6.1
+pytz >= 2018.3
+scipy >=1.0.0
+sgp4 >= 1.4
+six >= 1.11.0
+beautifulsoup4 >= 4.6
 https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-1.0.12.tar.gz
 requests
 inquirer
-astropy==3.1.2

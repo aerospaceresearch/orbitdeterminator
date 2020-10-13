@@ -1,12 +1,17 @@
+#!/usr/bin/env python3
 '''
 Runs the whole process in one file for a .csv positional data file (time, x, y, z)
 and generates the final set of keplerian elements along with a plot and a filtered.csv data file
 '''
 
-
-from util import (read_data, kep_state, rkf78, golay_window)
-from filters import (sav_golay, triple_moving_average)
-from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbsMethod)
+import sys
+import os
+sys.path.append(os.getcwd())
+import warnings
+from util import read_data, kep_state, rkf78, golay_window, get_format, convert_format, handle_multiple_files
+from filters import sav_golay, triple_moving_average
+from kep_determination import lamberts_kalman, interpolation, ellipse_fit, gibbsMethod
+import automated
 import argparse
 import numpy as np
 import matplotlib as mpl
@@ -14,29 +19,24 @@ import matplotlib.pylab as plt
 from propagation import sgp4
 import inquirer
 
-def process(data_file, error_apriori, units):
+def process(file_list, error_apriori, units, output):
     '''
     Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
     file, prints out the final keplerian elements computed from both Lamberts and Interpolation and finally plots
     the initial, filtered data set and the final orbit.
 
     Args:
-        data_file (string): The name of the .csv file containing the positional data
+        file_list (string): List of strings containing file names
         error_apriori (float): apriori estimation of the measurements error in km
 
     Returns:
         Runs the whole process of the program
     '''
-    # First read the csv file called "orbit" with the positional data
-    source_path = "example_data/SourceCSV/"
-    dest_path = "example_data/DestinationCSV/"
-    data = read_data.load_data(source_path + data_file)
+    source_path = "obs_data/Source"
+    dest_path = "obs_data/DestinationCSV/"
+    data = handle_multiple_files.handle_multiple_files(file_list)
 
-    if(units == 'm'):
-        # Transform m to km
-        data[:, 1:4] = data[:, 1:4] / 1000
-
-    print("***********Choose filter(s)/method(s) in desired order of application***********")
+    print("***********Choose from following options in desired order of application***********")
     print("(SPACE to toggle, UP/DOWN to navigate, RIGHT/LEFT to select/deselect and ENTER to submit)")
     print("*Default options are selected below, if nothing is selected these options will be executed")
     questions = [
@@ -52,6 +52,10 @@ def process(data_file, error_apriori, units):
                         ),
     ]
     choices = inquirer.prompt(questions)
+
+    if(units == 'm'):
+        # Transform m to km
+        data[:, 1:4] = data[:, 1:4] / 1000
     data_after_filter = data
 
     if not choices['filter']:
@@ -92,7 +96,7 @@ def process(data_file, error_apriori, units):
     print(means, "\n")
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt(dest_path + data_file.strip(".csv") + "_filtered.csv", data_after_filter, delimiter=",")
+    np.savetxt(dest_path + output + ".csv", data_after_filter, delimiter=",")
 
     kep_elements = {}
 
@@ -227,9 +231,11 @@ def process(data_file, error_apriori, units):
 
 def read_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file_path', type=str, help="path to .csv data file", default='orbit.csv')
-    parser.add_argument('-e', '--error', type=float, help="estimation of the measurement error", default=10.0)
+    parser.add_argument('-f', '--file_path', type=str, nargs='*', help="Path to .csv data file", default=['orbit.csv'])
+    parser.add_argument('-e', '--error', type=float, help="Estimation of the measurement error", default=10.0)
     parser.add_argument('-u', '--units', type=str, help="m for metres, k for kilometres", default='k')
+    parser.add_argument('-o', '--output', type=str, help="Filename to save filtered data in DestinationCSV folder", default='filtered')
+    parser.add_argument('-a', '--automate', help="Automate the orbit determination process", action='store_true')
     return parser.parse_args()
 
 
@@ -247,4 +253,7 @@ if __name__ == "__main__":
                "                                 |   4. Gibbs 3 Vector\n"
     print("\n" + workflow)
     args = read_args()
-    process(args.file_path, args.error, args.units)
+    if args.automate:
+        automated.main()
+    else:
+        process(args.file_path, args.error, args.units, args.output)

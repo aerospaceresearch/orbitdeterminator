@@ -1,0 +1,1227 @@
+{
+	"__COMMENT": "THIS FILE IS CODE GENERATED, DO NOT TOUCH ANYTHING",
+	"type": "FeatureCollection",
+	"metadata": {
+		"count": 64
+	},
+	"index": {
+		"1111": 0,
+		"4171": 1,
+		"4172": 2,
+		"4553": 3,
+		"0001": 4,
+		"0002": 5,
+		"0030": 6,
+		"0031": 7,
+		"0070": 8,
+		"0100": 9,
+		"0110": 10,
+		"0433": 11,
+		"0434": 12,
+		"0435": 13,
+		"0710": 14,
+		"0899": 15,
+		"1056": 16,
+		"1086": 17,
+		"1244": 18,
+		"1747": 19,
+		"1775": 20,
+		"2018": 21,
+		"2115": 22,
+		"2414": 23,
+		"2420": 24,
+		"2563": 25,
+		"2675": 26,
+		"2701": 27,
+		"2751": 28,
+		"2756": 29,
+		"4353": 30,
+		"4354": 31,
+		"4355": 32,
+		"4541": 33,
+		"4542": 34,
+		"4641": 35,
+		"5555": 36,
+		"5918": 37,
+		"5919": 38,
+		"6226": 39,
+		"7777": 40,
+		"7778": 41,
+		"7779": 42,
+		"8048": 43,
+		"8049": 44,
+		"8305": 45,
+		"8335": 46,
+		"8336": 47,
+		"8438": 48,
+		"8536": 49,
+		"8539": 50,
+		"8597": 51,
+		"8600": 52,
+		"0699": 53,
+		"8730": 54,
+		"8739": 55,
+		"9461": 56,
+		"9633": 57,
+		"9730": 58,
+		"6242": 59,
+		"6241": 60,
+		"4160": 61,
+		"9998": 62,
+		"9999": 63
+	},
+	"features": [
+		{
+			"type": "Feature",
+			"sitenumber": "1111",
+			"id": "RL",
+			"properties": {
+				"firstname": "Ron",
+				"middlename": "N/A",
+				"lastname": "Lee"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					38.9478,
+					-104.5614,
+					2073
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4171",
+			"id": "CB",
+			"properties": {
+				"firstname": "Cees",
+				"middlename": "N/A",
+				"lastname": "Bassa"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.8344,
+					6.3785,
+					10
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4172",
+			"id": "LB",
+			"properties": {
+				"firstname": "Leo",
+				"middlename": "N/A",
+				"lastname": "Barhorst"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.3713,
+					5.2580,
+					-3
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4553",
+			"id": "CB",
+			"properties": {
+				"firstname": "Cees",
+				"middlename": "N/A",
+				"lastname": "Bassa"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					53.3210,
+					-2.2330,
+					86
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0001",
+			"id": "MM",
+			"properties": {
+				"firstname": "Mike",
+				"middlename": "N/A",
+				"lastname": "McCants"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					30.3340,
+					-97.7610,
+					160
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0002",
+			"id": "MM",
+			"properties": {
+				"firstname": "Mike",
+				"middlename": "N/A",
+				"lastname": "McCants"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					30.3138,
+					-97.8661,
+					280
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0030",
+			"id": "IA",
+			"properties": {
+				"firstname": "Ivan",
+				"middlename": "N/A",
+				"lastname": "Artner"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					47.4857,
+					18.9727,
+					400
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0031",
+			"id": "IA",
+			"properties": {
+				"firstname": "Ivan",
+				"middlename": "N/A",
+				"lastname": "Artner"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					47.5612,
+					18.7366,
+					149
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0070",
+			"id": "BC",
+			"properties": {
+				"firstname": "Bob",
+				"middlename": "N/A",
+				"lastname": "Christy"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					53.2233,
+					-0.6003,
+					30
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0100",
+			"id": "SG",
+			"properties": {
+				"firstname": "Sven",
+				"middlename": "N/A",
+				"lastname": "Grahn"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					59.4627,
+					17.9138,
+					0
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0110",
+			"id": "LK",
+			"properties": {
+				"firstname": "Lyn",
+				"middlename": "N/A",
+				"lastname": "Kennedy"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					32.5408,
+					-96.8906,
+					200
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0433",
+			"id": "GR",
+			"properties": {
+				"firstname": "Greg",
+				"middlename": "N/A",
+				"lastname": "Roberts"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-33.9406,
+					18.5129,
+					10
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0434",
+			"id": "IR",
+			"properties": {
+				"firstname": "Ian",
+				"middlename": "N/A",
+				"lastname": "Roberts"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-26.1030,
+					27.9288,
+					1646
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0435",
+			"id": "GR",
+			"properties": {
+				"firstname": "Greg",
+				"middlename": "N/A",
+				"lastname": "Roberts"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-33.9369,
+					18.5101,
+					25
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0710",
+			"id": "LS",
+			"properties": {
+				"firstname": "Lutz",
+				"middlename": "N/A",
+				"lastname": "Schindler"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.3261,
+					10.6756,
+					85
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0899",
+			"id": "FM",
+			"properties": {
+				"firstname": "Fernando",
+				"middlename": "N/A",
+				"lastname": "Mederos"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-34.8961,
+					-56.1227,
+					30
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "1056",
+			"id": "MK",
+			"properties": {
+				"firstname": "Martins",
+				"middlename": "N/A",
+				"lastname": "Keruss"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					57.0122,
+					23.9833,
+					4
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "1086",
+			"id": "NK",
+			"properties": {
+				"firstname": "Nikolay",
+				"middlename": "N/A",
+				"lastname": "Koshkin"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					46.4778,
+					30.7556,
+					56
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "1244",
+			"id": "AM",
+			"properties": {
+				"firstname": "Andriy",
+				"middlename": "N/A",
+				"lastname": "Makeyev"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					44.3932,
+					33.9701,
+					69
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "1747",
+			"id": "DD",
+			"properties": {
+				"firstname": "Daniel",
+				"middlename": "N/A",
+				"lastname": "Deak"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					45.7275,
+					-72.3526,
+					191
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "1775",
+			"id": "KF",
+			"properties": {
+				"firstname": "Kevin",
+				"middlename": "N/A",
+				"lastname": "Fetter"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					44.6062,
+					-75.6910,
+					200
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2018",
+			"id": "PW",
+			"properties": {
+				"firstname": "Peter",
+				"middlename": "N/A",
+				"lastname": "Wakelin"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					51.0945,
+					-1.1188,
+					124
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2115",
+			"id": "MW",
+			"properties": {
+				"firstname": "Mike",
+				"middlename": "N/A",
+				"lastname": "Waterman"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					51.3286,
+					-0.7950,
+					75
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2414",
+			"id": "DH",
+			"properties": {
+				"firstname": "David",
+				"middlename": "N/A",
+				"lastname": "Hopkins"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					50.7468,
+					-1.8800,
+					34
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2420",
+			"id": "RE",
+			"properties": {
+				"firstname": "Russell",
+				"middlename": "N/A",
+				"lastname": "Eberst"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					55.9486,
+					-3.1386,
+					40
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2563",
+			"id": "PN",
+			"properties": {
+				"firstname": "Pierre",
+				"middlename": "N/A",
+				"lastname": "Nierinck"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					51.0524,
+					2.4043,
+					10
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2675",
+			"id": "DB",
+			"properties": {
+				"firstname": "David",
+				"middlename": "N/A",
+				"lastname": "Brierley"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.1358,
+					-2.3264,
+					70
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2701",
+			"id": "TM",
+			"properties": {
+				"firstname": "Ted",
+				"middlename": "N/A",
+				"lastname": "Molczan"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					43.6876,
+					-79.3924,
+					230
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2751",
+			"id": "BM",
+			"properties": {
+				"firstname": "Bruce",
+				"middlename": "N/A",
+				"lastname": "MacDonald"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					51.3440,
+					-1.9849,
+					125
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "2756",
+			"id": "AK",
+			"properties": {
+				"firstname": "Andy",
+				"middlename": "N/A",
+				"lastname": "Kirkham"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					56.0907,
+					-3.1623,
+					25
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4353",
+			"id": "ML",
+			"properties": {
+				"firstname": "Marco",
+				"middlename": "N/A",
+				"lastname": "Langbroek"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.1541,
+					4.4908,
+					0
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4354",
+			"id": "ML",
+			"properties": {
+				"firstname": "Marco",
+				"middlename": "N/A",
+				"lastname": "Langbroek"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.1168,
+					4.5602,
+					-2
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4355",
+			"id": "ML",
+			"properties": {
+				"firstname": "Marco",
+				"middlename": "N/A",
+				"lastname": "Langbroek"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.1388,
+					4.4994,
+					-2
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4541",
+			"id": "AR",
+			"properties": {
+				"firstname": "Alberto",
+				"middlename": "N/A",
+				"lastname": "Rango"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					41.9639,
+					12.4531,
+					80
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4542",
+			"id": "AR",
+			"properties": {
+				"firstname": "Alberto",
+				"middlename": "N/A",
+				"lastname": "Rango"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					41.9683,
+					12.4545,
+					80
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4641",
+			"id": "AR",
+			"properties": {
+				"firstname": "Alberto",
+				"middlename": "N/A",
+				"lastname": "Rango"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					41.1060,
+					16.9010,
+					70
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "5555",
+			"id": "SG",
+			"properties": {
+				"firstname": "Sergey",
+				"middlename": "N/A",
+				"lastname": "Guryanov"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					56.1019,
+					94.5533,
+					154
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "5918",
+			"id": "BG",
+			"properties": {
+				"firstname": "Bjorn",
+				"middlename": "N/A",
+				"lastname": "Gimle"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					59.2985,
+					18.1045,
+					40
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "5919",
+			"id": "BG",
+			"properties": {
+				"firstname": "Bjorn",
+				"middlename": "N/A",
+				"lastname": "Gimle"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					59.2615,
+					18.6206,
+					30
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "6226",
+			"id": "SC",
+			"properties": {
+				"firstname": "Scott",
+				"middlename": "N/A",
+				"lastname": "Campbell"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					28.4861,
+					-97.8194,
+					110
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "7777",
+			"id": "BY",
+			"properties": {
+				"firstname": "Brad",
+				"middlename": "Young",
+				"lastname": "remote"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					38.1656,
+					-2.3267,
+					1608
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "7778",
+			"id": "BY",
+			"properties": {
+				"firstname": "Brad",
+				"middlename": "Young",
+				"lastname": "SSO"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-31.2733,
+					149.0644,
+					1122
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "7779",
+			"id": "BY",
+			"properties": {
+				"firstname": "Brad",
+				"middlename": "Young",
+				"lastname": "NM"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					32.9204,
+					-105.5283,
+					2225
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8048",
+			"id": "ST",
+			"properties": {
+				"firstname": "Scott",
+				"middlename": "N/A",
+				"lastname": "Tilley"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					49.4175,
+					-123.6420,
+					1
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8049",
+			"id": "ST",
+			"properties": {
+				"firstname": "Scott",
+				"middlename": "N/A",
+				"lastname": "Tilley"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					49.4348,
+					-123.6685,
+					40
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8305",
+			"id": "PG",
+			"properties": {
+				"firstname": "Paul",
+				"middlename": "N/A",
+				"lastname": "Gabriel"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					26.2431,
+					-98.2163,
+					30
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8335",
+			"id": "BY",
+			"properties": {
+				"firstname": "Brad",
+				"middlename": "N/A",
+				"lastname": "Young"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					36.1397,
+					-95.9838,
+					205
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8336",
+			"id": "BY",
+			"properties": {
+				"firstname": "Brad",
+				"middlename": "N/A",
+				"lastname": "Young"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					36.1397,
+					-95.9838,
+					205
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8438",
+			"id": "SS",
+			"properties": {
+				"firstname": "Sierra",
+				"middlename": "N/A",
+				"lastname": "Stars"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					38.8108,
+					-119.7750,
+					1545
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8536",
+			"id": "TL",
+			"properties": {
+				"firstname": "Tim",
+				"middlename": "N/A",
+				"lastname": "Luton"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					36.8479,
+					-76.5010,
+					4
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8539",
+			"id": "SN",
+			"properties": {
+				"firstname": "Steve",
+				"middlename": "N/A",
+				"lastname": "Newcomb"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					39.4707,
+					-79.3388,
+					839
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8597",
+			"id": "TB",
+			"properties": {
+				"firstname": "Tony",
+				"middlename": "N/A",
+				"lastname": "Beresford"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-34.9638,
+					138.6333,
+					100
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8600",
+			"id": "PC",
+			"properties": {
+				"firstname": "Paul",
+				"middlename": "N/A",
+				"lastname": "Camilleri"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-32.9770,
+					151.6477,
+					18
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "0699",
+			"id": "PC",
+			"properties": {
+				"firstname": "Paul",
+				"middlename": "N/A",
+				"lastname": "Camilleri"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					-14.4733,
+					132.2369,
+					108
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8730",
+			"id": "EC",
+			"properties": {
+				"firstname": "Ed",
+				"middlename": "N/A",
+				"lastname": "Cannon"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					30.3086,
+					-97.7279,
+					150
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "8739",
+			"id": "DB",
+			"properties": {
+				"firstname": "Derek",
+				"middlename": "N/A",
+				"lastname": "Breit"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					37.1133,
+					-121.7028,
+					282
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "9461",
+			"id": "KO",
+			"properties": {
+				"firstname": "Konkoly",
+				"middlename": "N/A",
+				"lastname": "Obs"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					47.9175,
+					19.89365,
+					938
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "9633",
+			"id": "JN",
+			"properties": {
+				"firstname": "Jim",
+				"middlename": "N/A",
+				"lastname": "Nix"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					33.0206,
+					-96.9982,
+					153
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "9730",
+			"id": "MM",
+			"properties": {
+				"firstname": "Mike",
+				"middlename": "N/A",
+				"lastname": "McCants"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					30.3150,
+					-97.8660,
+					280
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "6242",
+			"id": "JM",
+			"properties": {
+				"firstname": "Jon",
+				"middlename": "N/A",
+				"lastname": "Mikel"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					42.9453,
+					-2.8284,
+					623
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "6241",
+			"id": "JM",
+			"properties": {
+				"firstname": "Jon",
+				"middlename": "N/A",
+				"lastname": "Mikel"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					42.9565,
+					-2.8203,
+					619
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "4160",
+			"id": "BD",
+			"properties": {
+				"firstname": "Bram",
+				"middlename": "N/A",
+				"lastname": "Dorreman"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					51.2793,
+					5.4768,
+					35
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "9998",
+			"id": "DT",
+			"properties": {
+				"firstname": "Dwingeloo",
+				"middlename": "N/A",
+				"lastname": "telescoop"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					52.8119,
+					6.3961,
+					10
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"sitenumber": "9999",
+			"id": "GR",
+			"properties": {
+				"firstname": "Graves",
+				"middlename": "N/A",
+				"lastname": "N/A"
+			},
+			"geometry": {
+				"type": "EarthPoint",
+				"coordinates": [
+					47.348,
+					5.5151,
+					100
+				]
+			}
+		}
+	]
+}
