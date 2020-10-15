@@ -1,7 +1,7 @@
 import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from orbitdeterminator.util import input_transf
+from util import input_transf
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
