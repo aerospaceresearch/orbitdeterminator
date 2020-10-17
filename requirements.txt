@@ -7,6 +7,7 @@ numpy >= 1.14.0
 pluggy >= 0.6.0
 poliastro >= 0.9.1
 py >= 1.5.2
+pyephem >= 3.7.6.0
 pykep >= 2.1
 pyparsing >= 2.2.0
 pytest >= 3.4.0
@@ -18,4 +19,3 @@ six >= 1.11.0
 beautifulsoup4 >= 4.6
 https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-1.0.12.tar.gz
 requests
-inquirer
