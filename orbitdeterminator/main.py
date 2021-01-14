@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pylab as plt
 from propagation import sgp4
-import inquirer
+from PyInquirer import style_from_dict, Token, prompt, Separator
 
 def process(data_file, error_apriori, units):
     '''
@@ -38,12 +38,21 @@ def process(data_file, error_apriori, units):
     print("(SPACE to toggle, UP/DOWN to navigate, RIGHT/LEFT to select/deselect and ENTER to submit)")
     print("*if nothing is selected, Triple Moving Average followed by Savitzky Golay will be applied")
     questions = [
-      inquirer.Checkbox('filter',
-                        message="Select filter(s)",
-                        choices=['Savitzky Golay Filter', 'Triple Moving Average Filter'],
-                        ),
+        {
+            'type': 'checkbox',
+            'message': 'Select filter(s)',
+            'name': 'filter',
+            'choices': [ 
+                {
+                    'name': 'Savitzky Golay Filter'
+                },
+                {
+                    'name': 'Triple Moving Average Filter'
+                }
+            ],
+        }
     ]
-    choices = inquirer.prompt(questions)
+    choices = prompt(questions)
     data_after_filter = data
 
     if(len(choices['filter']) == 0):
@@ -87,12 +96,27 @@ def process(data_file, error_apriori, units):
     print("(SPACE to toggle, UP/DOWN to navigate, RIGHT/LEFT to select/deselect and ENTER to submit)")
     print("*if nothing is selected, Cubic Spline Interpolation will be used for Orbit Determination")
     questions = [
-      inquirer.Checkbox('method',
-                        message="Select Method(s)",
-                        choices=['Lamberts Kalman', 'Cubic Spline Interpolation', 'Ellipse Best Fit', 'Gibbs 3 Vector'],
-                        ),
+        {
+            'type': 'checkbox',
+            'message': 'Select Method(s)',
+            'name': 'method',
+            'choices': [ 
+                {
+                    'name': 'Lamberts Kalman'
+                },
+                {
+                    'name': 'Cubic Spline Interpolation'
+                },
+                {
+                    'name': 'Ellipse Best Fit'
+                },
+                {
+                    'name': 'Gibbs 3 Vector'
+                }
+            ],
+        }
     ]
-    choices = inquirer.prompt(questions)
+    choices = prompt(questions)
     kep_elements = {}
 
     if(len(choices['method']) == 0):
