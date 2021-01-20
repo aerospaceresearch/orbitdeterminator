@@ -58,7 +58,7 @@ All the steps are same except for **Step 3** from Linux Users guide
 
 For **Step 3**, instead of using pip use conda to install **pykep** and **matplotlib**
 ```
-conda install pykep==2.1
+conda install -c conda-forge pykep
 conda install matplotlib
 ```
 Now, remove these two dependencies from requirements.txt and then run
