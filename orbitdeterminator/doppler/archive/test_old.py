@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from orbdet.archive.utils_astro import *
+from orbitdeterminator.doppler.archive.utils_astro import *
 
 class TestTransformations(unittest.TestCase):
     """ Unit test for coordinate system transofrmations.
@@ -49,7 +49,7 @@ class TestTransformations(unittest.TestCase):
         #print(0.271180555555556)
 
     def test_gmst(self):
-        """ Test Greenwitch Mean Sidereal Time 
+        """ Test Greenwitch Mean Sidereal Time
         """
 
         # Test #0
@@ -59,7 +59,7 @@ class TestTransformations(unittest.TestCase):
         self.assertAlmostEqual(test_gmst_0, 1.744767163330613)
         #print(f"\n{test_gmst_0}")
         #print(1.744767163330613)
-        
+
         # Test #1
         # MATLAB 11 significant digits
         jd_1, jdfrac_1 = get_jd(self.date_1)
@@ -68,7 +68,7 @@ class TestTransformations(unittest.TestCase):
         #print(f"\n{test_gmst_1}")
         #print(4.96091044108139)
 
-        # Test #2 
+        # Test #2
         # MATLAB 11 significant digits
         jd_2, jdfrac_2 = get_jd(self.date_2)
         test_gmst_2 = get_gmst(jd_2 + jdfrac_2)
@@ -78,18 +78,18 @@ class TestTransformations(unittest.TestCase):
 
     def test_geodetic_to_ecef(self):
         """ Test latitude, longitude, altitude to Earth-Centered, Earth-Fixed (ECEF)
-        transformation 
+        transformation
         """
 
         # Test #1, Chilbolton
         test_ecef_0 = geodetic_to_ecef(self.geodetic_0)
-        np.testing.assert_allclose(test_ecef_0, 
+        np.testing.assert_allclose(test_ecef_0,
             np.array([4007978.00308211, -100643.89986322, 4943977.86517641, 0, 0 ,0]))
         # print(f"\n{test_ecef_0}")
 
         # Test #1, Atlanta
         test_ecef_1 = geodetic_to_ecef(self.geodetic_1)
-        np.testing.assert_allclose(test_ecef_1, 
+        np.testing.assert_allclose(test_ecef_1,
             np.array([518191.396915951, -5282096.72284627, 3525827.47644486, 0, 0 ,0]))
         # print(f"\n{test_ecef_1}")
 
@@ -97,7 +97,7 @@ class TestTransformations(unittest.TestCase):
 
     def test_ecef_to_pef(self):
         """ Test Earth-Centered, Earth-Fixed frame to Pseudo Earth-Centered Fixed (PEF) frame """
-        
+
         # Test zero rotation
         test_ecef_0 = geodetic_to_ecef(self.geodetic_0)
         test_pef_0 = ecef_to_pef(test_ecef_0, 0, 0, 0)
@@ -137,7 +137,7 @@ class TestTransformations(unittest.TestCase):
         ])
         np.testing.assert_allclose(pm_2, pm_2_matlab)
 
-        # TODO: Test IAU-2000 polar motion 
+        # TODO: Test IAU-2000 polar motion
 
     def test_ecef_to_teme(self):
         """ Test Earth-Centered, Earth-Fixed (ECEF) to True Equator, Mean Equinox (TEME)
@@ -151,7 +151,7 @@ class TestTransformations(unittest.TestCase):
         test_teme_1 = ecef_to_teme(ecef_1, jd_1+jdfrac_1, ttt_1, 0, 0, 0, 0)
 
         teme_1_matlab = np.array([
-            888294.982007313, -3909597.02433772, 4943977.86517641, 
+            888294.982007313, -3909597.02433772, 4943977.86517641,
             0285.092316786936, 0064.7754929303933, 0
         ])
 
@@ -161,11 +161,11 @@ class TestTransformations(unittest.TestCase):
         np.testing.assert_allclose(test_teme_1, teme_1_matlab)
 
         #test_ecef_1 = geodetic_to_ecef(self.geodetic_0)
-        
-    
+
+
     # def test_ecef_to_eci(self):
     #     """ Test Earth-Centered, Earth-Fixed (ECEF) to Earth-Centered Inertial (ECI)
-    #     coordinate system transformation. 
+    #     coordinate system transformation.
     #     """
 
     #     # Test #1
@@ -183,7 +183,7 @@ class TestTransformations(unittest.TestCase):
 
     def test_eci_to_ecef(self):
         """ Test Earth-Centered Inertial (ECI) to Earth-Centered, Earth-Fixed (ECEF)
-        coordinate system transformation. 
+        coordinate system transformation.
         """
 
         # Test #1

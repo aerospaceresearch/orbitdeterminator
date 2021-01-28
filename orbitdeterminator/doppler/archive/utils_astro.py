@@ -1,7 +1,7 @@
 import numpy as np
 from math import fmod, pi, floor, sqrt
 
-from orbdet.utils.constants import *
+from orbitdeterminator.doppler.utils.constants import *
 
 # def get_jd(date):
 #     """ Obtain Julian Day given date.
@@ -9,7 +9,7 @@ from orbdet.utils.constants import *
 #     Args:
 #         date (datetime): date to be converted
 #     Returns
-#         jd (float): julian day number 
+#         jd (float): julian day number
 #     """
 #     y = date[0]
 #     m = date[1]
@@ -33,7 +33,7 @@ def get_jd(date):
     Args:
         date (datetime): date to be converted
     Returns
-        jd (float): julian day number 
+        jd (float): julian day number
     """
 
     jd = 367.0 * date[0]  \
@@ -44,12 +44,12 @@ def get_jd(date):
     if jdfrac > 1.0:
         jd = jd + np.floor(jdfrac)
         jdfrac = jdfrac - np.floor(jdfrac)
-        
+
     return jd, jdfrac
 
 def get_ttt(jd:float):
     """ Get Julian centuries.
-        
+
     Args:
         jd (float): Julan day number.
     Returns:
@@ -59,7 +59,7 @@ def get_ttt(jd:float):
 
 def get_gmst(jd_ut_1):
     """ Obtain Greenwitch Mean Sidereal Time (GMST).
-    
+
     Args:
         jjd_ut_1d (float):Julian Day Number
     Returns:
@@ -79,7 +79,7 @@ def get_gmst(jd_ut_1):
 # def eci_to_ecef(eci, jd):
 #     """ Earth-Centered Inertial (ECI) to Earth-Centered, Earth-Fixed (ECEF)
 #     coordinate system conversion.
-    
+
 #     TODO: Vectorize
 
 #     Args:
@@ -101,7 +101,7 @@ def ecef_to_pef(ecef: np.array, ttt:float, xp: float, yp: float):
 
     TODO: Vectorize
 
-    Args: 
+    Args:
         ecef (np.ndarray): ECEF coordinates
         jd (float): Julian day number
         ttt (np.ndarray): Julian centures
@@ -126,7 +126,7 @@ def ecef_to_teme(ecef: np.array, jd: float, t_tt: float, lod: float, xp: float, 
 
     TODO: Vectorize
 
-    Args: 
+    Args:
         ecef (np.ndarray): ECEF coordinates
         t_tt (np.ndarray): Julian centures
         jd (float): Julian day number
@@ -165,7 +165,7 @@ def ecef_to_teme(ecef: np.array, jd: float, t_tt: float, lod: float, xp: float, 
 # def ecef_to_eci(ecef, jd):
 #     """ Earth-Centered, Earth-Fixed (ECEF) to Earth-Centered Inertial (ECI)
 #     coordinate system conversion.
-    
+
 #     TODO: Vectorize
 
 #     Args:
@@ -177,7 +177,7 @@ def ecef_to_teme(ecef: np.array, jd: float, t_tt: float, lod: float, xp: float, 
 #     rot_gmst = rot_z(get_gmst(jd))
 #     eci_pos = rot_gmst.dot(ecef[0:3])
 #     eci_vel = rot_gmst.dot(ecef[3:6] + np.cross(OMEGA_EARTH, ecef[0:3]))
-    
+
 #     return np.concatenate((eci_pos, eci_vel), axis=0)
 
 def geodetic_to_ecef(geo):
@@ -185,27 +185,27 @@ def geodetic_to_ecef(geo):
     WGS-84 Standard (TODO: Verify).
 
     Args:
-        geo (np.array): geodetic coordinates 
+        geo (np.array): geodetic coordinates
                         (latitude (rad), longitude (rad), altitude (m))
     Returns:
         ecef (np.array): vector in ECEF coordinates
     """
-    
+
     s = np.sin(geo[0])
     N = R_EQ / sqrt(1.0 - E2 * pow(s, 2))
     t = (N + geo[2]) * np.cos(geo[0])
-    
+
     ecef = np.array([t * np.cos(geo[1]), t * np.sin(geo[1]), ((1 - E2) * N + geo[2]) * s, 0, 0, 0])
     return ecef
 
 def rot_x(a):
     """ Rotation around x axis.
 
-    Args: 
+    Args:
         a (float): angle.
     Returns:
         r (np.array): rotation matrix
-    """ 
+    """
 
     s,c = np.sin(a), np.cos(a)
     r = np.array([[1,0,0], [0,c,-s], [0,s,c]])
@@ -214,11 +214,11 @@ def rot_x(a):
 def rot_1(a):
     """ Rotation around x axis.
 
-    Args: 
+    Args:
         a (float): angle.
     Returns:
         r (np.array): rotation matrix
-    """ 
+    """
 
     s,c = np.sin(a), np.cos(a)
     r = np.array([[1,0,0], [0,c,s], [0,-s,c]])
@@ -227,7 +227,7 @@ def rot_1(a):
 def rot_y(a):
     """ Rotation around y axis.
 
-    Args: 
+    Args:
         a (float): angle.
     Returns:
         r (np.array): rotation matrix
@@ -239,7 +239,7 @@ def rot_y(a):
 def rot_2(a):
     """ Rotation around y axis.
 
-    Args: 
+    Args:
         a (float): angle.
     Returns:
         r (np.array): rotation matrix
@@ -251,7 +251,7 @@ def rot_2(a):
 def rot_z(a):
     """ Rotation around z axis.
 
-    Args: 
+    Args:
         a (float): angle.
     Returns:
         r (np.array): rotation matrix
@@ -263,7 +263,7 @@ def rot_z(a):
 def rot_3(a):
     """ Rotation around z axis.
 
-    Args: 
+    Args:
         a (float): angle.
     Returns:
         r (np.array): rotation matrix
@@ -289,6 +289,6 @@ def polar_motion(xp:float, yp:float, ttt:float=0.0, type:str='iau-76'):
     elif type=='iau-2000':
         sp = -47.0e-6 * ttt * pi / (3600.0 * 180.0)
         pm = np.linalg.multi_dot([rot_3(-sp), rot_1(yp), rot_2(xp)])
-    
+
     return pm
 

@@ -27,7 +27,7 @@ class TestTransformations(unittest.TestCase):
         cls.x_sat_2 = np.array([[4.5208219685642188e+05, -5.6171149075666666e+06, 3.8442491231144061e+06,
             7.1685422344352655e+03, -3.4886906729108524e+01, -1.0425277899525731e+03]]).T
 
-        cls.x_sat_3 = np.array([[-5558.91355593, -400.86892821, 3960.02332486, 
+        cls.x_sat_3 = np.array([[-5558.91355593, -400.86892821, 3960.02332486,
             0.78846265, -7.58966734, 0.34103136]]).T*1e3
 
         cls.x_sat_arr = np.concatenate([cls.x_sat_1, cls.x_sat_2], axis=1)
@@ -56,7 +56,7 @@ class TestTransformations(unittest.TestCase):
         r_2, rr_2 = range_range_rate(self.x_sat_2, self.x_obs_2)
         np.testing.assert_almost_equal(r_2, 466904.653536031)
         np.testing.assert_almost_equal(rr_2, -1700.9516913344)
-        
+
         # Test 3 - Array
         r_arr, rr_arr = range_range_rate(self.x_sat_arr, self.x_obs_arr)
         np.testing.assert_almost_equal(r_arr[0], 922181.755369173)
@@ -106,7 +106,7 @@ class TestTransformations(unittest.TestCase):
         """ Unit test for 2body integration function (state vector derivative only).
         """
 
-        # Test 1 
+        # Test 1
         x_orbdyn_1 = orbdyn_2body(self.x_sat_1, t=1, mu=MU)
         x_orbdyn_1_ref = np.array([[7180.55879305564, -730.680290744203, -559.794179309392,
             0.324554918222522, 6.9932747167318, -4.91812929254025]]).T
@@ -114,7 +114,7 @@ class TestTransformations(unittest.TestCase):
 
         # Test 2
         x_orbdyn_3 = orbdyn_2body(self.x_sat_3, t=1, mu=MU)
-        x_orbdyn_3_ref = np.array([[788.46265, -7589.66734, 341.03136, 
+        x_orbdyn_3_ref = np.array([[788.46265, -7589.66734, 341.03136,
             6.93328222128297, 0.499978527289434, -4.93908729428414]]).T
         np.testing.assert_almost_equal(x_orbdyn_3, x_orbdyn_3_ref)
 
@@ -166,28 +166,28 @@ class TestTransformations(unittest.TestCase):
         """ Unit test for 2 body integration function
             (state vector and state transition matrix derivatives).
         """
-        
+
         Phi_0 = np.eye(6)
         x_1 = np.concatenate([self.x_sat_1.squeeze(), Phi_0.flatten()])
         x_2 = np.concatenate([self.x_sat_2.squeeze(), Phi_0.flatten()])
         x_arr = np.concatenate([[x_1], [x_2]], axis=0).T
 
         # Reference variables
-        x_orbdyn_1_ref = np.array([7.180558793055639e+03, -7.306802907442034e+02, -5.597941793093923e+02, 
+        x_orbdyn_1_ref = np.array([7.180558793055639e+03, -7.306802907442034e+02, -5.597941793093923e+02,
             0.324554918222522, 6.993274716731798, -4.918129292540249, 0, 0, 0,
-            -1.248050094833666e-06, 1.165989213742894e-07, -8.200000627995956e-08, 0, 0, 0, 
+            -1.248050094833666e-06, 1.165989213742894e-07, -8.200000627995956e-08, 0, 0, 0,
             1.165989213742894e-07, 1.258927852507746e-06, -1.766876847314698e-06,  0, 0, 0,
-            -8.200000627995956e-08, -1.766876847314698e-06, -1.087775767408096e-08, 
-            1, 0, 0, 0, 0, 0, 
+            -8.200000627995956e-08, -1.766876847314698e-06, -1.087775767408096e-08,
+            1, 0, 0, 0, 0, 0,
             0, 1, 0, 0, 0, 0,
             0, 0, 1, 0, 0, 0]).T
 
-        x_orbdyn_2_ref = np.array([7.168542234435266e+03, -34.886906729108524, -1.042527789952573e+03, 
+        x_orbdyn_2_ref = np.array([7.168542234435266e+03, -34.886906729108524, -1.042527789952573e+03,
             -0.567663629219594, 7.053212571397640, -4.827087693401094, 0, 0, 0,
-            -1.239120140248052e-06, -2.055651825938295e-07, 1.406849932631190e-07, 0, 0, 0, 
-            -2.055651825938295e-07, 1.298479848325686e-06, -1.748009053274349e-06, 0, 0, 0, 
-            1.406849932631190e-07, -1.748009053274349e-06, -5.935970807763372e-08, 
-            1, 0, 0, 0, 0, 0, 
+            -1.239120140248052e-06, -2.055651825938295e-07, 1.406849932631190e-07, 0, 0, 0,
+            -2.055651825938295e-07, 1.298479848325686e-06, -1.748009053274349e-06, 0, 0, 0,
+            1.406849932631190e-07, -1.748009053274349e-06, -5.935970807763372e-08,
+            1, 0, 0, 0, 0, 0,
             0, 1, 0, 0, 0, 0,
             0, 0, 1, 0, 0, 0]).T
 
@@ -203,7 +203,7 @@ class TestTransformations(unittest.TestCase):
 
         np.testing.assert_almost_equal(x_orbdyn_1[0:6], x_orbdyn_1_ref[0:6])
         np.testing.assert_almost_equal(Phi_1, Phi_1_ref)
-        
+
         # Test 2 - Array
         x_orbdyn_arr = orbdyn_2body_stm(x_arr, 1, mu=MU)
 
@@ -227,7 +227,7 @@ class TestTransformations(unittest.TestCase):
 
         # Test 1
         H_1 = get_matrix_range_rate_H(self.x_sat_1, self.x_obs_1)
-        H_1_ref = np.array([0.002251451274953, -0.002908250817344, 0.002226382699264, 
+        H_1_ref = np.array([0.002251451274953, -0.002908250817344, 0.002226382699264,
             -0.842695408932710, -0.322142191921000, 0.431380175654917])
 
         np.testing.assert_equal(H_1.shape, (1, 6, 1))
@@ -235,7 +235,7 @@ class TestTransformations(unittest.TestCase):
 
         # Test 2
         H_2 = get_matrix_range_rate_H(self.x_sat_2, self.x_obs_2)
-        H_2_ref = np.array([0.014837512995586, -0.002688709755468, 2.516457481210894e-04, 
+        H_2_ref = np.array([0.014837512995586, -0.002688709755468, 2.516457481210894e-04,
             -0.141590364454198, -0.717530189907480, 0.681984307198533])
 
         np.testing.assert_equal(H_2.shape, (1,6,1))
@@ -248,7 +248,7 @@ class TestTransformations(unittest.TestCase):
         # (dim_z, dim_x, n)
         # (1, 6, 2)
         np.testing.assert_equal(H_arr.shape, (1, 6, 2))     # Asser shape
-    
+
         np.testing.assert_almost_equal(H_arr[:,:, 0].squeeze(), H_1_ref)
         np.testing.assert_almost_equal(H_arr[:,:, 1].squeeze(), H_2_ref)
 
@@ -270,7 +270,7 @@ class TestTransformations(unittest.TestCase):
 
         # Test 1
         z_1, H_1 = f_obs_range_rate(self.x_sat_1, self.x_obs_1)
-        H_1_ref = np.array([0.002251451274953, -0.002908250817344, 0.002226382699264, 
+        H_1_ref = np.array([0.002251451274953, -0.002908250817344, 0.002226382699264,
             -0.842695408932710, -0.322142191921000, 0.431380175654917])
 
         # Shape of the observation Jacobian matrix
@@ -281,7 +281,7 @@ class TestTransformations(unittest.TestCase):
 
         # Test 2
         z_2, H_2 = f_obs_range_rate(self.x_sat_2, self.x_obs_2)
-        H_2_ref = np.array([0.014837512995586, -0.002688709755468, 2.516457481210894e-04, 
+        H_2_ref = np.array([0.014837512995586, -0.002688709755468, 2.516457481210894e-04,
             -0.141590364454198, -0.717530189907480, 0.681984307198533])
 
         np.testing.assert_equal(H_1.shape, (1, 6, 1))
@@ -307,7 +307,7 @@ class TestTransformations(unittest.TestCase):
         np.testing.assert_equal(z_t.shape, (3, 240))
         np.testing.assert_equal(H_t.shape, (3, 6, 240))
 
-        # Compare positions 
+        # Compare positions
         np.testing.assert_equal(z_t[0,:], z_0_t.squeeze())
         np.testing.assert_equal(z_t[1,:], z_1_t.squeeze())
         np.testing.assert_equal(z_t[2,:], z_2_t.squeeze())
@@ -325,7 +325,7 @@ class TestTransformations(unittest.TestCase):
 
         # Test 1
         test_x_sat_1, H_1 = f_obs_x_sat(self.x_sat_1)
-        
+
         np.testing.assert_equal(test_x_sat_1.shape, self.x_sat_1.shape)
         np.testing.assert_equal(test_x_sat_1, self.x_sat_1)
         np.testing.assert_equal(H_1, H_ref)
@@ -401,11 +401,11 @@ class TestTransformations(unittest.TestCase):
         """ Unit test for Herrick-Gibbs initial orbit determination (3 position and corresponding times) method.
         """
         # TODO: Clarify
-        # Herrick-Gibbs is a first-order method, so it will not converge to exact value 
+        # Herrick-Gibbs is a first-order method, so it will not converge to exact value
         # even if groundtruth values are provided. Should still provide reasonably close
         # velocity estimate.
-        rtol=10 # 10 m/s error 
-        
+        rtol=10 # 10 m/s error
+
         # Test 1 - 10 seconds separation
         idx_1 = [0, 10, 20]     # Each timestep is ~1sec
         p_sat_1 = self.x_sat_orbdyn_stm[0:3,idx_1]
@@ -427,7 +427,7 @@ class TestTransformations(unittest.TestCase):
         self.assertIsNone(error_2)
         np.testing.assert_allclose(x_sat_result_2[3:6], self.x_sat_orbdyn_stm[3:6, idx_2[1]], rtol=rtol)
 
-        # Test 3 - 30 seconds separation 
+        # Test 3 - 30 seconds separation
         idx_3 = [0, 30, 60]     # Each timestep is ~1sec
         p_sat_3 = self.x_sat_orbdyn_stm[0:3,idx_3]
         t_sat_3 = self.t_sec[idx_3]
