@@ -9,6 +9,7 @@ poliastro >= 0.9.1
 py >= 1.5.2
 pyephem >= 3.7.6.0
 pykep >= 2.1
+pandas==0.24.2
 pyparsing >= 2.2.0
 pytest >= 3.4.0
 python-dateutil >= 2.6.1
