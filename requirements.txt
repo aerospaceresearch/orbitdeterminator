@@ -9,7 +9,9 @@ poliastro >= 0.9.1
 py >= 1.5.2
 pyephem >= 3.7.6.0
 pykep >= 2.1
-Anaconda Distrubtion = Step 1.conda config --add channels conda-forge  Step 2.conda config --set channel_priority strict Step 3.conda install pykep
+conda config --add channels conda-forge 
+conda config --set channel_priority strict 
+conda install pykep
 pyparsing >= 2.2.0
 pytest >= 3.4.0
 python-dateutil >= 2.6.1
