@@ -1,7 +1,7 @@
 import numpy as np
 from math import fmod, pi, floor, sqrt
 
-from orbdet.utils.constants import *
+from orbitdeterminator.doppler.utils.constants import *
 
 # def get_jd(date):
 #     """ Obtain Julian Day given date.
