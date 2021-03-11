@@ -1,5 +1,7 @@
 # Orbitdeterminator: Automated satellite orbit determination
 
+![](/docs/orbits.jpeg)
+
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9c770ba2dd9d48fa8ba3ac207b9f5c85)](https://www.codacy.com/app/201452004/orbitdeterminator?utm_source=github.com&utm_medium=referral&utm_content=aerospaceresearch/orbitdeterminator&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/aerospaceresearch/orbitdeterminator.svg?branch=master)](https://travis-ci.org/aerospaceresearch/orbitdeterminator)
 [![Documentation Status](https://readthedocs.org/projects/orbit-determinator/badge/?version=latest)](http://orbit-determinator.readthedocs.io/en/latest/?badge=latest)
@@ -25,7 +27,7 @@ conda create -n env_name python=3.5.2
 conda activate env_name
 ```
 *Rest of the guide will assume that virtualenv is activated
-### Linux Users
+## Linux Users
 Run the following commands to install orbitdeterminator:
 
 **Step 1**: Clone the repository
@@ -53,7 +55,7 @@ pip install -r requirements.txt
 pytest
 ```
 If guide is followed correctly then pytest will not show any failed test case. After this, program can be used (to learn how to use the program check orbitdeterminator tutorials [here](https://orbit-determinator.readthedocs.io/en/latest/examples.html))
-### Windows/macOS Users
+## Windows/macOS Users
 All the steps are same except for **Step 3** from Linux Users guide
 
 For **Step 3**, instead of using pip use conda to install **pykep** and **matplotlib**
