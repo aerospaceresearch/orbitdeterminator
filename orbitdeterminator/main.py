@@ -13,6 +13,10 @@ import matplotlib as mpl
 import matplotlib.pylab as plt
 from propagation import sgp4
 import inquirer
+from vpython import *
+import animate_orbit
+
+
 
 def process(data_file, error_apriori, units):
     '''
@@ -40,7 +44,7 @@ def process(data_file, error_apriori, units):
     questions = [
       inquirer.Checkbox('filter',
                         message="Select filter(s)",
-                        choices=['Savitzky Golay Filter', 'Triple Moving Average Filter'],
+                        choices=['Savitzky Golay Filter', 'Triple Moving Average Filter','Wiener Filter'],
                         ),
     ]
     choices = inquirer.prompt(questions)
@@ -65,10 +69,18 @@ def process(data_file, error_apriori, units):
 
                 # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
                 data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+            elif(choice == 'Wiener Filter'):
+                print("Applying Wiener Filter...")
+                # Apply the Wiener filter
+                data_after_filter = wiener.wiener_new(data_after_filter,3)
+                
             else:
                 print("Applying Triple Moving Average Filter...")
                 # Apply the Triple moving average filter with window = 3
                 data_after_filter = triple_moving_average.generate_filtered_data(data_after_filter, 3)
+
+              
+            
 
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
     res = data_after_filter[:, 1:4] - data[:, 1:4]
@@ -196,6 +208,7 @@ def process(data_file, error_apriori, units):
             ax.set_ylabel('y (km)')
             ax.set_zlabel('z (km)')
             plt.show()
+         
 
 def read_args():
     parser = argparse.ArgumentParser()
@@ -220,3 +233,5 @@ if __name__ == "__main__":
     print("\n" + workflow)
     args = read_args()
     process(args.file_path, args.error, args.units)
+    animate_orbit.animate(args.file_path,6400)
+  
