@@ -10,7 +10,7 @@ import math
 from mpl_toolkits import mplot3d
 from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average,wiener)
-from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbsMethod)
+from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbs_method)
 
 '''
 This is a module to animate orbit of a satellite around a planet of given radius r and data file.
