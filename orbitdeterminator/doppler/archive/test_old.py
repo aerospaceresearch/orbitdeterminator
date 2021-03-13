@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from orbdet.archive.utils_astro import *
+from .utils_astro import *
 
 class TestTransformations(unittest.TestCase):
     """ Unit test for coordinate system transofrmations.
