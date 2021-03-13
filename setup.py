@@ -19,7 +19,8 @@ setup(
 				  "operators to choose from.  ",
     long_description=long_description,
     long_description_content_type="text/markdown",
-	install_requires=[req for req in requirements if req[:2] != "# "],
+	install_requires=[req for req in requirements if req[:2] != "# "and req[:4] != "http"],
+    dependency_links=[req for req in requirements if req[:4] != "http"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
