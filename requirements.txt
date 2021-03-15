@@ -20,4 +20,5 @@ requests
 scipy >= 1.0.0
 sgp4 >= 1.4
 six >= 1.11.0
+vpython
 https://cdn.mysql.com/Downloads/Connector-Python/mysql-connector-python-1.0.12.tar.gz
