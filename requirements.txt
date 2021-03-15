@@ -5,7 +5,7 @@ colorama >= 0.3.9
 cycler >= 0.10.0
 inquirer
 matplotlib >= 2.1.2
-numpy >= 1.14.0
+numpy >= 1.17.0
 pluggy >= 0.6.0
 poliastro >= 0.9.1
 py >= 1.5.2

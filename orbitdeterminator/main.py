@@ -228,7 +228,7 @@ if __name__ == "__main__":
                "Available filters:               | Available methods for orbit determination:\n"\
                "  1. Savitzky Golay Filter       |   1. Lamberts Kalman\n"\
                "  2. Triple Moving Average Filter|   2. Cubic spline interpolation\n"\
-               "                                 |   3. Ellipse Bset Fit\n"\
+               "  3. Wiener Filter               |   3. Ellipse Bset Fit\n"\
                "                                 |   4. Gibbs 3 Vector\n"
     print("\n" + workflow)
     args = read_args()
