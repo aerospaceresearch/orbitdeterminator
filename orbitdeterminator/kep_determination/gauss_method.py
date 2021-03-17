@@ -2,16 +2,19 @@
 declination measurements of celestial bodies. Supports both Earth-centered and
 Sun-centered orbits."""
 
+from astropy.coordinates.earth import EarthLocation
 import numpy as np
+import math
 from astropy.coordinates import Longitude, SkyCoord
 from astropy.coordinates import solar_system_ephemeris, get_body_barycentric
+from astropy.coordinates import Angle
 from astropy import units as uts
 from astropy import constants as cts
 from astropy.time import Time
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-from poliastro.stumpff import c2, c3
+from . import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
@@ -251,6 +254,36 @@ def load_iod_data(fname):
                    2, 1, 3, 3, 9]
 
     iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+    def equatorial_to_horizon(ele, az, lat, lon, utc):
+        """
+        ele : elevation 
+        az  : azimuth 
+        lat : latitude
+        lon : longitude
+        utc : utc time in string format
+        """
+        ELE = math.radians(ele)
+        AZ = math.radians(az)
+        LAT = math.radians(lat)
+        #converting utc time to local siderial time in radians
+        observing_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg)
+        observing_time = Time(utc, scale='utc', location=observing_location)
+        ST = Angle(observing_time.sidereal_time('mean'))
+        ST = ST.degree
+        
+        sin_dec = (math.sin(LAT)*math.sin(ELE)) + (math.cos(LAT)*math.cos(ELE)*math.cos(AZ))
+        dec = math.degrees(math.asin(sin_dec))
+
+        cos_HA = (math.sin(ELE) - math.sin(LAT)*sin_dec)/(math.cos(LAT)*math.cos(math.asin(sin_dec)))
+        HA = math.degrees(math.acos(cos_HA))
+        #if the object is west of observer's meridian
+        if(ST-HA > 0):
+            ra = ST - HA
+        #if the object is east of observer's meridian
+        else:
+            ra = ST + HA
+
+        return ra, dec
 
     right_ascension = []
     declination = []
@@ -298,7 +331,7 @@ def load_iod_data(fname):
                 DEC = -1.0 * DEC
 
         elif iod_input_lines["angformat"][i] == 3:
-            # 3: RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
+            # 3: RA/DEC = HHMMmmm+DDdddd MX   (MX  of arc)
             RAAZ = iod_input_lines["raaz"][i].decode()
             HH = float(RAAZ[0:2])
             MM = float(RAAZ[2:4])
@@ -349,7 +382,7 @@ def load_iod_data(fname):
             # TODO: convert from AZ/EL to RA/DEC
 
         elif iod_input_lines["angformat"][i] == 6:
-            # 6: AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
+            # 6: AZ/EL  = DDDdddd+DDdddd MX   (MX  of arc)
             RAAZ = iod_input_lines["raaz"][i].decode()
             DDD = float(RAAZ[0:3])
             dddd = float(RAAZ[3:7])
@@ -365,7 +398,7 @@ def load_iod_data(fname):
             # TODO: convert from AZ/EL to RA/DEC
 
         elif iod_input_lines["angformat"][i] == 7:
-            # 7: RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
+            # 7: RA/DEC = HHMMSSs+DDdddd MX   (MX  of arc)
             RAAZ = iod_input_lines["raaz"][i].decode()
             HH = float(RAAZ[0:2])
             MM = float(RAAZ[2:4])
