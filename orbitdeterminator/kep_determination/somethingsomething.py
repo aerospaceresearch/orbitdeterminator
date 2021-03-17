@@ -15,8 +15,8 @@ a = Angle(lst)
 print(a.degree)
 #print(datetime.utcnow())
 
-def equatorial_to_horizon(ele, az, lat, lon, utc):
-        ELE = math.radians(ele)
+def equatorial_to_horizon(al, az, lat, lon, utc):
+        AL = math.radians(al)
         AZ = math.radians(az)
         LAT = math.radians(lat)
         #converting utc time to local siderial time in radians
@@ -25,10 +25,10 @@ def equatorial_to_horizon(ele, az, lat, lon, utc):
         ST = Angle(observing_time.sidereal_time('mean'))
         ST = ST.degree
         
-        sin_dec = (math.sin(LAT)*math.sin(ELE)) + (math.cos(LAT)*math.cos(ELE)*math.cos(AZ))
+        sin_dec = (math.sin(LAT)*math.sin(AL)) + (math.cos(LAT)*math.cos(AL)*math.cos(AZ))
         dec = math.degrees(math.asin(sin_dec))
 
-        cos_HA = (math.sin(ELE) - math.sin(LAT)*sin_dec)/(math.cos(LAT)*math.cos(math.asin(sin_dec)))
+        cos_HA = (math.sin(AL) - math.sin(LAT)*sin_dec)/(math.cos(LAT)*math.cos(math.asin(sin_dec)))
         HA = math.degrees(math.acos(cos_HA))
         #if the object is west of observer's meridian
         if(ST-HA > 0):
@@ -39,4 +39,6 @@ def equatorial_to_horizon(ele, az, lat, lon, utc):
 
         return ra, dec
 
-print(equatorial_to_horizon(2073, 22.5, 38.9478, -104.5614, datetime.utcnow()))
+RA, DEC = equatorial_to_horizon(2073, 22.5, 38.9478, -104.5614, datetime.utcnow())
+print(RA, DEC)
+print(datetime.utcnow())

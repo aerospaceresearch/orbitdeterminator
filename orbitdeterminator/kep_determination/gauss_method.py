@@ -360,8 +360,18 @@ def load_iod_data(fname):
             EL = DD + (MM + SS / 60.0) / 60.0
             if DECEL[0] == "-":
                 EL = -1.0 * EL
-
+            
+            yr=iod_input_lines['yr'][i].decode(),
+            month=iod_input_lines['month'][i].decode(),
+            day=iod_input_lines['day'][i].decode(),
+            hr=iod_input_lines['hr'][i].decode(),
+            min=iod_input_lines['min'][i].decode(),
+            sec=iod_input_lines['sec'][i].decode(),
+            msec=iod_input_lines['msec'][i].decode()
+            UTC_TIME = f'{yr}-{month}-{day} {hr}:{min}:{sec}.{msec}'
             # TODO: convert from AZ/EL to RA/DEC
+            RA, DEC = equatorial_to_horizon(EL, AZ, LAT, LON, UTC_TIME)
+
 
         elif iod_input_lines["angformat"][i] == 5:
             # 5: AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
@@ -378,8 +388,18 @@ def load_iod_data(fname):
             EL = DD + (MM + mm / 100.0) / 60.0
             if DECEL[0] == "-":
                 EL = -1.0 * EL
+            
+            yr=iod_input_lines['yr'][i].decode(),
+            month=iod_input_lines['month'][i].decode(),
+            day=iod_input_lines['day'][i].decode(),
+            hr=iod_input_lines['hr'][i].decode(),
+            min=iod_input_lines['min'][i].decode(),
+            sec=iod_input_lines['sec'][i].decode(),
+            msec=iod_input_lines['msec'][i].decode()
+            UTC_TIME = f'{yr}-{month}-{day} {hr}:{min}:{sec}.{msec}'
 
             # TODO: convert from AZ/EL to RA/DEC
+            RA, DEC = equatorial_to_horizon(EL, AZ, LAT, LON, UTC_TIME)
 
         elif iod_input_lines["angformat"][i] == 6:
             # 6: AZ/EL  = DDDdddd+DDdddd MX   (MX  of arc)
@@ -394,8 +414,18 @@ def load_iod_data(fname):
             EL = DD + dddd / 1000.0
             if DECEL[0] == "-":
                 EL = -1.0 * EL
-
+            
+            yr=iod_input_lines['yr'][i].decode(),
+            month=iod_input_lines['month'][i].decode(),
+            day=iod_input_lines['day'][i].decode(),
+            hr=iod_input_lines['hr'][i].decode(),
+            min=iod_input_lines['min'][i].decode(),
+            sec=iod_input_lines['sec'][i].decode(),
+            msec=iod_input_lines['msec'][i].decode()
+            UTC_TIME = f'{yr}-{month}-{day} {hr}:{min}:{sec}.{msec}'
+            
             # TODO: convert from AZ/EL to RA/DEC
+            RA, DEC = equatorial_to_horizon(EL, AZ, LAT, LON, UTC_TIME)
 
         elif iod_input_lines["angformat"][i] == 7:
             # 7: RA/DEC = HHMMSSs+DDdddd MX   (MX  of arc)
