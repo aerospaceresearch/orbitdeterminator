@@ -21,9 +21,10 @@ import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
 from orbitdeterminator.kep_determination.ellipse_fit import determine_kep, __read_file
 from orbitdeterminator.kep_determination.gauss_method import *
+import sys
 
 # compute residuals vector, with Earth's grav parameter as to-be-fitted variable
-def res_vec(x, my_data):
+def res_vec(x, my_data,weights):
     rv = np.zeros((3*my_data.shape[0]))
     for i in range(0,my_data.shape[0]-1):
         # observed xyz values
@@ -34,6 +35,111 @@ def res_vec(x, my_data):
         rv[3*i-3] = xyz_obs[0]-xyz_com[0]
         rv[3*i-2] = xyz_obs[1]-xyz_com[1]
         rv[3*i-1] = xyz_obs[2]-xyz_com[2]
+
+        rv[3*i-3] = weights[i]*rv[3*i-3]
+        rv[3*i-2] = weights[i]*rv[3*i-2]
+        rv[3*i-1] = weights[i]*rv[3*i-1]
+    return rv
+
+def res_vec_1(x, my_data):
+    rv = np.zeros((3*my_data.shape[0]))
+    for i in range(0,my_data.shape[0]-1):
+        # observed xyz values
+        xyz_obs = my_data[i,1:4]
+        # predicted )computed xyz values
+        xyz_com = orbel2xyz(my_data[i,0], x[6], x[0], x[1], x[2], x[3], x[4], x[5])
+        # observed minus computed residual:
+        rv[3*i-3] = xyz_obs[0]-xyz_com[0]
+        rv[3*i-2] = xyz_obs[1]-xyz_com[1]
+        rv[3*i-1] = xyz_obs[2]-xyz_com[2]
+    return rv
+
+def get_weights(resid):
+    """
+    This function calculates the weights per (x,y,z) by using the inverse of the squared residuals divided by the total sum of the inverse of the squared residuals. 
+    """
+    total = sum([abs(resid[i]) for i in range(len(resid))])
+    fract = np.array([resid[i]/total for i in range(len(resid))])
+    return fract
+
+def radec_res_vec_rov_sat_w(x, inds, iod_object_data, sat_observatories_data, rov, weights):
+    """Compute vector of observed minus computed (O-C) weighted residuals for ra/dec Earth-orbiting satellite observations
+    with pre-computed observed radec values vector. Assumes ra/dec observed values vector
+    is contained in rov, and they are stored as rov = [ra1, dec1, ra2, dec2, ...].
+
+       Args:
+           x (1x6 float array): set of orbital elements (a, e, taup, omega, I, Omega)
+           inds (int array): line numbers of data in file
+           iod_object_data (ndarray): observation data
+           sat_observatories_data (ndarray): satellite tracking stations data
+           rov (1xlen(inds) float-like array): vector of observed ra/dec values
+
+       Returns:
+           rv (1xlen(inds) array): vector of ra/dec weighted (O-C) residuals.
+    """
+    rv = np.zeros((2*len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
+        site_code = iod_object_data['station'][indm1]
+        obsite = get_station_data(site_code, sat_observatories_data)
+        # object position wrt to Earth
+        xyz_obj = orbel2xyz(timeobs.jd, cts.GM_earth.to(uts.Unit('km3 / day2')).value, x[0], x[1], x[2], x[3], x[4], x[5])
+        # observer position wrt to Earth
+        xyz_oe = observerpos_sat(obsite['Latitude'], obsite['Longitude'], obsite['Elev'], timeobs)
+        # object position wrt observer (unnormalized LOS vector)
+        rho_vec = xyz_obj - xyz_oe
+        # compute normalized LOS vector
+        rho_vec_norm = np.linalg.norm(rho_vec, ord=2)
+        rho_vec_unit = rho_vec/rho_vec_norm
+        # compute RA, Dec
+        cosd_cosa = rho_vec_unit[0]
+        cosd_sina = rho_vec_unit[1]
+        sind = rho_vec_unit[2]
+        # make sure computed RA (ra_comp) is always within [0.0, 2.0*np.pi]
+        ra_comp = np.mod(np.arctan2(cosd_sina, cosd_cosa), 2.0*np.pi)
+        dec_comp = np.arcsin(sind)
+        #compute angle difference, taking always the smallest difference
+        diff_ra = angle_diff_rad(rov[2*i-2], ra_comp)
+        diff_dec = angle_diff_rad(rov[2*i-1], dec_comp)
+        # store O-C residual into vector (O-C = "Observed minus Computed")
+        rv[2*i-2], rv[2*i-1] = diff_ra, diff_dec
+        rv[2*i-2]= weights[i]*rv[2*i-2]
+        rv[2*i-1]= weights[i]*rv[2*i-1] 
+    return rv
+
+def radec_res_vec_rov_mpc_w(x, inds, mpc_object_data, mpc_observatories_data, rov, weights):
+    """Compute vector of observed minus computed weighted (O-C) residuals for ra/dec
+    MPC-formatted observations of minor planets (asteroids, comets, etc.), with
+    pre-computed observed radec values vector. Assumes ra/dec observed values
+    vector is contained in rov, and they are stored as
+    rov = [ra1, dec1, ra2, dec2, ...].
+
+       Args:
+           x (1x6 float array): set of orbital elements (a, e, taup, omega, I, Omega)
+           inds (int array): line numbers of data in file
+           mpc_object_data (ndarray): observation data
+           mpc_observatories_data (ndarray): MPC observatories data
+           rov (1xlen(inds) float-like array): vector of observed ra/dec values
+
+       Returns:
+           rv (1xlen(inds) array): vector of ra/dec (O-C) residuals.
+    """
+    rv = np.zeros((2*len(inds)))
+    for i in range(0,len(inds)):
+        indm1 = inds[i]-1
+        # extract observations data
+        timeobs = Time( datetime(mpc_object_data['yr'][indm1], mpc_object_data['month'][indm1], mpc_object_data['day'][indm1]) + timedelta(days=mpc_object_data['utc'][indm1]) )
+        site_code = mpc_object_data['observatory'][indm1]
+        obsite = get_observatory_data(site_code, mpc_observatories_data)
+        # compute residuals
+        radec_res = radec_residual_rov_mpc(x, timeobs, rov[2*i-2], rov[2*i-1], obsite['Long'], obsite['sin'], obsite['cos'])
+        # assign residuals to ra/dec residuals vector
+        rv[2*i-2], rv[2*i-1] = radec_res
+        rv[2*i-2]= weights[i]*rv[2*i-2]
+        rv[2*i-1]= weights[i]*rv[2*i-1]        
     return rv
 
 # evaluate cost function given a set of observations
@@ -96,9 +202,27 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
     rv0 = radec_res_vec_rov_sat(x0, obs_arr_ls, iod_object_data, sat_observatories_data, rov)
     Q0 = np.linalg.norm(rv0, ord=2)/len(rv0)
 
-    Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
-
     print('\n*** ORBIT DETERMINATION: LEAST-SQUARES FIT ***')
+
+    #Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
+    if(chk=='2'):
+             Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
+             residuals=Q_ls.fun
+             #print("--")
+             #print(residuals)
+             #print("--")
+             weights=get_weights(residuals)
+             #print("--")
+             #print(weights)
+             #print("--")
+             Q_ls = least_squares(radec_res_vec_rov_sat_w, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov, weights), method='lm', xtol=1e-13)
+             
+    elif(chk=='1'):
+             Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
+             
+    else:
+             print("Invalid input.Exiting...")
+             sys.exit()  
 
     print('\nINFO: scipy.optimize.least_squares exited with code', Q_ls.status)
     print(Q_ls.message,'\n')
@@ -209,7 +333,25 @@ def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
 
     print('\n*** ORBIT DETERMINATION: LEAST-SQUARES FIT ***')
 
-    Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
+    #Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
+    if(chk=='2'):
+             Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
+             residuals=Q_ls.fun
+             #print("--")
+             #print(residuals)
+             #print("--")
+             weights=get_weights(residuals)
+             #print("--")
+             #print(weights)
+             #print("--")
+             Q_ls = least_squares(radec_res_vec_rov_mpc_w, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov, weights), method='lm')             
+    elif(chk=='1'):
+             Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
+             
+    else:
+             print("Invalid input.Exiting...")
+             sys.exit()  
+
 
     print('\nINFO: scipy.optimize.least_squares exited with code ', Q_ls.status)
     print(Q_ls.message,'\n')
@@ -338,7 +480,30 @@ if __name__ == "__main__":
     #Q_mini = minimize(QQ,x0,method='nelder-mead',options={'maxiter':100, 'disp': True})
     #Q_ls = least_squares(res_vec, x0, args=(data[0:2000,:], mu_Earth), method='lm')
     #Q_ls = least_squares(res_vec, x0, args=(data, mu_Earth), method='lm')
-    Q_ls = least_squares(res_vec, x0, args=(data,), method='lm')
+    print("What action do you want to perform?")
+    print("1.Least squares.")
+    print("2.Weighted Least squares.")
+    chk=input()
+
+
+    if(chk=='2'):
+             Q_ls = least_squares(res_vec_1, x0, args=(data,), method='lm')
+             residuals=Q_ls.fun
+             #print("--")
+             #print(residuals)
+             #print("--")
+             weights=get_weights(residuals)
+             #print("--")
+             #print(weights)
+             #print("--")
+             Q_ls = least_squares(res_vec, x0, args=(data,weights), method='lm')
+             
+    elif(chk=='1'):
+             Q_ls = least_squares(res_vec_1, x0, args=(data,), method='lm')
+    else:
+             print("Invalid input.Exiting...")
+             sys.exit()          
+
     print('scipy.optimize.least_squares exited with code ', Q_ls.status)
     print(Q_ls.message,'\n')
     #display least-squares solution

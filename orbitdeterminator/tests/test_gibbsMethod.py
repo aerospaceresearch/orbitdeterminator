@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 
 from numpy.testing import assert_array_equal
 from numpy.testing import assert_almost_equal
-from kep_determination.gibbsMethod import *
+from kep_determination.gibbs_method import *
 
 def test_convert_list():
     obj = Gibbs()
