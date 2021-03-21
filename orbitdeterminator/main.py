@@ -31,6 +31,7 @@ def process(data_file, error_apriori, units):
     Returns:
         Runs the whole process of the program
     '''
+
     # First read the csv file called "orbit" with the positional data
     data = read_data.load_data(data_file)
 
@@ -60,19 +61,22 @@ def process(data_file, error_apriori, units):
         
         # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
         data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+
     else:
         for index, choice in enumerate(choices['filter']):
             if(choice == 'Savitzky Golay Filter'):
                 print("Applying Savitzky Golay Filter...")
-                # Use the golay_window.py script to find the window for the Savitzky Golay filter based on the error you input
+                # Use the golay_window.py script to find the window for the Savitzky Golay filter
+                # based on the error you input
                 window = golay_window.window(error_apriori, data_after_filter)
 
                 # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
                 data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+
             elif(choice == 'Wiener Filter'):
                 print("Applying Wiener Filter...")
                 # Apply the Wiener filter
-                data_after_filter = wiener.wiener_new(data_after_filter,3)
+                data_after_filter = wiener.wiener_new(data_after_filter, 3)
                 
             else:
                 print("Applying Triple Moving Average Filter...")
@@ -84,16 +88,16 @@ def process(data_file, error_apriori, units):
 
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
     res = data_after_filter[:, 1:4] - data[:, 1:4]
-    sums = np.sum(res, axis=0)
+    sums = np.sum(res, axis = 0)
     print("\nDisplaying the sum of the residuals for each axis")
     print(sums, "\n")
 
-    means = np.mean(res, axis=0)
+    means = np.mean(res, axis = 0)
     print("Displaying the mean of the residuals for each axis")
     print(means, "\n")
 
     # Save the filtered data into a new csv called "filtered"
-    np.savetxt("filtered.csv", data_after_filter, delimiter=",")
+    np.savetxt("filtered.csv", data_after_filter, delimiter = ",")
 
     print("***********Choose Method(s) for Orbit Determination***********")
     print("(SPACE to toggle, UP/DOWN to navigate, RIGHT/LEFT to select/deselect and ENTER to submit)")
@@ -117,6 +121,7 @@ def process(data_file, error_apriori, units):
         kep_final_inter = np.resize(kep_final_inter, ((7, 1)))
         kep_final_inter[6, 0] = sgp4.rev_per_day(kep_final_inter[0, 0])
         kep_elements['Cubic Spline Interpolation'] = kep_final_inter
+
     else:
         for index, choice in enumerate(choices['method']):
             if(choice == 'Lamberts Kalman'):
@@ -129,6 +134,7 @@ def process(data_file, error_apriori, units):
                 kep_final_lamb = np.resize(kep_final_lamb, ((7, 1)))
                 kep_final_lamb[6, 0] = sgp4.rev_per_day(kep_final_lamb[0, 0])
                 kep_elements['Lamberts Kalman'] = kep_final_lamb
+
             elif(choice == 'Cubic Spline Interpolation'):
                 # Apply the interpolation method
                 kep_inter = interpolation.main(data_after_filter)
@@ -139,6 +145,7 @@ def process(data_file, error_apriori, units):
                 kep_final_inter = np.resize(kep_final_inter, ((7, 1)))
                 kep_final_inter[6, 0] = sgp4.rev_per_day(kep_final_inter[0, 0])
                 kep_elements['Cubic Spline Interpolation'] = kep_final_inter
+
             elif(choice == 'Ellipse Best Fit'):
                 # Apply the ellipse best fit method
                 kep_ellip = ellipse_fit.determine_kep(data_after_filter[:, 1:])[0]
@@ -146,6 +153,7 @@ def process(data_file, error_apriori, units):
                 kep_final_ellip = np.resize(kep_final_ellip, ((7, 1)))
                 kep_final_ellip[6, 0] = sgp4.rev_per_day(kep_final_ellip[0, 0])
                 kep_elements['Ellipse Best Fit'] = kep_final_ellip
+
             else:
                 # Apply the Gibbs method
 
@@ -163,11 +171,11 @@ def process(data_file, error_apriori, units):
                 timestamps = data_after_filter[:, 0]
                 runtime = np.subtract(timestamps, np.min(timestamps))
                 index = np.argmax(runtime >= T_orbitperiod // 2) - 1 # only half orbit is good for Gibbs method
+
                 if index < 2:
                     # in case there are not enough points to have the result at index point at 2
                     # or the argmax search does not find anything and sets index = 0.
                     index = len(timestamps) - 1
-                print(index)
 
                 # enough data for half orbit
                 R = np.array([data_after_filter[:, 1:][0],
@@ -193,7 +201,10 @@ def process(data_file, error_apriori, units):
         order.append(str(key))
 
     # Print the final orbital elements for all solutions
-    kep_elements = ["Semi major axis (a)(km)", "Eccentricity (e)", "Inclination (i)(deg)", "Argument of perigee (ω)(deg)", "Right acension of ascending node (Ω)(deg)", "True anomaly (v)(deg)", "Frequency (f)(rev/day)"]
+    kep_elements = ["Semi major axis (a)(km)", "Eccentricity (e)", "Inclination (i)(deg)",
+                    "Argument of perigee (ω)(deg)", "Right acension of ascending node (Ω)(deg)",
+                    "True anomaly (v)(deg)", "Frequency (f)(rev/day)"]
+
     for i in range(0, len(order)):
         print("\n******************Output for %s Method******************\n" % order[i])
         for j in range(0, 7):
@@ -226,11 +237,11 @@ def process(data_file, error_apriori, units):
             ## Finally we plot the graph
             mpl.rcParams['legend.fontsize'] = 10
             fig = plt.figure()
-            ax = fig.gca(projection='3d')
-            ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label='Initial data ')
-            ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle='-',
-                    label='Filtered data')
-            ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label='Orbit after %s method' % order[j])
+            ax = fig.gca(projection = '3d')
+            ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label = 'Initial data ')
+            ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle = '-',
+                    label = 'Filtered data')
+            ax.plot(positions[0, :], positions[1, :], positions[2, :], "r-", label = 'Orbit after %s method' % order[j])
             ax.legend()
             ax.can_zoom()
             ax.set_xlabel('x (km)')
@@ -241,9 +252,9 @@ def process(data_file, error_apriori, units):
 
 def read_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file_path', type=str, help="path to .csv data file", default='orbit.csv')
-    parser.add_argument('-e', '--error', type=float, help="estimation of the measurement error", default=10.0)
-    parser.add_argument('-u', '--units', type=str, help="m for metres, k for kilometres", default='m')
+    parser.add_argument('-f', '--file_path', type = str, help = "path to .csv data file", default = 'orbit.csv')
+    parser.add_argument('-e', '--error', type = float, help = "estimation of the measurement error", default = 10.0)
+    parser.add_argument('-u', '--units', type = str, help = "m for metres, k for kilometres", default = 'm')
     return parser.parse_args()
 
 
@@ -260,7 +271,7 @@ if __name__ == "__main__":
                "  3. Wiener Filter               |   3. Ellipse Bset Fit\n"\
                "                                 |   4. Gibbs 3 Vector\n"
     print("\n" + workflow)
+    
     args = read_args()
     process(args.file_path, args.error, args.units)
-    animate_orbit.animate(args.file_path,6400)
-  
+    animate_orbit.animate(args.file_path, 6400)
