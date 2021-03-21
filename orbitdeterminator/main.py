@@ -15,7 +15,7 @@ from propagation import sgp4
 import inquirer
 from vpython import *
 import animate_orbit
-
+import kep_determination.orbital_elements as oe
 
 
 def process(data_file, error_apriori, units):
@@ -148,10 +148,39 @@ def process(data_file, error_apriori, units):
                 kep_elements['Ellipse Best Fit'] = kep_final_ellip
             else:
                 # Apply the Gibbs method
-                kep_gibbs = gibbs_method.gibbs_get_kep(data_after_filter[:,1:])
+
+                # first only with first, middle and last measurement
+                R = np.array([data_after_filter[:,1:][0],
+                              data_after_filter[:,1:][len(data_after_filter) // 2],
+                              data_after_filter[:,1:][-1]])
+
+                kep_gibbs = gibbs_method.gibbs_get_kep(R)
+
+
+                # Determination of orbit period
+                semimajor_axis = kep_gibbs[0][0]
+                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
+                timestamps = data_after_filter[:, 0]
+                runtime = np.subtract(timestamps, np.min(timestamps))
+                index = np.argmax(runtime >= T_orbitperiod // 2) - 1 # only half orbit is good for Gibbs method
+                if index < 2:
+                    # in case there are not enough points to have the result at index point at 2
+                    # or the argmax search does not find anything and sets index = 0.
+                    index = len(timestamps) - 1
+                print(index)
+
+                # enough data for half orbit
+                R = np.array([data_after_filter[:, 1:][0],
+                              data_after_filter[:, 1:][index // 2],
+                              data_after_filter[:, 1:][index]])
+
+                kep_gibbs = gibbs_method.gibbs_get_kep(R)
+
+
                 # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
                 # We set an estimate of measurement variance R = 0.01 ** 2
                 kep_final_gibbs = lamberts_kalman.kalman(kep_gibbs, 0.01 ** 2)
+
                 kep_final_gibbs = np.transpose(kep_final_gibbs)
                 kep_final_gibbs = np.resize(kep_final_gibbs, ((7, 1)))
                 kep_final_gibbs[6, 0] = sgp4.rev_per_day(kep_final_gibbs[0, 0])
