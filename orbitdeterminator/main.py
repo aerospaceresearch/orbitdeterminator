@@ -214,7 +214,7 @@ def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file_path', type=str, help="path to .csv data file", default='orbit.csv')
     parser.add_argument('-e', '--error', type=float, help="estimation of the measurement error", default=10.0)
-    parser.add_argument('-u', '--units', type=str, help="m for metres, k for kilometres", default='k')
+    parser.add_argument('-u', '--units', type=str, help="m for metres, k for kilometres", default='m')
     return parser.parse_args()
 
 
