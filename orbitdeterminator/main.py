@@ -45,7 +45,7 @@ def process(data_file, error_apriori, units):
     questions = [
       inquirer.Checkbox('filter',
                         message="Select filter(s)",
-                        choices=['Savitzky Golay Filter', 'Triple Moving Average Filter','Wiener Filter'],
+                        choices=['None', 'Savitzky Golay Filter', 'Triple Moving Average Filter','Wiener Filter'],
                         ),
     ]
     choices = inquirer.prompt(questions)
@@ -64,7 +64,12 @@ def process(data_file, error_apriori, units):
 
     else:
         for index, choice in enumerate(choices['filter']):
-            if(choice == 'Savitzky Golay Filter'):
+            if(choice == 'None'):
+                print("Using the original data...")
+                # no filter is applied
+                data_after_filter = data_after_filter
+
+            elif (choice == 'Savitzky Golay Filter'):
                 print("Applying Savitzky Golay Filter...")
                 # Use the golay_window.py script to find the window for the Savitzky Golay filter
                 # based on the error you input
@@ -266,12 +271,12 @@ if __name__ == "__main__":
                "                   |         |    | Determination      |\n"\
                "                   -----------    ----------------------\n\n"\
                "Available filters:               | Available methods for orbit determination:\n"\
-               "  1. Savitzky Golay Filter       |   1. Lamberts Kalman\n"\
-               "  2. Triple Moving Average Filter|   2. Cubic spline interpolation\n"\
-               "  3. Wiener Filter               |   3. Ellipse Bset Fit\n"\
-               "                                 |   4. Gibbs 3 Vector\n"
+               "  1. None (original data)        |   1. Lamberts Kalman\n"\
+               "  2. Savitzky Golay Filter       |   2. Cubic spline interpolation\n"\
+               "  4. Triple Moving Average Filter|   3. Ellipse Bset Fit\n"\
+               "  3. Wiener Filter               |   4. Gibbs 3 Vector\n"
     print("\n" + workflow)
-    
+
     args = read_args()
     process(args.file_path, args.error, args.units)
     animate_orbit.animate(args.file_path, 6400)
