@@ -131,7 +131,38 @@ def process(data_file, error_apriori, units):
         for index, choice in enumerate(choices['method']):
             if(choice == 'Lamberts Kalman'):
                 # Apply Lambert Kalman method for the filtered data set
-                kep_lamb = lamberts_kalman.create_kep(data_after_filter)
+
+                #previously, all data...
+                #kep_lamb = lamberts_kalman.create_kep(data_after_filter)
+
+                # only three (3) observations from half an orbit.
+                # also just two (2) observations are fine for lamberts.
+                data = np.array([data_after_filter[:, :][0],
+                              data_after_filter[:, :][len(data_after_filter) // 2],
+                              data_after_filter[:, 0:][-1]])
+
+                kep_lamb = lamberts_kalman.create_kep(data)
+
+                # Determination of orbit period
+                semimajor_axis = kep_lamb[0][0]
+                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
+                timestamps = data_after_filter[:, 0]
+                runtime = np.subtract(timestamps, np.min(timestamps))
+                index = np.argmax(runtime >= T_orbitperiod // 2) - 1  # only half orbit is good for Gibbs method
+
+                if index < 2:
+                    # in case there are not enough points to have the result at index point at 2
+                    # or the argmax search does not find anything and sets index = 0.
+                    index = len(timestamps) - 1
+
+                # enough data for half orbit
+                data = np.array([data_after_filter[:, :][0],
+                                 data_after_filter[:, :][index // 2],
+                                 data_after_filter[:, :][index]])
+
+                kep_lamb = lamberts_kalman.create_kep(data)
+
+
                 # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
                 # We set an estimate of measurement variance R = 0.01 ** 2
                 kep_final_lamb = lamberts_kalman.kalman(kep_lamb, 0.01 ** 2)
