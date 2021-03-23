@@ -258,6 +258,10 @@ def load_iod_data(fname):
                    2, 1, 3, 3, 9]
 
     iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+    
+    filename = '../orbitdeterminator/kep_determination/sat_tracking_observatories.txt'
+    sat_observatories_data = load_sat_observatories_data(filename)
+
     def equatorial_to_horizon(ele, az, lat, lon, utc):
         """
         ele : elevation 
@@ -374,6 +378,9 @@ def load_iod_data(fname):
             msec=iod_input_lines['msec'][i].decode()
             UTC_TIME = f'{yr}-{month}-{day} {hr}:{min}:{sec}.{msec}'
             # TODO: convert from AZ/EL to RA/DEC
+            location_data = get_station_data(iod_input_lines['station'][i].decode(), sat_observatories_data=sat_observatories_data)
+            LAT = location_data['Latitude']
+            LON = location_data['Longitude']
             RA, DEC = equatorial_to_horizon(EL, AZ, LAT, LON, UTC_TIME)
 
 
@@ -403,6 +410,9 @@ def load_iod_data(fname):
             UTC_TIME = f'{yr}-{month}-{day} {hr}:{min}:{sec}.{msec}'
 
             # TODO: convert from AZ/EL to RA/DEC
+            location_data = get_station_data(iod_input_lines['station'][i].decode(), sat_observatories_data=sat_observatories_data)
+            LAT = location_data['Latitude']
+            LON = location_data['Longitude']
             RA, DEC = equatorial_to_horizon(EL, AZ, LAT, LON, UTC_TIME)
 
         elif iod_input_lines["angformat"][i] == 6:
@@ -429,6 +439,9 @@ def load_iod_data(fname):
             UTC_TIME = f'{yr}-{month}-{day} {hr}:{min}:{sec}.{msec}'
             
             # TODO: convert from AZ/EL to RA/DEC
+            location_data = get_station_data(iod_input_lines['station'][i].decode(), sat_observatories_data=sat_observatories_data)
+            LAT = location_data['Latitude']
+            LON = location_data['Longitude']
             RA, DEC = equatorial_to_horizon(EL, AZ, LAT, LON, UTC_TIME)
 
         elif iod_input_lines["angformat"][i] == 7:
