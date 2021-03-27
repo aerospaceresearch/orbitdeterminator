@@ -16,9 +16,9 @@ For this guide we will be using **miniconda**, you are free to use any virtual e
 
 **Step 1**: Install miniconda using script and instruction [here](https://docs.conda.io/en/latest/miniconda.html)
 
-**Step 2**: After installation, create a virtualenv with python3.5 as
+**Step 2**: After installation, create a virtualenv with python3.7 as
 ```
-conda create -n env_name python=3.5.2
+conda create -n env_name python=3.7.0
 ```
 **Step 3**: Activate your virtualenv
 ```
