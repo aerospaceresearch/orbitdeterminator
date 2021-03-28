@@ -15,8 +15,12 @@ from poliastro.core.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
+import ephem
+import inquirer
 import lamberts_method as lm
 import orbital_elements as oe
+import sys
+
 
 # declare astronomical constants in appropriate units
 au = cts.au.to(uts.Unit('km')).value
@@ -26,11 +30,9 @@ c_light = cts.c.to(uts.Unit('au/day'))
 earth_f = 0.003353
 Re = cts.R_earth.to(uts.Unit('km')).value
 
-# load JPL DE432s ephemeris SPK kernel
-# 'de432s.bsp' is automatically loaded by astropy, via jplephem
-# 'de432s.bsp' is about 10MB in size and will be automatically downloaded if not present yet in astropy's cache
-# for more information, see astropy.coordinates.solar_system_ephemeris documentation
-solar_system_ephemeris.set('de432s')
+x_ephem='de432s'
+solar_system_ephemeris.set(x_ephem)    
+
 
 #compute rotation matrices from equatorial to ecliptic frame and viceversa
 obliquity_j2000 = obliquity(2451544.5) # mean obliquity of the ecliptic at J2000.0
@@ -234,7 +236,12 @@ def load_iod_data(fname):
     """
 
     # dt is the dtype for IOD-formatted text files
-    dt = 'S15, i8, S1, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, i8, S8, S7, i8, i8, S1, S1, i8, i8, i8'
+    dt = 'S15, i8, S1,' \
+         ' i8, i8, i8,' \
+         ' i8, i8, i8, i8, i8, i8,' \
+         ' i8, i8,' \
+         ' S8, S7, i8, i8,' \
+         ' S1, S1, i8, i8, i8'
 
     # iod_names correspond to the dtype names of each field
     iod_names = ['object', 'station', 'stationstatus',
@@ -252,6 +259,7 @@ def load_iod_data(fname):
                    8, 7, 2, 1,
                    2, 1, 3, 3, 9]
 
+
     iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
 
     right_ascension = []
@@ -259,7 +267,31 @@ def load_iod_data(fname):
     azimuth = []
     elevation = []
 
+    # work in progress. get_observations_data_sat() needs it still.
+    # should be cleaned and centrally handled.
+    raHH = []
+    raMM = []
+    rammm = []
+    decDD = []
+    decMM = []
+    decmmm = []
+
+
     for i in range(len(iod_input_lines)):
+
+        RAAZ = iod_input_lines["raaz"][i]
+        raHH.append(RAAZ[0:3])
+        raMM.append(RAAZ[3:5])
+        rammm.append(RAAZ[5:7])
+        RAAZ = RAAZ.decode()
+
+        DECEL = iod_input_lines["decel"][i]
+        decDD.append(DECEL[0:3])
+        decMM.append(DECEL[3:5])
+        decmmm.append(DECEL[5:7])
+        DECEL = DECEL.decode()
+
+
 
         RA = -1.0
         DEC = -1.0
@@ -268,14 +300,12 @@ def load_iod_data(fname):
 
         if iod_input_lines["angformat"][i] == 1:
             # 1: RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
-            RAAZ = iod_input_lines["raaz"][i].decode()
             HH = float(RAAZ[0:2])
             MM = float(RAAZ[2:4])
             SS = float(RAAZ[4:6])
             s = float(RAAZ[6])
             RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
 
-            DECEL = iod_input_lines["decel"][i].decode()
             DD = float(DECEL[1:3])
             MM = float(DECEL[3:5])
             SS = float(DECEL[5:7])
@@ -285,13 +315,11 @@ def load_iod_data(fname):
 
         elif iod_input_lines["angformat"][i] == 2:
             # 2: RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
-            RAAZ = iod_input_lines["raaz"][i].decode()
             HH = float(RAAZ[0:2])
             MM = float(RAAZ[2:4])
             mmm = float(RAAZ[4:7])
             RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
 
-            DECEL = iod_input_lines["decel"][i].decode()
             DD = float(DECEL[1:3])
             MM = float(DECEL[3:5])
             mm = float(DECEL[5:7])
@@ -301,13 +329,11 @@ def load_iod_data(fname):
 
         elif iod_input_lines["angformat"][i] == 3:
             # 3: RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
-            RAAZ = iod_input_lines["raaz"][i].decode()
             HH = float(RAAZ[0:2])
             MM = float(RAAZ[2:4])
             mmm = float(RAAZ[4:7])
             RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
 
-            DECEL = iod_input_lines["decel"][i].decode()
             DD = float(DECEL[1:3])
             dddd = float(DECEL[3:7])
             DEC = (DD + (dddd / 1000.0))
@@ -316,13 +342,11 @@ def load_iod_data(fname):
 
         elif iod_input_lines["angformat"][i] == 4:
             # 4: AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
-            RAAZ = iod_input_lines["raaz"][i].decode()
             DDD = float(RAAZ[0:3])
             MM = float(RAAZ[3:5])
             SS = float(RAAZ[5:7])
             AZ = DDD + (MM + SS / 60.0) / 60.0
 
-            DECEL = iod_input_lines["decel"][i].decode()
             DD = float(DECEL[1:3])
             MM = float(DECEL[3:5])
             SS = float(DECEL[5:7])
@@ -334,13 +358,11 @@ def load_iod_data(fname):
 
         elif iod_input_lines["angformat"][i] == 5:
             # 5: AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
-            RAAZ = iod_input_lines["raaz"][i].decode()
             DDD = float(RAAZ[0:3])
             MM = float(RAAZ[3:5])
             SS = float(RAAZ[5:7])
             AZ = DDD + (MM + SS / 60.0) / 60.0
 
-            DECEL = iod_input_lines["decel"][i].decode()
             DD = float(DECEL[1:3])
             MM = float(DECEL[3:5])
             mm = float(DECEL[5:7])
@@ -352,12 +374,10 @@ def load_iod_data(fname):
 
         elif iod_input_lines["angformat"][i] == 6:
             # 6: AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
-            RAAZ = iod_input_lines["raaz"][i].decode()
             DDD = float(RAAZ[0:3])
             dddd = float(RAAZ[3:7])
             AZ = DDD + dddd / 1000.0
 
-            DECEL = iod_input_lines["decel"][i].decode()
             DD = float(DECEL[1:3])
             dddd = float(DECEL[3:7])
             EL = DD + dddd / 1000.0
@@ -368,14 +388,12 @@ def load_iod_data(fname):
 
         elif iod_input_lines["angformat"][i] == 7:
             # 7: RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
-            RAAZ = iod_input_lines["raaz"][i].decode()
             HH = float(RAAZ[0:2])
             MM = float(RAAZ[2:4])
             SS = float(RAAZ[4:6])
             s = float(RAAZ[6])
             RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
 
-            DECEL = iod_input_lines["decel"][i].decode()
             DD = float(DECEL[1:3])
             dddd = float(DECEL[3:7])
             DEC = (DD + (dddd / 1000.0))
@@ -399,6 +417,14 @@ def load_iod_data(fname):
     iod["declination"] = declination
     iod["azimuth"] = azimuth
     iod["elevation"] = elevation
+
+    iod["raHH"] = raHH
+    iod["raMM"] = raMM
+    iod["rammm"] = rammm
+
+    iod["decDD"] = decDD
+    iod["decMM"] = decMM
+    iod["decmmm"] = decmmm
 
     return iod
 
@@ -671,7 +697,7 @@ def argperi(x, y, z, u, v, w, mu):
        Returns:
            float: argument of pericenter
     """
-    #n = (z-axis unit vector)×h = (-hy, hx, 0)
+    
     n = np.array((x*w-z*u, y*w-z*v, 0.0))
     e = rungelenz(x,y,z,u,v,w,mu) #cartesian comps. of Laplace-Runge-Lenz vector
     n = n/np.sqrt(n[0]**2+n[1]**2+n[2]**2)
@@ -881,6 +907,7 @@ def get_observations_data(mpc_object_data, inds):
 
     return obs_radec, obs_t, site_codes
 
+
 def get_observations_data_sat(iod_object_data, inds):
     """Extract three ra/dec observations from IOD observation data file.
 
@@ -898,50 +925,451 @@ def get_observations_data_sat(iod_object_data, inds):
     obs_radec = np.zeros((3,), dtype=SkyCoord)
     obs_t = np.zeros((3,))
 
-    timeobs[0] = get_time_of_observation(iod_object_data['yr'][inds[0]],
-                                         iod_object_data['month'][inds[0]],
-                                         iod_object_data['day'][inds[0]],
-                                         iod_object_data['hr'][inds[0]],
-                                         iod_object_data['min'][inds[0]],
-                                         iod_object_data['sec'][inds[0]],
-                                         iod_object_data['msec'][inds[0]])
+    td1 = timedelta(hours=1.0*iod_object_data['hr'][inds[0]], minutes=1.0*iod_object_data['min'][inds[0]], seconds=(iod_object_data['sec'][inds[0]]+iod_object_data['msec'][inds[0]]/1000.0))
+    td2 = timedelta(hours=1.0*iod_object_data['hr'][inds[1]], minutes=1.0*iod_object_data['min'][inds[1]], seconds=(iod_object_data['sec'][inds[1]]+iod_object_data['msec'][inds[1]]/1000.0))
+    td3 = timedelta(hours=1.0*iod_object_data['hr'][inds[2]], minutes=1.0*iod_object_data['min'][inds[2]], seconds=(iod_object_data['sec'][inds[2]]+iod_object_data['msec'][inds[2]]/1000.0))
 
-    timeobs[1] = get_time_of_observation(iod_object_data['yr'][inds[1]],
-                                         iod_object_data['month'][inds[1]],
-                                         iod_object_data['day'][inds[1]],
-                                         iod_object_data['hr'][inds[1]],
-                                         iod_object_data['min'][inds[1]],
-                                         iod_object_data['sec'][inds[1]],
-                                         iod_object_data['msec'][inds[1]])
+    timeobs[0] = Time( datetime(iod_object_data['yr'][inds[0]], iod_object_data['month'][inds[0]], iod_object_data['day'][inds[0]]) + td1 )
+    timeobs[1] = Time( datetime(iod_object_data['yr'][inds[1]], iod_object_data['month'][inds[1]], iod_object_data['day'][inds[1]]) + td2 )
+    timeobs[2] = Time( datetime(iod_object_data['yr'][inds[2]], iod_object_data['month'][inds[2]], iod_object_data['day'][inds[2]]) + td3 )
 
-    timeobs[2] = get_time_of_observation(iod_object_data['yr'][inds[2]],
-                                         iod_object_data['month'][inds[2]],
-                                         iod_object_data['day'][inds[2]],
-                                         iod_object_data['hr'][inds[2]],
-                                         iod_object_data['min'][inds[2]],
-                                         iod_object_data['sec'][inds[2]],
-                                         iod_object_data['msec'][inds[2]])
+    raHHMMmmm0 = str(iod_object_data['raHH'][inds[0]].decode()) + str(iod_object_data['raMM'][inds[0]].decode()) + str(iod_object_data['rammm'][inds[0]].decode())
+    raHHMMmmm1 = str(iod_object_data['raHH'][inds[1]].decode()) + str(iod_object_data['raMM'][inds[1]].decode()) + str(iod_object_data['rammm'][inds[1]].decode())
+    raHHMMmmm2 = str(iod_object_data['raHH'][inds[2]].decode()) + str(iod_object_data['raMM'][inds[2]].decode()) + str(iod_object_data['rammm'][inds[2]].decode())
 
-    ra_ha0 = iod_object_data['right_ascension'][inds[0]] / 360.0 * 24.0
-    ra_ha1 = iod_object_data['right_ascension'][inds[1]] / 360.0 * 24.0
-    ra_ha2 = iod_object_data['right_ascension'][inds[2]] / 360.0 * 24.0
+    decDDMMmmm0 = str(iod_object_data['decDD'][inds[0]].decode()) + str(iod_object_data['decMM'][inds[0]].decode()) + str(iod_object_data['decmmm'][inds[0]].decode())
+    decDDMMmmm1 = str(iod_object_data['decDD'][inds[1]].decode()) + str(iod_object_data['decMM'][inds[1]].decode()) + str(iod_object_data['decmmm'][inds[1]].decode())
+    decDDMMmmm2 = str(iod_object_data['decDD'][inds[2]].decode()) + str(iod_object_data['decMM'][inds[2]].decode()) + str(iod_object_data['decmmm'][inds[2]].decode())
 
-    dec0 = iod_object_data['declination'][inds[0]]
-    dec1 = iod_object_data['declination'][inds[1]]
-    dec2 = iod_object_data['declination'][inds[2]]
-
-    obs_radec[0] = SkyCoord(ra=ra_ha0, dec=dec0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
-    obs_radec[1] = SkyCoord(ra=ra_ha1, dec=dec1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
-    obs_radec[2] = SkyCoord(ra=ra_ha2, dec=dec2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])
+    
 
     # construct vector of observation time (continous variable)
     obs_t[0] = (timeobs[0]-timeobs[0]).sec
     obs_t[1] = (timeobs[1]-timeobs[0]).sec
     obs_t[2] = (timeobs[2]-timeobs[0]).sec
+    
+    site_codes = [iod_object_data['station'][inds[0]], iod_object_data['station'][inds[1]], iod_object_data['station'][inds[2]]]
+    sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')    
+    
+    
+    # checks angle sub-format, converts subformats to sub-format 2 used in satobs for all three lines
+    clipped_iod=str(raHHMMmmm0)+str(decDDMMmmm0)
 
-    site_codes = [iod_object_data['station'][inds[0]],
-                  iod_object_data['station'][inds[1]],
-                  iod_object_data['station'][inds[2]]]
+
+    site_codes_0 = iod_object_data['station'][inds[0]]
+    obs=get_station_data(site_codes_0, sat_observatories_data)
+    lat=obs['Latitude'] 
+    lon=obs['Longitude']
+    alt=obs['Elev']
+
+    lon = np.radians(lon)
+    lat = np.radians(lat)
+
+    ut = 2455822.868055556     #can be anything
+
+    J0 = ephem.julian_date(0)  #can be anything  
+
+    observer = ephem.Observer()
+    observer.lon = lon
+    observer.lat = lat
+    observer.elevation = alt
+    observer.date = ut - J0   
+    
+    ra0 = 0.0
+    dec0 = 0.0
+
+
+
+    # RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
+    if(iod_object_data['angformat'][inds[0]] == 1):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
+            + ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
+            )
+        ra0= ra_or_az
+        dec0= dec_or_el         
+    
+    # RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
+    if(iod_object_data['angformat'][inds[0]] == 2):
+        
+        raHHMMmmm0 = int(iod_object_data['raHH'][inds[0]]) + (int(iod_object_data['raMM'][inds[0]])+int(iod_object_data['rammm'][inds[0]])/1000.0)/60.0
+        decDDMMmmm0 = int(iod_object_data['decDD'][inds[0]]) + (int(iod_object_data['decMM'][inds[0]])+int(iod_object_data['decmmm'][inds[0]])/1000.0)/60.0 
+        ra0= raHHMMmmm0
+        dec0= decDDMMmmm0 
+        
+    
+    # RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[0]] == 3):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * (float(clipped_iod[4:7].replace(' ', '') if len(clipped_iod[4:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[4:7].replace(' ', ''))))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+        ra0= ra_or_az
+        dec0= dec_or_el        
+    
+    # AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
+    if(iod_object_data['angformat'][inds[0]] == 4):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)
+        ra0= ra_or_az
+        dec0= dec_or_el
+
+    # AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
+    if(iod_object_data['angformat'][inds[0]] == 5):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
+            + ((1.0 / 60.0) * (float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[5:7].replace(' ', ''))))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + ((1.0 / 60.0) * (float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[12:14].replace(' ', ''))))))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)        
+        ra0= ra_or_az
+        dec0= dec_or_el
+
+    # AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[0]] == 6):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[3:7].replace(' ', '') if len(clipped_iod[3:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[3:7].replace(' ', ''))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)        
+        ra0= ra_or_az
+        dec0= dec_or_el
+
+    # RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[0]] == 7):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
+            + ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+        ra0= ra_or_az
+        dec0= dec_or_el        
+    
+
+
+####
+    clipped_iod=raHHMMmmm1+decDDMMmmm1
+    site_codes_1 = iod_object_data['station'][inds[1]] 
+    obs=get_station_data(site_codes_1, sat_observatories_data)
+    lat=obs['Latitude'] 
+    lon=obs['Longitude']
+    alt=obs['Elev']
+
+    ut = 2455822.868055556     #can be anything
+
+    J0 = ephem.julian_date(0)  #can be anything  
+
+    observer = ephem.Observer()
+    observer.lon = lon
+    observer.lat = lat
+    observer.elevation = alt
+    observer.date = ut - J0   
+    
+    ra1 = 0.0
+    dec1 = 0.0
+    
+
+    # RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
+    if(iod_object_data['angformat'][inds[1]] == 1):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
+            + ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
+            )
+        ra1= ra_or_az
+        dec1= dec_or_el        
+    
+    # RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
+    if(iod_object_data['angformat'][inds[1]] == 2):
+        raHHMMmmm1 = int(iod_object_data['raHH'][inds[1]]) + (int(iod_object_data['raMM'][inds[1]])+int(iod_object_data['rammm'][inds[1]])/1000.0)/60.0
+        decDDMMmmm1 = int(iod_object_data['decDD'][inds[1]]) + (int(iod_object_data['decMM'][inds[1]])+int(iod_object_data['decmmm'][inds[1]])/1000.0)/60.0
+        ra1= raHHMMmmm1
+        dec1= decDDMMmmm1    
+        
+    
+    # RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[1]] == 3):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * (float(clipped_iod[4:7].replace(' ', '') if len(clipped_iod[4:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[4:7].replace(' ', ''))))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+        ra1= ra_or_az
+        dec1= dec_or_el           
+    
+    # AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
+    if(iod_object_data['angformat'][inds[1]] == 4):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)
+        ra1= ra_or_az
+        dec1= dec_or_el   
+
+    # AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
+    if(iod_object_data['angformat'][inds[1]] == 5):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
+            + ((1.0 / 60.0) * (float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[5:7].replace(' ', ''))))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + ((1.0 / 60.0) * (float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[12:14].replace(' ', ''))))))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)        
+        ra1= ra_or_az
+        dec1= dec_or_el   
+
+    # AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[1]] == 6):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[3:7].replace(' ', '') if len(clipped_iod[3:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[3:7].replace(' ', ''))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)        
+        ra1= ra_or_az
+        dec1= dec_or_el   
+
+    # RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[1]] == 7):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
+            + ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+        ra1= ra_or_az
+        dec1= dec_or_el           
+    
+
+####
+####
+    clipped_iod=raHHMMmmm2+decDDMMmmm2
+    site_codes_2 = iod_object_data['station'][inds[2]] 
+    obs=get_station_data(site_codes_2, sat_observatories_data)
+    lat=obs['Latitude'] 
+    lon=obs['Longitude']
+    alt=obs['Elev']
+
+    ut = 2455822.868055556     #can be anything
+
+    J0 = ephem.julian_date(0)  #can be anything  
+
+    observer = ephem.Observer()
+    observer.lon = lon
+    observer.lat = lat
+    observer.elevation = alt
+    observer.date = ut - J0   
+    
+    ra2 = 0.0
+    dec2 = 0.0
+    
+
+    # RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
+    if(iod_object_data['angformat'][inds[2]] == 1):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
+            + ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
+            )
+        ra2= ra_or_az
+        dec2= dec_or_el        
+    
+    # RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
+    if(iod_object_data['angformat'][inds[2]] == 2):
+        raHHMMmmm2 = int(iod_object_data['raHH'][inds[2]]) + (int(iod_object_data['raMM'][inds[2]])+int(iod_object_data['rammm'][inds[2]])/1000.0)/60.0
+        decDDMMmmm2 = int(iod_object_data['decDD'][inds[2]]) + (int(iod_object_data['decMM'][inds[2]])+int(iod_object_data['decmmm'][inds[2]])/1000.0)/60.0 
+        ra2= raHHMMmmm2
+        dec2= decDDMMmmm2  
+        
+    
+    # RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[2]] == 3):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * (float(clipped_iod[4:7].replace(' ', '') if len(clipped_iod[4:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[4:7].replace(' ', ''))))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+        ra2= ra_or_az
+        dec2= dec_or_el          
+    
+    # AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
+    if(iod_object_data['angformat'][inds[2]] == 4):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)
+        ra2= ra_or_az
+        dec2= dec_or_el  
+
+    # AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
+    if(iod_object_data['angformat'][inds[2]] == 5):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[3:5].replace(' ', '') if len(clipped_iod[3:5].replace(' ', '')) > 0 else "0"))\
+            + ((1.0 / 60.0) * (float(clipped_iod[5:7].replace(' ', '') if len(clipped_iod[5:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[5:7].replace(' ', ''))))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + ((1.0 / 60.0) * float(clipped_iod[10:12].replace(' ', '') if len(clipped_iod[10:12].replace(' ', '')) > 0 else "0"))\
+            + ((1.0 / 60.0) * (float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[12:14].replace(' ', ''))))))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)        
+        ra2= ra_or_az
+        dec2= dec_or_el  
+
+    # AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[2]] == 6):
+        ra_or_az = float(clipped_iod[0:3].replace(' ', '') if len(clipped_iod[0:3].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[3:7].replace(' ', '') if len(clipped_iod[3:7].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[3:7].replace(' ', ''))))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+
+        az = np.radians(ra_or_az)
+        el = np.radians(dec_or_el)
+        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
+        ra_or_az=np.degree(ra_or_az)
+        dec_or_el=np.degree(dec_or_el)
+        ra2= ra_or_az
+        dec2= dec_or_el                 
+    
+    # RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
+    if(iod_object_data['angformat'][inds[2]] == 7):
+        ra_or_az = (15.0 * float(clipped_iod[0:2].replace(' ', '') if len(clipped_iod[0:2].replace(' ', '')) > 0 else "0"))\
+            + ((15.0 / 60.0) * float(clipped_iod[2:4].replace(' ', '') if len(clipped_iod[2:4].replace(' ', '')) > 0 else "0"))\
+            + (((15.0 / 60.0) / 60.0) * float(clipped_iod[4:6].replace(' ', '') if len(clipped_iod[4:6].replace(' ', '')) > 0 else "0"))\
+            + ((((15.0 / 60.0) / 60.0) / 10.0) * float(clipped_iod[6].replace(' ', '') if len(clipped_iod[6].replace(' ', '')) > 0 else "0"))
+        dec_or_el = (-1 if clipped_iod[7] == '-' else 1)\
+            * (\
+            float(clipped_iod[8:10].replace(' ', '') if len(clipped_iod[8:10].replace(' ', '')) > 0 else "0")\
+            + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
+            )
+
+        ra2= ra_or_az
+        dec2= dec_or_el            
+        
+    
+
+####
+    if(iod_object_data['angformat'][inds[2]]!=2):
+         obs_radec[0] = SkyCoord(ra=ra0, dec=dec0, unit=(uts.deg, uts.deg), obstime=timeobs[0])
+         obs_radec[1] = SkyCoord(ra=ra1, dec=dec1, unit=(uts.deg, uts.deg), obstime=timeobs[1])
+         obs_radec[2] = SkyCoord(ra=ra2, dec=dec2, unit=(uts.deg, uts.deg), obstime=timeobs[2])
+    else:
+         obs_radec[0] = SkyCoord(ra=ra0, dec=dec0, unit=(uts.hourangle, uts.deg), obstime=timeobs[0])
+         obs_radec[1] = SkyCoord(ra=ra1, dec=dec1, unit=(uts.hourangle, uts.deg), obstime=timeobs[1])
+         obs_radec[2] = SkyCoord(ra=ra2, dec=dec2, unit=(uts.hourangle, uts.deg), obstime=timeobs[2])              
+
+####
+
+    
+
 
     return obs_radec, obs_t, site_codes
 
@@ -955,6 +1383,7 @@ def earth_ephemeris(t_tdb):
        Returns:
            (1x3 array): cartesian position in km
     """
+
     t = Time(t_tdb, format='jd', scale='tdb')
     ye = get_body_barycentric('earth', t)
     ys = get_body_barycentric('sun', t)
@@ -1051,7 +1480,7 @@ def rhovec2radec(long, parallax_s, parallax_c, t_utc, a, e, taup, omega, I, Omeg
         return ra_rad, dec_rad
 
 def angle_diff_rad(a1, a2):
-    """Compute shortest signed difference between two angles. Input angles
+    """Computes signed difference between two angles. Input angles
     are assumed to be in radians. Result is returned in radians. Code adapted
     from https://rosettacode.org/wiki/Angle_difference_between_two_bearings#Python.
 
@@ -1065,8 +1494,18 @@ def angle_diff_rad(a1, a2):
     r = (a2 - a1) % (2.0*np.pi)
     # Python modulus has same sign as divisor, which is positive here,
     # so no need to consider negative case
-    if r >= np.pi:
-        r -= (2.0*np.pi)
+    print("Use shorter value of signed difference?[y/n]")
+    ch=input()    
+    if(ch=='y'):
+         if r >= np.pi:
+             r -= (2.0*np.pi)
+    elif(ch=='n'):
+         if r <= np.pi:
+             r -= (2.0*np.pi) 
+    else:
+         print("Invalid input.Exiting...\n")
+         sys.exit()                                 
+
     return r
 
 def radec_residual_mpc(x, t_ra_dec_datapoint, long, parallax_s, parallax_c):
@@ -1367,6 +1806,8 @@ def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, 
 
     return r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f_1_new, g_1_new, f_3_new, g_3_new, refinement_success
 
+
+
 def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=0):
     """Gauss method implementation for MPC Near-Earth asteroids ra/dec tracking data.
 
@@ -1450,6 +1891,7 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
     mu = mu_Earth
 
     # extract observations data
+
     obs_radec, obs_t, site_codes = get_observations_data_sat(iod_object_data, inds)
     obs_t_jd = np.array((obs_radec[0].obstime.jd, obs_radec[1].obstime.jd, obs_radec[2].obstime.jd))
 
@@ -1493,7 +1935,6 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=0
     mu = mu_Earth
     r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est = \
         gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=r2_root_ind)
-
     r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est
 
 
@@ -1781,7 +2222,7 @@ def t_radec_res_vec_mpc(x, inds, mpc_object_data, mpc_observatories_data):
         tv[i] = timeobs.tdb.jd
     return tv, rv
 
-def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters=0, plot=True):
+def gauss_method_mpc(filename, bodyname, obs_arr=None, r2_root_ind_vec=None, refiters=0, plot=True):
     """Gauss method high-level function for minor planets (asteroids, comets,
     etc.) orbit determination from MPC-formatted ra/dec tracking data. Roots of
     8-th order Gauss polynomial are computed using np.roots function. Note that
@@ -1797,7 +2238,8 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
            plot (bool): if True, plots data.
 
        Returns:
-           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+           x (tuple): set of Keplerian orbital elements {(a, e, taup, omega, I, omega, T),t_vec[-1]}
+           
     """
     # load MPC data for a given NEA
     mpc_object_data = load_mpc_data(filename)
@@ -1811,6 +2253,28 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
     # Sun's G*m value
     # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
     mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    # handle default behavior for obs_arr
+
+    # load JPL DE432s ephemeris SPK kernel
+    # 'de432s.bsp' is automatically loaded by astropy, via jplephem
+    # 'de432s.bsp' is about 10MB in size and will be automatically downloaded if not present yet in astropy's cache
+    # for more information, see astropy.coordinates.solar_system_ephemeris documentation
+    print("")
+    questions = [
+      inquirer.List('Ephemerides',
+                    message="Select ephemerides[de432s(default,small in size,faster)','de430(more precise)]:",
+                    choices=['de432s','de430'],
+                ),
+    ]
+    answers = inquirer.prompt(questions)
+
+    global x_ephem
+    x_ephem=answers["Ephemerides"]
+
+    solar_system_ephemeris.set(answers["Ephemerides"])    
+    
+    if obs_arr is None:
+        obs_arr = list(range(1, len(mpc_object_data)+1))
 
     #the total number of observations used
     nobs = len(obs_arr)
@@ -1835,12 +2299,33 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
     z_Ea_vec = np.zeros((nobs,))
     t_vec = np.zeros((nobs,))
 
+    # Speed of light constant
+    c= 299792.458
+
+    print("Consider light propogation time?[y/n]")
+    check=input()
+
+    if(check!='y' and check!='n'):
+         print("Invalid input.Exiting...\n")
+         sys.exit()     
+
     for j in range (0,nobs-2):
         # Apply Gauss method to three elements of data
         inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
         print('Processing observation #', j)
         r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, Ea_hc_pos, obs_t = \
             gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+
+        # Consider light propagation time
+        if(check=='y'):
+            #print(obs_t[0])
+            #print(obs_t[1])
+            obs_t[0]= obs_t[0]-(rho_1_sr/c)
+            obs_t[1]= obs_t[1]-(rho_2_sr/c)
+            obs_t[2]= obs_t[2]-(rho_3_sr/c)
+            #print(rho_1_sr)
+
+
 
         if j==0:
             t_vec[0] = obs_t[0]
@@ -1919,7 +2404,7 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
             xyz_Ea_orb_vec_eclip = np.matmul(rot_equat_to_eclip, xyz_Ea_orb_vec_equat)
             x_Ea_orb_vec[i], y_Ea_orb_vec[i], z_Ea_orb_vec[i] = xyz_Ea_orb_vec_eclip
 
-        ax = plt.axes(aspect='equal', projection='3d')
+        ax = plt.axes(aspect='auto', projection='3d')
 
         # Sun-centered orbits: Computed orbit and Earth's
         ax.scatter3D(0.0, 0.0, 0.0, color='yellow', label='Sun')
@@ -1939,11 +2424,12 @@ def gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, refiters
         ax.set_title('Angles-only orbit determ. (Gauss): '+bodyname)
         plt.show()
 
-    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean
+    return a_mean, e_mean, taup_mean, w_mean, I_mean, W_mean, 2.0*np.pi/n_mean,t_vec[-1]
+
 
 def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None, refiters=10, plot=False):
     """Gauss method high-level function for orbit determination of Earth satellites
-    from IOD-formatted ra/dec tracking data. IOD angle subformat 2 is assumed.
+    from IOD-formatted ra/dec tracking data. 
     Roots of 8-th order Gauss polynomial are computed using np.roots function.
     Note that if `r2_root_ind_vec` is not specified by the user, then the first
     positive root returned by np.roots is used by default.
@@ -1957,15 +2443,17 @@ def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_v
            plot (bool): if True, plots data.
 
        Returns:
-           x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
+           x (tuple): set of Keplerian orbital elements {(a, e, taup, omega, I, omega, T),t_vec[-1]}
+           
     """
     # load IOD data for a given satellite
     iod_object_data = load_iod_data(filename)
-
+    
     # handle default behavior for obs_arr
     if obs_arr is None:
         obs_arr = list(range(1, len(iod_object_data)+1))
-    # #the total number of observations used
+
+    # the total number of observations used
     nobs = len(obs_arr)
 
     # get object name
@@ -1986,15 +2474,61 @@ def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_v
     counter_process = 0
     sequence = np.zeros(nobs)
     groupmark = 1
+    # #auxiliary arrays
+    x_vec = np.zeros((nobs,))
+    y_vec = np.zeros((nobs,))
+    z_vec = np.zeros((nobs,))
+    a_vec = np.zeros((nobs-2,))
+    e_vec = np.zeros((nobs-2,))
+    taup_vec = np.zeros((nobs-2,))
+    I_vec = np.zeros((nobs-2,))
+    W_vec = np.zeros((nobs-2,))
+    w_vec = np.zeros((nobs-2,))
+    n_vec = np.zeros((nobs-2,))
+    t_vec = np.zeros((nobs,))
+    
+    # Speed of light constant
+    c= 299792.458
+
+    print("Consider light propogation time?[y/n]")
+    check=input()
+
+    if(check!='y' and check!='n'):
+         print("Invalid input.Exiting...\n")
+         sys.exit()   
+
 
     for j in range (0,nobs-2):
 
         # Apply Gauss method to three elements of data
         inds = [obs_arr[j]-1, obs_arr[j+1]-1, obs_arr[j+2]-1]
-        print('Processing observation #', counter_process)
-        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t , refinement_success = \
-            gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=refiters, r2_root_ind=r2_root_ind_vec[j])
+        print('Processing observation #', j)
+        r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t, refinement_success= \
+            gauss_iterator_sat(iod_object_data, sat_observatories_data, inds,
+                               refiters=refiters,
+                               r2_root_ind=r2_root_ind_vec[j])
+      
+        # Consider light propagation time
+        if(check=='y'):
+            #print(obs_t[0])
+            #print(obs_t[1])
+            obs_t[0]= obs_t[0]-(rho_1_sr/c)
+            obs_t[1]= obs_t[1]-(rho_2_sr/c)
+            obs_t[2]= obs_t[2]-(rho_3_sr/c)
+            #print(rho_1_sr)
 
+
+        if j==0:
+            t_vec[0] = obs_t[0]
+            x_vec[0] = r1[0]
+            y_vec[0] = r1[1]
+            z_vec[0] = r1[2]
+
+        if j==nobs-3:
+            t_vec[nobs-1] = obs_t[2]
+            x_vec[nobs-1] = r3[0]
+            y_vec[nobs-1] = r3[1]
+            z_vec[nobs-1] = r3[2]
 
         # storing all solutions now
         # todo: checking if solutions with radii inside the earth surface can be filtered out?

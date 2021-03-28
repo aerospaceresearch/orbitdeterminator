@@ -1,0 +1,9 @@
+A clarification regarding the deliverables:
+
+- [Part A Analysis] Deliverables:
+    - DC Gain 
+    - Time Constants
+    - Simulink Diagram
+
+- [Part B Controller Design]:
+    - 
