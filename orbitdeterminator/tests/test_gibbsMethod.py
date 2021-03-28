@@ -28,19 +28,19 @@ def test_magnitude():
     obj = Gibbs()
 
     vec = [-294.32, 4265.1, 5986.7]
-    mag = obj.magnitude(vec)
+    mag = np.linalg.norm(vec)
     mag = float("{0:.1f}".format(mag))
     ans = 7356.5
     assert_almost_equal(mag, ans)
 
     vec = [-1365.5, 3637.6, 6346.8]
-    mag = obj.magnitude(vec)
+    mag = np.linalg.norm(vec)
     mag = float("{0:.1f}".format(mag))
     ans = 7441.7
     assert_almost_equal(mag, ans)
 
     vec = [-2940.3, 2473.7, 6555.8]
-    mag = obj.magnitude(vec)
+    mag = np.linalg.norm(vec)
     mag = float("{0:.1f}".format(mag))
     ans = 7598.9
     assert_almost_equal(mag, ans)
