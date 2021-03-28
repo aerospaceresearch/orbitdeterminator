@@ -138,8 +138,8 @@ class Gibbs(object):
             r2 = self.convert_list(re.split(',', str2))
         else:
             # Split on files delimited with tabs and space
-            r1 = self.convert_list(re.split('\t|\s', str1))
-            r2 = self.convert_list(re.split('\t|\s', str2))
+            r1 = self.convert_list(re.split(r'\t|\s', str1))
+            r2 = self.convert_list(re.split(r'\t|\s', str2))
 
         i = 0
         while(i < upto):
@@ -154,7 +154,7 @@ class Gibbs(object):
                 r3 = self.convert_list(re.split(',', str3))
             else:
                 # Split on files delimited with tabs and space
-                r3 = self.convert_list(re.split('\t|\s', str3))
+                r3 = self.convert_list(re.split(r'\t|\s', str3))
             v2 = self.gibbs(r1, r2, r3)
             ele = self.orbital_elements(r2, v2)
             # Add to keplerian elements to later on find average
