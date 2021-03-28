@@ -2,6 +2,7 @@ import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 
+import numpy as np
 from numpy.testing import assert_array_equal
 from numpy.testing import assert_almost_equal
 from kep_determination.gibbs_method import *
@@ -51,14 +52,14 @@ def test_dot_product():
 
     vec1 = [123.76, 233.98, 675.21]
     vec2 = [13.234, 231.235, 8776.65]
-    dot = obj.dot_product(vec1, vec2)
+    dot = np.dot(vec1, vec2)
     dot = float("{0:.2f}".format(dot))
     ans = 5981824.05
     assert_almost_equal(dot, ans)
 
     vec1 = [435.3452, -655.621, 956.075]
     vec2 = [537.956, 392.374, -755.343]
-    dot = obj.dot_product(vec1, vec2)
+    dot = np.dot(vec1, vec2)
     dot = float("{0:.2f}".format(dot))
     ans = -745216.63
     assert_almost_equal(dot, ans)
@@ -70,14 +71,14 @@ def test_cross_product():
 
     vec1 = [123.76, 233.98, 675.21]
     vec2 = [13.234, 231.235, 8776.65]
-    cross = obj.cross_product(vec1, vec2)
+    cross = np.cross(vec1, vec2)
     cross = [float("{0:.2f}".format(i)) for i in cross]
     ans = [1897428.38, -1077262.47, 25521.15]
     assert_array_equal(cross, ans)
 
     vec1 = [435.3452, -655.621, 956.075]
     vec2 = [537.956, 392.374, -755.343]
-    cross = obj.cross_product(vec1, vec2)
+    cross = np.cross(vec1, vec2)
     cross = [float("{0:.2f}".format(i)) for i in cross]
     ans = [120079.76, 843161.23, 523513.39]
     assert_array_equal(cross, ans)
