@@ -1,9 +1,4 @@
 import numpy as np
-import sys
-import os.path
-from util import state_kep
-import numpy as np
-import pykep as pkp
 
 from math import pi, sin, cos, radians, degrees, floor, sqrt, atan2
 from datetime import datetime, timedelta
@@ -11,12 +6,8 @@ from sys import stdin
 
 from math import *
 from pyorbital import dt2np
-from astropy.utils.data import conf
 from astropy import constants as cts
 from astropy import units as u
-from astropy.time import Time, TimeDelta
-from astropy.coordinates import solar_system_ephemeris
-from astropy.coordinates import get_sun
 from astropy.constants import G, M_earth, R_earth
 
 
