@@ -138,8 +138,8 @@ def process(data_file, error_apriori, units):
                 # only three (3) observations from half an orbit.
                 # also just two (2) observations are fine for lamberts.
                 data = np.array([data_after_filter[:, :][0],
-                              data_after_filter[:, :][len(data_after_filter) // 2],
-                              data_after_filter[:, 0:][-1]])
+                                 data_after_filter[:, :][len(data_after_filter) // 2],
+                                 data_after_filter[:, :][-1]])
 
                 kep_lamb = lamberts_kalman.create_kep(data)
 
@@ -194,9 +194,9 @@ def process(data_file, error_apriori, units):
                 # Apply the Gibbs method
 
                 # first only with first, middle and last measurement
-                R = np.array([data_after_filter[:,1:][0],
-                              data_after_filter[:,1:][len(data_after_filter) // 2],
-                              data_after_filter[:,1:][-1]])
+                R = np.array([data_after_filter[:, 1:][0],
+                              data_after_filter[:, 1:][len(data_after_filter) // 2],
+                              data_after_filter[:, 1:][-1]])
 
                 kep_gibbs = gibbs_method.gibbs_get_kep(R)
 
