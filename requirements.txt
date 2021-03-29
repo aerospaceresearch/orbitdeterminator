@@ -12,6 +12,7 @@ py >= 1.5.2
 pyephem >= 3.7.6.0
 pygmo == 2.15
 pykep >= 2.1
+pyorbital
 pyparsing >= 2.2.0
 pytest >= 3.4.0
 python-dateutil >= 2.6.1
