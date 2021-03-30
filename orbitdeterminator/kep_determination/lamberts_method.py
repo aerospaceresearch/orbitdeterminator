@@ -79,6 +79,7 @@ def lamberts_method(R1, R2, delta_time, trajectory_cw=False):
 
     V1: velocity vector of R1
     V2: velocity vector of R2
+    ratio: absolute tolerance result
 
     """
 
@@ -116,15 +117,15 @@ def lamberts_method(R1, R2, delta_time, trajectory_cw=False):
     while F_z_i(z, delta_time, r1, r2, A) < 0.0:
         z = z + 0.1
 
-    tol = 1.e-10
-    nmax = 6000
+    tol = 1.e-10 # tolerance
+    nmax = 6000 # iterations
 
     ratio = 1
     n = 0
     while (np.abs(ratio) > tol) and (n <= nmax):
         n = n + 1
         ratio = F_z_i(z, delta_time, r1, r2, A)
-        #print(n, z, ratio)
+
         if np.isnan(ratio) == True:
             break
         ratio = ratio / dFdz(z, r1, r2, A)
@@ -145,4 +146,4 @@ def lamberts_method(R1, R2, delta_time, trajectory_cw=False):
     V1 = 1.0 / g * (np.add(R2, -np.multiply(f, R1)))
     V2 = 1.0 / g * (np.multiply(gdot, R2) - R1)
 
-    return V1, V2
+    return V1, V2, np.abs(ratio)

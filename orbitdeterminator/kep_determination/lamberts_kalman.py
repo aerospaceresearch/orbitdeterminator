@@ -9,7 +9,6 @@ import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from orbitdeterminator.util import state_kep
 import numpy as np
-#import pykep as pkp
 import kep_determination.lamberts_method as lm
 
 
@@ -28,23 +27,21 @@ def orbit_trajectory(x1_new, x2_new, time):
 
     #l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False, 0)
     # https://esa.github.io/pykep/documentation/core.html#pykep.lambert_problem
-    v1, v2 = lm.lamberts_method(x1_new, x2_new, time, False)
 
-    # only one revolution is needed
-    #v1 = l.get_v1()[0]
-    #v1 = np.asarray(v1)
+    # progreade or retrograde orbit determination
+    # in lambert_problem solver from PyKep, another baheviour is used.
+    # there, unrealistic kepler parameters like negative semimajor axis are used to exclude the result.
+    # in our version we now compare the behaviour in finding the better result
+    v1_true, v2_true, ratio_true = lm.lamberts_method(x1_new, x2_new, time, True)
+    v1_false, v2_false, ratio_false = lm.lamberts_method(x1_new, x2_new, time, False)
 
-    v1 = np.reshape(v1, 3)
-    x1_new = np.asarray(x1_new)
-
-    kep1 = state_kep.state_kep(x1_new, v1)
-
-    if kep1[0] < 0.0:
-        traj = True
-    elif kep1[1] > 1.0:
-        traj = True
-    else:
+    # finding out if orbit is clockwise or counter-clockwise.
+    # sole criterion: what has the best residual behaviour.
+    # it looks like the right setting gets the results faster (after a few iterations n the tolerance tol is reached)
+    traj = True
+    if ratio_false < ratio_true:
         traj = False
+
 
     return traj
 
@@ -108,7 +105,7 @@ def create_kep(my_data):
 
     traj = orbit_trajectory(x1_new, x2_new, time)
 
-    v1, v2 = lm.lamberts_method(x1_new, x2_new, time, traj)
+    v1, v2, ratio = lm.lamberts_method(x1_new, x2_new, time, traj)
     v_hold[0] = v1
 
     # Produce all the 2 consecutive pairs and find the velocity with lamberts() method
@@ -121,7 +118,7 @@ def create_kep(my_data):
         x2_new[:] = my_data[j, 1:4]
         time = my_data[j, 0] - my_data[i, 0]
 
-        v1, v2 = lm.lamberts_method(x1_new, x2_new, time, traj)
+        v1, v2, ratio = lm.lamberts_method(x1_new, x2_new, time, traj)
         v_hold[i] = v1
 
         # compute the absolute value of the velocity vector for every point
