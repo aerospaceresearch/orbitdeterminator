@@ -7,7 +7,7 @@ using Lambert's solution for preliminary orbit determination and Kalman filters
 import sys
 import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from orbitdeterminator.util import state_kep
+from util import state_kep
 import numpy as np
 import kep_determination.lamberts_method as lm
 
