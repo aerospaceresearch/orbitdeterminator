@@ -1,22 +1,11 @@
 
 # Allows user to choose perturbations, add custom perturbations, allows tweaking with predefined parameters
 from __future__ import division
-import sys
-import numpy as np
 import re
-import matplotlib.pyplot as plt
-import plotly
-import time
 import datetime
-import math
-from scipy.optimize import least_squares
-from orbitdeterminator.kep_determination.ellipse_fit import determine_kep, __read_file
 from orbitdeterminator.kep_determination.gauss_method import *
 from orbitdeterminator.util.state_kep import state_kep
 from orbitdeterminator.util.kep_state import kep_state
-
-from numba import njit
-from mpl_toolkits.mplot3d import Axes3D
 
 from astropy.utils.data import conf
 from astropy import constants as cts
@@ -26,11 +15,8 @@ from astropy.coordinates import solar_system_ephemeris
 from astropy.coordinates import get_sun
 from astropy.constants import G, M_earth, R_earth
 
-from poliastro.twobody.propagation import cowell
 from poliastro.twobody.propagation import propagate, cowell
 from poliastro.ephem import build_ephem_interpolant
-from poliastro.core.elements import rv2coe
-from poliastro.core.util import norm
 from poliastro.core.perturbations import atmospheric_drag, third_body, J2_perturbation,J3_perturbation,shadow_function
 from poliastro.bodies import Earth, Moon, Sun
 from poliastro.twobody import Orbit
@@ -40,6 +26,8 @@ from poliastro.neos import neows
 from sgp4.model import Satellite
 from sgp4.earth_gravity import wgs72
 from sgp4.propagation import sgp4init
+
+import inquirer
 
 
 mu = G.value*M_earth.value
