@@ -15,7 +15,6 @@ from poliastro.core.stumpff import c2, c3
 from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
-import ephem
 import inquirer
 import lamberts_method as lm
 import orbital_elements as oe
