@@ -1,22 +1,12 @@
 import numpy as np
-import sys
-import os.path
-from util import state_kep
-import numpy as np
-import pykep as pkp
 
 from math import pi, sin, cos, radians, degrees, floor, sqrt, atan2
 from datetime import datetime, timedelta
 from sys import stdin
 
 from math import *
-from pyorbital import dt2np
-from astropy.utils.data import conf
 from astropy import constants as cts
 from astropy import units as u
-from astropy.time import Time, TimeDelta
-from astropy.coordinates import solar_system_ephemeris
-from astropy.coordinates import get_sun
 from astropy.constants import G, M_earth, R_earth
 
 
@@ -82,8 +72,8 @@ def checksum(line):
 
 
 def getTrueAnomaly(ecc, EA):
-	fak = sqrt(1.0 - ecc * ecc)
-	return degrees(atan2(fak * sin(EA), cos(EA) - ecc))
+    fak = sqrt(1.0 - ecc * ecc)
+    return degrees(atan2(fak * sin(EA), cos(EA) - ecc))
 
 
 
@@ -107,13 +97,22 @@ def getEccentricAnomaly(ecc, MA):
     F = EA - ecc * sin(MA) - MA
 
     while ((abs(F) > precision) and (i < iterLimit)):
+        EA = EA - F / (1.0 - ecc * cos(EA))
+        F = EA - ecc * sin(EA) - MA
 
-	    EA = EA - F / (1.0 - ecc * cos(EA))
-	    F = EA - ecc * sin(EA) - MA
-
-	    i += 1
+        i += 1
 
     return degrees(EA)
+
+
+
+def dt2np(utc_time):
+    """Converts datetime to datetime64.
+    """
+    try:
+        return np.datetime64(utc_time)
+    except ValueError:
+        return utc_time.astype('datetime64[ns]')
 
 
 
@@ -125,10 +124,10 @@ def days_since_2000(utc_time):
 
 
 def MM2SMA(MM):
-	MU = 398600.4418
-	# Convert Mean motion from revs/day to rad/s
-	MM = MM*((2*pi)/86400)
-	return (MU/(MM**2))**(1.0/3.0)
+    MU = 398600.4418
+    # Convert Mean motion from revs/day to rad/s
+    MM = MM*((2*pi)/86400)
+    return (MU/(MM**2))**(1.0/3.0)
 
 
 
@@ -143,20 +142,22 @@ def print_norad_elements():
     TLE.append(stdin.readline().strip())
 
     if TLE[1][:2] != '1 ' or checksum(TLE[1]) == False:
-	    print ("Not a TLE")
-	    exit()
+        print ("Not a TLE")
+        exit()
     if TLE[2][:2] != '2 'or checksum(TLE[2]) == False:
-	    print ("Not a TLE")
-	    exit()
+        print ("Not a TLE")
+        exit()
 
     SatName = TLE[0]
     (line,SAT,Desgnator,TLEEpoch,MM1,MM2,BSTAR,EType,ElementNum) = TLE[1].split()
     (line,SATNum,Inc,RAAN,Ecc,AoP,MA,MM) = TLE[2].split()[:8]
     EpochY = int(TLEEpoch[:2])
+
     if EpochY > 56:
-	    EpochY+=1900
+        EpochY+=1900
     else:
-	    EpochY+=2000
+        EpochY+=2000
+
     EpochD = float(TLEEpoch[2:])
     MA = float(MA)
     MM = float(MM)
@@ -171,17 +172,17 @@ def print_norad_elements():
     print("Epoch:", Epoch)
 
     print("\nCreate Spacecraft "+SatName+";\n" +
-	    	"GMAT "+SatName+".Id = '"+SATNum+"';\n" +
-		    "GMAT "+SatName+".DateFormat = UTCGregorian;\n" +
-    		"GMAT "+SatName+".Epoch = '"+Epoch+"';\n" +
-    		"GMAT "+SatName+".CoordinateSystem = EarthMJ2000Eq;\n" +
-	    	"GMAT "+SatName+".DisplayStateType = Keplerian;\n" +
-    		"GMAT "+SatName+".SMA = "+str(SMA)+";\n" +
-    		"GMAT "+SatName+".ECC = "+str(Ecc)+";\n" +
-    		"GMAT "+SatName+".INC = "+str(Inc)+";\n" +
-    		"GMAT "+SatName+".RAAN = " + str(RAAN) + ";\n" +
-    		"GMAT "+SatName+".AOP = " + str(AoP) + ";\n" +
-    		"GMAT "+SatName+".TA = "+str(TA)+";\n")
+          "GMAT "+SatName+".Id = '"+SATNum+"';\n" +
+          "GMAT "+SatName+".DateFormat = UTCGregorian;\n" +
+          "GMAT "+SatName+".Epoch = '"+Epoch+"';\n" +
+          "GMAT "+SatName+".CoordinateSystem = EarthMJ2000Eq;\n" +
+          "GMAT "+SatName+".DisplayStateType = Keplerian;\n" +
+          "GMAT "+SatName+".SMA = "+str(SMA)+";\n" +
+          "GMAT "+SatName+".ECC = "+str(Ecc)+";\n" +
+          "GMAT "+SatName+".INC = "+str(Inc)+";\n" +
+          "GMAT "+SatName+".RAAN = " + str(RAAN) + ";\n" +
+          "GMAT "+SatName+".AOP = " + str(AoP) + ";\n" +
+          "GMAT "+SatName+".TA = "+str(TA)+";\n")
 
 
 
@@ -381,6 +382,3 @@ def position_ECI(time, lon, lat, alt):
     vz = 0
 
     return (x, y, z), (vx, vy, vz)
-
-
-

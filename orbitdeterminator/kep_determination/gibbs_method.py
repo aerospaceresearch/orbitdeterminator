@@ -11,9 +11,72 @@ import numpy as np
 import math
 import re
 
-sqrt = np.sqrt
 pi = np.pi
 mu = 398600.4418
+
+
+def check_coplanarity(r1, r2, r3, tol = 1e-4):
+    '''
+    Check that R1, R2 and R3 are coplanar.
+    if not set error flag = 1
+
+    Args:
+        r1 (list): first position vector
+        r2 (list): second position vector
+        r3 (list): third position vector
+
+    Returns:
+        int: ierr (error flag)
+    '''
+
+    ierr = 0
+
+    mag_r1 = np.linalg.norm(r1)
+    c23 = np.cross(r2, r3)
+
+    if np.abs(np.dot(r1, c23) / mag_r1 / np.linalg.norm(c23)) > tol:
+        ierr = 1
+
+    return ierr
+
+
+def gibbs_method(r1, r2, r3):
+    '''
+    Computes velocity vector (part of state vector) using Gibb's Method
+    and takes r2 (input argument) as its position vector (part of state
+    vector). Both combined forms state vector.
+
+    Args:
+        r1 (list): first position vector
+        r2 (list): second position vector
+        r3 (list): third position vector
+
+    Returns:
+        list: velocity vector
+    '''
+
+    mag_r1 = np.linalg.norm(r1)
+    mag_r2 = np.linalg.norm(r2)
+    mag_r3 = np.linalg.norm(r3)
+
+    c12 = np.cross(r1, r2)
+    c23 = np.cross(r2, r3)
+    c31 = np.cross(r3, r1)
+
+    N = mag_r1 * c23 + mag_r2 * c31 + mag_r3 * c12
+    mag_N = np.linalg.norm(N)
+
+    D = c12 + c23 + c31
+    mag_D = np.linalg.norm(D)
+
+    S = np.multiply(r1, (mag_r2 - mag_r3)) + \
+        np.multiply(r2, (mag_r3 - mag_r1)) + \
+        np.multiply(r3, (mag_r1 - mag_r2))
+
+    v2 = np.sqrt(mu / mag_N / mag_D) * (np.cross(D, r2) / mag_r2 + S)
+
+    return v2
+
 
 class Gibbs(object):
 
@@ -175,48 +238,6 @@ class Gibbs(object):
         # Returning r and v array earlier
         # return final
 
-    @classmethod
-    def magnitude(self, vec):
-        '''
-        Computes magnitude of the input vector.
-
-        Args:
-            vec (list): vector
-
-        Returns:
-            float: magnitude of vector
-        '''
-        mag_vec = math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
-        return mag_vec
-
-    @classmethod
-    def dot_product(self, a, b):
-        '''
-        Computes dot product of two vectors. Multiplies corresponding axis with
-        each other and then adds them. Returns a single value.
-
-        Args:
-            a (list/array): first vector
-            b (list/array): second vector
-
-        Returns:
-            float: dot product of given vectors
-        '''
-        return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]
-
-    @classmethod
-    def cross_product(self, a, b):
-        '''
-        Computes cross product of the given vectors. Returns a vector.
-
-        Args:
-            a (list/array): first vector
-            b (list/array): second vector
-
-        Returns:
-            list/array: cross product of given vectors
-        '''
-        return [a[1]*b[2] - b[1]*a[2], (-1)*(a[0]*b[2] - b[0]*a[2]), a[0]*b[1] - b[0]*a[1]]
 
     @classmethod
     def operate_vector(self, a, b, flag):
@@ -252,7 +273,7 @@ class Gibbs(object):
         Returns:
             list: unit vector
         '''
-        mag = self.magnitude(vec)
+        mag = np.linalg.norm(vec)
         return [i/mag for i in vec]
 
     @classmethod
@@ -273,38 +294,11 @@ class Gibbs(object):
         Returns:
             list: velocity vector
         '''
-        mag_r1 = self.magnitude(r1)
-        mag_r2 = self.magnitude(r2)
-        mag_r3 = self.magnitude(r3)
 
-        c12 = self.cross_product(r1, r2)
-        c23 = self.cross_product(r2, r3)
-        c31 = self.cross_product(r3, r1)
+        ierr = check_coplanarity(r1, r2, r3, tol=1e-4)
+        # if not coplanary, then ierr flag is 1 and v2 not trust worthy
 
-        # '''For checking colplanarity'''
-        # unit_c23 = self.unit(c23)
-        # unit_r1 = self.unit(r1)
-        # check = self.dot_product(unit_r1, unit_c23)
-
-        r1c23 = [mag_r1*i for i in c23]
-        r2c31 = [mag_r2*i for i in c31]
-        r3c12 = [mag_r3*i for i in c12]
-        N = [r1c23[0]+r2c31[0]+r3c12[0], r1c23[1]+r2c31[1]+r3c12[1], r1c23[2]+r2c31[2]+r3c12[2]]
-        mag_N = self.magnitude(N)
-
-        D = self.operate_vector(c12, self.operate_vector(c23, c31, 1), 1)
-        mag_D = self.magnitude(D)
-
-        vec1 = [(mag_r2-mag_r3)*i for i in r1]
-        vec2 = [(mag_r3-mag_r1)*i for i in r2]
-        vec3 = [(mag_r1-mag_r2)*i for i in r3]
-        S = self.operate_vector(vec1, self.operate_vector(vec2, vec3, 1), 1)
-
-        term1 = math.sqrt(mu / (mag_N * mag_D))
-        var1 = self.cross_product(D, r2)
-        var2 = [i/mag_r2 for i in var1]
-        term2 = self.operate_vector(var2, S, 1)
-        v2 = [term1*i for i in term2]
+        v2 = gibbs_method(r1, r2, r3)
 
         return v2
 
@@ -324,11 +318,11 @@ class Gibbs(object):
         Returns:
             list: set of six orbital elements
         '''
-        mag_r = self.magnitude(r)
-        mag_v = self.magnitude(v)
-        vr = self.dot_product(r, v)/mag_r
-        h = self.cross_product(r, v)
-        mag_h = self.magnitude(h)
+        mag_r = np.linalg.norm(r)
+        mag_v = np.linalg.norm(v)
+        vr = np.dot(r, v) / mag_r
+        h = np.cross(r, v)
+        mag_h = np.linalg.norm(h)
         # Requires further research, not put in try block because one set should not affect entire calculation
         if((h[2]/mag_h) <= 1 and (h[2]/mag_h) >= -1):
             inclination = math.acos(h[2]/mag_h)*(180/pi)
@@ -337,42 +331,44 @@ class Gibbs(object):
         else:
             inclination = 180
 
-        N = self.cross_product([0,0,1], h)
-        mag_N = self.magnitude(N)
+        N = np.cross([0,0,1], h)
+        mag_N = np.linalg.norm(N)
 
         ascension = math.acos(N[0]/mag_N)*(180/pi)
         if(N[1] < 0):
             ascension = 360 - ascension
 
         var1 = [(mag_v ** 2 - mu / mag_r) * i for i in r]
-        var2 = [self.dot_product(r, v)*i for i in v]
+        var2 = [np.dot(r, v)*i for i in v]
         vec = self.operate_vector(var1, var2, 0)
         eccentricity = [i / mu for i in vec]
-        mag_e = self.magnitude(eccentricity)
+        mag_e = np.linalg.norm(eccentricity)
 
         # Requires further research, not put in try block because one set should not affect entire calculation
-        if((self.dot_product(N,eccentricity)/(mag_N*mag_e)) <= 1 and (self.dot_product(N,eccentricity)/(mag_N*mag_e)) >= -1):
-            perigee = math.acos(self.dot_product(N,eccentricity)/(mag_N*mag_e))*(180/pi)
-        elif((self.dot_product(N,eccentricity)/(mag_N*mag_e)) > 1):
+        if((np.dot(N,eccentricity) / (mag_N*mag_e)) <= 1 and (np.dot(N,eccentricity) / (mag_N*mag_e)) >= -1):
+            perigee = math.acos(np.dot(N,eccentricity) / (mag_N*mag_e)) * (180/pi)
+        elif((np.dot(N,eccentricity) / (mag_N*mag_e)) > 1):
             perigee = 0
         else:
             perigee = 180
+
         if(eccentricity[2] < 0):
             perigee = 360 - perigee
 
         # Requires further research, not put in try block because one set should not affect entire calculation
-        if((self.dot_product(eccentricity,r)/(mag_e*mag_r)) <= 1 and (self.dot_product(eccentricity,r)/(mag_e*mag_r)) >= -1):
-            anomaly = math.acos(self.dot_product(eccentricity,r)/(mag_e*mag_r))*(180/pi)
-        elif(self.dot_product(eccentricity,r)/(mag_e*mag_r) > 1):
+        if((np.dot(eccentricity,r) / (mag_e*mag_r)) <= 1 and (np.dot(eccentricity,r) / (mag_e*mag_r)) >= -1):
+            anomaly = math.acos(np.dot(eccentricity,r) / (mag_e*mag_r)) * (180/pi)
+        elif(np.dot(eccentricity,r)/(mag_e*mag_r) > 1):
             anomaly = 0
         else:
             anomaly = 180
+
         if(vr < 0):
             anomaly = 360 - anomaly
 
-        rp = mag_h**2/(mu * (1 + mag_e))
-        ra = mag_h**2/(mu * (1 - mag_e))
-        axis = (rp+ra)/2
+        rp = mag_h**2 / (mu * (1 + mag_e))
+        ra = mag_h**2 / (mu * (1 - mag_e))
+        axis = (rp+ra) / 2.0
 
         # Following format trend from test_gibbsMethod file
         # return [axis, inclination, ascension, mag_e, perigee, anomaly]
@@ -427,32 +423,7 @@ def gibbs_get_kep(dataset):
         i = i + 1
     return kep
 
-def gibbs_method(R1, R2, R3):
-    tol = 1e-4
-    ierr = 0
 
-    r1 = np.linalg.norm(R1)
-    r2 = np.linalg.norm(R2)
-    r3 = np.linalg.norm(R3)
-
-    c12 = np.cross(R1, R2)
-    c23 = np.cross(R2, R3)
-    c31 = np.cross(R3, R1)
-
-    # Check that R1, R2 and R3 are coplanar.
-    # if not set error flag
-    if np.abs(np.dot(R1, c23) / r1 / np.linalg.norm(c23)) > tol:
-        ierr = 1
-
-    N = r1 * c23 + r2 * c31 + r3 * c12
-
-    D = c12 + c23 + c31
-
-    S = np.multiply(R1, (r2 - r3)) + np.multiply(R2, (r3 - r1)) + np.multiply(R3, (r1 - r2))
-
-    v2 = np.sqrt(mu / np.linalg.norm(N) / np.linalg.norm(D)) * (np.cross(D, R2) / r2 + S)
-
-    return v2, ierr
 
 # if __name__ == "__main__":
 #     filename = "ISS.csv"

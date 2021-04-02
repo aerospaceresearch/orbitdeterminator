@@ -66,16 +66,20 @@ def dFdz(z, r1, r2, A):
     return dF
 
 
-def lamberts_method(R1, R2, delta_time):
+def lamberts_method(R1, R2, delta_time, trajectory_cw=False):
     """ lamberts method that generates velocity vectors for each radius vectors that are put in here.
+
+    Similar to https://esa.github.io/pykep/documentation/core.html#pykep.lambert_problem
 
     :param R1: radius vector of measuements #1
     :param R2: radius vector of measuements #2
     :param delta_time: delta time between R1 and R2 measurements, in seconds. Only works for same pass
+    :param trajectory_cw: bool. True for retrograde motion (clockwise), False if counter-clock wise
     :return:
 
     V1: velocity vector of R1
     V2: velocity vector of R2
+    ratio: absolute tolerance result
 
     """
 
@@ -87,17 +91,21 @@ def lamberts_method(R1, R2, delta_time):
     theta = np.arccos(np.dot(R1, R2) / r1 / r2)
 
     # todo: automatic check for pro or retrograde orbits is needed. currently set to prograde
-    trajectory = "prograde"
-    inclination = 0.0
-    if inclination >= 0.0 and inclination < 90.0:
+    if trajectory_cw == False:
         trajectory = "prograde"
+    if trajectory_cw == True:
+        trajectory = "retrograde"
+
+    #inclination = 0.0
+    #if inclination >= 0.0 and inclination < 90.0:
+    if trajectory == "prograde":
         if c12[2] >= 0:
             theta = theta
         else:
             theta = np.pi*2 - theta
 
-    if inclination >= 90.0 and inclination < 180.0:
-        trajectory = "retrograde"
+    #if inclination >= 90.0 and inclination < 180.0:
+    if trajectory == "retrograde":
         if c12[2] < 0:
             theta = theta
         else:
@@ -109,15 +117,15 @@ def lamberts_method(R1, R2, delta_time):
     while F_z_i(z, delta_time, r1, r2, A) < 0.0:
         z = z + 0.1
 
-    tol = 1.e-8
-    nmax = 5000
+    tol = 1.e-10 # tolerance
+    nmax = 6000 # iterations
 
     ratio = 1
     n = 0
     while (np.abs(ratio) > tol) and (n <= nmax):
         n = n + 1
         ratio = F_z_i(z, delta_time, r1, r2, A)
-        #print(n, z, ratio)
+
         if np.isnan(ratio) == True:
             break
         ratio = ratio / dFdz(z, r1, r2, A)
@@ -138,4 +146,4 @@ def lamberts_method(R1, R2, delta_time):
     V1 = 1.0 / g * (np.add(R2, -np.multiply(f, R1)))
     V2 = 1.0 / g * (np.multiply(gdot, R2) - R1)
 
-    return V1, V2
+    return V1, V2, np.abs(ratio)

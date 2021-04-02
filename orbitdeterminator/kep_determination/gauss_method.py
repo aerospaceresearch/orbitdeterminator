@@ -30,7 +30,7 @@ c_light = cts.c.to(uts.Unit('au/day'))
 earth_f = 0.003353
 Re = cts.R_earth.to(uts.Unit('km')).value
 
-x_ephem='de432s'
+x_ephem = 'de432s'
 solar_system_ephemeris.set(x_ephem)    
 
 
@@ -77,7 +77,7 @@ def orbplane2frame(x):
 
 # get Keplerian range
 def kep_r_(a, e, f):
-    return a*(1.0-e**2)/(1.0+e*np.cos(f))
+    return a * (1.0 - e**2)/(1.0 + e * np.cos(f))
 
 def kep_r(x):
     return kep_r_(x[0],x[1],x[2])
@@ -2549,7 +2549,7 @@ def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_v
 
             print("T_period", state.T_orbitperiod)
 
-            v1_lamberts, v2_lamberts = lm.lamberts_method(r1, r2, dt1)
+            v1_lamberts, v2_lamberts, ratio = lm.lamberts_method(r1, r2, dt1)
             print(dt1, dt2, v2, v2_lamberts)
 
 
@@ -2693,7 +2693,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
             state_T_orbitperiod = np.zeros(3)
 
 
-            v1_lamberts, v2_lamberts = lm.lamberts_method(r1, r2, dt1)
+            v1_lamberts, v2_lamberts, ratio = lm.lamberts_method(r1, r2, dt1)
             state.get_orbital_elemts_from_statevector(r1, v1_lamberts)
             print("v1", v1_lamberts, dt1)
 
@@ -2722,7 +2722,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
             state_T_orbitperiod[1] = state.T_orbitperiod
 
 
-            v2_lamberts, v3_lamberts = lm.lamberts_method(r2, r3, dt2)
+            v2_lamberts, v3_lamberts, ratio = lm.lamberts_method(r2, r3, dt2)
             state.get_orbital_elemts_from_statevector(r2, v2_lamberts)
             print("v2", v2_lamberts, dt2)
 

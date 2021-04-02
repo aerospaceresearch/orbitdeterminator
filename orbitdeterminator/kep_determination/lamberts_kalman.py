@@ -9,9 +9,7 @@ import os.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from util import state_kep
 import numpy as np
-import matplotlib.pylab as plt
-import pykep as pkp
-from math import *
+import kep_determination.lamberts_method as lm
 
 
 def orbit_trajectory(x1_new, x2_new, time):
@@ -24,58 +22,28 @@ def orbit_trajectory(x1_new, x2_new, time):
         time (float): time difference between the 2 points
         
     Returns:
-        bool: true if we want to keep retrogade, False if we want counter-clock wise
+        bool: true if we want to keep retrograde, False if we want counter-clock wise
     '''
 
-    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False, 0)
+    #l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, False, 0)
+    # https://esa.github.io/pykep/documentation/core.html#pykep.lambert_problem
 
-    # only one revolution is needed
-    v1 = l.get_v1()[0]
-    v1 = np.asarray(v1)
-    #v1 = np.reshape(v1, 3)
-    x1_new = np.asarray(x1_new)
+    # progreade or retrograde orbit determination
+    # in lambert_problem solver from PyKep, another baheviour is used.
+    # there, unrealistic kepler parameters like negative semimajor axis are used to exclude the result.
+    # in our version we now compare the behaviour in finding the better result
+    v1_true, v2_true, ratio_true = lm.lamberts_method(x1_new, x2_new, time, True)
+    v1_false, v2_false, ratio_false = lm.lamberts_method(x1_new, x2_new, time, False)
 
-    kep1 = state_kep.state_kep(x1_new, v1)
-
-    if kep1[0] < 0.0:
-        traj = True
-    elif kep1[1] > 1.0:
-        traj = True
-    else:
+    # finding out if orbit is clockwise or counter-clockwise.
+    # sole criterion: what has the best residual behaviour.
+    # it looks like the right setting gets the results faster (after a few iterations n the tolerance tol is reached)
+    traj = True
+    if ratio_false < ratio_true:
         traj = False
 
+
     return traj
-
-
-def lamberts(x1, x2, traj):
-    '''
-    Takes two position points - numpy arrays with time,x,y,z as elements
-    and produces two vectors with the state vector for both positions using Lamberts solution
-
-    Args:
-        x1(numpy array): time and position for point 1 [time1,x1,y1,z1]
-        x2(numpy array): time and position for point 2 [time2,x2,y2,z2]
-
-    Returns:
-        numpy array: velocity vector for point 1 (vx, vy, vz)
-    '''
-
-    x1_new = [1, 1, 1]
-    x1_new[:] = x1[1:4]
-    x2_new = [1, 1, 1]
-    x2_new[:] = x2[1:4]
-    time = x2[0] - x1[0]
-
-    # traj = orbit_trajectory(x1_new, x2_new, time)
-
-    l = pkp.lambert_problem(x1_new, x2_new, time, 398600.4405, traj,0)
-
-    # only one revolution is needed
-    v1 = l.get_v1()[0]
-    v1 = np.asarray(v1)
-    #v1 = np.reshape(v1, 3)
-
-    return v1
 
 
 def check_keplerian(kep):
@@ -134,19 +102,25 @@ def create_kep(my_data):
     x2_new = [1, 1, 1]
     x2_new[:] = my_data[1, 1:4]
     time = my_data[1, 0] - my_data[0, 0]
+
     traj = orbit_trajectory(x1_new, x2_new, time)
 
-    v1 = lamberts(my_data[0, :], my_data[1, :], traj)
-    # v_abs1[0] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
+    v1, v2, ratio = lm.lamberts_method(x1_new, x2_new, time, traj)
     v_hold[0] = v1
 
     # Produce all the 2 consecutive pairs and find the velocity with lamberts() method
     for i in range(1, (len(my_data) - 1)):
 
         j = i + 1
-        v1 = lamberts(my_data[i, :], my_data[j, :], traj)
+        x1_new = [1, 1, 1]
+        x1_new[:] = my_data[i, 1:4]
+        x2_new = [1, 1, 1]
+        x2_new[:] = my_data[j, 1:4]
+        time = my_data[j, 0] - my_data[i, 0]
 
+        v1, v2, ratio = lm.lamberts_method(x1_new, x2_new, time, traj)
         v_hold[i] = v1
+
         # compute the absolute value of the velocity vector for every point
         # v_abs1[i] = (v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2) ** (0.5)
 
