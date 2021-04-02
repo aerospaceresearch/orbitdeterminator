@@ -5,7 +5,6 @@ numpy >= 1.17.0
 poliastro >= 0.9.1
 py >= 1.5.2
 pyephem >= 3.7.6.0
-pyorbital
 pytest >= 3.4.0
 requests
 scipy >= 1.0.0
