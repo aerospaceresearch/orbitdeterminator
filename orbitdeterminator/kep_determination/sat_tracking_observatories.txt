@@ -64,5 +64,3 @@ No   ID  Latitude Longitude   Elev    Observer
 6241 JM   42.9565   -2.8203    619    Jon Mikel
 4160 BD   51.2793    5.4768     35    Bram Dorreman
 9999 GR   47.348     5.5151    100    Graves
-8888 AH   50.9157   11.7199    406    Andreas Hornig
-7782 bb  -32.008   116.135     300    m
