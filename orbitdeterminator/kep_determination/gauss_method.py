@@ -3,7 +3,7 @@ declination measurements of celestial bodies. Supports both Earth-centered and
 Sun-centered orbits."""
 
 import numpy as np
-from astropy.coordinates import Longitude, SkyCoord
+from astropy.coordinates import Longitude, SkyCoord, EarthLocation
 from astropy.coordinates import solar_system_ephemeris, get_body_barycentric
 from astropy import units as uts
 from astropy import constants as cts
@@ -958,22 +958,12 @@ def get_observations_data_sat(iod_object_data, inds):
 
     site_codes_0 = iod_object_data['station'][inds[0]]
     obs=get_station_data(site_codes_0, sat_observatories_data)
-    lat=obs['Latitude']
-    lon=obs['Longitude']
-    alt=obs['Elev']
+    lat=obs['Latitude'] # deg
+    lon=obs['Longitude'] # deg
+    alt=obs['Elev'] # meters
 
     lon = np.radians(lon)
     lat = np.radians(lat)
-
-    ut = 2455822.868055556     #can be anything
-
-    J0 = ephem.julian_date(0)  #can be anything
-
-    observer = ephem.Observer()
-    observer.lon = lon
-    observer.lat = lat
-    observer.elevation = alt
-    observer.date = ut - J0
 
     ra0 = 0.0
     dec0 = 0.0
@@ -1029,13 +1019,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra0= ra_or_az
-        dec0= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_0 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[0], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_0.icrs.ra.deg
+        dec_or_el = skcrd_0.icrs.dec.deg
+        ra0 = ra_or_az
+        dec0 = dec_or_el
 
     # AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
     if(iod_object_data['angformat'][inds[0]] == 5):
@@ -1049,13 +1041,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + ((1.0 / 60.0) * (float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[12:14].replace(' ', ''))))))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra0= ra_or_az
-        dec0= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_0 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[0], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_0.icrs.ra.deg
+        dec_or_el = skcrd_0.icrs.dec.deg
+        ra0 = ra_or_az
+        dec0 = dec_or_el
 
     # AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
     if(iod_object_data['angformat'][inds[0]] == 6):
@@ -1067,13 +1061,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra0= ra_or_az
-        dec0= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_0 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[0], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_0.icrs.ra.deg
+        dec_or_el = skcrd_0.icrs.dec.deg
+        ra0 = ra_or_az
+        dec0 = dec_or_el
 
     # RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
     if(iod_object_data['angformat'][inds[0]] == 7):
@@ -1098,16 +1094,6 @@ def get_observations_data_sat(iod_object_data, inds):
     lat=obs['Latitude']
     lon=obs['Longitude']
     alt=obs['Elev']
-
-    ut = 2455822.868055556     #can be anything
-
-    J0 = ephem.julian_date(0)  #can be anything
-
-    observer = ephem.Observer()
-    observer.lon = lon
-    observer.lat = lat
-    observer.elevation = alt
-    observer.date = ut - J0
 
     ra1 = 0.0
     dec1 = 0.0
@@ -1161,13 +1147,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra1= ra_or_az
-        dec1= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_1 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[1], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_1.icrs.ra.deg
+        dec_or_el = skcrd_1.icrs.dec.deg
+        ra1 = ra_or_az
+        dec1 = dec_or_el
 
     # AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
     if(iod_object_data['angformat'][inds[1]] == 5):
@@ -1181,13 +1169,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + ((1.0 / 60.0) * (float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[12:14].replace(' ', ''))))))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra1= ra_or_az
-        dec1= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_1 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[1], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_1.icrs.ra.deg
+        dec_or_el = skcrd_1.icrs.dec.deg
+        ra1 = ra_or_az
+        dec1 = dec_or_el
 
     # AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
     if(iod_object_data['angformat'][inds[1]] == 6):
@@ -1199,13 +1189,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra1= ra_or_az
-        dec1= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_1 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[1], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_1.icrs.ra.deg
+        dec_or_el = skcrd_1.icrs.dec.deg
+        ra1 = ra_or_az
+        dec1 = dec_or_el
 
     # RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
     if(iod_object_data['angformat'][inds[1]] == 7):
@@ -1230,16 +1222,6 @@ def get_observations_data_sat(iod_object_data, inds):
     lat=obs['Latitude']
     lon=obs['Longitude']
     alt=obs['Elev']
-
-    ut = 2455822.868055556     #can be anything
-
-    J0 = ephem.julian_date(0)  #can be anything
-
-    observer = ephem.Observer()
-    observer.lon = lon
-    observer.lat = lat
-    observer.elevation = alt
-    observer.date = ut - J0
 
     ra2 = 0.0
     dec2 = 0.0
@@ -1293,13 +1275,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + (((1.0 / 60.0) / 60.0) * float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0"))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra2= ra_or_az
-        dec2= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_2 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[2], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_2.icrs.ra.deg
+        dec_or_el = skcrd_2.icrs.dec.deg
+        ra2 = ra_or_az
+        dec2 = dec_or_el
 
     # AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
     if(iod_object_data['angformat'][inds[2]] == 5):
@@ -1313,13 +1297,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + ((1.0 / 60.0) * (float(clipped_iod[12:14].replace(' ', '') if len(clipped_iod[12:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[12:14].replace(' ', ''))))))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra2= ra_or_az
-        dec2= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_2 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[2], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_2.icrs.ra.deg
+        dec_or_el = skcrd_2.icrs.dec.deg
+        ra2 = ra_or_az
+        dec2 = dec_or_el
 
     # AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
     if(iod_object_data['angformat'][inds[2]] == 6):
@@ -1331,13 +1317,15 @@ def get_observations_data_sat(iod_object_data, inds):
             + float(clipped_iod[10:14].replace(' ', '') if len(clipped_iod[10:14].replace(' ', '')) > 0 else "0") * (10.0 ** (-1 * len(clipped_iod[10:14].replace(' ', ''))))\
             )
 
+        # convert (az,el) to (RA,Dec) in degrees
         az = np.radians(ra_or_az)
         el = np.radians(dec_or_el)
-        ra_or_az,dec_or_el = observer.radec_of(az, el)                 #converts az/el to ra/dec in radians
-        ra_or_az=np.degree(ra_or_az)
-        dec_or_el=np.degree(dec_or_el)
-        ra2= ra_or_az
-        dec2= dec_or_el
+        observer_location = EarthLocation(lat=lat*uts.deg, lon=lon*uts.deg, height=alt*uts.m)
+        skcrd_2 = SkyCoord(alt = el*uts.deg, az = az*uts.deg, obstime = timeobs[2], frame = 'altaz', location = observer_location)
+        ra_or_az = skcrd_2.icrs.ra.deg
+        dec_or_el = skcrd_2.icrs.dec.deg
+        ra2 = ra_or_az
+        dec2 = dec_or_el
 
     # RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
     if(iod_object_data['angformat'][inds[2]] == 7):
