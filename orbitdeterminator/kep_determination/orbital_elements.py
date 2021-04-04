@@ -143,7 +143,7 @@ def T_orbitperiod(h_angularmomentuum = None, eccentricity = None, semimajor_axis
         T_orbitperiod = 2.0 * np.pi / mu_Earth ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
     if semimajor_axis != None:
-        T_orbitperiod = 2.0 * np.pi / mu_Earth ** 0.5 * semimajor_axis * 3.0/2.0
+        T_orbitperiod = 2.0 * np.pi / mu_Earth ** 0.5 * semimajor_axis ** 3.0/2.0
 
     return T_orbitperiod
 
