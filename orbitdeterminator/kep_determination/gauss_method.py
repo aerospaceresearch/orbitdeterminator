@@ -16,8 +16,8 @@ from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
 import inquirer
-import lamberts_method as lm
-import orbital_elements as oe
+import kep_determination.lamberts_method as lm
+import kep_determination.orbital_elements as oe
 import sys
 
 
@@ -1601,6 +1601,28 @@ def get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes):
     R[2] = observerpos_sat(obsite3['Latitude'], obsite3['Longitude'], obsite3['Elev'], obs_radec[2].obstime)
 
     return R
+
+
+def gauss_method_test(r1, r2, r3, t1, t2, t3):
+
+    mu = mu_Earth
+
+    tau1 = (t1 - t2)
+    tau3 = (t3 - t2)
+    tau = (tau3 - tau1)
+
+    r2_star = np.linalg.norm(r2)
+
+    f1 = lagrangef(mu, r2_star, tau1)
+    f3 = lagrangef(mu, r2_star, tau3)
+
+    g1 = lagrangeg(mu, r2_star, tau1)
+    g3 = lagrangeg(mu, r2_star, tau3)
+
+    v2 = (-f3 * r1 + f1 * r3) / (f1 * g3 - f3 * g1)
+
+    return v2
+
 
 def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
     """Perform core Gauss method.
