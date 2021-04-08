@@ -16,8 +16,8 @@ from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
 import inquirer
-import lamberts_method as lm
-import orbital_elements as oe
+import kep_determination.lamberts_method as lm
+import kep_determination.orbital_elements as oe
 import sys
 
 
@@ -1602,6 +1602,29 @@ def get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes):
 
     return R
 
+
+def gauss_method_get_velocity(r1, r2, r3, t1, t2, t3, r2_star=None):
+
+    mu = mu_Earth
+
+    tau1 = (t1 - t2)
+    tau3 = (t3 - t2)
+    #tau = (tau3 - tau1)
+
+    if r2_star == None:
+        r2_star = np.linalg.norm(r2)
+
+    f1 = lagrangef(mu, r2_star, tau1)
+    f3 = lagrangef(mu, r2_star, tau3)
+
+    g1 = lagrangeg(mu, r2_star, tau1)
+    g3 = lagrangeg(mu, r2_star, tau3)
+
+    v2 = (-f3 * r1 + f1 * r3) / (f1 * g3 - f3 * g1)
+
+    return v2
+
+
 def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
     """Perform core Gauss method.
 
@@ -1690,31 +1713,26 @@ def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
     r2_star = np.real(gauss_poly_roots[rt_indx[0][r2_root_ind]])
     print('r2_star = ', r2_star)
 
-    num1 = 6.0*(D[2,0]*(tau1/tau3)+D[1,0]*(tau/tau3))*(r2_star**3)+mu*D[2,0]*(tau**2-tau1**2)*(tau1/tau3)
-    den1 = 6.0*(r2_star**3)+mu*(tau**2-tau3**2)
+    num1 = 6.0*(D[2,0]*(tau1/tau3) + D[1,0]*(tau/tau3))*(r2_star**3) + mu*D[2,0]*(tau**2-tau1**2)*(tau1/tau3)
+    den1 = 6.0*(r2_star**3) + mu*(tau**2 - tau3**2)
 
-    rho_1_sr = ((num1/den1)-D[0,0])/D0
+    rho_1_sr = ((num1/den1) - D[0,0])/D0
 
-    rho_2_sr = A+(mu*B)/(r2_star**3)
+    rho_2_sr = A + (mu*B)/(r2_star**3)
 
-    num3 = 6.0*(D[0,2]*(tau3/tau1)-D[1,2]*(tau/tau1))*(r2_star**3)+mu*D[0,2]*(tau**2-tau3**2)*(tau3/tau1)
-    den3 = 6.0*(r2_star**3)+mu*(tau**2-tau1**2)
+    num3 = 6.0 * (D[0,2] * (tau3/tau1) - D[1,2]*(tau/tau1))*(r2_star**3) + mu*D[0,2]*(tau**2-tau3**2)*(tau3/tau1)
+    den3 = 6.0 * (r2_star**3) + mu*(tau**2 - tau1**2)
 
-    rho_3_sr = ((num3/den3)-D[2,2])/D0
+    rho_3_sr = ((num3/den3) - D[2,2])/D0
 
     r1 = R[0]+rho_1_sr*rho1
     r2 = R[1]+rho_2_sr*rho2
     r3 = R[2]+rho_3_sr*rho3
 
-    f1 = lagrangef(mu, r2_star, tau1)
-    f3 = lagrangef(mu, r2_star, tau3)
-
-    g1 = lagrangeg(mu, r2_star, tau1)
-    g3 = lagrangeg(mu, r2_star, tau3)
-
-    v2 = (-f3*r1+f1*r3)/(f1*g3-f3*g1)
+    v2 = gauss_method_get_velocity(r1, r2, r3, t1, t2, t3, r2_star=r2_star)
 
     return r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr
+
 
 def gauss_refinement(mu, tau1, tau3, r2, v2, atol, D, R, rho1, rho2, rho3, f_1, g_1, f_3, g_3):
     """Perform refinement of Gauss method.

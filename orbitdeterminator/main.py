@@ -6,7 +6,7 @@ and generates the final set of keplerian elements along with a plot and a filter
 
 from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average, wiener)
-from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbs_method)
+from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbs_method, gauss_method)
 import argparse
 import numpy as np
 import matplotlib as mpl
@@ -16,6 +16,20 @@ import inquirer
 from vpython import *
 import animate_orbit
 import kep_determination.orbital_elements as oe
+
+
+def get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps):
+
+    T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
+    runtime = np.subtract(timestamps, np.min(timestamps))
+    index = np.argmax(runtime >= T_orbitperiod // 2) - 1  # only half orbit is good for Gibbs method
+
+    if index < 2:
+        # in case there are not enough points to have the result at index point at 2
+        # or the argmax search does not find anything and sets index = 0.
+        index = len(timestamps) - 1
+
+    return index
 
 
 def process(data_file, error_apriori, units):
@@ -110,7 +124,11 @@ def process(data_file, error_apriori, units):
     questions = [
       inquirer.Checkbox('method',
                         message="Select Method(s)",
-                        choices=['Lamberts Kalman', 'Cubic Spline Interpolation', 'Ellipse Best Fit', 'Gibbs 3 Vector'],
+                        choices=['Lamberts Kalman',
+                                 'Cubic Spline Interpolation',
+                                 'Ellipse Best Fit',
+                                 'Gibbs 3 Vector',
+                                 'Gauss 3 Vector'],
                         ),
     ]
     choices = inquirer.prompt(questions)
@@ -145,15 +163,9 @@ def process(data_file, error_apriori, units):
 
                 # Determination of orbit period
                 semimajor_axis = kep_lamb[0][0]
-                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
                 timestamps = data_after_filter[:, 0]
-                runtime = np.subtract(timestamps, np.min(timestamps))
-                index = np.argmax(runtime >= T_orbitperiod // 2) - 1  # only half orbit is good for Gibbs method
 
-                if index < 2:
-                    # in case there are not enough points to have the result at index point at 2
-                    # or the argmax search does not find anything and sets index = 0.
-                    index = len(timestamps) - 1
+                index = get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps)
 
                 # enough data for half orbit
                 data = np.array([data_after_filter[:, :][0],
@@ -190,7 +202,7 @@ def process(data_file, error_apriori, units):
                 kep_final_ellip[6, 0] = sgp4.rev_per_day(kep_final_ellip[0, 0])
                 kep_elements['Ellipse Best Fit'] = kep_final_ellip
 
-            else:
+            elif (choice == 'Gibbs 3 Vector'):
                 # Apply the Gibbs method
 
                 # first only with first, middle and last measurement
@@ -203,15 +215,9 @@ def process(data_file, error_apriori, units):
 
                 # Determination of orbit period
                 semimajor_axis = kep_gibbs[0][0]
-                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
                 timestamps = data_after_filter[:, 0]
-                runtime = np.subtract(timestamps, np.min(timestamps))
-                index = np.argmax(runtime >= T_orbitperiod // 2) - 1 # only half orbit is good for Gibbs method
 
-                if index < 2:
-                    # in case there are not enough points to have the result at index point at 2
-                    # or the argmax search does not find anything and sets index = 0.
-                    index = len(timestamps) - 1
+                index = get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps)
 
                 # enough data for half orbit
                 R = np.array([data_after_filter[:, 1:][0],
@@ -220,15 +226,64 @@ def process(data_file, error_apriori, units):
 
                 kep_gibbs = gibbs_method.gibbs_get_kep(R)
 
-
                 # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
                 # We set an estimate of measurement variance R = 0.01 ** 2
                 kep_final_gibbs = lamberts_kalman.kalman(kep_gibbs, 0.01 ** 2)
-
                 kep_final_gibbs = np.transpose(kep_final_gibbs)
                 kep_final_gibbs = np.resize(kep_final_gibbs, ((7, 1)))
                 kep_final_gibbs[6, 0] = sgp4.rev_per_day(kep_final_gibbs[0, 0])
                 kep_elements['Gibbs 3 Vector'] = kep_final_gibbs
+
+            else:
+                # Apply the Gauss method
+
+                # first only with first, middle and last measurement
+                R = np.array([data_after_filter[:, 1:][0],
+                              data_after_filter[:, 1:][len(data_after_filter) // 2],
+                              data_after_filter[:, 1:][-1]])
+
+                t1 = data_after_filter[:, 0][0]
+                t2 = data_after_filter[:, 0][len(data_after_filter) // 2]
+                t3 = data_after_filter[:, 0][-1]
+
+                v2 = gauss_method.gauss_method_get_velocity(R[0], R[1], R[2], t1, t2, t3)
+
+                # Determination of orbit period
+                semimajor_axis = oe.semimajor_axis(R[0], v2)
+                timestamps = data_after_filter[:, 0]
+
+                index = get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps)
+
+                # enough data for half orbit
+                R = np.array([data_after_filter[:, 1:][0],
+                              data_after_filter[:, 1:][index // 2],
+                              data_after_filter[:, 1:][index]])
+
+                t1 = data_after_filter[:, 0][0]
+                t2 = data_after_filter[:, 0][index // 2]
+                t3 = data_after_filter[:, 0][index]
+
+                v2 = gauss_method.gauss_method_get_velocity(R[0], R[1], R[2], t1, t2, t3)
+
+                semimajor_axis = oe.semimajor_axis(R[0], v2)
+                ecc = oe.eccentricity_v(R[1], v2)
+                ecc = np.linalg.norm(ecc)
+                inc = oe.inclination(R[1], v2) * 180.0 / np.pi
+                AoP = oe.AoP(R[1], v2) * 180.0 / np.pi
+                raan = oe.raan(R[1], v2) * 180.0 / np.pi
+                true_anomaly = oe.true_anomaly(R[1], v2) * 180.0 / np.pi
+                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
+                n_mean_motion_perday = oe.n_mean_motion_perday(T_orbitperiod)
+
+                kep_gauss = np.array([[semimajor_axis, ecc, inc, AoP, raan, true_anomaly, n_mean_motion_perday]])
+
+                # Apply Kalman filters to find the best approximation of the keplerian elements for all solutions
+                # We set an estimate of measurement variance R = 0.01 ** 2
+                kep_final_gauss = lamberts_kalman.kalman(kep_gauss, 0.01 ** 2)
+                kep_final_gauss = np.transpose(kep_final_gauss)
+                kep_final_gauss = np.resize(kep_final_gauss, ((7, 1)))
+                kep_final_gauss[6, 0] = sgp4.rev_per_day(kep_final_gauss[0, 0])
+                kep_elements['Gauss 3 Vector'] = kep_final_gauss
 
     kep_final = np.zeros((7, len(kep_elements)))
     order = []
@@ -273,7 +328,7 @@ def process(data_file, error_apriori, units):
             ## Finally we plot the graph
             mpl.rcParams['legend.fontsize'] = 10
             fig = plt.figure()
-            ax = fig.gca(projection = '3d')
+            ax = plt.axes(projection = '3d')
             ax.plot(data[:, 1], data[:, 2], data[:, 3], ".", label = 'Initial data ')
             ax.plot(data_after_filter[:, 1], data_after_filter[:, 2], data_after_filter[:, 3], "k", linestyle = '-',
                     label = 'Filtered data')
@@ -305,7 +360,8 @@ if __name__ == "__main__":
                "  1. None (original data)        |   1. Lamberts Kalman\n"\
                "  2. Savitzky Golay Filter       |   2. Cubic spline interpolation\n"\
                "  4. Triple Moving Average Filter|   3. Ellipse Bset Fit\n"\
-               "  3. Wiener Filter               |   4. Gibbs 3 Vector\n"
+               "  5. Wiener Filter               |   4. Gibbs 3 Vector\n"\
+               "                                 |   5. Gauss 3 Vector\n"
     print("\n" + workflow)
 
     args = read_args()
