@@ -244,7 +244,7 @@ def process(data_file, error_apriori, units):
                 t2 = data_after_filter[:, 0][len(data_after_filter) // 2]
                 t3 = data_after_filter[:, 0][-1]
 
-                v2 = gauss_method.gauss_method_test(R[0], R[1], R[2], t1, t2, t3)
+                v2 = gauss_method.gauss_method_get_velocity(R[0], R[1], R[2], t1, t2, t3)
 
                 # Determination of orbit period
                 semimajor_axis = oe.semimajor_axis(R[0], v2)
@@ -267,7 +267,7 @@ def process(data_file, error_apriori, units):
                 t2 = data_after_filter[:, 0][index // 2]
                 t3 = data_after_filter[:, 0][index]
 
-                v2 = gauss_method.gauss_method_test(R[0], R[1], R[2], t1, t2, t3)
+                v2 = gauss_method.gauss_method_get_velocity(R[0], R[1], R[2], t1, t2, t3)
 
                 semimajor_axis = oe.semimajor_axis(R[0], v2)
                 ecc = oe.eccentricity_v(R[1], v2)
@@ -288,8 +288,6 @@ def process(data_file, error_apriori, units):
                 kep_final_gauss = np.resize(kep_final_gauss, ((7, 1)))
                 kep_final_gauss[6, 0] = sgp4.rev_per_day(kep_final_gauss[0, 0])
                 kep_elements['Gauss 3 Vector'] = kep_final_gauss
-                print(kep_gauss)
-                print(kep_final_gauss)
 
     kep_final = np.zeros((7, len(kep_elements)))
     order = []
