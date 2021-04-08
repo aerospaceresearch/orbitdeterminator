@@ -18,6 +18,20 @@ import animate_orbit
 import kep_determination.orbital_elements as oe
 
 
+def get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps):
+
+    T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
+    runtime = np.subtract(timestamps, np.min(timestamps))
+    index = np.argmax(runtime >= T_orbitperiod // 2) - 1  # only half orbit is good for Gibbs method
+
+    if index < 2:
+        # in case there are not enough points to have the result at index point at 2
+        # or the argmax search does not find anything and sets index = 0.
+        index = len(timestamps) - 1
+
+    return index
+
+
 def process(data_file, error_apriori, units):
     '''
     Given a .csv data file in the format of (time, x, y, z) applies both filters, generates a filtered.csv data
@@ -149,15 +163,9 @@ def process(data_file, error_apriori, units):
 
                 # Determination of orbit period
                 semimajor_axis = kep_lamb[0][0]
-                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
                 timestamps = data_after_filter[:, 0]
-                runtime = np.subtract(timestamps, np.min(timestamps))
-                index = np.argmax(runtime >= T_orbitperiod // 2) - 1  # only half orbit is good for Gibbs method
 
-                if index < 2:
-                    # in case there are not enough points to have the result at index point at 2
-                    # or the argmax search does not find anything and sets index = 0.
-                    index = len(timestamps) - 1
+                index = get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps)
 
                 # enough data for half orbit
                 data = np.array([data_after_filter[:, :][0],
@@ -207,15 +215,9 @@ def process(data_file, error_apriori, units):
 
                 # Determination of orbit period
                 semimajor_axis = kep_gibbs[0][0]
-                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
                 timestamps = data_after_filter[:, 0]
-                runtime = np.subtract(timestamps, np.min(timestamps))
-                index = np.argmax(runtime >= T_orbitperiod // 2) - 1 # only half orbit is good for Gibbs method
 
-                if index < 2:
-                    # in case there are not enough points to have the result at index point at 2
-                    # or the argmax search does not find anything and sets index = 0.
-                    index = len(timestamps) - 1
+                index = get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps)
 
                 # enough data for half orbit
                 R = np.array([data_after_filter[:, 1:][0],
@@ -248,15 +250,9 @@ def process(data_file, error_apriori, units):
 
                 # Determination of orbit period
                 semimajor_axis = oe.semimajor_axis(R[0], v2)
-                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
                 timestamps = data_after_filter[:, 0]
-                runtime = np.subtract(timestamps, np.min(timestamps))
-                index = np.argmax(runtime >= T_orbitperiod // 2) - 1  # only half orbit is good for Gibbs method
 
-                if index < 2:
-                    # in case there are not enough points to have the result at index point at 2
-                    # or the argmax search does not find anything and sets index = 0.
-                    index = len(timestamps) - 1
+                index = get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps)
 
                 # enough data for half orbit
                 R = np.array([data_after_filter[:, 1:][0],
