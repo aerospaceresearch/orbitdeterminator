@@ -18,6 +18,7 @@ import argparse
 import inquirer
 import kep_determination.lamberts_method as lm
 import kep_determination.orbital_elements as oe
+import kep_determination.positional_observation_reporting as por
 import sys
 
 
@@ -218,214 +219,6 @@ def load_mpc_data(fname):
     mpc_delims = [5,7,1,1,1,4,3,3,7,24,9,6,6,3]
     return np.genfromtxt(fname, dtype=dt, names=mpc_names, delimiter=mpc_delims, autostrip=True)
 
-def load_iod_data(fname):
-    """ Loads satellite position observation data files following the Interactive
-    Orbit Determination format (IOD). Currently, the only supported angle format
-    are 1,2,3&7, as specified in IOD format.
-    IOD format is described at http://www.satobs.org/position/IODformat.html.
-
-    TODO: convert IOD angle formats 4,5&6 from AZ/EL to RA/DEC.
-
-    Args:
-        fname (string): name of the IOD-formatted text file to be parsed
-
-    Returns:
-        x (numpy array): array of satellite position observations following the
-        IOD format, with angle format code = 2.
-    """
-
-    # dt is the dtype for IOD-formatted text files
-    dt = 'S15, i8, S1,' \
-         ' i8, i8, i8,' \
-         ' i8, i8, i8, i8, i8, i8,' \
-         ' i8, i8,' \
-         ' S8, S7, i8, i8,' \
-         ' S1, S1, i8, i8, i8'
-
-    # iod_names correspond to the dtype names of each field
-    iod_names = ['object', 'station', 'stationstatus',
-                  'yr', 'month', 'day',
-                  'hr', 'min', 'sec', 'msec', 'timeM', 'timeX',
-                  'angformat', 'epoch',
-                  'raaz', 'decel', 'radecazelM', 'radecazelX',
-                  'optical', 'vismagsign', 'vismag', 'vismaguncertainty', 'flashperiod']
-
-    # iod_delims corresponds to the delimiter for cutting the right variable from each input string
-    iod_delims = [15, 5, 2,
-                   5, 2, 2,
-                   2, 2, 2, 3, 2, 1,
-                   2, 1,
-                   8, 7, 2, 1,
-                   2, 1, 3, 3, 9]
-
-
-    iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
-
-    right_ascension = []
-    declination = []
-    azimuth = []
-    elevation = []
-
-    # work in progress. get_observations_data_sat() needs it still.
-    # should be cleaned and centrally handled.
-    raHH = []
-    raMM = []
-    rammm = []
-    decDD = []
-    decMM = []
-    decmmm = []
-
-
-    for i in range(len(iod_input_lines)):
-
-        RAAZ = iod_input_lines["raaz"][i]
-        raHH.append(RAAZ[0:3])
-        raMM.append(RAAZ[3:5])
-        rammm.append(RAAZ[5:7])
-        RAAZ = RAAZ.decode()
-
-        DECEL = iod_input_lines["decel"][i]
-        decDD.append(DECEL[0:3])
-        decMM.append(DECEL[3:5])
-        decmmm.append(DECEL[5:7])
-        DECEL = DECEL.decode()
-
-
-
-        RA = -1.0
-        DEC = -1.0
-        AZ = -1.0
-        EL = -1.0
-
-        if iod_input_lines["angformat"][i] == 1:
-            # 1: RA/DEC = HHMMSSs+DDMMSS MX   (MX in seconds of arc)
-            HH = float(RAAZ[0:2])
-            MM = float(RAAZ[2:4])
-            SS = float(RAAZ[4:6])
-            s = float(RAAZ[6])
-            RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
-
-            DD = float(DECEL[1:3])
-            MM = float(DECEL[3:5])
-            SS = float(DECEL[5:7])
-            DEC = DD + (MM + SS / 60.0) / 60.0
-            if DECEL[0] == "-":
-                DEC = -1.0 * DEC
-
-        elif iod_input_lines["angformat"][i] == 2:
-            # 2: RA/DEC = HHMMmmm+DDMMmm MX   (MX in minutes of arc)
-            HH = float(RAAZ[0:2])
-            MM = float(RAAZ[2:4])
-            mmm = float(RAAZ[4:7])
-            RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
-
-            DD = float(DECEL[1:3])
-            MM = float(DECEL[3:5])
-            mm = float(DECEL[5:7])
-            DEC = DD + (MM + mm / 100.0) / 60.0
-            if DECEL[0] == "-":
-                DEC = -1.0 * DEC
-
-        elif iod_input_lines["angformat"][i] == 3:
-            # 3: RA/DEC = HHMMmmm+DDdddd MX   (MX in degrees of arc)
-            HH = float(RAAZ[0:2])
-            MM = float(RAAZ[2:4])
-            mmm = float(RAAZ[4:7])
-            RA = (HH + (MM + mmm / 1000.0) / 60.0) / 24.0 * 360.0
-
-            DD = float(DECEL[1:3])
-            dddd = float(DECEL[3:7])
-            DEC = (DD + (dddd / 1000.0))
-            if DECEL[0] == "-":
-                DEC = -1.0 * DEC
-
-        elif iod_input_lines["angformat"][i] == 4:
-            # 4: AZ/EL  = DDDMMSS+DDMMSS MX   (MX in seconds of arc)
-            DDD = float(RAAZ[0:3])
-            MM = float(RAAZ[3:5])
-            SS = float(RAAZ[5:7])
-            AZ = DDD + (MM + SS / 60.0) / 60.0
-
-            DD = float(DECEL[1:3])
-            MM = float(DECEL[3:5])
-            SS = float(DECEL[5:7])
-            EL = DD + (MM + SS / 60.0) / 60.0
-            if DECEL[0] == "-":
-                EL = -1.0 * EL
-
-            # TODO: convert from AZ/EL to RA/DEC
-
-        elif iod_input_lines["angformat"][i] == 5:
-            # 5: AZ/EL  = DDDMMmm+DDMMmm MX   (MX in minutes of arc)
-            DDD = float(RAAZ[0:3])
-            MM = float(RAAZ[3:5])
-            SS = float(RAAZ[5:7])
-            AZ = DDD + (MM + SS / 60.0) / 60.0
-
-            DD = float(DECEL[1:3])
-            MM = float(DECEL[3:5])
-            mm = float(DECEL[5:7])
-            EL = DD + (MM + mm / 100.0) / 60.0
-            if DECEL[0] == "-":
-                EL = -1.0 * EL
-
-            # TODO: convert from AZ/EL to RA/DEC
-
-        elif iod_input_lines["angformat"][i] == 6:
-            # 6: AZ/EL  = DDDdddd+DDdddd MX   (MX in degrees of arc)
-            DDD = float(RAAZ[0:3])
-            dddd = float(RAAZ[3:7])
-            AZ = DDD + dddd / 1000.0
-
-            DD = float(DECEL[1:3])
-            dddd = float(DECEL[3:7])
-            EL = DD + dddd / 1000.0
-            if DECEL[0] == "-":
-                EL = -1.0 * EL
-
-            # TODO: convert from AZ/EL to RA/DEC
-
-        elif iod_input_lines["angformat"][i] == 7:
-            # 7: RA/DEC = HHMMSSs+DDdddd MX   (MX in degrees of arc)
-            HH = float(RAAZ[0:2])
-            MM = float(RAAZ[2:4])
-            SS = float(RAAZ[4:6])
-            s = float(RAAZ[6])
-            RA = (HH + (MM + (SS + s / 10.0) / 60.0) / 60.0) / 24.0 * 360.0
-
-            DD = float(DECEL[1:3])
-            dddd = float(DECEL[3:7])
-            DEC = (DD + (dddd / 1000.0))
-            if DECEL[0] == "-":
-                DEC = -1.0 * DEC
-
-        #else:
-        #    # TODO: when not defined, we assume it is RA/DEC
-
-        right_ascension.append(RA)
-        declination.append(DEC)
-        azimuth.append(AZ)
-        elevation.append(EL)
-
-    # expanding the input iod data with the position data in different formats
-    iod = {}
-    for name in iod_names:
-         iod[name] = iod_input_lines[name].tolist()
-
-    iod["right_ascension"] = right_ascension
-    iod["declination"] = declination
-    iod["azimuth"] = azimuth
-    iod["elevation"] = elevation
-
-    iod["raHH"] = raHH
-    iod["raMM"] = raMM
-    iod["rammm"] = rammm
-
-    iod["decDD"] = decDD
-    iod["decMM"] = decMM
-    iod["decmmm"] = decmmm
-
-    return iod
 
 def observerpos_mpc(long, parallax_s, parallax_c, t_utc):
     """Compute geocentric observer position at UTC instant t_utc, for Sun-centered orbits,
@@ -1729,6 +1522,12 @@ def gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=0):
     r2 = R[1]+rho_2_sr*rho2
     r3 = R[2]+rho_3_sr*rho3
 
+    f1 = lagrangef(mu, r2_star, tau1)
+    f3 = lagrangef(mu, r2_star, tau3)
+
+    g1 = lagrangeg(mu, r2_star, tau1)
+    g3 = lagrangeg(mu, r2_star, tau3)
+
     v2 = gauss_method_get_velocity(r1, r2, r3, t1, t2, t3, r2_star=r2_star)
 
     return r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr
@@ -1940,7 +1739,9 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=0
     mu = mu_Earth
     r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est = \
         gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=r2_root_ind)
-    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est
+
+    r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t = \
+        r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est
 
 
     # Apply refinement to Gauss' method, `refiters` iterations
@@ -2452,7 +2253,7 @@ def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_v
 
     """
     # load IOD data for a given satellite
-    iod_object_data = load_iod_data(filename)
+    iod_object_data = por.load_iod_data(filename)
 
     # handle default behavior for obs_arr
     if obs_arr is None:
@@ -2622,7 +2423,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
            x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
     """
     # load IOD data for a given satellite
-    iod_object_data = load_iod_data(filename)
+    iod_object_data = por.load_iod_data(filename)
 
     # handle default behavior for obs_arr
     if obs_arr is None:

@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
 from orbitdeterminator.kep_determination.ellipse_fit import determine_kep, __read_file
 from orbitdeterminator.kep_determination.gauss_method import *
+import kep_determination.positional_observation_reporting as por
 import sys
 
 # compute residuals vector, with Earth's grav parameter as to-be-fitted variable
@@ -81,7 +82,9 @@ def radec_res_vec_rov_sat_w(x, inds, iod_object_data, sat_observatories_data, ro
     for i in range(0,len(inds)):
         indm1 = inds[i]-1
         # extract observations data
-        td = timedelta(hours=1.0*iod_object_data['hr'][indm1], minutes=1.0*iod_object_data['min'][indm1], seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
+        td = timedelta(hours=1.0*iod_object_data['hr'][indm1],
+                       minutes=1.0*iod_object_data['min'][indm1],
+                       seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
         timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
         site_code = iod_object_data['station'][indm1]
         obsite = get_station_data(site_code, sat_observatories_data)
@@ -183,14 +186,19 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
            x (tuple): set of Keplerian orbital elements (a, e, taup, omega, I, omega, T)
     """
     # load IOD data for a given satellite
-    iod_object_data = load_iod_data(filename)
+    iod_object_data = por.load_iod_data(filename)
 
     #load data of listed observatories (longitude, latitude, elevation)
     sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
 
     #get preliminary orbit using Gauss method
     #q0 : a, e, taup, I, W, w, T
-    q0 = np.array(gauss_method_sat(filename, obs_arr=obs_arr, bodyname=bodyname, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
+    q0 = np.array(gauss_method_sat(filename,
+                                   obs_arr=obs_arr,
+                                   bodyname=bodyname,
+                                   r2_root_ind_vec=r2_root_ind_vec,
+                                   refiters=gaussiters,
+                                   plot=False))
     x0 = q0[0:6]
     x0[3:6] = np.deg2rad(x0[3:6])
 
@@ -206,7 +214,10 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
 
     #Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
     if(chk=='2'):
-             Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
+             Q_ls = least_squares(radec_res_vec_rov_sat, x0,
+                                  args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov),
+                                  method='lm',
+                                  xtol=1e-13)
              residuals=Q_ls.fun
              #print("--")
              #print(residuals)
@@ -215,10 +226,16 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
              #print("--")
              #print(weights)
              #print("--")
-             Q_ls = least_squares(radec_res_vec_rov_sat_w, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov, weights), method='lm', xtol=1e-13)
+             Q_ls = least_squares(radec_res_vec_rov_sat_w, x0,
+                                  args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov, weights),
+                                  method='lm',
+                                  xtol=1e-13)
              
     elif(chk=='1'):
-             Q_ls = least_squares(radec_res_vec_rov_sat, x0, args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov), method='lm', xtol=1e-13)
+             Q_ls = least_squares(radec_res_vec_rov_sat, x0,
+                                  args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov),
+                                  method='lm',
+                                  xtol=1e-13)
              
     else:
              print("Invalid input.Exiting...")
@@ -318,7 +335,10 @@ def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
     mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
 
     #x0 : a, e, taup, I, W, w
-    x0 = np.array(gauss_method_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=r2_root_ind_vec, refiters=gaussiters, plot=False))
+    x0 = np.array(gauss_method_mpc(filename, bodyname, obs_arr,
+                                   r2_root_ind_vec=r2_root_ind_vec,
+                                   refiters=gaussiters,
+                                   plot=False))
 
     x0[3:6] = np.deg2rad(x0[3:6])
 
@@ -335,7 +355,9 @@ def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
 
     #Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
     if(chk=='2'):
-             Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
+             Q_ls = least_squares(radec_res_vec_rov_mpc, x0,
+                                  args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov),
+                                  method='lm')
              residuals=Q_ls.fun
              #print("--")
              #print(residuals)
@@ -344,9 +366,13 @@ def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
              #print("--")
              #print(weights)
              #print("--")
-             Q_ls = least_squares(radec_res_vec_rov_mpc_w, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov, weights), method='lm')             
+             Q_ls = least_squares(radec_res_vec_rov_mpc_w, x0,
+                                  args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov, weights),
+                                  method='lm')
     elif(chk=='1'):
-             Q_ls = least_squares(radec_res_vec_rov_mpc, x0, args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov), method='lm')
+             Q_ls = least_squares(radec_res_vec_rov_mpc, x0,
+                                  args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov),
+                                  method='lm')
              
     else:
              print("Invalid input.Exiting...")
@@ -529,8 +555,12 @@ if __name__ == "__main__":
 
     #generate plots:
     plt.scatter( data[:,0], ranges_ ,s=0.1, label='observed data')
-    plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])), color="green", label='initial fit')
-    plt.plot( data[:,0], kep_r_(Q_ls.x[0], Q_ls.x[1], time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth, data[:,0], Q_ls.x[2])), color="orange", label='LS fit')
+    plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])),
+              color="green",
+              label='initial fit')
+    plt.plot( data[:,0], kep_r_(Q_ls.x[0], Q_ls.x[1], time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth, data[:,0], Q_ls.x[2])),
+              color="orange",
+              label='LS fit')
     plt.xlabel('time')
     plt.ylabel('range')
     plt.title('LS fit vs observations: range')
