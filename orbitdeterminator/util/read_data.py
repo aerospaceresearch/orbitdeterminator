@@ -6,7 +6,7 @@ import os
 import csv
 import pickle
 import numpy as np
-
+import  json
 _SOURCE = "../raw data"
 _DESTINATION = "../filtered data"
 
@@ -21,6 +21,11 @@ def load_data(filename):
         numpy array: array of the orbit positions, each point of the orbit is of the
         format (time, x, y, z)
     '''
+    if(filename.endswith('.json')):
+            with open(filename) as f: 
+                data=json.load(f)
+            return np.asarray(data)
+
     return np.genfromtxt(filename, delimiter='\t')[1:]
 
 def save_orbits(source, destination):
@@ -37,7 +42,7 @@ def save_orbits(source, destination):
         os.system("mkdir {}".format(destination))
 
     for file in os.listdir(source):
-        if file.endswith('.csv'):
+        if file.endswith('.csv') or file.endswith('.json'):
             orbit = load_data(source + '/' + str(file))
             pickle.dump(orbit, open(destination + "/%s.p" %file[:-4], "wb"))
 
