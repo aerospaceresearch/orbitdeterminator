@@ -1,5 +1,71 @@
 import numpy as np
 
+
+def check_iod_format(fname):
+
+    iod_input_lines = get_iod_lines(fname)
+
+    number_of_lines = len(iod_input_lines["yr"])
+    confirmed_lines = 0
+
+    for line in range(number_of_lines):
+
+        year = iod_input_lines["yr"][line]
+        station = iod_input_lines["station"][line]
+        stationstatus = iod_input_lines["stationstatus"][line]
+        angformat = iod_input_lines["angformat"][line]
+
+        if len(str(year)) == 4 and \
+                station >= 0 and \
+                any(stationstatus.decode('ascii') == x for x in ["E", "G", "F", "P", "B", "T", "C", "O", ""]) and \
+                angformat >= 1 and angformat <= 7:
+
+            confirmed_lines += 1
+
+
+
+    if confirmed_lines >= 3:
+        return True
+    else:
+        return False
+
+
+def get_iod_names():
+    iod_names = ['object', 'station', 'stationstatus',
+                 'yr', 'month', 'day',
+                 'hr', 'min', 'sec', 'msec', 'timeM', 'timeX',
+                 'angformat', 'epoch',
+                 'raaz', 'decel', 'radecazelM', 'radecazelX',
+                 'optical', 'vismagsign', 'vismag', 'vismaguncertainty', 'flashperiod']
+
+    return iod_names
+
+
+def get_iod_lines(fname):
+    # dt is the dtype for IOD-formatted text files
+    dt = 'S15, i8, S1,' \
+         ' i8, i8, i8,' \
+         ' i8, i8, i8, i8, i8, i8,' \
+         ' i8, i8,' \
+         ' S8, S7, i8, i8,' \
+         ' S1, S1, i8, i8, i8'
+
+    # iod_names correspond to the dtype names of each field
+    iod_names = get_iod_names()
+
+    # iod_delims corresponds to the delimiter for cutting the right variable from each input string
+    iod_delims = [15, 5, 2,
+                  5, 2, 2,
+                  2, 2, 2, 3, 2, 1,
+                  2, 1,
+                  8, 7, 2, 1,
+                  2, 1, 3, 3, 9]
+
+    iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+
+    return iod_input_lines
+
+
 def load_iod_data(fname):
     """ Loads satellite position observation data files following the Interactive
     Orbit Determination format (IOD). Currently, the only supported angle format
@@ -16,32 +82,8 @@ def load_iod_data(fname):
         IOD format, with angle format code = 2.
     """
 
-    # dt is the dtype for IOD-formatted text files
-    dt = 'S15, i8, S1,' \
-         ' i8, i8, i8,' \
-         ' i8, i8, i8, i8, i8, i8,' \
-         ' i8, i8,' \
-         ' S8, S7, i8, i8,' \
-         ' S1, S1, i8, i8, i8'
-
-    # iod_names correspond to the dtype names of each field
-    iod_names = ['object', 'station', 'stationstatus',
-                  'yr', 'month', 'day',
-                  'hr', 'min', 'sec', 'msec', 'timeM', 'timeX',
-                  'angformat', 'epoch',
-                  'raaz', 'decel', 'radecazelM', 'radecazelX',
-                  'optical', 'vismagsign', 'vismag', 'vismaguncertainty', 'flashperiod']
-
-    # iod_delims corresponds to the delimiter for cutting the right variable from each input string
-    iod_delims = [15, 5, 2,
-                   5, 2, 2,
-                   2, 2, 2, 3, 2, 1,
-                   2, 1,
-                   8, 7, 2, 1,
-                   2, 1, 3, 3, 9]
-
-
-    iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+    iod_input_lines = get_iod_lines(fname)
+    iod_names = get_iod_names()
 
     right_ascension = []
     declination = []
