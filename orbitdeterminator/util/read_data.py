@@ -66,7 +66,33 @@ def detect_iod(filename):
 
 def detect_csv(filename):
 
-    file = {"file" : "csv"}
+    file = {"file": None}
+
+    linecheck = np.genfromtxt(filename, delimiter='\t')[1]
+    file1 = file
+    try:
+        if len(linecheck) > 1:
+            file1 = {"file": "csv",
+                    "delimiter": "\t"}
+    except:
+        file1 = {"file": None}
+
+
+    linecheck = np.genfromtxt(filename, delimiter=';')[1]
+    file2 = file
+    try:
+        if len(linecheck) > 1:
+            file2 = {"file": "csv",
+                     "delimiter": ";"}
+    except:
+        file2 = {"file": None}
+
+
+    if file1["file"] is not None:
+        file = file1
+
+    if file2["file"] is not None:
+        file = file2
 
     return file
 
@@ -81,6 +107,8 @@ def detect_file_format(filename):
         file_json = detect_json(filename)
         file_iod = detect_iod(filename)
         file_csv = detect_csv(filename)
+        #file_uk = detect_uk(filename)
+        #file_rde = detect_rde(filename)
 
         if file_json["file"] == "json":
             return file_json
