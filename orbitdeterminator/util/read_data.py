@@ -7,7 +7,10 @@ import csv
 import pickle
 import numpy as np
 import json
-import orbitdeterminator.kep_determination.positional_observation_reporting as por
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+import kep_determination.positional_observation_reporting as por
+
 
 _SOURCE = "../raw data"
 _DESTINATION = "../filtered data"
