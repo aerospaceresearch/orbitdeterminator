@@ -3,9 +3,7 @@
 from __future__ import division
 import re
 import datetime
-from orbitdeterminator.kep_determination.gauss_method import *
-from orbitdeterminator.util.state_kep import state_kep
-from orbitdeterminator.util.kep_state import kep_state
+
 
 from astropy.utils.data import conf
 from astropy import constants as cts
@@ -29,6 +27,12 @@ from sgp4.propagation import sgp4init
 
 import inquirer
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from kep_determination.gauss_method import *
+from util.state_kep import state_kep
+from util.kep_state import kep_state
 
 mu = G.value*M_earth.value
 Re = R_earth.value

@@ -6,10 +6,12 @@ import signal
 import threading
 from functools import partial
 import numpy as np
-
-from orbitdeterminator.propagation.cowell import propagate_state
-from orbitdeterminator.util.teme_to_ecef import conv_to_ecef
-from orbitdeterminator.util.new_tle_kep_state import kep_to_state
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from propagation.cowell import propagate_state
+from util.teme_to_ecef import conv_to_ecef
+from util.new_tle_kep_state import kep_to_state
 
 class Simulator():
     """A class for the simulator."""

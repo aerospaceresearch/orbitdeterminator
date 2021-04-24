@@ -4,12 +4,11 @@ hence orbital elements at every time epoch (at every second) for the next 8
 hours.
 '''
 
-import sys
-import os.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-
 import numpy as np
 import math
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from kep_determination.gibbs_method import *
 
 pi = np.pi
