@@ -26,6 +26,22 @@ def load_data(filename):
         numpy array: array of the orbit positions, each point of the orbit is of the
         format (time, x, y, z)
     '''
+    format=detect_file_format(filename)
+
+    if format['file'] == "json":          #filename.endswith('.json')
+
+            with open(filename) as f:
+                data=json.load(f)
+            ajnew=list(range(len(data)))
+            for i in range(len(data)):
+                ajnew[i]=list(data[i].values())
+            ajs=np.asarray(ajnew)[1:]
+            ajf=list(range(len(ajs)))
+            for x in range(len(ajs)):
+                ajf[x]= list(map(float, ajs[x]))
+
+            print(np.asarray(ajf)[1:])
+            return np.asarray(ajf)[1:]
     return np.genfromtxt(filename, delimiter='\t')[1:]
 
 def save_orbits(source, destination):
