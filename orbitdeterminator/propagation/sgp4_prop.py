@@ -7,7 +7,10 @@ import numpy as np
 from sgp4.model import Satellite
 from sgp4.earth_gravity import wgs72
 from sgp4.propagation import sgp4init
-from orbitdeterminator.util.state_kep import state_kep
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from util.state_kep import state_kep
 
 def __true_to_mean(T,e):
     """Converts true anomaly to mean anomaly.

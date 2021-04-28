@@ -47,6 +47,8 @@ def process(data_file, error_apriori, units):
     '''
 
     # First read the csv file called "orbit" with the positional data
+    print("Imported file format is:", read_data.detect_file_format(data_file)["file"])
+    print("")
     data = read_data.load_data(data_file)
 
     if(units == 'm'):

@@ -5,8 +5,6 @@
    will be out of range of the satellite.
 """
 
-import os
-import sys
 import time
 import random
 import signal
@@ -15,10 +13,11 @@ from functools import partial
 import numpy as np
 
 from cowell import propagate_state
-PROJ_DIR = os.getcwd() + "/.."
-sys.path.insert(0, PROJ_DIR + '/util')
-from teme_to_ecef import conv_to_ecef
-from new_tle_kep_state import kep_to_state
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+from util.teme_to_ecef import conv_to_ecef
+from util.new_tle_kep_state import kep_to_state
 
 class DGSNSimulator():
     """A class for the simulator."""
