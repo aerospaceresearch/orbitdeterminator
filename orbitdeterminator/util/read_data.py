@@ -82,6 +82,13 @@ def detect_iod(filename):
 
     return file
 
+def detect_uk(filename):
+    if por.check_uk_format(filename) == True:
+        file = {"file" : "UK"}
+    else:
+        file = {"file": None}
+
+    return file
 
 def detect_csv(filename):
 
@@ -126,7 +133,7 @@ def detect_file_format(filename):
         file_json = detect_json(filename)
         file_iod = detect_iod(filename)
         file_csv = detect_csv(filename)
-        #file_uk = detect_uk(filename)
+        file_uk = detect_uk(filename)
         #file_rde = detect_rde(filename)
 
         if file_json["file"] == "json":
@@ -137,7 +144,8 @@ def detect_file_format(filename):
 
         elif file_csv["file"] == "csv":
             return file_csv
-
+        elif file_uk["file"] == "UK":
+            return file_uk
         else:
             return file
 
@@ -150,5 +158,6 @@ if __name__ == "__main__":
 
     #save_orbits(_SOURCE, _DESTINATION)
     print("detecting file", detect_file_format("../orbit.csv"))
+    print("detecting file", detect_file_format("../sampleukformatdata.txt"))
     print("detecting file", detect_file_format("../example_data/SATOBS-ML-19200716.txt"))
-    print("detecting file", detect_file_format("../orbit1.csv"))
+    print("detecting file", detect_file_format("../orbit.json"))
