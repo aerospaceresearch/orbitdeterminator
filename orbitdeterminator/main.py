@@ -75,8 +75,10 @@ def process(data_file, error_apriori, units):
         # Use the golay_window.py script to find the window for the Savitzky Golay filter based on the error you input
         window = golay_window.window(error_apriori, data_after_filter)
         
-        # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
-        data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+        polyorder = 3
+        if polyorder < window:
+            # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
+            data_after_filter = sav_golay.golay(data_after_filter, window, polyorder)
 
     else:
         for index, choice in enumerate(choices['filter']):
@@ -91,8 +93,10 @@ def process(data_file, error_apriori, units):
                 # based on the error you input
                 window = golay_window.window(error_apriori, data_after_filter)
 
-                # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
-                data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+                polyorder = 3
+                if polyorder < window:
+                    # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
+                    data_after_filter = sav_golay.golay(data_after_filter, window, polyorder)
 
             elif(choice == 'Wiener Filter'):
                 print("Applying Wiener Filter...")
