@@ -188,6 +188,14 @@ def zeroTo360(x):
 
     return x
 
+def zeroTo180(x):
+    if x >= 180.0:
+        x = x - int(x/180) * 180.0
+    elif x < 0.0:
+        x = x - (int(x/180) - 1) * 180.0
+
+    return x
+
 
 def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements):
 
@@ -336,7 +344,12 @@ def log_prior(theta, parameters, finding, orbit):
 
     r_earth = 6378.0
 
-    if r_earth < r_p and r_p <= r_a and inc >= 0.0 and inc <= 180.0 and raan >= -90.0 and AoP > -90.0:# and np.abs(bstar) <= 1111111 and np.abs(bstar) >= 0:
+    if r_earth < r_p and r_p <= r_a and\
+            inc >= 0.0 and inc <= 180.0 and\
+            raan >= -90.0 and \
+            AoP > -90.0 and \
+            np.abs(bstar) <= 1.0:
+
         return 0.0
 
     return -np.inf
@@ -490,11 +503,27 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
 
 
 
-        print(b4_tle_line1)
-        print(b4_tle_line2)
-
-        print(counter+1, i+1, "/", loops, b4, time.time() - starttime, mode)
+        print("tle_line1:", b4_tle_line1)
+        print("tle_line2:", b4_tle_line2)
+        print("overall", counter+1, i+1, "/", loops,"", b4,"runtime=", time.time() - starttime)
         print("")
+
+
+
+        # filtering the POS to change the values within their limits.
+        # this shall help also with the percentiles and averages
+        keys = list(finding.keys())
+        for k in range(len(pos)):
+            for l in range(len(pos[k])):
+
+                if keys[l] == "AoP":
+                    pos[k][l] = zeroTo360(pos[k][l])
+
+                if keys[l] == "raan":
+                    pos[k][l] = zeroTo360(pos[k][l])
+
+                if keys[l] == "inc":
+                    pos[k][l] = zeroTo180(pos[k][l])
 
         counter += 1
         sampler.reset()
@@ -598,6 +627,76 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
           "td=", td)
 
 
+
+
+
+
+    ############# next optimization, just the bstar now
+    print("")
+    print("## Determination2: Finding the bstar")
+    pos = []
+    for index_bstar in range(220):
+        bstar = np.random.randint(-100000, 100000) / 100000.0
+
+        inputs = [bstar]
+        pos.append(inputs)
+
+    td = np.zeros(len(station))
+
+    orbit = 1  # 0 = circle
+
+    parameters = {
+        "r_p": r_p,
+        "r_a": r_a,
+        "AoP": AoP,
+        "inc": inc,
+        "raan": raan,
+        "tp": tp,
+        "bstar": 0.0,
+        "td": td
+    }
+
+    finding = {
+        "bstar": 0
+    }
+
+    # the overall number of walkers need to be multiple of 2.
+    ndim = len(finding)
+    nwalkers = len(pos)
+
+    # initiating the optimization.
+    # every loop will provide an output.
+    # walks is the number of steps/hops a walker will be doing.
+
+    #counter = 0
+
+    print("performing:", loops, "loops,", walks, "walks, for", nwalkers, "walkers")
+    print("please wait again now...")
+    # finding the orbits now...
+
+    result, counter = find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station,
+                                 timestamp_min, timestamps, mode, measurements, orbit)
+
+    theta = []
+    for r in range(len(result)):
+        theta.append(result[r])
+
+    r_p, r_a, AoP, inc, raan, tp, bstar, td = get_kepler_parameters(theta, parameters, finding, orbit)
+    sum = get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements)
+
+    print("rp=", r_p,
+          "ra=", r_a,
+          "AoP=", AoP,
+          "inc=", inc,
+          "raan=", raan,
+          "tp=", tp,
+          "bstar=", bstar,
+          "td=", td)
+
+
+
+
+
     '''
     global_grid_dif = []
 
@@ -663,7 +762,7 @@ def fromposition(timestamp, sat, mode=0):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
-    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps, mode, measurements, loops = 20, walks=50)
+    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps, mode, measurements, loops = 15, walks=60)
 
     return r_p, r_a, AoP, inc, raan, tp, bstar, td
 
