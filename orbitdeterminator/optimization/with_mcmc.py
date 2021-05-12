@@ -505,7 +505,7 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
 
         print("tle_line1:", b4_tle_line1)
         print("tle_line2:", b4_tle_line2)
-        print("overall", counter+1, i+1, "/", loops,"", b4,"runtime=", time.time() - starttime)
+        print("overall", counter+1, i+1, "/", loops,"rms=", b4,"runtime=", time.time() - starttime)
         print("")
 
 
@@ -636,9 +636,12 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     print("## Determination2: Finding the bstar")
     pos = []
     for index_bstar in range(220):
+        AoP = np.random.randint(-2, 2) + AoP
+        raan = np.random.randint(-2, 2) + raan
+        tp = np.random.randint(-5, 5) + tp
         bstar = np.random.randint(-100000, 100000) / 100000.0
 
-        inputs = [bstar]
+        inputs = [AoP, raan, tp, bstar]
         pos.append(inputs)
 
     td = np.zeros(len(station))
@@ -652,12 +655,15 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         "inc": inc,
         "raan": raan,
         "tp": tp,
-        "bstar": 0.0,
+        "bstar": bstar,
         "td": td
     }
 
     finding = {
-        "bstar": 0
+        "AoP": 0,
+        "raan": 1,
+        "tp": 2,
+        "bstar": 3
     }
 
     # the overall number of walkers need to be multiple of 2.
@@ -762,7 +768,7 @@ def fromposition(timestamp, sat, mode=0):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
-    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps, mode, measurements, loops = 15, walks=60)
+    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps, mode, measurements, loops = 17, walks=50)
 
     return r_p, r_a, AoP, inc, raan, tp, bstar, td
 
