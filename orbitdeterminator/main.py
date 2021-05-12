@@ -7,6 +7,7 @@ and generates the final set of keplerian elements along with a plot and a filter
 from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average, wiener)
 from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbs_method, gauss_method)
+from optimization import (with_mcmc)
 import argparse
 import numpy as np
 import matplotlib as mpl
@@ -134,7 +135,8 @@ def process(data_file, error_apriori, units):
                                  'Cubic Spline Interpolation',
                                  'Ellipse Best Fit',
                                  'Gibbs 3 Vector',
-                                 'Gauss 3 Vector'],
+                                 'Gauss 3 Vector',
+                                 'MCMC'],
                         ),
     ]
     choices = inquirer.prompt(questions)
@@ -240,7 +242,7 @@ def process(data_file, error_apriori, units):
                 kep_final_gibbs[6, 0] = sgp4.rev_per_day(kep_final_gibbs[0, 0])
                 kep_elements['Gibbs 3 Vector'] = kep_final_gibbs
 
-            else:
+            elif (choice == 'Gauss 3 Vector'):
                 # Apply the Gauss method
 
                 # first only with first, middle and last measurement
@@ -290,6 +292,27 @@ def process(data_file, error_apriori, units):
                 kep_final_gauss = np.resize(kep_final_gauss, ((7, 1)))
                 kep_final_gauss[6, 0] = sgp4.rev_per_day(kep_final_gauss[0, 0])
                 kep_elements['Gauss 3 Vector'] = kep_final_gauss
+
+            else:
+                # apply mcmc method, a real optimizer
+
+                timestamps = data_after_filter[:, 0]
+
+                # enough data for half orbit
+                R = np.array(data_after_filter[:, 1:])
+
+                r_p, r_a, AoP, inc, raan, tp, bstar, td = with_mcmc.fromposition(timestamps, R)
+
+                semimajor_axis = (r_p + r_a) / 2.0
+                ecc = (r_a - r_p) / (r_a + r_p)
+                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
+                true_anomaly = tp / T_orbitperiod * 360.0
+                n_mean_motion_perday = oe.n_mean_motion_perday(T_orbitperiod)
+
+                kep_mcmc = np.array([[semimajor_axis, ecc, inc, AoP, raan, true_anomaly, n_mean_motion_perday]])
+
+                kep_elements['MCMC'] = kep_mcmc
+
 
     kep_final = np.zeros((7, len(kep_elements)))
     order = []
@@ -367,7 +390,8 @@ if __name__ == "__main__":
                "  2. Savitzky Golay Filter       |   2. Cubic spline interpolation\n"\
                "  4. Triple Moving Average Filter|   3. Ellipse Bset Fit\n"\
                "  5. Wiener Filter               |   4. Gibbs 3 Vector\n"\
-               "                                 |   5. Gauss 3 Vector\n"
+               "                                 |   5. Gauss 3 Vector\n"\
+               "                                 |   6. MCMC\n"
     print("\n" + workflow)
 
     args = read_args()
