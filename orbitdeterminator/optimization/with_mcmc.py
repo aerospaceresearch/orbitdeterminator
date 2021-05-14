@@ -272,8 +272,31 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
 
     # now we just do a simple Root-mean-square of the measurement positions
     # and the orbit positions based on the simulation
-    rms = np.subtract(track, satellite_pos)
-    rms_sum = np.sum(np.square(rms))
+    # but first min-max-rescaling or currently mean.
+
+    # normalization
+    satellite_radius = []
+    for s in range(len(satellite_pos)):
+        for pos in range(len(satellite_pos[s])):
+            satellite_radius.append((satellite_pos[s][pos][0]**2 +
+                                     satellite_pos[s][pos][1]**2 +
+                                     satellite_pos[s][pos][2]**2)**0.5)
+
+    mean_radius = np.mean(satellite_radius)
+    rms_sum = 0
+    emcee_factor = 10000 # somehow emcee seems to not like rms_sum smaller 1.0, so we artificially boost that up
+
+    for s in range(len(satellite_pos)):
+        # unfortunately inputs can be ragged arrays, and numpy does not like it.
+        # so we iterate through it and use numpy sub-array wise.
+
+        # normalizing with mean radius
+        track1 = np.divide(track[s], mean_radius)
+        satellite_pos1 = np.divide(satellite_pos[s], mean_radius)
+
+        rms = np.subtract(track1, satellite_pos1)
+        rms = np.multiply(rms, emcee_factor)
+        rms_sum += np.sum(np.square(rms))
 
     return -0.5 * rms_sum
 
@@ -505,7 +528,7 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
 
         print("tle_line1:", b4_tle_line1)
         print("tle_line2:", b4_tle_line2)
-        print("overall", counter+1, i+1, "/", loops,"rms=", b4,"runtime=", time.time() - starttime)
+        print("overall", counter+1, i+1, "/", loops,"rms=", b4, "runtime=", time.time() - starttime)
         print("")
 
 
