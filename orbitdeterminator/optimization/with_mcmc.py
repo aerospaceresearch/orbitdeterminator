@@ -561,47 +561,6 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     print("## Determination1: Finding the orbit parameters")
 
     # distributing the initial positions within the scope of AoP, inclination and raan.
-    pos = []
-    for index_aop in range(7):
-        for index_inclination in range(7):
-            for index_raan in range(7):
-                # the following ranges for the random initial parameter are gut feelings.
-                # for later automation, this needs to be configurable by the user
-                r_p0 = np.random.randint(63780 + 0, 63780 + 10000) / 10.0
-                r_a0 = np.random.randint(r_p0 * 10.0, 63780 + 10000) / 10.0
-                AoP0 = float(360.0 / 7 * index_aop)
-
-
-                inc0 = np.random.randint(0, 18000) / 100.0
-                raan0 = np.random.randint(0, 36000) / 100.0
-
-                eccentricity = (r_a0 - r_p0) / (r_a0 + r_p0)
-                h_angularmomentuum = np.sqrt(r_p0 * (1 + eccentricity * np.cos(0)) * mu)
-                T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
-
-                tp0 = np.random.randint(0, int(T_orbitperiod))
-                bstar = np.random.randint(-11111 * 333, 11111 * 333)
-
-                inputs = [r_p0, r_a0, AoP0, inc0, raan0, tp0]
-                # inputs = [r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar]
-
-                pos.append(inputs)
-
-    td = np.zeros(len(station))
-
-    orbit = 1 # 0 = circle
-
-    parameters = {
-        "r_p": 0,
-        "r_a": 0,
-        "AoP": 0,
-        "inc": 0,
-        "raan": 0,
-        "tp": 0,
-        "bstar": 0.0,
-        "td": td
-    }
-
     finding = {
         "r_p": 0,
         "r_a": 1,
@@ -609,10 +568,86 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         "inc": 3,
         "raan": 4,
         "tp": 5,
-        #"bstar": 6# ,
+        # "bstar": 6# ,
         # "td": {"0": 7,
         #       "2": 8}
     }
+
+    r_a = 0.0
+    r_p = 0.0
+    AoP = 0.0
+    inc = 0.0
+    raan = 0.0
+    tp = 0.0
+    bstar = 0.0
+    td = np.zeros(len(station))
+
+    orbit = 1  # 0 = circle
+
+
+    pos = []
+    for index_aop in range(370):
+
+        inputs = []
+
+        # the following ranges for the random initial parameter are gut feelings.
+        # for later automation, this needs to be configurable by the user
+
+        if "r_p" in finding:
+            r_p = np.random.randint(63780 + 0, 63780 + 10000) / 10.0
+            inputs.append(r_p)
+
+        if "r_a" in finding:
+            r_a = np.random.randint(r_p * 10.0, 63780 + 10000) / 10.0
+            inputs.append(r_a)
+            # todo what if only r_a or r_p is set?
+
+        if "AoP" in finding:
+            AoP = np.random.randint(0, 36000) / 100.0
+            inputs.append(AoP)
+
+        if "inc" in finding:
+            inc = np.random.randint(0, 18000) / 100.0
+            inputs.append(inc)
+
+        if "raan" in finding:
+            raan = np.random.randint(0, 36000) / 100.0
+            inputs.append(raan)
+
+        if "tp" in finding:
+
+            eccentricity = (r_a - r_p) / (r_a + r_p)
+            h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu)
+            T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
+
+            tp = np.random.randint(0, int(T_orbitperiod))
+            #todo: if r_a0 and r_p0 are not set, what to do then?
+            inputs.append(tp)
+
+        if "bstar" in finding:
+            bstar = np.random.randint(-100000, 100000) / 100000.0
+            inputs.append(bstar)
+
+        if "td" in finding:
+            for f in range(len(finding["td"])):
+                td = np.random.randint(100, 10000) / 100.0
+                inputs.appedn(td)
+
+        pos.append(inputs)
+
+
+    parameters = {
+        "r_p": r_p,
+        "r_a": r_a,
+        "AoP": AoP,
+        "inc": inc,
+        "raan": raan,
+        "tp": tp,
+        "bstar": bstar,
+        "td": td
+    }
+
+
 
     # the overall number of walkers need to be multiple of 2.
     ndim = len(finding)
@@ -657,19 +692,67 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     ############# next optimization, just the bstar now
     print("")
     print("## Determination2: Finding the bstar")
-    pos = []
-    for index_bstar in range(220):
-        AoP = np.random.randint(-2, 2) + AoP
-        raan = np.random.randint(-2, 2) + raan
-        tp = np.random.randint(-5, 5) + tp
-        bstar = np.random.randint(-100000, 100000) / 100000.0
 
-        inputs = [AoP, raan, tp, bstar]
-        pos.append(inputs)
-
-    td = np.zeros(len(station))
+    finding = {
+        "r_p": 0,
+        "r_a": 1,
+        "AoP": 2,
+        "inc": 3,
+        "raan": 4,
+        "tp": 5,
+        "bstar": 6
+    }
 
     orbit = 1  # 0 = circle
+
+    pos = []
+    for index_aop in range(200):
+
+        inputs = []
+
+        # the following ranges for the random initial parameter are gut feelings.
+        # for later automation, this needs to be configurable by the user
+
+        if "r_p" in finding:
+            r_p = np.random.randint(0, 100) / 10.0 + r_p
+            inputs.append(r_p)
+
+        if "r_a" in finding:
+            r_a = np.random.randint(r_p * 10.0, (r_a * 10.0) + 100) / 10.0
+            inputs.append(r_a)
+            # todo what if only r_a or r_p is set?
+
+        if "AoP" in finding:
+            AoP = np.random.randint(-100, 100) / 100.0 + AoP
+            inputs.append(AoP)
+
+        if "inc" in finding:
+            inc = np.random.randint(-100, 100) / 100.0 + inc
+            inputs.append(inc)
+
+        if "raan" in finding:
+            raan = np.random.randint(-100, 100) / 100.0 + raan
+            inputs.append(raan)
+
+        if "tp" in finding:
+            eccentricity = (r_a - r_p) / (r_a + r_p)
+            h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu)
+            T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
+
+            tp = np.random.randint(-10, 10) + tp
+            # todo: if r_a0 and r_p0 are not set, what to do then?
+            inputs.append(tp)
+
+        if "bstar" in finding:
+            bstar = np.random.randint(-1000000, 1000000) / 1000000.0
+            inputs.append(bstar)
+
+        if "td" in finding:
+            for f in range(len(finding["td"])):
+                td = np.random.randint(100, 10000) / 100.0
+                inputs.appedn(td)
+
+        pos.append(inputs)
 
     parameters = {
         "r_p": r_p,
@@ -682,12 +765,7 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         "td": td
     }
 
-    finding = {
-        "AoP": 0,
-        "raan": 1,
-        "tp": 2,
-        "bstar": 3
-    }
+
 
     # the overall number of walkers need to be multiple of 2.
     ndim = len(finding)
@@ -791,7 +869,7 @@ def fromposition(timestamp, sat, mode=0):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
-    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps, mode, measurements, loops = 17, walks=50)
+    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps, mode, measurements, loops = 15, walks=50)
 
     return r_p, r_a, AoP, inc, raan, tp, bstar, td
 
