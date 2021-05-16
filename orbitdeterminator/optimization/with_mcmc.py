@@ -573,20 +573,35 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         #       "2": 8}
     }
 
-    r_a = 0.0
-    r_p = 0.0
-    AoP = 0.0
-    inc = 0.0
-    raan = 0.0
-    tp = 0.0
-    bstar = 0.0
-    td = np.zeros(len(station))
+    r_a0 = 6378.0
+    r_p0 = 6378.0
+    AoP0 = 0.0
+    inc0 = 0.0
+    raan0 = 0.0
+    tp0 = -1.0
+    bstar0 = 0.0
+    td0 = np.zeros(len(station))
+
+    r_a_min = 0.0
+    r_a_max = 1000.0
+    r_p_min = 0.0
+    r_p_max = 1000.0
+    AoP_min = 0.0
+    AoP_max = 360.0
+    inc_min = 0.0
+    inc_max = 180.0
+    raan_min = 0.0
+    raan_max = 360.0
+    tp_min = 0.0
+    tp_max = 1.0
+    bstar_min = -100000.0
+    bstar_max = 100000.0
 
     orbit = 1  # 0 = circle
 
 
     pos = []
-    for index_aop in range(370):
+    for index_aop in range(300):
 
         inputs = []
 
@@ -594,24 +609,26 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         # for later automation, this needs to be configurable by the user
 
         if "r_p" in finding:
-            r_p = np.random.randint(63780 + 0, 63780 + 10000) / 10.0
+            r_p = np.random.randint(int(r_p_min * 10.0), int(r_p_max * 10.0)) / 10.0 + r_p0
             inputs.append(r_p)
 
         if "r_a" in finding:
-            r_a = np.random.randint(r_p * 10.0, 63780 + 10000) / 10.0
+            r_a = np.random.randint(int(r_a_min * 10.0), int(r_a_max * 10.0)) / 10.0 + r_a0
+            if r_a < r_p:
+                r_a = r_p
             inputs.append(r_a)
             # todo what if only r_a or r_p is set?
 
         if "AoP" in finding:
-            AoP = np.random.randint(0, 36000) / 100.0
+            AoP = np.random.randint(int(AoP_min * 100.0), int(AoP_max * 100.0)) / 100.0 + AoP0
             inputs.append(AoP)
 
         if "inc" in finding:
-            inc = np.random.randint(0, 18000) / 100.0
+            inc = np.random.randint(int(inc_min * 100.0), int(inc_max * 100.0)) / 100.0 + inc0
             inputs.append(inc)
 
         if "raan" in finding:
-            raan = np.random.randint(0, 36000) / 100.0
+            raan = np.random.randint(int(raan_min * 100.0), int(raan_max * 100.0)) / 100.0 + raan0
             inputs.append(raan)
 
         if "tp" in finding:
@@ -620,31 +637,35 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
             h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu)
             T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
-            tp = np.random.randint(0, int(T_orbitperiod))
+            tp = np.random.randint(int(tp_min * 100.0), int(tp_max * 100.0)) / 100.0
+            if tp0 < 0.0:
+                tp = tp * T_orbitperiod
+            else:
+                tp = tp + tp0
             #todo: if r_a0 and r_p0 are not set, what to do then?
             inputs.append(tp)
 
         if "bstar" in finding:
-            bstar = np.random.randint(-100000, 100000) / 100000.0
+            bstar = np.random.randint(int(bstar_min), int(bstar_max)) / 100000.0 + bstar0
             inputs.append(bstar)
 
         if "td" in finding:
             for f in range(len(finding["td"])):
-                td = np.random.randint(100, 10000) / 100.0
+                td = np.random.randint(-10000, 10000) / 1000.0
                 inputs.appedn(td)
 
         pos.append(inputs)
 
 
     parameters = {
-        "r_p": r_p,
-        "r_a": r_a,
-        "AoP": AoP,
-        "inc": inc,
-        "raan": raan,
-        "tp": tp,
-        "bstar": bstar,
-        "td": td
+        "r_p": r_p0,
+        "r_a": r_a0,
+        "AoP": AoP0,
+        "inc": inc0,
+        "raan": raan0,
+        "tp": tp0,
+        "bstar": bstar0,
+        "td": td0
     }
 
 
@@ -672,17 +693,17 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     for r in range(len(result)):
         theta.append(result[r])
 
-    r_p, r_a, AoP, inc, raan, tp, bstar, td = get_kepler_parameters(theta, parameters, finding, orbit)
-    sum = get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements)
+    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = get_kepler_parameters(theta, parameters, finding, orbit)
+    sum = get_state_sum(r_a0, r_p0, inc0, raan0, AoP0, tp0, bstar0, td0, station, timestamp_min, timestamps, mode, measurements)
 
-    print("rp=", r_p,
-          "ra=", r_a,
-          "AoP=", AoP,
-          "inc=", inc,
-          "raan=", raan,
-          "tp=", tp,
-          "bstar=", bstar,
-          "td=", td)
+    print("rp=", r_p0,
+          "ra=", r_a0,
+          "AoP=", AoP0,
+          "inc=", inc0,
+          "raan=", raan0,
+          "tp=", tp0,
+          "bstar=", bstar0,
+          "td=", td0)
 
 
 
@@ -703,10 +724,25 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         "bstar": 6
     }
 
+    r_a_min = -1.0
+    r_a_max = 1.0
+    r_p_min = -1.0
+    r_p_max = 1.0
+    AoP_min = -1.0
+    AoP_max = 1.0
+    inc_min = -1.0
+    inc_max = 1.0
+    raan_min = -1.0
+    raan_max = 1.0
+    tp_min = -10.0
+    tp_max = 10.0
+    bstar_min = -100000.0
+    bstar_max = 100000.0
+
     orbit = 1  # 0 = circle
 
     pos = []
-    for index_aop in range(200):
+    for index_aop in range(300):
 
         inputs = []
 
@@ -714,55 +750,62 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         # for later automation, this needs to be configurable by the user
 
         if "r_p" in finding:
-            r_p = np.random.randint(0, 100) / 10.0 + r_p
+            r_p = np.random.randint(int(r_p_min * 10.0), int(r_p_max * 10.0)) / 10.0 + r_p0
             inputs.append(r_p)
 
         if "r_a" in finding:
-            r_a = np.random.randint(r_p * 10.0, (r_a * 10.0) + 100) / 10.0
+            r_a = np.random.randint(int(r_a_min * 10.0), int(r_a_max * 10.0)) / 10.0 + r_a0
+            if r_a < r_p:
+                r_a = r_p
             inputs.append(r_a)
             # todo what if only r_a or r_p is set?
 
         if "AoP" in finding:
-            AoP = np.random.randint(-100, 100) / 100.0 + AoP
+            AoP = np.random.randint(int(AoP_min * 100.0), int(AoP_max * 100.0)) / 100.0 + AoP0
             inputs.append(AoP)
 
         if "inc" in finding:
-            inc = np.random.randint(-100, 100) / 100.0 + inc
+            inc = np.random.randint(int(inc_min * 100.0), int(inc_max * 100.0)) / 100.0 + inc0
             inputs.append(inc)
 
         if "raan" in finding:
-            raan = np.random.randint(-100, 100) / 100.0 + raan
+            raan = np.random.randint(int(raan_min * 100.0), int(raan_max * 100.0)) / 100.0 + raan0
             inputs.append(raan)
 
         if "tp" in finding:
+
             eccentricity = (r_a - r_p) / (r_a + r_p)
             h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu)
             T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
-            tp = np.random.randint(-10, 10) + tp
+            tp = np.random.randint(int(tp_min * 100.0), int(tp_max * 100.0)) / 100.0
+            if tp0 < 0.0:
+                tp = tp * T_orbitperiod
+            else:
+                tp = tp + tp0
             # todo: if r_a0 and r_p0 are not set, what to do then?
             inputs.append(tp)
 
         if "bstar" in finding:
-            bstar = np.random.randint(-1000000, 1000000) / 1000000.0
+            bstar = np.random.randint(int(bstar_min), int(bstar_max)) / 100000.0 + bstar0
             inputs.append(bstar)
 
         if "td" in finding:
             for f in range(len(finding["td"])):
-                td = np.random.randint(100, 10000) / 100.0
+                td = np.random.randint(-10000, 10000) / 1000.0
                 inputs.appedn(td)
 
         pos.append(inputs)
 
     parameters = {
-        "r_p": r_p,
-        "r_a": r_a,
-        "AoP": AoP,
-        "inc": inc,
-        "raan": raan,
-        "tp": tp,
-        "bstar": bstar,
-        "td": td
+        "r_p": r_p0,
+        "r_a": r_a0,
+        "AoP": AoP0,
+        "inc": inc0,
+        "raan": raan0,
+        "tp": tp0,
+        "bstar": bstar0,
+        "td": td0
     }
 
 
@@ -788,17 +831,17 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     for r in range(len(result)):
         theta.append(result[r])
 
-    r_p, r_a, AoP, inc, raan, tp, bstar, td = get_kepler_parameters(theta, parameters, finding, orbit)
-    sum = get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements)
+    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = get_kepler_parameters(theta, parameters, finding, orbit)
+    sum = get_state_sum(r_a0, r_p0, inc0, raan0, AoP0, tp0, bstar0, td0, station, timestamp_min, timestamps, mode, measurements)
 
-    print("rp=", r_p,
-          "ra=", r_a,
-          "AoP=", AoP,
-          "inc=", inc,
-          "raan=", raan,
-          "tp=", tp,
-          "bstar=", bstar,
-          "td=", td)
+    print("rp=", r_p0,
+          "ra=", r_a0,
+          "AoP=", AoP0,
+          "inc=", inc0,
+          "raan=", raan0,
+          "tp=", tp0,
+          "bstar=", bstar0,
+          "td=", td0)
 
 
 
@@ -838,7 +881,7 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     print(AoP_set, tp_set)
     '''
 
-    return r_p, r_a, AoP, inc, raan, tp, bstar, td
+    return r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0
 
 
 def fromposition(timestamp, sat, mode=0):
