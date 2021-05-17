@@ -555,194 +555,18 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
     return b4_result, counter
 
 
-
-def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walks=100):
-    print("")
-    print("## Determination1: Finding the orbit parameters")
-
-    # distributing the initial positions within the scope of AoP, inclination and raan.
-    finding = {
-        "r_p": 0,
-        "r_a": 1,
-        "AoP": 2,
-        "inc": 3,
-        "raan": 4,
-        "tp": 5,
-        # "bstar": 6# ,
-        # "td": {"0": 7,
-        #       "2": 8}
-    }
-
-    r_a0 = 6378.0
-    r_p0 = 6378.0
-    AoP0 = 0.0
-    inc0 = 0.0
-    raan0 = 0.0
-    tp0 = -1.0
-    bstar0 = 0.0
-    td0 = np.zeros(len(station))
-
-    r_a_min = 0.0
-    r_a_max = 1000.0
-    r_p_min = 0.0
-    r_p_max = 1000.0
-    AoP_min = 0.0
-    AoP_max = 360.0
-    inc_min = 0.0
-    inc_max = 180.0
-    raan_min = 0.0
-    raan_max = 360.0
-    tp_min = 0.0
-    tp_max = 1.0
-    bstar_min = -100000.0
-    bstar_max = 100000.0
-
-    orbit = 1  # 0 = circle
-
+def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, station, timestamp_min, timestamps, mode,
+                       measurements, r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0, orbit=0,
+                       r_a_min= 0.0, r_a_max= 10.0,
+                       r_p_min= 0.0, r_p_max= 10.0,
+                       AoP_min= 0.0, AoP_max= 360.0,
+                       inc_min= 0.0, inc_max= 180.0,
+                       raan_min= 0.0, raan_max= 360.0,
+                       tp_min= 0.0, tp_max= 1.0,
+                       bstar_min= -100000.0, bstar_max= 100000.0):
 
     pos = []
-    for index_aop in range(300):
-
-        inputs = []
-
-        # the following ranges for the random initial parameter are gut feelings.
-        # for later automation, this needs to be configurable by the user
-
-        if "r_p" in finding:
-            r_p = np.random.randint(int(r_p_min * 10.0), int(r_p_max * 10.0)) / 10.0 + r_p0
-            inputs.append(r_p)
-
-        if "r_a" in finding:
-            r_a = np.random.randint(int(r_a_min * 10.0), int(r_a_max * 10.0)) / 10.0 + r_a0
-            if r_a < r_p:
-                r_a = r_p
-            inputs.append(r_a)
-            # todo what if only r_a or r_p is set?
-
-        if "AoP" in finding:
-            AoP = np.random.randint(int(AoP_min * 100.0), int(AoP_max * 100.0)) / 100.0 + AoP0
-            inputs.append(AoP)
-
-        if "inc" in finding:
-            inc = np.random.randint(int(inc_min * 100.0), int(inc_max * 100.0)) / 100.0 + inc0
-            inputs.append(inc)
-
-        if "raan" in finding:
-            raan = np.random.randint(int(raan_min * 100.0), int(raan_max * 100.0)) / 100.0 + raan0
-            inputs.append(raan)
-
-        if "tp" in finding:
-
-            eccentricity = (r_a - r_p) / (r_a + r_p)
-            h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu)
-            T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
-
-            tp = np.random.randint(int(tp_min * 100.0), int(tp_max * 100.0)) / 100.0
-            if tp0 < 0.0:
-                tp = tp * T_orbitperiod
-            else:
-                tp = tp + tp0
-            #todo: if r_a0 and r_p0 are not set, what to do then?
-            inputs.append(tp)
-
-        if "bstar" in finding:
-            bstar = np.random.randint(int(bstar_min), int(bstar_max)) / 100000.0 + bstar0
-            inputs.append(bstar)
-
-        if "td" in finding:
-            for f in range(len(finding["td"])):
-                td = np.random.randint(-10000, 10000) / 1000.0
-                inputs.appedn(td)
-
-        pos.append(inputs)
-
-
-    parameters = {
-        "r_p": r_p0,
-        "r_a": r_a0,
-        "AoP": AoP0,
-        "inc": inc0,
-        "raan": raan0,
-        "tp": tp0,
-        "bstar": bstar0,
-        "td": td0
-    }
-
-
-
-    # the overall number of walkers need to be multiple of 2.
-    ndim = len(finding)
-    nwalkers = len(pos)
-
-    # initiating the optimization.
-    # every loop will provide an output.
-    # walks is the number of steps/hops a walker will be doing.
-
-    counter = 0
-
-    print("performing:", loops, "loops,", walks, "walks, for", nwalkers, "walkers")
-    print("please wait now...")
-    # finding the orbits now...
-
-
-    result, counter = find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station,
-                                 timestamp_min, timestamps, mode, measurements, orbit)
-
-
-    theta = []
-    for r in range(len(result)):
-        theta.append(result[r])
-
-    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = get_kepler_parameters(theta, parameters, finding, orbit)
-    sum = get_state_sum(r_a0, r_p0, inc0, raan0, AoP0, tp0, bstar0, td0, station, timestamp_min, timestamps, mode, measurements)
-
-    print("rp=", r_p0,
-          "ra=", r_a0,
-          "AoP=", AoP0,
-          "inc=", inc0,
-          "raan=", raan0,
-          "tp=", tp0,
-          "bstar=", bstar0,
-          "td=", td0)
-
-
-
-
-
-
-    ############# next optimization, just the bstar now
-    print("")
-    print("## Determination2: Finding the bstar")
-
-    finding = {
-        "r_p": 0,
-        "r_a": 1,
-        "AoP": 2,
-        "inc": 3,
-        "raan": 4,
-        "tp": 5,
-        "bstar": 6
-    }
-
-    r_a_min = -1.0
-    r_a_max = 1.0
-    r_p_min = -1.0
-    r_p_max = 1.0
-    AoP_min = -1.0
-    AoP_max = 1.0
-    inc_min = -1.0
-    inc_max = 1.0
-    raan_min = -1.0
-    raan_max = 1.0
-    tp_min = -10.0
-    tp_max = 10.0
-    bstar_min = -100000.0
-    bstar_max = 100000.0
-
-    orbit = 1  # 0 = circle
-
-    pos = []
-    for index_aop in range(300):
+    for _ in range(nwalkers):
 
         inputs = []
 
@@ -793,9 +617,89 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         if "td" in finding:
             for f in range(len(finding["td"])):
                 td = np.random.randint(-10000, 10000) / 1000.0
-                inputs.appedn(td)
+                inputs.append(td)
 
         pos.append(inputs)
+
+    # the overall number of walkers need to be multiple of 2.
+    ndim = len(finding)
+
+    # initiating the optimization.
+    # every loop will provide an output.
+    # walks is the number of steps/hops a walker will be doing.
+
+    print("performing:", loops, "loops,", walks, "walks, for", nwalkers, "walkers")
+    print("please wait now...")
+    # finding the orbits now...
+
+    result, counter = find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station,
+                                 timestamp_min, timestamps, mode, measurements, orbit)
+
+    theta = []
+    for r in range(len(result)):
+        theta.append(result[r])
+
+    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = get_kepler_parameters(theta, parameters, finding, orbit)
+    sum = get_state_sum(r_a0, r_p0, inc0, raan0, AoP0, tp0, bstar0, td0, station, timestamp_min, timestamps, mode,
+                        measurements)
+
+    print("rp=", r_p0,
+          "ra=", r_a0,
+          "AoP=", AoP0,
+          "inc=", inc0,
+          "raan=", raan0,
+          "tp=", tp0,
+          "bstar=", bstar0,
+          "td=", td0)
+
+    return r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0
+
+
+
+def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walks=100):
+    print("")
+    print("## Determination1: Finding the orbit parameters")
+
+    # distributing the initial positions within the scope of AoP, inclination and raan.
+    finding = {
+        "r_p": 0,
+        "r_a": 1,
+        "AoP": 2,
+        "inc": 3,
+        "raan": 4,
+        "tp": 5,
+        # "bstar": 6# ,
+        # "td": {"0": 7,
+        #       "2": 8}
+    }
+
+    r_a0 = 6378.0
+    r_p0 = 6378.0
+    AoP0 = 0.0
+    inc0 = 0.0
+    raan0 = 0.0
+    tp0 = -1.0
+    bstar0 = 0.0
+    td0 = np.zeros(len(station))
+
+    r_a_min = 0.0
+    r_a_max = 1000.0
+    r_p_min = 0.0
+    r_p_max = 1000.0
+    AoP_min = 0.0
+    AoP_max = 360.0
+    inc_min = 0.0
+    inc_max = 180.0
+    raan_min = 0.0
+    raan_max = 360.0
+    tp_min = 0.0
+    tp_max = 1.0
+    bstar_min = -100000.0
+    bstar_max = 100000.0
+
+    orbit = 1  # 0 = circle
+
+    counter = 0
 
     parameters = {
         "r_p": r_p0,
@@ -808,44 +712,83 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         "td": td0
     }
 
+    nwalkers = 300
+
+    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
+                                                                         counter, station, timestamp_min, timestamps,
+                                                                         mode, measurements,
+                                                                         r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0,
+                                                                         orbit= orbit,
+                                                                         r_a_min= r_a_min, r_a_max= r_a_max,
+                                                                         r_p_min= r_p_min, r_p_max= r_p_max,
+                                                                         AoP_min= AoP_min, AoP_max= AoP_max,
+                                                                         inc_min= inc_min, inc_max= inc_max,
+                                                                         raan_min= raan_min, raan_max= raan_max,
+                                                                         tp_min= tp_min, tp_max= tp_max,
+                                                                         bstar_min= bstar_min, bstar_max= bstar_max)
+
+    counter += loops
 
 
-    # the overall number of walkers need to be multiple of 2.
-    ndim = len(finding)
-    nwalkers = len(pos)
+    ############# next optimization, just the bstar now
+    print("")
+    print("## Determination2: Finding the bstar")
 
-    # initiating the optimization.
-    # every loop will provide an output.
-    # walks is the number of steps/hops a walker will be doing.
+    finding = {
+        "r_p": 0,
+        "r_a": 1,
+        "AoP": 2,
+        "inc": 3,
+        "raan": 4,
+        "tp": 5,
+        "bstar": 6
+    }
 
-    #counter = 0
+    r_a_min = -1.0
+    r_a_max = 1.0
+    r_p_min = -1.0
+    r_p_max = 1.0
+    AoP_min = -1.0
+    AoP_max = 1.0
+    inc_min = -1.0
+    inc_max = 1.0
+    raan_min = -1.0
+    raan_max = 1.0
+    tp_min = -10.0
+    tp_max = 10.0
+    bstar_min = -100000.0
+    bstar_max = 100000.0
 
-    print("performing:", loops, "loops,", walks, "walks, for", nwalkers, "walkers")
-    print("please wait again now...")
-    # finding the orbits now...
+    orbit = 1  # 0 = circle
 
-    result, counter = find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station,
-                                 timestamp_min, timestamps, mode, measurements, orbit)
+    parameters = {
+        "r_p": r_p0,
+        "r_a": r_a0,
+        "AoP": AoP0,
+        "inc": inc0,
+        "raan": raan0,
+        "tp": tp0,
+        "bstar": bstar0,
+        "td": td0
+    }
 
-    theta = []
-    for r in range(len(result)):
-        theta.append(result[r])
+    nwalkers = 200
 
-    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = get_kepler_parameters(theta, parameters, finding, orbit)
-    sum = get_state_sum(r_a0, r_p0, inc0, raan0, AoP0, tp0, bstar0, td0, station, timestamp_min, timestamps, mode, measurements)
+    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
+                                                                         counter, station, timestamp_min, timestamps,
+                                                                         mode, measurements,
+                                                                         r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0,
+                                                                         td0,
+                                                                         orbit=orbit,
+                                                                         r_a_min=r_a_min, r_a_max=r_a_max,
+                                                                         r_p_min=r_p_min, r_p_max=r_p_max,
+                                                                         AoP_min=AoP_min, AoP_max=AoP_max,
+                                                                         inc_min=inc_min, inc_max=inc_max,
+                                                                         raan_min=raan_min, raan_max=raan_max,
+                                                                         tp_min=tp_min, tp_max=tp_max,
+                                                                         bstar_min=bstar_min, bstar_max=bstar_max)
 
-    print("rp=", r_p0,
-          "ra=", r_a0,
-          "AoP=", AoP0,
-          "inc=", inc0,
-          "raan=", raan0,
-          "tp=", tp0,
-          "bstar=", bstar0,
-          "td=", td0)
-
-
-
-
+    counter += loops
 
     '''
     global_grid_dif = []
@@ -912,7 +855,8 @@ def fromposition(timestamp, sat, mode=0):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
-    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps, mode, measurements, loops = 15, walks=50)
+    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps,
+                                                    mode, measurements, loops= 15, walks=50)
 
     return r_p, r_a, AoP, inc, raan, tp, bstar, td
 
