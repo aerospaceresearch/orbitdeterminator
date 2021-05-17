@@ -275,6 +275,9 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     # but first min-max-rescaling or currently mean.
 
     # normalization
+    rms_sum = 0
+    emcee_factor = 10000  # somehow emcee seems to not like rms_sum smaller 1.0, so we artificially boost that up
+
     satellite_radius = []
     for s in range(len(satellite_pos)):
         for pos in range(len(satellite_pos[s])):
@@ -282,11 +285,8 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
                                      satellite_pos[s][pos][1]**2 +
                                      satellite_pos[s][pos][2]**2)**0.5)
 
-    mean_radius = np.mean(satellite_radius)
-    rms_sum = 0
-    emcee_factor = 10000 # somehow emcee seems to not like rms_sum smaller 1.0, so we artificially boost that up
+        mean_radius = np.mean(satellite_radius)
 
-    for s in range(len(satellite_pos)):
         # unfortunately inputs can be ragged arrays, and numpy does not like it.
         # so we iterate through it and use numpy sub-array wise.
 
