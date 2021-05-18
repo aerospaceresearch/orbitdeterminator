@@ -556,7 +556,7 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
 
 
 def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, station, timestamp_min, timestamps, mode,
-                       measurements, r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0, orbit=0,
+                       measurements, orbit=0,
                        r_a_min= 0.0, r_a_max= 10.0,
                        r_p_min= 0.0, r_p_max= 10.0,
                        AoP_min= 0.0, AoP_max= 360.0,
@@ -574,26 +574,26 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
         # for later automation, this needs to be configurable by the user
 
         if "r_p" in finding:
-            r_p = np.random.randint(int(r_p_min * 10.0), int(r_p_max * 10.0)) / 10.0 + r_p0
+            r_p = np.random.randint(int(r_p_min * 10.0), int(r_p_max * 10.0)) / 10.0 + parameters["r_p"]
             inputs.append(r_p)
 
         if "r_a" in finding:
-            r_a = np.random.randint(int(r_a_min * 10.0), int(r_a_max * 10.0)) / 10.0 + r_a0
+            r_a = np.random.randint(int(r_a_min * 10.0), int(r_a_max * 10.0)) / 10.0 + parameters["r_a"]
             if r_a < r_p:
                 r_a = r_p
             inputs.append(r_a)
             # todo what if only r_a or r_p is set?
 
         if "AoP" in finding:
-            AoP = np.random.randint(int(AoP_min * 100.0), int(AoP_max * 100.0)) / 100.0 + AoP0
+            AoP = np.random.randint(int(AoP_min * 100.0), int(AoP_max * 100.0)) / 100.0 + parameters["AoP"]
             inputs.append(AoP)
 
         if "inc" in finding:
-            inc = np.random.randint(int(inc_min * 100.0), int(inc_max * 100.0)) / 100.0 + inc0
+            inc = np.random.randint(int(inc_min * 100.0), int(inc_max * 100.0)) / 100.0 + parameters["inc"]
             inputs.append(inc)
 
         if "raan" in finding:
-            raan = np.random.randint(int(raan_min * 100.0), int(raan_max * 100.0)) / 100.0 + raan0
+            raan = np.random.randint(int(raan_min * 100.0), int(raan_max * 100.0)) / 100.0 + parameters["raan"]
             inputs.append(raan)
 
         if "tp" in finding:
@@ -603,15 +603,15 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
             T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
             tp = np.random.randint(int(tp_min * 100.0), int(tp_max * 100.0)) / 100.0
-            if tp0 < 0.0:
+            if parameters["tp"] < 0.0:
                 tp = tp * T_orbitperiod
             else:
-                tp = tp + tp0
+                tp = tp + parameters["tp"]
             # todo: if r_a0 and r_p0 are not set, what to do then?
             inputs.append(tp)
 
         if "bstar" in finding:
-            bstar = np.random.randint(int(bstar_min), int(bstar_max)) / 100000.0 + bstar0
+            bstar = np.random.randint(int(bstar_min), int(bstar_max)) / 100000.0 + parameters["bstar"]
             inputs.append(bstar)
 
         if "td" in finding:
@@ -652,7 +652,18 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
           "bstar=", bstar0,
           "td=", td0)
 
-    return r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0
+    parameters = {
+        "r_p": r_p0,
+        "r_a": r_a0,
+        "AoP": AoP0,
+        "inc": inc0,
+        "raan": raan0,
+        "tp": tp0,
+        "bstar": bstar0,
+        "td": td0
+    }
+
+    return parameters
 
 
 
@@ -714,18 +725,16 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
 
     nwalkers = 300
 
-    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
-                                                                         counter, station, timestamp_min, timestamps,
-                                                                         mode, measurements,
-                                                                         r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0,
-                                                                         orbit= orbit,
-                                                                         r_a_min= r_a_min, r_a_max= r_a_max,
-                                                                         r_p_min= r_p_min, r_p_max= r_p_max,
-                                                                         AoP_min= AoP_min, AoP_max= AoP_max,
-                                                                         inc_min= inc_min, inc_max= inc_max,
-                                                                         raan_min= raan_min, raan_max= raan_max,
-                                                                         tp_min= tp_min, tp_max= tp_max,
-                                                                         bstar_min= bstar_min, bstar_max= bstar_max)
+    parameters = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
+                                    counter, station, timestamp_min, timestamps,
+                                    mode, measurements, orbit= orbit,
+                                    r_a_min= r_a_min, r_a_max= r_a_max,
+                                    r_p_min= r_p_min, r_p_max= r_p_max,
+                                    AoP_min= AoP_min, AoP_max= AoP_max,
+                                    inc_min= inc_min, inc_max= inc_max,
+                                    raan_min= raan_min, raan_max= raan_max,
+                                    tp_min= tp_min, tp_max= tp_max,
+                                    bstar_min= bstar_min, bstar_max= bstar_max)
 
     counter += loops
 
@@ -761,32 +770,18 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
 
     orbit = 1  # 0 = circle
 
-    parameters = {
-        "r_p": r_p0,
-        "r_a": r_a0,
-        "AoP": AoP0,
-        "inc": inc0,
-        "raan": raan0,
-        "tp": tp0,
-        "bstar": bstar0,
-        "td": td0
-    }
-
     nwalkers = 200
 
-    r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
-                                                                         counter, station, timestamp_min, timestamps,
-                                                                         mode, measurements,
-                                                                         r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0,
-                                                                         td0,
-                                                                         orbit=orbit,
-                                                                         r_a_min=r_a_min, r_a_max=r_a_max,
-                                                                         r_p_min=r_p_min, r_p_max=r_p_max,
-                                                                         AoP_min=AoP_min, AoP_max=AoP_max,
-                                                                         inc_min=inc_min, inc_max=inc_max,
-                                                                         raan_min=raan_min, raan_max=raan_max,
-                                                                         tp_min=tp_min, tp_max=tp_max,
-                                                                         bstar_min=bstar_min, bstar_max=bstar_max)
+    parameters = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
+                                    counter, station, timestamp_min, timestamps,
+                                    mode, measurements, orbit=orbit,
+                                    r_a_min=r_a_min, r_a_max=r_a_max,
+                                    r_p_min=r_p_min, r_p_max=r_p_max,
+                                    AoP_min=AoP_min, AoP_max=AoP_max,
+                                    inc_min=inc_min, inc_max=inc_max,
+                                    raan_min=raan_min, raan_max=raan_max,
+                                    tp_min=tp_min, tp_max=tp_max,
+                                    bstar_min=bstar_min, bstar_max=bstar_max)
 
     counter += loops
 
@@ -824,7 +819,7 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     print(AoP_set, tp_set)
     '''
 
-    return r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0
+    return parameters
 
 
 def fromposition(timestamp, sat, mode=0):
@@ -855,10 +850,9 @@ def fromposition(timestamp, sat, mode=0):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
-    r_p, r_a, AoP, inc, raan, tp, bstar, td = start(station, timestamp_min, timestamps,
-                                                    mode, measurements, loops= 15, walks=50)
+    parameters = start(station, timestamp_min, timestamps, mode, measurements, loops= 15, walks=50)
 
-    return r_p, r_a, AoP, inc, raan, tp, bstar, td
+    return parameters
 
 
 if __name__== "__main__":

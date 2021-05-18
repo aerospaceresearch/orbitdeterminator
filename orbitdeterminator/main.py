@@ -327,7 +327,14 @@ def process(data_file, error_apriori, units):
                     R_short = R
 
 
-                r_p, r_a, AoP, inc, raan, tp, bstar, td = with_mcmc.fromposition(timestamps_short, R_short)
+                parameters = with_mcmc.fromposition(timestamps_short, R_short)
+
+                r_a = parameters["r_a"]
+                r_p = parameters["r_p"]
+                AoP = parameters["AoP"]
+                inc = parameters["inc"]
+                raan = parameters["raan"]
+                tp = parameters["tp"]
 
                 semimajor_axis = (r_p + r_a) / 2.0
                 ecc = (r_a - r_p) / (r_a + r_p)
