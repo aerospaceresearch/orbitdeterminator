@@ -573,12 +573,16 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
         # the following ranges for the random initial parameter are gut feelings.
         # for later automation, this needs to be configurable by the user
 
+        r_p = parameters["r_p"]
+        r_a = parameters["r_a"]
+        # todo check if a smaller/bigger check is needed also here.
+
         if "r_p" in finding:
-            r_p = np.random.randint(int(r_p_lim[0] * 10.0), int(r_p_lim[1] * 10.0)) / 10.0 + parameters["r_p"]
+            r_p = np.random.randint(int(r_p_lim[0] * 10.0), int(r_p_lim[1] * 10.0)) / 10.0 + r_p
             inputs.append(r_p)
 
         if "r_a" in finding:
-            r_a = np.random.randint(int(r_a_lim[0] * 10.0), int(r_a_lim[1] * 10.0)) / 10.0 + parameters["r_a"]
+            r_a = np.random.randint(int(r_a_lim[0] * 10.0), int(r_a_lim[1] * 10.0)) / 10.0 + r_a
             if r_a < r_p:
                 r_a = r_p
             inputs.append(r_a)
