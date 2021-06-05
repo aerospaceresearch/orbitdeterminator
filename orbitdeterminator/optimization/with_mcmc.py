@@ -1047,23 +1047,33 @@ def fromposition(timestamp, sat, mode=0):
     return parameters
 
 
-def extract_key_and_time_from_data(data, key):
+def extract_key_and_time_from_data(data, keys):
 
-    key_data = []
-    time_data = []
+    keys_data = []
+    times_data = []
 
-    if "solve" in data["signal"][i]:
-        if key in data["signal"][i]["solve"]:
-            if data["signal"][i]["solve"][key] == 1:
-                print("solve activated for ", key)
+    for key in keys:
 
-                for j in range(len(data["signal"][i]["data"])):
-                    line = data["signal"][i]["data"][j]
-                    if key in line:
-                        key_data.append(line[key])
-                        time_data.append(line["systemtime"])
+        key_data = []
+        time_data = []
 
-    return key_data, time_data
+        if "solve" in data["signal"][i]:
+            if key in data["signal"][i]["solve"]:
+                if data["signal"][i]["solve"][key] == 1:
+                    print("solve activated for ", key)
+
+                    for j in range(len(data["signal"][i]["data"])):
+                        line = data["signal"][i]["data"][j]
+
+
+                        if key in line:
+                            key_data.append(line[key])
+                            time_data.append(line["systemtime"])
+
+        keys_data.append(key_data)
+        times_data.append(time_data)
+
+    return keys_data, times_data
 
 
 if __name__== "__main__":
@@ -1109,14 +1119,16 @@ if __name__== "__main__":
             ranging = []
             doppler = []
 
-            key = "position"
+            keys = ["position"]
 
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
             else:
                 meta.append([])
 
-            R, timestamp_t = extract_key_and_time_from_data(data, key)
+            input, input_time = extract_key_and_time_from_data(data, keys)
+            R = input[0]
+            timestamp_t = input_time[0]
 
             station.append([])
             Rs.append(R)
@@ -1132,25 +1144,17 @@ if __name__== "__main__":
             ranging = []
             doppler = []
 
+            keys = ["az", "el"]
 
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
             else:
                 meta.append([])
 
-
-            if "solve" in data["signal"][i]:
-                key = "azel"
-                if key in data["signal"][i]["solve"]:
-                    if data["signal"][i]["solve"][key] == 1:
-                        print("solve activated for ", key)
-
-                        for j in range(len(data["signal"][i]["data"])):
-                            line = data["signal"][i]["data"][j]
-                            if "az" in line:
-                                az.append(line["az"])
-                                el.append(line["el"])
-                                timestamp_azel.append(line["systemtime"])
+            input, input_time = extract_key_and_time_from_data(data, keys)
+            az = input[0]
+            el = input[1]
+            timestamp_azel = input_time[0]
 
             station.append(data["location"]["fixed"]["data"][0])
             Rs.append(R)
@@ -1165,14 +1169,16 @@ if __name__== "__main__":
             ranging = []
             doppler = []
 
-            key = "range"
+            keys = ["range"]
 
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
             else:
                 meta.append([])
 
-            ranging, timestamp_ranging = extract_key_and_time_from_data(data, key)
+            input, input_time = extract_key_and_time_from_data(data, keys)
+            ranging = input[0]
+            timestamp_ranging = input_time[0]
 
             station.append(data["location"]["fixed"]["data"][0])
             Rs.append(R)
@@ -1187,14 +1193,16 @@ if __name__== "__main__":
             ranging = []
             doppler = []
 
-            key = "doppler"
+            keys = ["doppler"]
 
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
             else:
                 meta.append([])
 
-            doppler, timestamp_doppler = extract_key_and_time_from_data(data, key)
+            input, input_time = extract_key_and_time_from_data(data, keys)
+            doppler = input[0]
+            timestamp_doppler = input_time[0]
 
             station.append(data["location"]["fixed"]["data"][0])
             Rs.append(R)
