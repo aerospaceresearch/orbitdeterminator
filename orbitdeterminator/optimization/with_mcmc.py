@@ -177,6 +177,9 @@ def get_satrec(satnum, epoch, ecco, argpo, inclo, mo, no_kozai, nodeo, bstar, nd
         nodeo * np.pi / 180.0,  # nodeo: right ascension of ascending node (radians)
     )
 
+    satrec.classification = 'U'
+    satrec.intldesg = "OrbDet"
+
     return satrec
 
 
@@ -197,11 +200,11 @@ def zeroTo180(x):
     return x
 
 
-def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements):
+def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements, meta):
 
     # putting in the measurements
-    ras = measurements["rightascension"]
-    decs = measurements["declination"]
+    #ras = measurements["ra"]
+    #decs = measurements["dec"]
     el = measurements["el"]
     az = measurements["az"]
     ranging = measurements["range"]
@@ -209,7 +212,24 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     satellite_pos = measurements["satellite_pos"]
 
     # preparing the orbit track that is being simulated and used for comparing to the measurements
-    track = np.zeros_like(satellite_pos)
+    #track = np.zeros_like(satellite_pos) # did not work with strange arrays.
+    track = []
+    for tr in range(len(satellite_pos)):
+        track.append(np.zeros_like(satellite_pos[tr]))
+
+    track_az = []
+    track_el = []
+    for tr in range(len(az)):
+        track_az.append(np.zeros_like(az[tr]))
+        track_el.append(np.zeros_like(el[tr]))
+
+    track_range = []
+    for tr in range(len(ranging)):
+        track_range.append(np.zeros_like(ranging[tr]))
+
+    track_doppler = []
+    for tr in range(len(doppler)):
+        track_doppler.append(np.zeros_like(doppler[tr]))
 
 
     # preparing the orbit parameter needed for the simulated orbit
@@ -240,11 +260,13 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     satellite = EarthSatellite.from_satrec(satrec, ts)
 
 
+
+
     # now for each station s the measurements are being iterated through by its measurements.
     # for each measurement, the orbit state is calculated based on the timestamp t0
     for s in range(len(timestamps)):
 
-        for t0 in range(len(timestamps[s])):
+        for t0 in range(len(satellite_pos[s])):
 
             time_step = timestamps[s][t0]
 
@@ -254,7 +276,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             t = ts.from_astropy(observing_time)
 
             R1 = satellite.at(t).position.km
-            V1 = satellite.at(t).velocity.km_per_s
+            #V1 = satellite.at(t).velocity.km_per_s
 
             #R = np.array(R1)
             #V = np.array(V1)
@@ -270,6 +292,81 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             #    #             (R[1] - satellite_pos[s][t0][1]) ** 2 + \
             #    #             (R[2] - satellite_pos[s][t0][2]) ** 2
 
+        ### station
+        if "long" in station[s]:
+            gs_long = station[s]["long"]
+            gs_lat = station[s]["lat"]
+            gs_alt = station[s]["alt"]
+
+            observer = wgs84.latlon(gs_lat, gs_long)
+            difference = satellite - observer
+
+        for t0 in range(len(az[s])):
+            time_step = timestamps[s][t0]
+
+            timestamp1 = timestamp_min + time_step + td[s]
+
+            observing_time = Time(timestamp1, format="unix", scale="utc")
+            t = ts.from_astropy(observing_time)
+
+            topocentric = difference.at(t)
+            alt1, az1, distance1 = topocentric.altaz()
+
+            if alt1.degrees >= 0.0:
+                track_az[s][t0] = az1.degrees
+                track_el[s][t0] = alt1.degrees
+            else:
+                track_az[s][t0] = np.inf
+                track_el[s][t0] = np.inf
+
+
+        for t0 in range(len(ranging[s])):
+            time_step = timestamps[s][t0]
+
+            timestamp1 = timestamp_min + time_step + td[s]
+
+            observing_time = Time(timestamp1, format="unix", scale="utc")
+            t = ts.from_astropy(observing_time)
+
+            topocentric = difference.at(t)
+            alt1, az1, distance1 = topocentric.altaz()
+
+            if alt1.degrees >= 0.0:
+                track_range[s][t0] = distance1.km
+            else:
+                track_range[s][t0] = np.inf
+
+
+        for t0 in range(len(doppler[s])):
+            time_step = timestamps[s][t0]
+
+            timestamp1 = timestamp_min + time_step + td[s]
+
+            observing_time = Time(timestamp1, format="unix", scale="utc")
+            t = ts.from_astropy(observing_time)
+
+            topocentric = difference.at(t)
+            alt1, az1, distance1 = topocentric.altaz()
+            pointing = topocentric.position.km
+            velo = topocentric.velocity.km_per_s
+            #angle = np.dot(pointing, velo)
+            angle = (pointing[0] * velo[0] + pointing[1] * velo[1] + pointing[2] * velo[2]) / (
+                    np.linalg.norm(pointing) * np.linalg.norm(velo))
+            angle = np.arccos(angle)
+            range_rate = np.cos(angle) * np.linalg.norm(velo)
+            f_0 = meta[s][0]["rf"]["fc"]
+            c_speedoflight = 299792.458
+            doppler_c = -range_rate * f_0 / c_speedoflight
+
+            if alt1.degrees >= 0.0:
+                track_doppler[s][t0] = doppler_c
+            else:
+                track_doppler[s][t0] = np.inf
+
+
+
+
+
     # now we just do a simple Root-mean-square of the measurement positions
     # and the orbit positions based on the simulation
     # but first min-max-rescaling or currently mean.
@@ -280,23 +377,72 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
 
     satellite_radius = []
     for s in range(len(satellite_pos)):
-        for pos in range(len(satellite_pos[s])):
-            satellite_radius.append((satellite_pos[s][pos][0]**2 +
-                                     satellite_pos[s][pos][1]**2 +
-                                     satellite_pos[s][pos][2]**2)**0.5)
+        if len(satellite_pos[s]) > 0:
+            for pos in range(len(satellite_pos[s])):
+                satellite_radius.append((satellite_pos[s][pos][0]**2 +
+                                         satellite_pos[s][pos][1]**2 +
+                                         satellite_pos[s][pos][2]**2)**0.5)
 
-        mean_radius = np.mean(satellite_radius)
+            mean_radius = np.mean(satellite_radius)
 
-        # unfortunately inputs can be ragged arrays, and numpy does not like it.
-        # so we iterate through it and use numpy sub-array wise.
+            # unfortunately inputs can be ragged arrays, and numpy does not like it.
+            # so we iterate through it and use numpy sub-array wise.
 
-        # normalizing with mean radius
-        track1 = np.divide(track[s], mean_radius)
-        satellite_pos1 = np.divide(satellite_pos[s], mean_radius)
+            # normalizing with mean radius
+            track1 = np.divide(track[s], mean_radius)
+            satellite_pos1 = np.divide(satellite_pos[s], mean_radius)
 
-        rms = np.subtract(track1, satellite_pos1)
-        rms = np.multiply(rms, emcee_factor)
-        rms_sum += np.sum(np.square(rms))
+            rms = np.subtract(track1, satellite_pos1)
+            rms = np.multiply(rms, emcee_factor)
+            rms_sum += np.sum(np.square(rms))
+
+
+    for s in range(len(az)):
+        if len(az[s])> 0:
+            mean_az = np.mean(np.abs(az[s]))
+            mean_el = np.mean(np.abs(el[s]))
+
+            # normalizing with mean az
+            track_az1 = np.divide(track_az[s], mean_az)
+            az1 = np.divide(az[s], mean_az)
+
+            rms = np.subtract(track_az1, az1)
+            rms = np.multiply(rms, emcee_factor)
+            rms_sum += np.sum(np.square(rms))
+
+            # normalizing with mean el
+            track_el1 = np.divide(track_el[s], mean_el)
+            el1 = np.divide(el[s], mean_el)
+
+            rms = np.subtract(track_el1, el1)
+            rms = np.multiply(rms, emcee_factor)
+            rms_sum += np.sum(np.square(rms))
+
+    for s in range(len(ranging)):
+        if len(ranging[s])> 0:
+            mean_range = np.mean(ranging[s])
+
+            # normalizing with mean az
+            track_range1 = np.divide(track_range[s], mean_range)
+            range1 = np.divide(ranging[s], mean_range)
+
+            rms = np.subtract(track_range1, range1)
+            rms = np.multiply(rms, emcee_factor)
+            rms_sum += np.sum(np.square(rms))
+
+
+    for s in range(len(doppler)):
+        if len(doppler[s])> 0:
+
+            mean_doppler = np.mean(np.abs(doppler[s]))
+
+            # normalizing with mean az
+            track_doppler1 = np.divide(track_doppler[s], mean_doppler)
+            doppler1 = np.divide(doppler[s], mean_doppler)
+
+            rms = np.subtract(track_doppler1, doppler1)
+            rms = np.multiply(rms, emcee_factor)
+            rms_sum += np.sum(np.square(rms))
 
     return -0.5 * rms_sum
 
@@ -355,10 +501,11 @@ def get_kepler_parameters(theta, parameters, finding, orbit):
     return r_p, r_a, AoP, inc, raan, tp, bstar, td
 
 
-def log_likelihood(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit):
+def log_likelihood(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit, meta):
     r_p, r_a, AoP, inc, raan, tp, bstar, td = get_kepler_parameters(theta, parameters, finding, orbit)
 
-    sum = get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements)
+    sum = get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td,
+                        station, timestamp_min, timestamps, mode, measurements, meta)
     return sum
 
 
@@ -378,13 +525,13 @@ def log_prior(theta, parameters, finding, orbit):
     return -np.inf
 
 
-def log_probability(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit):
+def log_probability(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit, meta):
     lp = log_prior(theta, parameters, finding, orbit)
 
     if not np.isfinite(lp):
         return -np.inf
 
-    sum = log_likelihood(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit)
+    sum = log_likelihood(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit, meta)
 
     if np.isnan(sum) == True:
         return -np.inf
@@ -392,11 +539,42 @@ def log_probability(theta, parameters, finding, station, timestamp_min, timestam
     return lp + sum
 
 
-def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station, timestamp_min, timestamps, mode, measurements, orbit):
+def compare(line1_1, line1_2, line2_1, line2_2, timestamp_min, timestamps, td):
+    ts = load.timescale()
+
+    satrec1 = Satrec.twoline2rv(line1_1, line1_2)
+    satrec2 = Satrec.twoline2rv(line2_1, line2_2)
+    satellite1 = EarthSatellite.from_satrec(satrec1, ts)
+    satellite2 = EarthSatellite.from_satrec(satrec2, ts)
+
+    residual = 0
+    number_of_measurements = 0
+    for s in range(len(timestamps)):
+        number_of_measurements += len(timestamps[s])
+        for t0 in range(len(timestamps[s])):
+            time_step = timestamps[s][t0]
+
+            timestamp1 = timestamp_min + time_step + td[s]
+
+            observing_time = Time(timestamp1, format="unix", scale="utc")
+            t = ts.from_astropy(observing_time)
+
+            R1 = satellite1.at(t).position.km
+            R2 = satellite2.at(t).position.km
+
+            distance = ((R1[0]-R2[0])**2 + (R1[1]-R2[1])**2 + (R1[2]-R2[2])**2)**0.5
+            residual += distance
+
+    return residual / number_of_measurements
+
+
+def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station, timestamp_min, timestamps,
+               mode, measurements, orbit, meta=[[]], generated={}):
 
     # preparing the optimizer
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability,
-                                    args=(parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit))
+                                    args=(parameters, finding, station, timestamp_min, timestamps, mode,
+                                          measurements, orbit, meta))
 
 
     # preparing the storage of the best result of all loops
@@ -528,6 +706,8 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
 
         print("tle_line1:", b4_tle_line1)
         print("tle_line2:", b4_tle_line2)
+        if "tle" in generated:
+            print("compare", compare(b4_tle_line1, b4_tle_line2, generated["tle"]["line1"], generated["tle"]["line2"], timestamp_min, timestamps, td))
         print("overall", counter+1, i+1, "/", loops,"rms=", b4, "runtime=", time.time() - starttime)
         print("")
 
@@ -556,7 +736,7 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
 
 
 def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, station, timestamp_min, timestamps, mode,
-                       measurements, orbit=0,
+                       measurements, orbit=0, meta=[[]], generated={},
                        r_a_lim= [0.0, 10.0],
                        r_p_lim= [0.0, 10.0],
                        AoP_lim= [0.0, 360.0],
@@ -637,7 +817,7 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
     # finding the orbits now...
 
     result, counter = find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station,
-                                 timestamp_min, timestamps, mode, measurements, orbit)
+                                 timestamp_min, timestamps, mode, measurements, orbit, meta=meta, generated=generated)
 
     theta = []
     for r in range(len(result)):
@@ -645,7 +825,7 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
 
     r_p0, r_a0, AoP0, inc0, raan0, tp0, bstar0, td0 = get_kepler_parameters(theta, parameters, finding, orbit)
     sum = get_state_sum(r_a0, r_p0, inc0, raan0, AoP0, tp0, bstar0, td0, station, timestamp_min, timestamps, mode,
-                        measurements)
+                        measurements, meta)
 
     print("rp=", r_p0,
           "ra=", r_a0,
@@ -671,7 +851,19 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
 
 
 
-def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walks=100):
+def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], generated={}, loops=30, walks=100):
+
+
+    r_a0 = 6378.0
+    r_p0 = 6378.0
+    AoP0 = 0.0
+    inc0 = 0.0
+    raan0 = 0.0
+    tp0 = -1.0
+    bstar0 = 0.0
+    td0 = np.zeros(len(station))
+
+
     print("")
     print("## Determination1: Finding the orbit parameters")
 
@@ -688,15 +880,6 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         #       "2": 8}
     }
 
-    r_a0 = 6378.0
-    r_p0 = 6378.0
-    AoP0 = 0.0
-    inc0 = 0.0
-    raan0 = 0.0
-    tp0 = -1.0
-    bstar0 = 0.0
-    td0 = np.zeros(len(station))
-
     r_a_min = 0.0
     r_a_max = 1000.0
     r_p_min = 0.0
@@ -712,7 +895,7 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
     bstar_min = -100000.0
     bstar_max = 100000.0
 
-    orbit = 1  # 0 = circle
+    orbit = 1
 
     counter = 0
 
@@ -727,18 +910,21 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         "td": td0
     }
 
-    nwalkers = 400
+    orbit = 1  # 0 = circle
+
+
+    nwalkers = 200
 
     parameters = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
                                     counter, station, timestamp_min, timestamps,
-                                    mode, measurements, orbit= orbit,
-                                    r_a_lim= [r_a_min, r_a_max],
-                                    r_p_lim= [r_p_min, r_p_max],
-                                    AoP_lim= [AoP_min, AoP_max],
-                                    inc_lim= [inc_min, inc_max],
-                                    raan_lim= [raan_min, raan_max],
-                                    tp_lim= [tp_min, tp_max],
-                                    bstar_lim= [bstar_min, bstar_max])
+                                    mode, measurements, orbit=orbit, meta=meta, generated=generated,
+                                    r_a_lim=[r_a_min, r_a_max],
+                                    r_p_lim=[r_p_min, r_p_max],
+                                    AoP_lim=[AoP_min, AoP_max],
+                                    inc_lim=[inc_min, inc_max],
+                                    raan_lim=[raan_min, raan_max],
+                                    tp_lim=[tp_min, tp_max],
+                                    bstar_lim=[bstar_min, bstar_max])
 
     counter += loops
 
@@ -753,32 +939,34 @@ def start(station, timestamp_min, timestamps, mode, measurements, loops=30, walk
         "AoP": 2,
         "inc": 3,
         "raan": 4,
-        "tp": 5,
-        "bstar": 6
+        "tp": 5#,
+        #"bstar": 6
     }
 
     r_a_min = -1.0
     r_a_max = 1.0
-    r_p_min = -1.0
-    r_p_max = 1.0
-    AoP_min = -1.0
-    AoP_max = 1.0
+    r_p_min = -4.0
+    r_p_max = 4.0
+    AoP_min = 0.0
+    AoP_max = 360.0
     inc_min = -1.0
     inc_max = 1.0
     raan_min = -1.0
     raan_max = 1.0
-    tp_min = -10.0
-    tp_max = 10.0
+    tp_min = 0.0
+    tp_max = 1.0
     bstar_min = -100000.0
     bstar_max = 100000.0
 
+    parameters["tp"] = -1
+
     orbit = 1  # 0 = circle
 
-    nwalkers = 200
+    nwalkers = 350
 
     parameters = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
                                     counter, station, timestamp_min, timestamps,
-                                    mode, measurements, orbit=orbit,
+                                    mode, measurements, orbit=orbit, meta=meta, generated=generated,
                                     r_a_lim=[r_a_min, r_a_max],
                                     r_p_lim=[r_p_min, r_p_max],
                                     AoP_lim=[AoP_min, AoP_max],
@@ -842,8 +1030,8 @@ def fromposition(timestamp, sat, mode=0):
     measurements = {}
     measurements["el"] = el
     measurements["az"] = az
-    measurements["rightascension"] = el
-    measurements["declination"] = az
+    measurements["ra"] = el
+    measurements["dec"] = az
     measurements["satellite_pos"] = satellite_pos
     measurements["range"] = ranging
     measurements["doppler"] = doppler
@@ -860,4 +1048,218 @@ def fromposition(timestamp, sat, mode=0):
 
 
 if __name__== "__main__":
-    fromposition()
+    import json
+
+
+
+
+    Rs = []
+    timestamps = []
+
+    station = []
+    els = []
+    azs = []
+    rangings = []
+    dopplers = []
+    t = []
+    satellite_pos = [[]]
+    generated = {}
+    meta = []
+
+    filenames = ["settrup.json", "leipzig.json"]#, "stuttgart.json", "lake_constance.json"]
+    
+    for file in filenames:
+        with open(file, 'r') as outfile:
+            data = json.load(outfile)
+
+        print(data)
+
+        for i in range(len(data["signal"])):
+
+            R = []
+            timestamp_t = []
+
+            az = []
+            el = []
+            timestamp_azel =[]
+
+            ranging = []
+            timestamp_ranging = []
+
+            doppler = []
+            timestamp_doppler = []
+
+            if "generated" in data["signal"][i]["meta"]:
+                generated = data["signal"][i]["meta"]["generated"]
+
+
+            if "meta" in data["signal"][i]:
+                meta.append([data["signal"][i]["meta"]])
+            else:
+                meta.append([])
+
+            if "solve" in data["signal"][i]:
+                key = "position"
+                if key in data["signal"][i]["solve"]:
+                    if data["signal"][i]["solve"][key] == 1:
+                        print("solve activated for ", key)
+
+                        for j in range(len(data["signal"][i]["data"])):
+                            line = data["signal"][i]["data"][j]
+
+                            if "position" in line:
+                                R.append(line["position"])
+                                timestamp_t.append(line["systemtime"])
+
+            station.append([])
+            Rs.append(R)
+            azs.append(az)
+            els.append(el)
+            rangings.append(ranging)
+            dopplers.append(doppler)
+
+
+            R = []
+            az = []
+            el = []
+            ranging = []
+            doppler = []
+
+
+            if "meta" in data["signal"][i]:
+                meta.append([data["signal"][i]["meta"]])
+            else:
+                meta.append([])
+
+
+            if "solve" in data["signal"][i]:
+                key = "azel"
+                if key in data["signal"][i]["solve"]:
+                    if data["signal"][i]["solve"][key] == 1:
+                        print("solve activated for ", key)
+
+                        for j in range(len(data["signal"][i]["data"])):
+                            line = data["signal"][i]["data"][j]
+                            if "az" in line:
+                                az.append(line["az"])
+                                el.append(line["el"])
+                                timestamp_azel.append(line["systemtime"])
+
+            station.append(data["location"]["fixed"]["data"][0])
+            Rs.append(R)
+            azs.append(az)
+            els.append(el)
+            rangings.append(ranging)
+            dopplers.append(doppler)
+
+
+            R = []
+            az = []
+            el = []
+            ranging = []
+            doppler = []
+
+
+            if "meta" in data["signal"][i]:
+                meta.append([data["signal"][i]["meta"]])
+            else:
+                meta.append([])
+
+
+            if "solve" in data["signal"][i]:
+                key = "range"
+                if key in data["signal"][i]["solve"]:
+                    if data["signal"][i]["solve"][key] == 1:
+                        print("solve activated for ", key)
+
+                        for j in range(len(data["signal"][i]["data"])):
+                            line = data["signal"][i]["data"][j]
+                            if "range" in line:
+                                ranging.append(line["range"])
+                                timestamp_ranging.append(line["systemtime"])
+
+            station.append(data["location"]["fixed"]["data"][0])
+            Rs.append(R)
+            azs.append(az)
+            els.append(el)
+            rangings.append(ranging)
+            dopplers.append(doppler)
+
+            R = []
+            az = []
+            el = []
+            ranging = []
+            doppler = []
+
+
+            if "meta" in data["signal"][i]:
+                meta.append([data["signal"][i]["meta"]])
+            else:
+                meta.append([])
+
+
+            if "solve" in data["signal"][i]:
+                key = "doppler"
+                if key in data["signal"][i]["solve"]:
+                    if data["signal"][i]["solve"][key] == 1:
+                        print("solve activated for ", key)
+
+                        for j in range(len(data["signal"][i]["data"])):
+                            line = data["signal"][i]["data"][j]
+                            if "doppler" in line:
+                                doppler.append(line["doppler"])
+                                timestamp_doppler.append(line["systemtime"])
+
+            station.append(data["location"]["fixed"]["data"][0])
+            Rs.append(R)
+            azs.append(az)
+            els.append(el)
+            rangings.append(ranging)
+            dopplers.append(doppler)
+
+            timestamps.append(timestamp_t)
+            timestamps.append(timestamp_azel)
+            timestamps.append(timestamp_ranging)
+            timestamps.append(timestamp_doppler)
+
+
+
+
+    print(len(timestamps))
+    print(len(azs))
+    print(len(Rs))
+    print(len(station))
+    print(len(rangings))
+    print(len(dopplers))
+
+    print(timestamps)
+    print(Rs)
+    print(azs)
+    print(Rs)
+    print(station)
+
+    measurements = {}
+    measurements["el"] = els
+    measurements["az"] = azs
+    measurements["satellite_pos"] = Rs
+    measurements["range"] = rangings
+    measurements["doppler"] = dopplers
+    timestamp_min = 0.0
+    tested = 0
+    for ii in range(len(timestamps)):
+        if len(timestamps[ii]):
+            if tested == 0:
+                timestamp_min = np.min(timestamps[ii])
+                tested = 1
+            else:
+                if timestamp_min > np.min(timestamps[ii]):
+                    timestamp_min = np.min(timestamps[ii])
+
+
+    for s in range(len(timestamps)):
+        for t0 in range(len(timestamps[s])):
+            timestamps[s][t0] = timestamps[s][t0] - timestamp_min
+
+
+    mode = 0
+    parameters = start(station, timestamp_min, timestamps, mode, measurements, meta=meta, generated=generated, loops=40, walks=50)
