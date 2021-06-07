@@ -202,6 +202,8 @@ def zeroTo180(x):
 
 def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements, meta):
 
+    elevation_min = -30
+
     # putting in the measurements
     #ras = measurements["ra"]
     #decs = measurements["dec"]
@@ -312,12 +314,15 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             topocentric = difference.at(t)
             alt1, az1, distance1 = topocentric.altaz()
 
-            if alt1.degrees >= 0.0:
+            if alt1.degrees >= elevation_min:
                 track_az[s][t0] = az1.degrees
                 track_el[s][t0] = alt1.degrees
             else:
-                track_az[s][t0] = np.inf
-                track_el[s][t0] = np.inf
+                #track_az[s][t0] = np.inf
+                #track_el[s][t0] = np.inf
+
+                # if one value is not good, then it is already infinity and we can also quit now
+                return -np.inf
 
 
         for t0 in range(len(ranging[s])):
@@ -331,10 +336,13 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             topocentric = difference.at(t)
             alt1, az1, distance1 = topocentric.altaz()
 
-            if alt1.degrees >= 0.0:
+            if alt1.degrees >= elevation_min:
                 track_range[s][t0] = distance1.km
             else:
-                track_range[s][t0] = np.inf
+                #track_range[s][t0] = np.inf
+
+                # if one value is not good, then it is already infinity and we can also quit now
+                return -np.inf
 
 
         for t0 in range(len(doppler[s])):
@@ -358,10 +366,13 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             c_speedoflight = 299792.458
             doppler_c = -range_rate * f_0 / c_speedoflight
 
-            if alt1.degrees >= 0.0:
+            if alt1.degrees >= elevation_min:
                 track_doppler[s][t0] = doppler_c
             else:
-                track_doppler[s][t0] = np.inf
+                #track_doppler[s][t0] = np.inf
+
+                # if one value is not good, then it is already infinity and we can also quit now
+                return -np.inf
 
 
 
@@ -1096,7 +1107,7 @@ if __name__== "__main__":
     meta = []
 
     filenames = ["settrup.json", "leipzig.json"]#, "stuttgart.json", "lake_constance.json"]
-
+    
     for file in filenames:
         with open(file, 'r') as outfile:
             data = json.load(outfile)
