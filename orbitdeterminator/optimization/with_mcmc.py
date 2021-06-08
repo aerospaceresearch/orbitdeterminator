@@ -205,8 +205,8 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     elevation_min = -30
 
     # putting in the measurements
-    #ras = measurements["ra"]
-    #decs = measurements["dec"]
+    ra = measurements["ra"]
+    dec = measurements["dec"]
     el = measurements["el"]
     az = measurements["az"]
     ranging = measurements["range"]
@@ -232,6 +232,12 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     track_doppler = []
     for tr in range(len(doppler)):
         track_doppler.append(np.zeros_like(doppler[tr]))
+
+    track_ra = []
+    track_dec = []
+    for tr in range(len(ra)):
+        track_ra.append(np.zeros_like(ra[tr]))
+        track_dec.append(np.zeros_like(dec[tr]))
 
 
     # preparing the orbit parameter needed for the simulated orbit
@@ -375,6 +381,28 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
                 return -np.inf
 
 
+        for t0 in range(len(ra[s])):
+            time_step = timestamps[s][t0]
+
+            timestamp1 = timestamp_min + time_step + td[s]
+
+            observing_time = Time(timestamp1, format="unix", scale="utc")
+            t = ts.from_astropy(observing_time)
+
+            topocentric = difference.at(t)
+            ra1, dec1, distance1 = topocentric.radec()
+
+            if alt1.degrees >= elevation_min:
+                track_ra[s][t0] = ra1.radians * 180.0 / np.pi
+                track_dec[s][t0] = dec1.degrees
+            else:
+                #track_ra[s][t0] = np.inf
+                #track_dec[s][t0] = np.inf
+
+                # if one value is not good, then it is already infinity and we can also quit now
+                return -np.inf
+
+
 
 
 
@@ -452,6 +480,28 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             doppler1 = np.divide(doppler[s], mean_doppler)
 
             rms = np.subtract(track_doppler1, doppler1)
+            rms = np.multiply(rms, emcee_factor)
+            rms_sum += np.sum(np.square(rms))
+
+
+    for s in range(len(ra)):
+        if len(ra[s])> 0:
+            mean_ra = np.mean(np.abs(ra[s]))
+            mean_dec = np.mean(np.abs(dec[s]))
+
+            # normalizing with mean az
+            track_ra1 = np.divide(track_ra[s], mean_az)
+            ra1 = np.divide(ra[s], mean_ra)
+
+            rms = np.subtract(track_ra1, ra1)
+            rms = np.multiply(rms, emcee_factor)
+            rms_sum += np.sum(np.square(rms))
+
+            # normalizing with mean el
+            track_dec1 = np.divide(track_dec[s], mean_dec)
+            dec1 = np.divide(dec[s], mean_dec)
+
+            rms = np.subtract(track_dec1, dec1)
             rms = np.multiply(rms, emcee_factor)
             rms_sum += np.sum(np.square(rms))
 
@@ -1101,6 +1151,8 @@ if __name__== "__main__":
     azs = []
     rangings = []
     dopplers = []
+    ras = []
+    decs = []
     t = []
     satellite_pos = [[]]
     generated = {}
@@ -1120,6 +1172,7 @@ if __name__== "__main__":
             timestamp_azel =[]
             timestamp_ranging = []
             timestamp_doppler = []
+            timestamp_radec = []
 
             if "generated" in data["signal"][i]["meta"]:
                 generated = data["signal"][i]["meta"]["generated"]
@@ -1129,6 +1182,8 @@ if __name__== "__main__":
             el = []
             ranging = []
             doppler = []
+            ra = []
+            dec = []
 
             keys = ["position"]
 
@@ -1147,13 +1202,16 @@ if __name__== "__main__":
             els.append(el)
             rangings.append(ranging)
             dopplers.append(doppler)
-
+            ras.append(ra)
+            decs.append(dec)
 
             R = []
             az = []
             el = []
             ranging = []
             doppler = []
+            ra = []
+            dec = []
 
             keys = ["az", "el"]
 
@@ -1173,12 +1231,16 @@ if __name__== "__main__":
             els.append(el)
             rangings.append(ranging)
             dopplers.append(doppler)
+            ras.append(ra)
+            decs.append(dec)
 
             R = []
             az = []
             el = []
             ranging = []
             doppler = []
+            ra = []
+            dec = []
 
             keys = ["range"]
 
@@ -1197,12 +1259,16 @@ if __name__== "__main__":
             els.append(el)
             rangings.append(ranging)
             dopplers.append(doppler)
+            ras.append(ra)
+            decs.append(dec)
 
             R = []
             az = []
             el = []
             ranging = []
             doppler = []
+            ra = []
+            dec = []
 
             keys = ["doppler"]
 
@@ -1221,12 +1287,44 @@ if __name__== "__main__":
             els.append(el)
             rangings.append(ranging)
             dopplers.append(doppler)
+            ras.append(ra)
+            decs.append(dec)
+
+            R = []
+            az = []
+            el = []
+            ranging = []
+            doppler = []
+            ra = []
+            dec = []
+
+            keys = ["ra", "dec"]
+
+            if "meta" in data["signal"][i]:
+                meta.append([data["signal"][i]["meta"]])
+            else:
+                meta.append([])
+
+            input, input_time = extract_key_and_time_from_data(data, keys)
+            ra = input[0]
+            dec = input[1]
+            timestamp_radec = input_time[0]
+
+            station.append(data["location"]["fixed"]["data"][0])
+            Rs.append(R)
+            azs.append(az)
+            els.append(el)
+            rangings.append(ranging)
+            dopplers.append(doppler)
+            ras.append(ra)
+            decs.append(dec)
 
 
             timestamps.append(timestamp_t)
             timestamps.append(timestamp_azel)
             timestamps.append(timestamp_ranging)
             timestamps.append(timestamp_doppler)
+            timestamps.append(timestamp_radec)
 
 
 
@@ -1237,12 +1335,14 @@ if __name__== "__main__":
     print(len(station))
     print(len(rangings))
     print(len(dopplers))
+    print(len(ras))
 
     print(timestamps)
     print(Rs)
     print(azs)
     print(Rs)
     print(station)
+    print(ras)
 
     measurements = {}
     measurements["el"] = els
@@ -1250,6 +1350,9 @@ if __name__== "__main__":
     measurements["satellite_pos"] = Rs
     measurements["range"] = rangings
     measurements["doppler"] = dopplers
+    measurements["ra"] = ras
+    measurements["dec"] = decs
+
     timestamp_min = 0.0
     tested = 0
     for ii in range(len(timestamps)):
