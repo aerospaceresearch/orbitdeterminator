@@ -306,7 +306,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             gs_lat = station[s]["lat"]
             gs_alt = station[s]["alt"]
 
-            observer = wgs84.latlon(gs_lat, gs_long)
+            observer = wgs84.latlon(gs_lat, gs_long, gs_alt)
             difference = satellite - observer
 
         for t0 in range(len(az[s])):
