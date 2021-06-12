@@ -313,6 +313,10 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             time_step = timestamps[s][t0]
 
             timestamp1 = timestamp_min + time_step + td[s]
+            if np.abs(td[s]) > 2.0:
+                # the system time is expected to be jittery only by a few seconds.
+                # so this should be enough and stops the time seach to run amok
+                return -np.inf
 
             observing_time = Time(timestamp1, format="unix", scale="utc")
             t = ts.from_astropy(observing_time)
@@ -769,6 +773,14 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
         print("tle_line2:", b4_tle_line2)
         if "tle" in generated:
             print("compare", compare(b4_tle_line1, b4_tle_line2, generated["tle"]["line1"], generated["tle"]["line2"], timestamp_min, timestamps, td))
+        print("rp=", r_p,
+              "ra=", r_a,
+              "AoP=", AoP,
+              "inc=", inc,
+              "raan=", raan,
+              "tp=", tp,
+              "bstar=", bstar,
+              "td=", td)
         print("overall", counter+1, i+1, "/", loops,"rms=", b4, "runtime=", time.time() - starttime)
         print("")
 
@@ -804,7 +816,8 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
                        inc_lim= [0.0, 180.0],
                        raan_lim= [0.0, 360.0],
                        tp_lim= [0.0, 1.0],
-                       bstar_lim= [-100000.0, 100000.0]):
+                       bstar_lim= [-100000.0, 100000.0],
+                       td_lim= [-0.5, 0.5]):
 
     pos = []
     for _ in range(nwalkers):
@@ -819,26 +832,36 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
         # todo check if a smaller/bigger check is needed also here.
 
         if "r_p" in finding:
-            r_p = np.random.randint(int(r_p_lim[0] * 10.0), int(r_p_lim[1] * 10.0)) / 10.0 + r_p
+            random_steps = 10000.0
+            random_factor = random_steps / np.abs(r_p_lim[1] - r_p_lim[0])
+            r_p = np.random.randint(int(r_p_lim[0] * random_factor), int(r_p_lim[1] * random_factor)) / random_factor + r_p
             inputs.append(r_p)
 
         if "r_a" in finding:
-            r_a = np.random.randint(int(r_a_lim[0] * 10.0), int(r_a_lim[1] * 10.0)) / 10.0 + r_a
+            random_steps = 10000.0
+            random_factor = random_steps / np.abs(r_a_lim[1] - r_a_lim[0])
+            r_a = np.random.randint(int(r_a_lim[0] * random_factor), int(r_a_lim[1] * random_factor)) / random_factor + r_a
             if r_a < r_p:
                 r_a = r_p
             inputs.append(r_a)
             # todo what if only r_a or r_p is set?
 
         if "AoP" in finding:
-            AoP = np.random.randint(int(AoP_lim[0] * 100.0), int(AoP_lim[1] * 100.0)) / 100.0 + parameters["AoP"]
+            random_steps = 10000.0
+            random_factor = random_steps / np.abs(AoP_lim[1] - AoP_lim[0])
+            AoP = np.random.randint(int(AoP_lim[0] * random_factor), int(AoP_lim[1] * random_factor)) / random_factor + parameters["AoP"]
             inputs.append(AoP)
 
         if "inc" in finding:
-            inc = np.random.randint(int(inc_lim[0] * 100.0), int(inc_lim[1] * 100.0)) / 100.0 + parameters["inc"]
+            random_steps = 10000.0
+            random_factor = random_steps / np.abs(inc_lim[1] - inc_lim[0])
+            inc = np.random.randint(int(inc_lim[0] * random_factor), int(inc_lim[1] * random_factor)) / random_factor + parameters["inc"]
             inputs.append(inc)
 
         if "raan" in finding:
-            raan = np.random.randint(int(raan_lim[0] * 100.0), int(raan_lim[1] * 100.0)) / 100.0 + parameters["raan"]
+            random_steps = 10000.0
+            random_factor = random_steps / np.abs(raan_lim[1] - raan_lim[0])
+            raan = np.random.randint(int(raan_lim[0] * random_factor), int(raan_lim[1] * random_factor)) / random_factor + parameters["raan"]
             inputs.append(raan)
 
         if "tp" in finding:
@@ -847,7 +870,10 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
             h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu)
             T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
-            tp = np.random.randint(int(tp_lim[0] * 100.0), int(tp_lim[1] * 100.0)) / 100.0
+            random_steps = 10000.0
+            random_factor = random_steps / np.abs(tp_lim[1] - tp_lim[0])
+
+            tp = np.random.randint(int(tp_lim[0] * random_factor), int(tp_lim[1] * random_factor)) / random_factor
             if parameters["tp"] < 0.0:
                 tp = tp * T_orbitperiod
             else:
@@ -856,12 +882,17 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
             inputs.append(tp)
 
         if "bstar" in finding:
+
             bstar = np.random.randint(int(bstar_lim[0]), int(bstar_lim[1])) / 100000.0 + parameters["bstar"]
             inputs.append(bstar)
 
         if "td" in finding:
+
+            random_steps = 10000.0
+            random_factor = random_steps / np.abs(td_lim[1] - td_lim[0])
+
             for f in range(len(finding["td"])):
-                td = np.random.randint(-10000, 10000) / 1000.0
+                td = np.random.randint(int(td_lim[0] * random_factor), int(td_lim[1] * random_factor)) / random_factor
                 inputs.append(td)
 
         pos.append(inputs)
@@ -1002,6 +1033,7 @@ def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], gen
         "raan": 4,
         "tp": 5#,
         #"bstar": 6
+        #"td": {"1": 4}
     }
 
     r_a_min = -1.0
@@ -1018,6 +1050,8 @@ def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], gen
     tp_max = 1.0
     bstar_min = -100000.0
     bstar_max = 100000.0
+    td_max = 0.5 # secs
+    td_min = -0.5  # secs
 
     parameters["tp"] = -1
 
@@ -1034,7 +1068,8 @@ def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], gen
                                     inc_lim=[inc_min, inc_max],
                                     raan_lim=[raan_min, raan_max],
                                     tp_lim=[tp_min, tp_max],
-                                    bstar_lim=[bstar_min, bstar_max])
+                                    bstar_lim=[bstar_min, bstar_max],
+                                    td_lim=[td_min, td_max])
 
     counter += loops
 
@@ -1159,7 +1194,7 @@ if __name__== "__main__":
     meta = []
 
     filenames = ["settrup.json", "leipzig.json"]#, "stuttgart.json", "lake_constance.json"]
-    
+
     for file in filenames:
         with open(file, 'r') as outfile:
             data = json.load(outfile)
