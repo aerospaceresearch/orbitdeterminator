@@ -395,6 +395,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
 
             topocentric = difference.at(t)
             ra1, dec1, distance1 = topocentric.radec()
+            alt1, az1, distance2 = topocentric.altaz()
 
             if alt1.degrees >= elevation_min:
                 track_ra[s][t0] = ra1.radians * 180.0 / np.pi
@@ -494,7 +495,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             mean_dec = np.mean(np.abs(dec[s]))
 
             # normalizing with mean az
-            track_ra1 = np.divide(track_ra[s], mean_az)
+            track_ra1 = np.divide(track_ra[s], mean_ra)
             ra1 = np.divide(ra[s], mean_ra)
 
             rms = np.subtract(track_ra1, ra1)
