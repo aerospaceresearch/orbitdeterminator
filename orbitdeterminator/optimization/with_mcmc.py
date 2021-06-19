@@ -18,6 +18,7 @@ import time
 from sgp4.api import Satrec, WGS72
 from sgp4 import exporter
 
+import json
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
@@ -1179,7 +1180,6 @@ def extract_key_and_time_from_data(data, keys):
 
 
 def from_iod(filename = "../example_data/SATOBS-ML-19200716.txt"):
-    import json
 
     # load IOD data for a given satellite
     iod_object_data = por.load_iod_data(filename)
