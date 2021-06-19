@@ -719,7 +719,7 @@ def get_observations_data_sat(iod_object_data, inds):
     obs_t[2] = (timeobs[2]-timeobs[0]).sec
 
     site_codes = [iod_object_data['station'][inds[0]], iod_object_data['station'][inds[1]], iod_object_data['station'][inds[2]]]
-    sat_observatories_data = por.load_sat_observatories_data('..\station_observatory_data\sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
 
 
     # checks angle sub-format, converts subformats to sub-format 2 used in satobs for all three lines
@@ -2029,7 +2029,7 @@ def gauss_method_mpc(filename, bodyname, obs_arr=None, r2_root_ind_vec=None, ref
     mpc_object_data = load_mpc_data(filename)
 
     #load MPC data of listed observatories (longitude, parallax constants C, S)
-    mpc_observatories_data = load_mpc_observatories_data('..\station_observatory_data\mpc_observatories.txt')
+    mpc_observatories_data = load_mpc_observatories_data('../station_observatory_data/mpc_observatories.txt')
 
     #definition of the astronomical unit in km
     # au = cts.au.to(uts.Unit('km')).value
@@ -2245,7 +2245,7 @@ def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_v
         bodyname = iod_object_data['object'][obs_arr[0]-1].decode()
 
     #load data of listed observatories (longitude, latitude, elevation)
-    sat_observatories_data = por.load_sat_observatories_data('..\station_observatory_data\sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
 
     # Earth's G*m value
     mu = mu_Earth
@@ -2414,7 +2414,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
         bodyname = iod_object_data['object'][obs_arr[0]-1].decode()
 
     #load data of listed observatories (longitude, latitude, elevation)
-    sat_observatories_data = por.load_sat_observatories_data('..\station_observatory_data\sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
 
     # Earth's G*m value
     mu = mu_Earth
