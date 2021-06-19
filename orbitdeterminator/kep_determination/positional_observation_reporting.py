@@ -250,3 +250,77 @@ def load_iod_data(fname):
     iod["decmmm"] = decmmm
 
     return iod
+
+##uk format detection
+
+def get_uk_names():
+    uk_names = ['launchyear', 'seqno', 'pieceno',
+                 'siteno', 'yr', 'month','date',
+                 'hr', 'min', 'sec', 'msec', 'timeN', 'timeD',
+                 'timestd', 'positionformatcode',
+                 'obsra', 'obsdec', 'pacc', 'epoch',
+                 'range', 'racc', 'bvismag', 'fvismag', 'flashperiod','remarks']
+
+    return uk_names
+
+def get_uk_lines(fname):
+    # dt is the dtype for UK-formatted text files
+    dt = 'i8, i8, i8,' \
+         ' i8, i8, i8, i8,' \
+         ' i8, i8, i8, i8, i8, i8,' \
+         ' i8, i8,' \
+         ' S8, S8, i8, i8,' \
+         ' i8, i8, S3, S3, i8, S1'
+
+    # iod_names correspond to the dtype names of each field
+    uk_names = get_uk_names()
+
+    # iod_delims corresponds to the delimiter for cutting the right variable from each input string
+    uk_delims = [2, 3, 2,
+                  4, 2, 2, 2,
+                  2, 2, 2, 4, 1, 4,
+                  1, 1,
+                  8, 8, 4, 1,
+                  8, 5, 3, 3, 5, 1]
+
+    uk_input_lines = np.genfromtxt(fname, dtype=dt, names=uk_names, delimiter=uk_delims, autostrip=True)
+
+    return uk_input_lines
+
+
+
+
+def check_uk_format(fname):
+
+    uk_input_lines = get_uk_lines(fname)
+
+    number_of_lines = len(uk_input_lines["launchyear"])
+    confirmed_lines = 0
+
+    for line in range(number_of_lines):
+
+        launchyear = uk_input_lines["launchyear"][line]
+        remarks = uk_input_lines["remarks"][line]
+        fvismag = uk_input_lines["fvismag"][line]
+        epoch = uk_input_lines["epoch"][line]
+        tstd=uk_input_lines["timestd"][line]
+
+        if len(str(launchyear)) == 2 and \
+                any(remarks.decode('ascii') == x for x in ["S","I","R","F","X","E"]) and \
+                (epoch == x for x in [0,1,2,3,4,5,6]) and \
+                (tstd== 1 or tstd== 2 or tstd == 3):
+
+
+            confirmed_lines += 1
+    """
+    print(confirmed_lines)
+    print("launch year: ", launchyear)
+    print("remarks: ", remarks)
+    print("epoch: ", epoch)
+    print("fvismag: ", fvismag)
+    print("tstd: ", tstd)"""
+    if confirmed_lines == number_of_lines:
+        #check
+        return True
+    else:
+        return False
