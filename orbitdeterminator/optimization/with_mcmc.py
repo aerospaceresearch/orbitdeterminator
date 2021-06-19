@@ -18,6 +18,11 @@ import time
 from sgp4.api import Satrec, WGS72
 from sgp4 import exporter
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+import kep_determination.positional_observation_reporting as por
+
 mu = 398600.0
 
 plotnames = "ggg_"
@@ -974,9 +979,9 @@ def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], gen
     }
 
     r_a_min = 0.0
-    r_a_max = 1000.0
+    r_a_max = 2000.0
     r_p_min = 0.0
-    r_p_max = 1000.0
+    r_p_max = 2000.0
     AoP_min = 0.0
     AoP_max = 360.0
     inc_min = 0.0
@@ -1173,11 +1178,72 @@ def extract_key_and_time_from_data(data, keys):
     return keys_data, times_data
 
 
-if __name__== "__main__":
+def from_iod(filename = "../example_data/SATOBS-ML-19200716.txt"):
     import json
 
+    # load IOD data for a given satellite
+    iod_object_data = por.load_iod_data(filename)
+    print(iod_object_data)
+
+    timestamp = []
+    ra = []
+    dec = []
+
+    for i in range(len(iod_object_data["object"])):
+        yr = iod_object_data["yr"][i]
+        month = iod_object_data["month"][i]
+        day = iod_object_data["day"][i]
+        hour = iod_object_data["hr"][i]
+        min = iod_object_data["min"][i]
+        sec = iod_object_data["sec"][i]
+        msec = iod_object_data["msec"][i]
+
+        time1 = datetime(yr, month, day, hour, min, sec, msec*1000)
+        time1 = observing_time = Time(time1, scale="utc").unix
+        timestamp.append(time1)
+        ra.append(iod_object_data["right_ascension"][i])
+        dec.append(iod_object_data["declination"][i])
+        print(time1, iod_object_data["right_ascension"][i], iod_object_data["declination"][i])
+        site_codes_0 = iod_object_data["station"][i]
+
+    sat_observatories_data = por.load_sat_observatories_data('../kep_determination/sat_tracking_observatories.txt')
+    station = por.get_station_data(site_codes_0, sat_observatories_data)
+    lat = station['Latitude']  # deg
+    lon = station['Longitude']  # deg
+    alt = station['Elev']  # meters
+    print(lat, lon, alt)
+
+    station = [{"lat":lat, "long":lon, "alt": alt}]
+    el = [[]]
+    az = [[]]
+    ranging = [[]]
+    doppler = [[]]
+    t = []
+    satellite_pos = [[]]
+
+    t.append(timestamp)
+
+    measurements = {}
+    measurements["el"] = el
+    measurements["az"] = az
+    measurements["ra"] = [ra]
+    measurements["dec"] = [dec]
+    measurements["satellite_pos"] = satellite_pos
+    measurements["range"] = ranging
+    measurements["doppler"] = doppler
+    timestamps = t
+    timestamp_min = np.min(np.min(timestamps))
+
+    for s in range(len(timestamps)):
+        for t0 in range(len(timestamps[s])):
+            timestamps[s][t0] = timestamps[s][t0] - timestamp_min
+
+    mode = 0
+
+    parameters = start(station, timestamp_min, timestamps, mode, measurements, loops=41, walks=50)
 
 
+def from_json():
 
     Rs = []
     timestamps = []
@@ -1408,3 +1474,7 @@ if __name__== "__main__":
 
     mode = 0
     parameters = start(station, timestamp_min, timestamps, mode, measurements, meta=meta, generated=generated, loops=40, walks=50)
+
+
+if __name__ == "__main__":
+    from_iod()
