@@ -89,7 +89,7 @@ def radec_res_vec_rov_sat_w(x, inds, iod_object_data, sat_observatories_data, ro
                        seconds=(iod_object_data['sec'][indm1]+iod_object_data['msec'][indm1]/1000.0))
         timeobs = Time( datetime(iod_object_data['yr'][indm1], iod_object_data['month'][indm1], iod_object_data['day'][indm1]) + td )
         site_code = iod_object_data['station'][indm1]
-        obsite = get_station_data(site_code, sat_observatories_data)
+        obsite = por.get_station_data(site_code, sat_observatories_data)
         # object position wrt to Earth
         xyz_obj = orbel2xyz(timeobs.jd, cts.GM_earth.to(uts.Unit('km3 / day2')).value, x[0], x[1], x[2], x[3], x[4], x[5])
         # observer position wrt to Earth
@@ -191,7 +191,7 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
     iod_object_data = por.load_iod_data(filename)
 
     #load data of listed observatories (longitude, latitude, elevation)
-    sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('sat_tracking_observatories.txt')
 
     #get preliminary orbit using Gauss method
     #q0 : a, e, taup, I, W, w, T

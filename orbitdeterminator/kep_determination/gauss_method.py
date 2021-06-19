@@ -156,18 +156,7 @@ def load_mpc_observatories_data(mpc_observatories_fname):
     obs_delims = [4, 10, 9, 10, 48]
     return np.genfromtxt(mpc_observatories_fname, dtype=obs_dt, names=True, delimiter=obs_delims, autostrip=True, encoding=None)
 
-def load_sat_observatories_data(sat_observatories_fname):
-    """Load COSPAR satellite tracking observatories data using numpy's genfromtxt function.
 
-       Args:
-           sat_observatories_fname (str): file name with COSPAR observatories data.
-
-       Returns:
-           ndarray: data read from the text file (output from numpy.genfromtxt)
-    """
-    obs_dt = 'i8, S2, f8, f8, f8, S18'
-    obs_delims = [4, 3, 10, 10, 8, 21]
-    return np.genfromtxt(sat_observatories_fname, dtype=obs_dt, names=True, delimiter=obs_delims, autostrip=True, encoding=None, skip_header=1)
 
 def get_observatory_data(observatory_code, mpc_observatories_data):
     """Load individual data of MPC observatory corresponding to given observatory code.
@@ -182,17 +171,6 @@ def get_observatory_data(observatory_code, mpc_observatories_data):
     arr_index = np.where(mpc_observatories_data['Code'] == observatory_code)
     return mpc_observatories_data[arr_index[0][0]]
 
-def get_station_data(station_code, sat_observatories_data):
-    """Load individual data of COSPAR satellite tracking observatory corresponding to given observatory code.
-
-       Args:
-           observatory_code (int): COSPAR station code.
-
-       Returns:
-           ndarray: station data (Lat, Long, Elev) corresponding to observatory code.
-    """
-    arr_index = np.where(sat_observatories_data['No'] == station_code)
-    return sat_observatories_data[arr_index[0][0]]
 
 def load_mpc_data(fname):
     """Loads minor planet position observation data from MPC-formatted files.
@@ -741,7 +719,7 @@ def get_observations_data_sat(iod_object_data, inds):
     obs_t[2] = (timeobs[2]-timeobs[0]).sec
 
     site_codes = [iod_object_data['station'][inds[0]], iod_object_data['station'][inds[1]], iod_object_data['station'][inds[2]]]
-    sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('sat_tracking_observatories.txt')
 
 
     # checks angle sub-format, converts subformats to sub-format 2 used in satobs for all three lines
@@ -749,7 +727,7 @@ def get_observations_data_sat(iod_object_data, inds):
 
 
     site_codes_0 = iod_object_data['station'][inds[0]]
-    obs=get_station_data(site_codes_0, sat_observatories_data)
+    obs=por.get_station_data(site_codes_0, sat_observatories_data)
     lat=obs['Latitude'] # deg
     lon=obs['Longitude'] # deg
     alt=obs['Elev'] # meters
@@ -882,7 +860,7 @@ def get_observations_data_sat(iod_object_data, inds):
 ####
     clipped_iod=raHHMMmmm1+decDDMMmmm1
     site_codes_1 = iod_object_data['station'][inds[1]]
-    obs=get_station_data(site_codes_1, sat_observatories_data)
+    obs=por.get_station_data(site_codes_1, sat_observatories_data)
     lat=obs['Latitude']
     lon=obs['Longitude']
     alt=obs['Elev']
@@ -1010,7 +988,7 @@ def get_observations_data_sat(iod_object_data, inds):
 ####
     clipped_iod=raHHMMmmm2+decDDMMmmm2
     site_codes_2 = iod_object_data['station'][inds[2]]
-    obs=get_station_data(site_codes_2, sat_observatories_data)
+    obs=por.get_station_data(site_codes_2, sat_observatories_data)
     lat=obs['Latitude']
     lon=obs['Longitude']
     alt=obs['Elev']
@@ -1385,9 +1363,9 @@ def get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes):
     """
     R = np.array((np.zeros((3,)),np.zeros((3,)),np.zeros((3,))))
     # load MPC observatory data
-    obsite1 = get_station_data(site_codes[0], sat_observatories_data)
-    obsite2 = get_station_data(site_codes[1], sat_observatories_data)
-    obsite3 = get_station_data(site_codes[2], sat_observatories_data)
+    obsite1 = por.get_station_data(site_codes[0], sat_observatories_data)
+    obsite2 = por.get_station_data(site_codes[1], sat_observatories_data)
+    obsite3 = por.get_station_data(site_codes[2], sat_observatories_data)
 
     R[0] = observerpos_sat(obsite1['Latitude'], obsite1['Longitude'], obsite1['Elev'], obs_radec[0].obstime)
     R[1] = observerpos_sat(obsite2['Latitude'], obsite2['Longitude'], obsite2['Elev'], obs_radec[1].obstime)
@@ -1853,7 +1831,7 @@ def radec_res_vec_rov_sat(x, inds, iod_object_data, sat_observatories_data, rov)
                                  iod_object_data['month'][indm1],
                                  iod_object_data['day'][indm1]) + td )
         site_code = iod_object_data['station'][indm1]
-        obsite = get_station_data(site_code, sat_observatories_data)
+        obsite = por.get_station_data(site_code, sat_observatories_data)
         # object position wrt to Earth
         xyz_obj = orbel2xyz(timeobs.jd,
                             cts.GM_earth.to(uts.Unit('km3 / day2')).value,
@@ -1910,7 +1888,7 @@ def t_radec_res_vec_sat(x, inds, iod_object_data, sat_observatories_data, rov):
                                  iod_object_data['day'][indm1]) + td )
         t_jd = timeobs.jd
         site_code = iod_object_data['station'][indm1]
-        obsite = get_station_data(site_code, sat_observatories_data)
+        obsite = por.get_station_data(site_code, sat_observatories_data)
         # object position wrt to Earth
         xyz_obj = orbel2xyz(t_jd, cts.GM_earth.to(uts.Unit('km3 / day2')).value, x[0], x[1], x[2], x[3], x[4], x[5])
         # observer position wrt to Earth
@@ -2267,7 +2245,7 @@ def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_v
         bodyname = iod_object_data['object'][obs_arr[0]-1].decode()
 
     #load data of listed observatories (longitude, latitude, elevation)
-    sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('sat_tracking_observatories.txt')
 
     # Earth's G*m value
     mu = mu_Earth
@@ -2436,7 +2414,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
         bodyname = iod_object_data['object'][obs_arr[0]-1].decode()
 
     #load data of listed observatories (longitude, latitude, elevation)
-    sat_observatories_data = load_sat_observatories_data('sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('sat_tracking_observatories.txt')
 
     # Earth's G*m value
     mu = mu_Earth
