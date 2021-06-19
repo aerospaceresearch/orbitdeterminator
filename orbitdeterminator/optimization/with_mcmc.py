@@ -1477,4 +1477,4 @@ def from_json():
 
 
 if __name__ == "__main__":
-    from_iod(filename = "../example_data/sats3.txt")
+    from_iod()
