@@ -1206,7 +1206,7 @@ def from_iod(filename = "../example_data/SATOBS-ML-19200716.txt"):
         print(time1, iod_object_data["right_ascension"][i], iod_object_data["declination"][i])
         site_codes_0 = iod_object_data["station"][i]
 
-    sat_observatories_data = por.load_sat_observatories_data('../kep_determination/sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
     station = por.get_station_data(site_codes_0, sat_observatories_data)
     lat = station['Latitude']  # deg
     lon = station['Longitude']  # deg
@@ -1477,4 +1477,4 @@ def from_json():
 
 
 if __name__ == "__main__":
-    from_iod()
+    from_iod(filename = "../example_data/sats3.txt")

@@ -191,7 +191,7 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
     iod_object_data = por.load_iod_data(filename)
 
     #load data of listed observatories (longitude, latitude, elevation)
-    sat_observatories_data = por.load_sat_observatories_data('sat_tracking_observatories.txt')
+    sat_observatories_data = por.load_sat_observatories_data('..\station_observatory_data\sat_tracking_observatories.txt')
 
     #get preliminary orbit using Gauss method
     #q0 : a, e, taup, I, W, w, T
@@ -334,7 +334,7 @@ def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
     mpc_object_data = load_mpc_data(filename)
 
     #load MPC data of listed observatories (longitude, parallax constants C, S)
-    mpc_observatories_data = load_mpc_observatories_data('mpc_observatories.txt')
+    mpc_observatories_data = load_mpc_observatories_data('..\station_observatory_data\mpc_observatories.txt')
 
     #x0 : a, e, taup, I, W, w
     x0 = np.array(gauss_method_mpc(filename, bodyname, obs_arr,
