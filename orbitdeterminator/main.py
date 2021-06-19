@@ -79,7 +79,7 @@ def process(data_file, error_apriori, units):
         
         polyorder = 3
         if polyorder < window:
-            # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
+            # Apply the Savitzky Golay filter with window = window (51 for example_data/orbit.csv) and polynomial order = 3
             data_after_filter = sav_golay.golay(data_after_filter, window, polyorder)
 
     else:
@@ -97,7 +97,7 @@ def process(data_file, error_apriori, units):
 
                 polyorder = 3
                 if polyorder < window:
-                    # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
+                    # Apply the Savitzky Golay filter with window = window (51 for example_data/orbit.csv) and polynomial order = 3
                     data_after_filter = sav_golay.golay(data_after_filter, window, polyorder)
 
             elif(choice == 'Wiener Filter'):
@@ -405,7 +405,7 @@ def process(data_file, error_apriori, units):
 
 def read_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file_path', type = str, help = "path to .csv data file", default = 'orbit.csv')
+    parser.add_argument('-f', '--file_path', type = str, help = "path to .csv data file", default = 'example_data/orbit.csv')
     parser.add_argument('-e', '--error', type = float, help = "estimation of the measurement error", default = 10.0)
     parser.add_argument('-u', '--units', type = str, help = "m for metres, k for kilometres", default = 'm')
     return parser.parse_args()

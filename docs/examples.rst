@@ -29,7 +29,7 @@ located in the src folder and the process will run. You also need to input a apr
 errors, which in the example case is 20km per point (points every 1 second). In the case you are using your own
 positional data set you need to estimate this value and input it because it is critical for the filtering process::
 
-    run = process("orbit.csv")
+    run = process("example_data/orbit.csv")
 
 .. warning::
 
@@ -106,8 +106,9 @@ Process
 ========================
 
 In this example we are not going to use the main.py, but some of the main modules provided. First of all lets clear the
-path we are going to follow which is fairly straightforward. Note that we are going to use the same orbit.csv that is
-located inside the src folder and has **tab delimeter** (read_data.py reads with this delimiter).
+path we are going to follow which is fairly straightforward. Note that we are going to use the same
+example_data/orbit.csv that is located inside the src folder and has **tab delimeter**
+(read_data.py reads with this delimiter).
 
 Process
 ~~~~~~~
@@ -118,7 +119,7 @@ Process
 So first we read the data using the util/read_data.load_data function. Just input the .csv file name into the
 function and it will create a numpy array with the positional data ready to be processed::
 
-    data = read_data.load_data("orbit.csv")
+    data = read_data.load_data("example_data/orbit.csv")
 
 .. warning::
 

@@ -21,7 +21,7 @@ This is a module to animate orbit of a satellite around a planet of given radius
 
 
 
-#data='orbit.csv'
+#data='example_data/orbit.csv'
 def read(data_file):
 	#global data
 	data = read_data.load_data(data_file)
