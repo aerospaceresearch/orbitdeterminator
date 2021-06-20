@@ -250,3 +250,37 @@ def load_iod_data(fname):
     iod["decmmm"] = decmmm
 
     return iod
+
+
+def load_sat_observatories_data(sat_observatories_fname):
+    """Load COSPAR satellite tracking observatories data using numpy's genfromtxt function.
+
+       Args:
+           sat_observatories_fname (str): file name with COSPAR observatories data.
+
+       Returns:
+           ndarray: data read from the text file (output from numpy.genfromtxt)
+    """
+    obs_dt = 'i8, S2, f8, f8, f8, S18'
+    obs_delims = [4, 3, 10, 10, 8, 21]
+
+    return np.genfromtxt(sat_observatories_fname,
+                         dtype=obs_dt,
+                         names=True,
+                         delimiter=obs_delims,
+                         autostrip=True,
+                         encoding=None,
+                         skip_header=1)
+
+
+def get_station_data(station_code, sat_observatories_data):
+    """Load individual data of COSPAR satellite tracking observatory corresponding to given observatory code.
+
+       Args:
+           observatory_code (int): COSPAR station code.
+
+       Returns:
+           ndarray: station data (Lat, Long, Elev) corresponding to observatory code.
+    """
+    arr_index = np.where(sat_observatories_data['No'] == station_code)
+    return sat_observatories_data[arr_index[0][0]]
