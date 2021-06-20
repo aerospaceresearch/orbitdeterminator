@@ -7,6 +7,7 @@ and generates the final set of keplerian elements along with a plot and a filter
 from util import (read_data, kep_state, rkf78, golay_window)
 from filters import (sav_golay, triple_moving_average, wiener)
 from kep_determination import (lamberts_kalman, interpolation, ellipse_fit, gibbs_method, gauss_method)
+from optimization import (with_mcmc)
 import argparse
 import numpy as np
 import matplotlib as mpl
@@ -16,6 +17,7 @@ import inquirer
 from vpython import *
 import animate_orbit
 import kep_determination.orbital_elements as oe
+import random
 
 
 def get_timestamp_index_by_orbitperiod(semimajor_axis, timestamps):
@@ -75,8 +77,10 @@ def process(data_file, error_apriori, units):
         # Use the golay_window.py script to find the window for the Savitzky Golay filter based on the error you input
         window = golay_window.window(error_apriori, data_after_filter)
         
-        # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
-        data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+        polyorder = 3
+        if polyorder < window:
+            # Apply the Savitzky Golay filter with window = window (51 for example_data/orbit.csv) and polynomial order = 3
+            data_after_filter = sav_golay.golay(data_after_filter, window, polyorder)
 
     else:
         for index, choice in enumerate(choices['filter']):
@@ -91,8 +95,10 @@ def process(data_file, error_apriori, units):
                 # based on the error you input
                 window = golay_window.window(error_apriori, data_after_filter)
 
-                # Apply the Savitzky Golay filter with window = window (51 for orbit.csv) and polynomial order = 3
-                data_after_filter = sav_golay.golay(data_after_filter, window, 3)
+                polyorder = 3
+                if polyorder < window:
+                    # Apply the Savitzky Golay filter with window = window (51 for example_data/orbit.csv) and polynomial order = 3
+                    data_after_filter = sav_golay.golay(data_after_filter, window, polyorder)
 
             elif(choice == 'Wiener Filter'):
                 print("Applying Wiener Filter...")
@@ -130,7 +136,8 @@ def process(data_file, error_apriori, units):
                                  'Cubic Spline Interpolation',
                                  'Ellipse Best Fit',
                                  'Gibbs 3 Vector',
-                                 'Gauss 3 Vector'],
+                                 'Gauss 3 Vector',
+                                 'MCMC (exp.)'],
                         ),
     ]
     choices = inquirer.prompt(questions)
@@ -236,7 +243,7 @@ def process(data_file, error_apriori, units):
                 kep_final_gibbs[6, 0] = sgp4.rev_per_day(kep_final_gibbs[0, 0])
                 kep_elements['Gibbs 3 Vector'] = kep_final_gibbs
 
-            else:
+            elif (choice == 'Gauss 3 Vector'):
                 # Apply the Gauss method
 
                 # first only with first, middle and last measurement
@@ -286,6 +293,59 @@ def process(data_file, error_apriori, units):
                 kep_final_gauss = np.resize(kep_final_gauss, ((7, 1)))
                 kep_final_gauss[6, 0] = sgp4.rev_per_day(kep_final_gauss[0, 0])
                 kep_elements['Gauss 3 Vector'] = kep_final_gauss
+
+            else:
+                # apply mcmc method, a real optimizer
+
+                # all data
+                timestamps = data_after_filter[:, 0]
+                R = np.array(data_after_filter[:, 1:])
+
+                # all data can make the MCMC very slow. so we just pick a few in random, but in order.
+                timestamps_short = []
+                R_short = []
+                if len(timestamps) > 25:
+                    print("Too many positions for MCMC. Just 25 positons are selected")
+
+                    # pick randomly, but in order and no duplicates
+                    l = list(np.linspace(0, len(timestamps) - 1, num=len(timestamps)))
+                    select_index = sorted(random.sample(list(l)[1:-1], k=23))
+                    print(select_index)
+
+                    timestamps_short.append(timestamps[0])
+                    R_short.append(R[0])
+
+                    for select in range(len(select_index)):
+                        timestamps_short.append(timestamps[int(select_index[select])])
+                        R_short.append(R[int(select_index[select])])
+
+                    timestamps_short.append(timestamps[-1])
+                    R_short.append(R[-1])
+
+                else:
+                    timestamps_short = timestamps
+                    R_short = R
+
+
+                parameters = with_mcmc.fromposition(timestamps_short, R_short)
+
+                r_a = parameters["r_a"]
+                r_p = parameters["r_p"]
+                AoP = parameters["AoP"]
+                inc = parameters["inc"]
+                raan = parameters["raan"]
+                tp = parameters["tp"]
+
+                semimajor_axis = (r_p + r_a) / 2.0
+                ecc = (r_a - r_p) / (r_a + r_p)
+                T_orbitperiod = oe.T_orbitperiod(semimajor_axis=semimajor_axis)
+                true_anomaly = tp / T_orbitperiod * 360.0
+                n_mean_motion_perday = oe.n_mean_motion_perday(T_orbitperiod)
+
+                kep_mcmc = np.array([[semimajor_axis, ecc, inc, AoP, raan, true_anomaly, n_mean_motion_perday]])
+
+                kep_elements['MCMC (exp.)'] = kep_mcmc
+
 
     kep_final = np.zeros((7, len(kep_elements)))
     order = []
@@ -345,7 +405,7 @@ def process(data_file, error_apriori, units):
 
 def read_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file_path', type = str, help = "path to .csv data file", default = 'orbit.csv')
+    parser.add_argument('-f', '--file_path', type = str, help = "path to .csv data file", default = 'example_data/orbit.csv')
     parser.add_argument('-e', '--error', type = float, help = "estimation of the measurement error", default = 10.0)
     parser.add_argument('-u', '--units', type = str, help = "m for metres, k for kilometres", default = 'm')
     return parser.parse_args()
@@ -363,7 +423,8 @@ if __name__ == "__main__":
                "  2. Savitzky Golay Filter       |   2. Cubic spline interpolation\n"\
                "  4. Triple Moving Average Filter|   3. Ellipse Bset Fit\n"\
                "  5. Wiener Filter               |   4. Gibbs 3 Vector\n"\
-               "                                 |   5. Gauss 3 Vector\n"
+               "                                 |   5. Gauss 3 Vector\n"\
+               "                                 |   6. MCMC (experimental)\n"
     print("\n" + workflow)
 
     args = read_args()

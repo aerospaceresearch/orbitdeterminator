@@ -48,7 +48,7 @@ def golay(data, window, degree):
 # if __name__ == "__main__":
 #
 #     pd.set_option('display.width', 1000)
-#     my_data = read_data.load_data('orbit.csv')
+#     my_data = read_data.load_data('../example_data/orbit.csv')
 #     window = 21 # its better to select it as the len(data)/3 and it needs to be an odd number
 #     degree = 6
 #     positions_filtered = golay(my_data, window, degree)

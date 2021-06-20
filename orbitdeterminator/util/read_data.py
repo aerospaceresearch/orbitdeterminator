@@ -133,6 +133,6 @@ def detect_file_format(filename):
 if __name__ == "__main__":
 
     #save_orbits(_SOURCE, _DESTINATION)
-    print("detecting file", detect_file_format("../orbit.csv"))
+    print("detecting file", detect_file_format("../example_data/orbit.csv"))
     print("detecting file", detect_file_format("../example_data/SATOBS-ML-19200716.txt"))
-    print("detecting file", detect_file_format("../orbit1.csv"))
+    print("detecting file", detect_file_format("../example_data/orbit1.csv"))

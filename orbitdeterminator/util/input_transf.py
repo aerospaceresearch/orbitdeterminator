@@ -66,7 +66,7 @@ def spher_to_cart(data):
 
 if __name__ == "__main__":
 
-    data = read_data.load_data("orbit.csv")
+    data = read_data.load_data("../example_data/orbit.csv")
     new_data = cart_to_spher(data)
     same_data = spher_to_cart(new_data)
     print(same_data == data)

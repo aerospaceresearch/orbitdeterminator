@@ -18,7 +18,7 @@ def __read_args():
     """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', type=str, help='path to .csv file', default='orbit.csv')
+    parser.add_argument('-f', '--file', type=str, help='path to .csv file', default='../example_data/orbit.csv')
     parser.add_argument('-u', '--units', type=str, help='units of distance (m or km)', default='km')
     return parser.parse_args()
 
