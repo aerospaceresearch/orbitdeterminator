@@ -1194,9 +1194,9 @@ def extract_key_and_time_from_data(i, data, keys):
 
 
 def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
+    print("loading IOD files")
 
     Rs = []
-
     station = []
     els = []
     azs = []
@@ -1208,12 +1208,18 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
 
     for file in filenames:
         # load IOD data for a given satellite
+
         iod_object_data = por.load_iod_data(file)
-        print(iod_object_data)
 
         timestamp = []
         ra = []
         dec = []
+        az = []
+        el = []
+
+        lat = 0.0
+        lon = 0.0
+        alt = 0.0
 
         for i in range(len(iod_object_data["object"])):
             yr = iod_object_data["yr"][i]
@@ -1224,27 +1230,78 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
             sec = iod_object_data["sec"][i]
             msec = iod_object_data["msec"][i]
 
-            time1 = datetime(yr, month, day, hour, min, sec, msec*1000)
-            time1 = observing_time = Time(time1, scale="utc").unix
-            timestamp.append(time1)
-            ra.append(iod_object_data["right_ascension"][i])
-            dec.append(iod_object_data["declination"][i])
-            print(time1, iod_object_data["right_ascension"][i], iod_object_data["declination"][i])
-            site_codes_0 = iod_object_data["station"][i]
+            time_iod = datetime(yr, month, day, hour, min, sec, msec*1000)
+            time_iod = observing_time = Time(time_iod, scale="utc").unix
 
-        sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
-        gs = por.get_station_data(site_codes_0, sat_observatories_data)
-        lat = gs['Latitude']  # deg
-        lon = gs['Longitude']  # deg
-        alt = gs['Elev']  # meters
-        print(lat, lon, alt)
+            if iod_object_data["right_ascension"][i] != -1 or iod_object_data["declination"][i] != -1:
+                timestamp.append(time_iod)
+                ra.append(iod_object_data["right_ascension"][i])
+                dec.append(iod_object_data["declination"][i])
+
+                site_codes_0 = iod_object_data["station"][i]
+
+                sat_observatories_data = por.load_sat_observatories_data(
+                    '../station_observatory_data/sat_tracking_observatories.txt')
+                gs = por.get_station_data(site_codes_0, sat_observatories_data)
+                lat = gs['Latitude']  # deg
+                lon = gs['Longitude']  # deg
+                alt = gs['Elev']  # meters
 
         station.append({"lat":lat, "long":lon, "alt": alt})
+
         t.append(timestamp)
         ras.append(ra)
         decs.append(dec)
-        els.append([]) # could be in iod format. not checked for now
-        azs.append([]) # could be in iod format. not checked for now
+        els.append(el) # could be in iod format. not checked for now
+        azs.append(az) # could be in iod format. not checked for now
+        rangings.append([])
+        dopplers.append([])
+        Rs.append([])
+
+
+        timestamp = []
+        ra = []
+        dec = []
+        az = []
+        el = []
+
+        lat = 0.0
+        lon = 0.0
+        alt = 0.0
+
+        for i in range(len(iod_object_data["object"])):
+            yr = iod_object_data["yr"][i]
+            month = iod_object_data["month"][i]
+            day = iod_object_data["day"][i]
+            hour = iod_object_data["hr"][i]
+            min = iod_object_data["min"][i]
+            sec = iod_object_data["sec"][i]
+            msec = iod_object_data["msec"][i]
+
+            time_iod = datetime(yr, month, day, hour, min, sec, msec * 1000)
+            time_iod = observing_time = Time(time_iod, scale="utc").unix
+
+            if iod_object_data["azimuth"][i] != -1 or iod_object_data["elevation"][i] != -1:
+                timestamp.append(time_iod)
+                az.append(iod_object_data["azimuth"][i])
+                el.append(iod_object_data["elevation"][i])
+
+                site_codes_0 = iod_object_data["station"][i]
+
+                sat_observatories_data = por.load_sat_observatories_data(
+                    '../station_observatory_data/sat_tracking_observatories.txt')
+                gs = por.get_station_data(site_codes_0, sat_observatories_data)
+                lat = gs['Latitude']  # deg
+                lon = gs['Longitude']  # deg
+                alt = gs['Elev']  # meters
+
+        station.append({"lat": lat, "long": lon, "alt": alt})
+
+        t.append(timestamp)
+        ras.append(ra)
+        decs.append(dec)
+        els.append(el)  # could be in iod format. not checked for now
+        azs.append(az)  # could be in iod format. not checked for now
         rangings.append([])
         dopplers.append([])
         Rs.append([])
@@ -1258,6 +1315,7 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
     measurements["satellite_pos"] = Rs
     measurements["range"] = rangings
     measurements["doppler"] = dopplers
+
     timestamps = t
 
     timestamp_min = 0.0
@@ -1276,11 +1334,11 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
     mode = 0
-
     parameters = start(station, timestamp_min, timestamps, mode, measurements, loops=41, walks=50)
 
 
 def from_json(filenames = ["../example_data/stuttgart.json"]):
+    print("loading JSON files")
 
     Rs = []
     timestamps = []
@@ -1496,10 +1554,10 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
 
 if __name__ == "__main__":
 
-    #path = os.path.join("..", "example_data", "23908_20200316.txt")
-    #filenames = rd.get_all_files(path)
-    #from_iod(filenames=filenames)
-
-    path = os.path.join("..", "example_data", "json")
+    path = os.path.join("..", "example_data", "23908_20200316.txt")
     filenames = rd.get_all_files(path)
-    from_json(filenames=filenames)
+    from_iod(filenames=filenames)
+
+    #path = os.path.join("..", "example_data", "json")
+    #filenames = rd.get_all_files(path)
+    #from_json(filenames=filenames)
