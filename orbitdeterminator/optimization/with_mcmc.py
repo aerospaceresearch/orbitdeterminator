@@ -1161,7 +1161,7 @@ def fromposition(timestamp, sat, mode=0):
     return parameters
 
 
-def extract_key_and_time_from_data(data, keys):
+def extract_key_and_time_from_data(i, data, keys):
 
     keys_data = []
     times_data = []
@@ -1277,7 +1277,7 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
     parameters = start(station, timestamp_min, timestamps, mode, measurements, loops=41, walks=50)
 
 
-def from_json():
+def from_json(filenames = ["../example_data/stuttgart.json"]):
 
     Rs = []
     timestamps = []
@@ -1290,11 +1290,9 @@ def from_json():
     ras = []
     decs = []
     t = []
-    satellite_pos = [[]]
     generated = {}
     meta = []
 
-    filenames = ["settrup.json", "leipzig.json"]#, "stuttgart.json", "lake_constance.json"]
 
     for file in filenames:
         with open(file, 'r') as outfile:
@@ -1328,7 +1326,7 @@ def from_json():
             else:
                 meta.append([])
 
-            input, input_time = extract_key_and_time_from_data(data, keys)
+            input, input_time = extract_key_and_time_from_data(i, data, keys)
             R = input[0]
             timestamp_t = input_time[0]
 
@@ -1356,7 +1354,7 @@ def from_json():
             else:
                 meta.append([])
 
-            input, input_time = extract_key_and_time_from_data(data, keys)
+            input, input_time = extract_key_and_time_from_data(i, data, keys)
             az = input[0]
             el = input[1]
             timestamp_azel = input_time[0]
@@ -1385,7 +1383,7 @@ def from_json():
             else:
                 meta.append([])
 
-            input, input_time = extract_key_and_time_from_data(data, keys)
+            input, input_time = extract_key_and_time_from_data(i, data, keys)
             ranging = input[0]
             timestamp_ranging = input_time[0]
 
@@ -1413,7 +1411,7 @@ def from_json():
             else:
                 meta.append([])
 
-            input, input_time = extract_key_and_time_from_data(data, keys)
+            input, input_time = extract_key_and_time_from_data(i, data, keys)
             doppler = input[0]
             timestamp_doppler = input_time[0]
 
@@ -1441,7 +1439,7 @@ def from_json():
             else:
                 meta.append([])
 
-            input, input_time = extract_key_and_time_from_data(data, keys)
+            input, input_time = extract_key_and_time_from_data(i, data, keys)
             ra = input[0]
             dec = input[1]
             timestamp_radec = input_time[0]
@@ -1512,7 +1510,10 @@ def from_json():
 
 if __name__ == "__main__":
 
-    path = os.path.join("..", "example_data", "23908_20200316.txt")
-    filenames = rd.get_all_files(path)
+    #path = os.path.join("..", "example_data", "23908_20200316.txt")
+    #filenames = rd.get_all_files(path)
+    #from_iod(filenames=filenames)
 
-    from_iod(filenames=filenames)
+    path = os.path.join("..", "example_data", "json")
+    filenames = rd.get_all_files(path)
+    from_json(filenames=filenames)
