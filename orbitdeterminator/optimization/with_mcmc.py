@@ -665,6 +665,9 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
     # now we can run the loops at each iteration we have the EMCEE results
     for i in range(loops):
         #start the optimization with emcee
+        print("maybe you will see this message:")
+        print("RuntimeWarning: invalid value encountered in double_scalars lnpdiff = f + nlp - state.log_prob[j]")
+        print("just ignore it. it will run anyways")
         pos, prob, state = sampler.run_mcmc(pos, walks, progress=True)
 
         # extracting the orbit parameters back from the resulting POS.
