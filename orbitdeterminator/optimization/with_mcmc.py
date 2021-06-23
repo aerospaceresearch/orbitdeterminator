@@ -18,6 +18,7 @@ import time
 from sgp4.api import Satrec, WGS72
 from sgp4 import exporter
 
+import glob
 import json
 import sys
 import os
@@ -1139,7 +1140,17 @@ def fromposition(timestamp, sat, mode=0):
     measurements["range"] = ranging
     measurements["doppler"] = doppler
     timestamps = t
-    timestamp_min = np.min(np.min(timestamps))
+
+    timestamp_min = 0.0
+    tested = 0
+    for ii in range(len(timestamps)):
+        if len(timestamps[ii]):
+            if tested == 0:
+                timestamp_min = np.min(timestamps[ii])
+                tested = 1
+            else:
+                if timestamp_min > np.min(timestamps[ii]):
+                    timestamp_min = np.min(timestamps[ii])
 
     for s in range(len(timestamps)):
         for t0 in range(len(timestamps[s])):
@@ -1179,60 +1190,83 @@ def extract_key_and_time_from_data(data, keys):
     return keys_data, times_data
 
 
-def from_iod(filename = "../example_data/SATOBS-ML-19200716.txt"):
+def from_iod(filename = ["../example_data/SATOBS-ML-19200716.txt"]):
 
-    # load IOD data for a given satellite
-    iod_object_data = por.load_iod_data(filename)
-    print(iod_object_data)
+    Rs = []
 
-    timestamp = []
-    ra = []
-    dec = []
-
-    for i in range(len(iod_object_data["object"])):
-        yr = iod_object_data["yr"][i]
-        month = iod_object_data["month"][i]
-        day = iod_object_data["day"][i]
-        hour = iod_object_data["hr"][i]
-        min = iod_object_data["min"][i]
-        sec = iod_object_data["sec"][i]
-        msec = iod_object_data["msec"][i]
-
-        time1 = datetime(yr, month, day, hour, min, sec, msec*1000)
-        time1 = observing_time = Time(time1, scale="utc").unix
-        timestamp.append(time1)
-        ra.append(iod_object_data["right_ascension"][i])
-        dec.append(iod_object_data["declination"][i])
-        print(time1, iod_object_data["right_ascension"][i], iod_object_data["declination"][i])
-        site_codes_0 = iod_object_data["station"][i]
-
-    sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
-    station = por.get_station_data(site_codes_0, sat_observatories_data)
-    lat = station['Latitude']  # deg
-    lon = station['Longitude']  # deg
-    alt = station['Elev']  # meters
-    print(lat, lon, alt)
-
-    station = [{"lat":lat, "long":lon, "alt": alt}]
-    el = [[]]
-    az = [[]]
-    ranging = [[]]
-    doppler = [[]]
+    station = []
+    els = []
+    azs = []
+    rangings = []
+    dopplers = []
+    ras = []
+    decs = []
     t = []
-    satellite_pos = [[]]
 
-    t.append(timestamp)
+    for file in filename:
+        # load IOD data for a given satellite
+        iod_object_data = por.load_iod_data(file)
+        print(iod_object_data)
+
+        timestamp = []
+        ra = []
+        dec = []
+
+        for i in range(len(iod_object_data["object"])):
+            yr = iod_object_data["yr"][i]
+            month = iod_object_data["month"][i]
+            day = iod_object_data["day"][i]
+            hour = iod_object_data["hr"][i]
+            min = iod_object_data["min"][i]
+            sec = iod_object_data["sec"][i]
+            msec = iod_object_data["msec"][i]
+
+            time1 = datetime(yr, month, day, hour, min, sec, msec*1000)
+            time1 = observing_time = Time(time1, scale="utc").unix
+            timestamp.append(time1)
+            ra.append(iod_object_data["right_ascension"][i])
+            dec.append(iod_object_data["declination"][i])
+            print(time1, iod_object_data["right_ascension"][i], iod_object_data["declination"][i])
+            site_codes_0 = iod_object_data["station"][i]
+
+        sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
+        gs = por.get_station_data(site_codes_0, sat_observatories_data)
+        lat = gs['Latitude']  # deg
+        lon = gs['Longitude']  # deg
+        alt = gs['Elev']  # meters
+        print(lat, lon, alt)
+
+        station.append({"lat":lat, "long":lon, "alt": alt})
+        t.append(timestamp)
+        ras.append(ra)
+        decs.append(dec)
+        els.append([]) # could be in iod format. not checked for now
+        azs.append([]) # could be in iod format. not checked for now
+        rangings.append([])
+        dopplers.append([])
+        Rs.append([])
+
 
     measurements = {}
-    measurements["el"] = el
-    measurements["az"] = az
-    measurements["ra"] = [ra]
-    measurements["dec"] = [dec]
-    measurements["satellite_pos"] = satellite_pos
-    measurements["range"] = ranging
-    measurements["doppler"] = doppler
+    measurements["el"] = els
+    measurements["az"] = azs
+    measurements["ra"] = ras
+    measurements["dec"] = decs
+    measurements["satellite_pos"] = Rs
+    measurements["range"] = rangings
+    measurements["doppler"] = dopplers
     timestamps = t
-    timestamp_min = np.min(np.min(timestamps))
+
+    timestamp_min = 0.0
+    tested = 0
+    for ii in range(len(timestamps)):
+        if len(timestamps[ii]):
+            if tested == 0:
+                timestamp_min = np.min(timestamps[ii])
+                tested = 1
+            else:
+                if timestamp_min > np.min(timestamps[ii]):
+                    timestamp_min = np.min(timestamps[ii])
 
     for s in range(len(timestamps)):
         for t0 in range(len(timestamps[s])):
@@ -1477,4 +1511,13 @@ def from_json():
 
 
 if __name__ == "__main__":
-    from_iod()
+
+    path = os.path.join("..", "example_data", "iod_23908_20200316")
+    if os.path.isdir(path):
+        files = glob.glob((path + os.sep+'*'))
+        print(files)
+    if os.path.isfile(path):
+        files = glob.glob((path))
+        print(files)
+
+    from_iod(filename=files)
