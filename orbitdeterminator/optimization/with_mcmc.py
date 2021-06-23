@@ -663,11 +663,11 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
     b4_result = []
 
     # now we can run the loops at each iteration we have the EMCEE results
+    print("maybe you will see this message:")
+    print("RuntimeWarning: invalid value encountered in double_scalars lnpdiff = f + nlp - state.log_prob[j]")
+    print("just ignore it. it will run anyways")
     for i in range(loops):
         #start the optimization with emcee
-        print("maybe you will see this message:")
-        print("RuntimeWarning: invalid value encountered in double_scalars lnpdiff = f + nlp - state.log_prob[j]")
-        print("just ignore it. it will run anyways")
         pos, prob, state = sampler.run_mcmc(pos, walks, progress=True)
 
         # extracting the orbit parameters back from the resulting POS.
@@ -1301,8 +1301,6 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
         with open(file, 'r') as outfile:
             data = json.load(outfile)
 
-        print(data)
-
         for i in range(len(data["signal"])):
 
             timestamp_t = []
@@ -1464,23 +1462,7 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             timestamps.append(timestamp_radec)
 
 
-
-
-    print(len(timestamps))
-    print(len(azs))
-    print(len(Rs))
-    print(len(station))
-    print(len(rangings))
-    print(len(dopplers))
-    print(len(ras))
-
-    print(timestamps)
-    print(Rs)
-    print(azs)
-    print(Rs)
-    print(station)
-    print(ras)
-
+    # putting the inputs into the measurements
     measurements = {}
     measurements["el"] = els
     measurements["az"] = azs
@@ -1490,21 +1472,22 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
     measurements["ra"] = ras
     measurements["dec"] = decs
 
+    # finding the minimum time stamp. from this on, the epoch for the TLE is calculated
     timestamp_min = 0.0
     tested = 0
-    for ii in range(len(timestamps)):
-        if len(timestamps[ii]):
+    for stamp in range(len(timestamps)):
+        if len(timestamps[stamp]):
             if tested == 0:
-                timestamp_min = np.min(timestamps[ii])
+                timestamp_min = np.min(timestamps[stamp])
                 tested = 1
             else:
-                if timestamp_min > np.min(timestamps[ii]):
-                    timestamp_min = np.min(timestamps[ii])
+                if timestamp_min > np.min(timestamps[stamp]):
+                    timestamp_min = np.min(timestamps[stamp])
 
 
-    for s in range(len(timestamps)):
-        for t0 in range(len(timestamps[s])):
-            timestamps[s][t0] = timestamps[s][t0] - timestamp_min
+    for stamp in range(len(timestamps)):
+        for t0 in range(len(timestamps[stamp])):
+            timestamps[stamp][t0] = timestamps[stamp][t0] - timestamp_min
 
 
     mode = 0
