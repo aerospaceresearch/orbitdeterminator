@@ -8,6 +8,7 @@ import pickle
 import numpy as np
 import json
 import sys
+import glob
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import kep_determination.positional_observation_reporting as por
 
@@ -61,15 +62,6 @@ def detect_json(filename):
 def detect_iod(filename):
     if por.check_iod_format(filename) == True:
         file = {"file" : "iod"}
-    else:
-        file = {"file": None}
-
-    return file
-
-
-def detect_uk(filename):
-    if por.check_uk_format(filename) == True:
-        file = {"file" : "uk"}
     else:
         file = {"file": None}
 
@@ -131,9 +123,6 @@ def detect_file_format(filename):
         elif file_csv["file"] == "csv":
             return file_csv
 
-        elif file_uk["file"] == "uk":
-            return file_uk
-
         else:
             return file
 
@@ -142,10 +131,23 @@ def detect_file_format(filename):
         # no file available
         return file
 
+
+def get_all_files(path):
+    # list all files from a folder, or just the one file that was stated.
+
+    if os.path.isdir(path):
+        files = glob.glob((path + os.sep+'*'))
+
+    if os.path.isfile(path):
+        files = glob.glob((path))
+
+    return files
+
+
+
 if __name__ == "__main__":
 
     #save_orbits(_SOURCE, _DESTINATION)
     print("detecting file", detect_file_format("../example_data/orbit.csv"))
     print("detecting file", detect_file_format("../example_data/SATOBS-ML-19200716.txt"))
     print("detecting file", detect_file_format("../example_data/orbit1.csv"))
-    print("detecting file", detect_file_format("../example_data/sampleukformatdata.txt"))

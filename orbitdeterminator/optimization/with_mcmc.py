@@ -18,12 +18,12 @@ import time
 from sgp4.api import Satrec, WGS72
 from sgp4 import exporter
 
-import glob
 import json
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import kep_determination.positional_observation_reporting as por
+import util.read_data as rd
 
 mu = 398600.0
 
@@ -1190,7 +1190,7 @@ def extract_key_and_time_from_data(data, keys):
     return keys_data, times_data
 
 
-def from_iod(filename = ["../example_data/SATOBS-ML-19200716.txt"]):
+def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
 
     Rs = []
 
@@ -1203,7 +1203,7 @@ def from_iod(filename = ["../example_data/SATOBS-ML-19200716.txt"]):
     decs = []
     t = []
 
-    for file in filename:
+    for file in filenames:
         # load IOD data for a given satellite
         iod_object_data = por.load_iod_data(file)
         print(iod_object_data)
@@ -1512,12 +1512,7 @@ def from_json():
 
 if __name__ == "__main__":
 
-    path = os.path.join("..", "example_data", "iod_23908_20200316")
-    if os.path.isdir(path):
-        files = glob.glob((path + os.sep+'*'))
-        print(files)
-    if os.path.isfile(path):
-        files = glob.glob((path))
-        print(files)
+    path = os.path.join("..", "example_data", "23908_20200316.txt")
+    filenames = rd.get_all_files(path)
 
-    from_iod(filename=files)
+    from_iod(filenames=filenames)
