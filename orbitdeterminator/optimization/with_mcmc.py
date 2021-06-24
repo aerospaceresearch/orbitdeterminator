@@ -1359,8 +1359,8 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
 
         print("detecting file", rd.detect_file_format(file))
 
-        with open(file, 'r') as outfile:
-            data = json.load(outfile)
+        with open(file, 'r') as infile:
+            data = json.load(infile)
 
         for i in range(len(data["signal"])):
 

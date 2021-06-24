@@ -51,7 +51,8 @@ def save_orbits(source, destination):
 def detect_json(filename):
     # detect json
     try:
-        json.loads(filename)
+        with open(filename, 'r') as infile:
+            data = json.load(infile)
         file = {"file" : "json"}
     except:
         file = {"file" : None}
