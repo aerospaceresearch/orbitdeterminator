@@ -1378,15 +1378,28 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ra = []
             dec = []
 
+
+            ## position
+
             keys = ["position"]
 
+            R_unit = "km"
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
+
+                if "unit" in data["signal"][i]["meta"]:
+                    if keys[0] in data["signal"][i]["meta"]["unit"]:
+                        R_unit = data["signal"][i]["meta"]["unit"][keys[0]]
+
             else:
                 meta.append([])
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
+
             R = input[0]
+            if R_unit == "m" or R_unit == "meters":
+                R = np.divide(R, 1000.0)
+
             timestamp_t = input_time[0]
 
             station.append([])
@@ -1406,16 +1419,37 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ra = []
             dec = []
 
+
+
+            ## AzEl
             keys = ["az", "el"]
+
+            az_unit = "deg"
+            el_unit = "deg"
 
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
+
+                if "unit" in data["signal"][i]["meta"]:
+                    if keys[0] in data["signal"][i]["meta"]["unit"]:
+                        az_unit = data["signal"][i]["meta"]["unit"][keys[0]]
+
+                    if keys[1] in data["signal"][i]["meta"]["unit"]:
+                        el_unit = data["signal"][i]["meta"]["unit"][keys[1]]
+
             else:
                 meta.append([])
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
+
             az = input[0]
+            if az_unit == "deg" or az_unit == "degrees":
+                az = np.divide(az, 1.0) # todo, adds other conversion
+
             el = input[1]
+            if el_unit == "deg" or el_unit == "degrees":
+                el = np.divide(el, 1.0) # todo, adds other conversion
+
             timestamp_azel = input_time[0]
 
             station.append(data["location"]["fixed"]["data"][0])
@@ -1435,15 +1469,30 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ra = []
             dec = []
 
+
+
+            ## range
+
             keys = ["range"]
+
+            ranging_unit = "km"
 
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
+
+                if "unit" in data["signal"][i]["meta"]:
+                    if keys[0] in data["signal"][i]["meta"]["unit"]:
+                        ranging_unit = data["signal"][i]["meta"]["unit"][keys[0]]
+
             else:
                 meta.append([])
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
+
             ranging = input[0]
+            if ranging_unit == "m" or ranging_unit == "meters":
+                ranging = np.divide(ranging, 1000.0)
+
             timestamp_ranging = input_time[0]
 
             station.append(data["location"]["fixed"]["data"][0])
@@ -1463,15 +1512,29 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ra = []
             dec = []
 
+
+
+            ## doppler
+
             keys = ["doppler"]
 
+            doppler_unit = "hz"
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
+
+                if "unit" in data["signal"][i]["meta"]:
+                    if keys[0] in data["signal"][i]["meta"]["unit"]:
+                        doppler_unit = data["signal"][i]["meta"]["unit"][keys[0]]
+
             else:
                 meta.append([])
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
+
             doppler = input[0]
+            if doppler_unit == "khz" or doppler_unit == "KHz":
+                doppler = np.multiply(doppler, 1000.0)
+
             timestamp_doppler = input_time[0]
 
             station.append(data["location"]["fixed"]["data"][0])
@@ -1491,16 +1554,36 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ra = []
             dec = []
 
+
+            ## RaDec
+
             keys = ["ra", "dec"]
+
+            ra_unit = "deg"
+            dec_unit = "deg"
 
             if "meta" in data["signal"][i]:
                 meta.append([data["signal"][i]["meta"]])
+
+                if "unit" in data["signal"][i]["meta"]:
+                    if keys[0] in data["signal"][i]["meta"]["unit"]:
+                        ra_unit = data["signal"][i]["meta"]["unit"][keys[0]]
+
+                    if keys[1] in data["signal"][i]["meta"]["unit"]:
+                        dec_unit = data["signal"][i]["meta"]["unit"][keys[1]]
+
             else:
                 meta.append([])
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
+
             ra = input[0]
+            if ra_unit == "deg" or ra_unit == "degrees":
+                ra = np.divide(az, 1.0)  # todo, adds other conversion
+
             dec = input[1]
+            if dec_unit == "deg" or dec_unit == "degrees":
+                dec = np.divide(el, 1.0)  # todo, adds other conversion
             timestamp_radec = input_time[0]
 
             station.append(data["location"]["fixed"]["data"][0])
@@ -1554,10 +1637,10 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
 
 if __name__ == "__main__":
 
-    path = os.path.join("..", "example_data", "23908_20200316.txt")
-    filenames = rd.get_all_files(path)
-    from_iod(filenames=filenames)
-
-    #path = os.path.join("..", "example_data", "json")
+    #path = os.path.join("..", "example_data", "iod_23908_20200316")
     #filenames = rd.get_all_files(path)
-    #from_json(filenames=filenames)
+    #from_iod(filenames=filenames)
+
+    path = os.path.join("..", "example_data", "json")
+    filenames = rd.get_all_files(path)
+    from_json(filenames=filenames)
