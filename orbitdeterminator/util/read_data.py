@@ -68,6 +68,15 @@ def detect_iod(filename):
     return file
 
 
+def detect_uk(filename):
+    if por.check_uk_format(filename) == True:
+        file = {"file" : "uk"}
+    else:
+        file = {"file": None}
+
+    return file
+
+
 def detect_csv(filename):
 
     file = {"file": None}
@@ -123,6 +132,9 @@ def detect_file_format(filename):
         elif file_csv["file"] == "csv":
             return file_csv
 
+        elif file_uk["file"] == "uk":
+            return file_uk
+
         else:
             return file
 
@@ -144,10 +156,10 @@ def get_all_files(path):
     return files
 
 
-
 if __name__ == "__main__":
 
     #save_orbits(_SOURCE, _DESTINATION)
     print("detecting file", detect_file_format("../example_data/orbit.csv"))
     print("detecting file", detect_file_format("../example_data/SATOBS-ML-19200716.txt"))
     print("detecting file", detect_file_format("../example_data/orbit1.csv"))
+    print("detecting file", detect_file_format("../example_data/sampleukformatdata.txt"))
