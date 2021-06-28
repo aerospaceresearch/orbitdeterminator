@@ -930,6 +930,8 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
 
 
 def start(opt, station, timestamp_min, timestamps, mode, measurements, meta=[[]], generated={}, loops=30, walks=100):
+
+    # initial parameters
     r_a0 = 6378.0
     r_p0 = 6378.0
     AoP0 = 0.0
@@ -939,7 +941,6 @@ def start(opt, station, timestamp_min, timestamps, mode, measurements, meta=[[]]
     bstar0 = 0.0
     td0 = np.zeros(len(station))
 
-    counter = 0
 
     parameters = {
         "r_p": r_p0,
@@ -952,6 +953,7 @@ def start(opt, station, timestamp_min, timestamps, mode, measurements, meta=[[]]
         "td": td0
     }
 
+    counter = 0
 
     for loop in range(len(opt.nwalkers)):
         print("")
@@ -960,14 +962,13 @@ def start(opt, station, timestamp_min, timestamps, mode, measurements, meta=[[]]
         # distributing the initial positions within the scope of AoP, inclination and raan.
         finding = opt.finding[loop]
 
-        orbit = 1  # 0 = circle
         #parameters["tp"] = -1
 
         nwalkers = opt.nwalkers[loop]
 
         parameters = optimize_with_mcmc(parameters, finding, opt.loops[loop], opt.walks[loop], nwalkers,
                                         counter, station, timestamp_min, timestamps,
-                                        mode, measurements, orbit=orbit, meta=meta, generated=generated,
+                                        mode, measurements, orbit=opt.orbit[loop], meta=meta, generated=generated,
                                         r_a_lim=opt.r_a_lim[loop],
                                         r_p_lim=opt.r_p_lim[loop],
                                         AoP_lim=opt.AoP_lim[loop],
@@ -1087,7 +1088,7 @@ def extract_key_and_time_from_data(i, data, keys):
     return keys_data, times_data
 
 
-def from_iod(opt, filenames=["../example_data/SATOBS-ML-19200716.txt"]):
+def from_iod(filenames=["../example_data/SATOBS-ML-19200716.txt"]):
     print("loading IOD files")
 
     Rs = []
@@ -1225,8 +1226,7 @@ def from_iod(opt, filenames=["../example_data/SATOBS-ML-19200716.txt"]):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
-    mode = 0
-    parameters = start(opt, station, timestamp_min, timestamps, mode, measurements, loops=41, walks=50)
+    return station, timestamp_min, timestamps, measurements
 
 
 def from_json(opt, filenames=["../example_data/stuttgart.json"]):
@@ -1532,6 +1532,10 @@ class optimizer:
         self.loops = []
         self.finding = []
 
+        # for optimization
+        # modes
+        self.orbit = []
+
         # limits
         self.r_a_lim = []
         self.r_p_lim = []
@@ -1542,11 +1546,18 @@ class optimizer:
         self.bstar_lim = []
         self.td_lim = []
 
-    def add_channel(self, nwalkers, walks, loops, finding):
+        self.station = []
+        self.timestamp_min = []
+        self.timestamps = []
+        self.mode = []
+        self.measurements = []
+
+    def add_optimization_runs(self, nwalkers=200, walks=50, loops=50, finding=None, orbit=1):
         self.nwalkers.append(nwalkers)
         self.walks.append(walks)
-        self.loops.append(walks)
+        self.loops.append(loops)
         self.finding.append(finding)
+        self.orbit.append(orbit) # orbit = 0 circle, orbit = 1 ellitic
 
     def add_limits(self, r_a_lim, r_p_lim, AoP_lim, inc_lim, raan_lim, tp_lim, bstar_lim, td_lim):
         self.r_a_lim.append(r_a_lim)
@@ -1559,13 +1570,18 @@ class optimizer:
         self.td_lim.append(td_lim)
 
     def add_file(self, path):
-        self.filepath.append(path)
+        filenames = rd.get_all_files(path)
+        self.filepath = filenames
 
     def convert_file(self):
-        pass
+        station, timestamp_min, timestamps, measurements = from_iod(filenames=self.filepath)
+        self.station = station
+        self.timestamp_min = timestamp_min
+        self.timestamps = timestamps
+        self.measurements = measurements
 
-    def start(self):
-        pass
+    def start(self, opt):
+        parameters = start(opt, self.station, self.timestamp_min, self.timestamps, self.mode, self.measurements, meta=[[]], generated={})
 
 
 if __name__ == "__main__":
@@ -1578,8 +1594,10 @@ if __name__ == "__main__":
     # from_json(filenames=filenames)
 
     opt = optimizer()
-    print(opt.nwalkers)
-    opt.add_file(path="test")
+    path = os.path.join("..", "example_data", "iod_23908_20200316")
+    opt.add_file(path)
+    opt.convert_file()
+
     finding = {
         "r_p": 0,
         "r_a": 1,
@@ -1601,7 +1619,7 @@ if __name__ == "__main__":
     bstar_lim = [-100000.0, 100000.0]
     td_lim = [0.0, 0.0]
 
-    opt.add_channel(nwalkers=300, walks=50, loops=40, finding=finding)
+    opt.add_optimization_runs(nwalkers=300, walks=50, loops=40, finding=finding)
     opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
                    raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
 
@@ -1614,11 +1632,8 @@ if __name__ == "__main__":
     bstar_lim = [-100000.0, 100000.0]
     td_lim = [0.0, 1.0]
 
-    opt.add_channel(nwalkers=300, walks=50, loops=40, finding=finding)
+    opt.add_optimization_runs(nwalkers=300, walks=50, loops=40, finding=finding)
     opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
                    raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
-    print(opt.finding)
 
-    path = os.path.join("..", "example_data", "iod_23908_20200316")
-    filenames = rd.get_all_files(path)
-    from_iod(opt, filenames=filenames)
+    opt.start(opt)
