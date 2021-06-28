@@ -21,6 +21,7 @@ from sgp4 import exporter
 import json
 import sys
 import os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import kep_determination.positional_observation_reporting as por
 import util.read_data as rd
@@ -51,27 +52,28 @@ def filler(input, fplaces, ffiller, bplaces):
 
     return tmp
 
+
 def tle_bstar(bstar):
     exp_max = 8
-    x = float(bstar) / 10**exp_max
+    x = float(bstar) / 10 ** exp_max
 
     if x == 0.0:
-        #out = "+33299-6"
+        # out = "+33299-6"
         out = "        "
 
     else:
         exp = np.floor(np.log10(np.abs(x)))
-        c = 10**(exp+1)
+        c = 10 ** (exp + 1)
 
         if np.sign(x) == 1.0:
             s = "+"
         else:
             s = "-"
 
-        number = x/c
+        number = x / c
         number = str(number)
         number = number.split(".")[1]
-        for i in range(5-len(number)):
+        for i in range(5 - len(number)):
             number += "0"
         number = number[:5]
 
@@ -86,25 +88,25 @@ def tle_bstar(bstar):
 
 def tle_bstar1(bstar):
     exp_max = 8
-    x = float(bstar) / 10**exp_max
+    x = float(bstar) / 10 ** exp_max
 
     if x == 0.0:
-        #out = "+33299-6"
+        # out = "+33299-6"
         out = "        "
 
     else:
         exp = np.floor(np.log10(np.abs(x)))
-        c = 10**(exp+1)
+        c = 10 ** (exp + 1)
 
         if np.sign(x) == 1.0:
             s = "+"
         else:
             s = "-"
 
-        number = x/c
+        number = x / c
         number = str(number)
         number = number.split(".")[1]
-        for i in range(5-len(number)):
+        for i in range(5 - len(number)):
             number += "0"
         number = number[:5]
 
@@ -116,11 +118,12 @@ def tle_bstar1(bstar):
 
     return out
 
+
 def tle_mod10(line):
     sum = 0
 
     line_out = ""
-    for i in range(len(line)-1):
+    for i in range(len(line) - 1):
 
         if line[i].isnumeric():
             sum += int(line[i])
@@ -137,24 +140,26 @@ def tle_mod10(line):
 
 def tlestuf(epoch, inc, ecc, aop, raan, me, meanmove, bstar):
     observing_time = Time(str(epoch), format="unix", scale="utc")
-    startofday = Time(str(observing_time.to_datetime().timetuple().tm_year)+"-"+str(observing_time.to_datetime().timetuple().tm_mon)+"-"+str(observing_time.to_datetime().timetuple().tm_mday), scale="utc").unix
-    fractionofday = filler(str((epoch-startofday)/(24.0*3600.0)),0 ," " , 8)
+    startofday = Time(str(observing_time.to_datetime().timetuple().tm_year) + "-" + str(
+        observing_time.to_datetime().timetuple().tm_mon) + "-" + str(observing_time.to_datetime().timetuple().tm_mday),
+                      scale="utc").unix
+    fractionofday = filler(str((epoch - startofday) / (24.0 * 3600.0)), 0, " ", 8)
     year = str(observing_time.to_datetime().timetuple().tm_year)[2:5]
     dayofyear = str(observing_time.to_datetime().timetuple().tm_yday)
-    dayofyear = filler(str(dayofyear)+".",3,"0", 0)
+    dayofyear = filler(str(dayofyear) + ".", 3, "0", 0)
 
-    sgp4_epoch = year+dayofyear+fractionofday[2:10]
+    sgp4_epoch = year + dayofyear + fractionofday[2:10]
     sgp4_inc = filler(str(inc), 3, " ", 4)[:8]
     sgp4_ecc = filler(ecc, 1, " ", 7)[2:9]
     sgp4_aop = filler(str(aop), 3, " ", 4)[:8]
     sgp4_raan = filler(str(raan), 3, " ", 4)[:8]
     sgp4_me = filler(str(me), 3, " ", 4)[:8]
     sgp4_meanmove = filler(str(meanmove), 2, " ", 8)[:11]
-    sgp4_revolutions = "00000" # any
-    sgp4_checksum = "0" # removed, any
+    sgp4_revolutions = "00000"  # any
+    sgp4_checksum = "0"  # removed, any
     sgp4_bstar = tle_bstar(bstar)
 
-    s = '1 12345U 00000A   '+sgp4_epoch+' -.00000180  00000-0 '+sgp4_bstar+' 0  0000'
+    s = '1 12345U 00000A   ' + sgp4_epoch + ' -.00000180  00000-0 ' + sgp4_bstar + ' 0  0000'
     t = '2 12345 ' + sgp4_inc + ' ' + sgp4_raan + ' ' + sgp4_ecc + ' ' + sgp4_aop + ' ' + sgp4_me + ' ' + sgp4_meanmove + sgp4_revolutions + sgp4_checksum
 
     s = tle_mod10(s)
@@ -164,7 +169,6 @@ def tlestuf(epoch, inc, ecc, aop, raan, me, meanmove, bstar):
 
 
 def get_satrec(satnum, epoch, ecco, argpo, inclo, mo, no_kozai, nodeo, bstar, ndot, nddot=0.0):
-
     time_ref = -631238400.0  # Time("1949-12-31T00:00:00", format="isot", scale="utc").unix
 
     satrec = Satrec()
@@ -192,23 +196,24 @@ def get_satrec(satnum, epoch, ecco, argpo, inclo, mo, no_kozai, nodeo, bstar, nd
 
 def zeroTo360(x):
     if x >= 360.0:
-        x = x - int(x/360) * 360.0
+        x = x - int(x / 360) * 360.0
     elif x < 0.0:
-        x = x - (int(x/360) - 1) * 360.0
+        x = x - (int(x / 360) - 1) * 360.0
 
     return x
+
 
 def zeroTo180(x):
     if x >= 180.0:
-        x = x - int(x/180) * 180.0
+        x = x - int(x / 180) * 180.0
     elif x < 0.0:
-        x = x - (int(x/180) - 1) * 180.0
+        x = x - (int(x / 180) - 1) * 180.0
 
     return x
 
 
-def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements, meta):
-
+def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements,
+                  meta):
     elevation_min = -30
 
     # putting in the measurements
@@ -221,7 +226,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     satellite_pos = measurements["satellite_pos"]
 
     # preparing the orbit track that is being simulated and used for comparing to the measurements
-    #track = np.zeros_like(satellite_pos) # did not work with strange arrays.
+    # track = np.zeros_like(satellite_pos) # did not work with strange arrays.
     track = []
     for tr in range(len(satellite_pos)):
         track.append(np.zeros_like(satellite_pos[tr]))
@@ -246,18 +251,16 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
         track_ra.append(np.zeros_like(ra[tr]))
         track_dec.append(np.zeros_like(dec[tr]))
 
-
     # preparing the orbit parameter needed for the simulated orbit
     eccentricity = (r_a - r_p) / (r_a + r_p)
     h_angularmomentuum = np.sqrt(r_p * (1.0 + eccentricity * np.cos(0)) * mu)
     T_orbitperiod = 2.0 * np.pi / mu ** 2.0 * (h_angularmomentuum / np.sqrt(1.0 - eccentricity ** 2)) ** 3
 
-    me = tp * (2.0 * np.pi) / T_orbitperiod * 180.0/np.pi
+    me = tp * (2.0 * np.pi) / T_orbitperiod * 180.0 / np.pi
     me = zeroTo360(me)
     AoP = zeroTo360(AoP)
     raan = zeroTo360(raan)
     n = 24.0 * 3600.0 / T_orbitperiod
-
 
     # preparing the orbit by putting in the orbit parameters
     ts = load.timescale()
@@ -274,15 +277,11 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     satrec = get_satrec(satnum, epoch, ecco, argpo, inclo, mo, no_kozai, nodeo, bstar, ndot, nddot=0.0)
     satellite = EarthSatellite.from_satrec(satrec, ts)
 
-
-
-
     # now for each station s the measurements are being iterated through by its measurements.
     # for each measurement, the orbit state is calculated based on the timestamp t0
     for s in range(len(timestamps)):
 
         for t0 in range(len(satellite_pos[s])):
-
             time_step = timestamps[s][t0]
 
             timestamp1 = timestamp_min + time_step + td[s]
@@ -291,10 +290,10 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             t = ts.from_astropy(observing_time)
 
             R1 = satellite.at(t).position.km
-            #V1 = satellite.at(t).velocity.km_per_s
+            # V1 = satellite.at(t).velocity.km_per_s
 
-            #R = np.array(R1)
-            #V = np.array(V1)
+            # R = np.array(R1)
+            # V = np.array(V1)
 
             track[s][t0][0] = R1[0]
             track[s][t0][1] = R1[1]
@@ -302,7 +301,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
 
             #############
 
-            #if mode == 0:
+            # if mode == 0:
             #    #state_sum += (R[0] - satellite_pos[s][t0][0]) ** 2 + \
             #    #             (R[1] - satellite_pos[s][t0][1]) ** 2 + \
             #    #             (R[2] - satellite_pos[s][t0][2]) ** 2
@@ -335,12 +334,11 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
                 track_az[s][t0] = az1.degrees
                 track_el[s][t0] = alt1.degrees
             else:
-                #track_az[s][t0] = np.inf
-                #track_el[s][t0] = np.inf
+                # track_az[s][t0] = np.inf
+                # track_el[s][t0] = np.inf
 
                 # if one value is not good, then it is already infinity and we can also quit now
                 return -np.inf
-
 
         for t0 in range(len(ranging[s])):
             time_step = timestamps[s][t0]
@@ -356,11 +354,10 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             if alt1.degrees >= elevation_min:
                 track_range[s][t0] = distance1.km
             else:
-                #track_range[s][t0] = np.inf
+                # track_range[s][t0] = np.inf
 
                 # if one value is not good, then it is already infinity and we can also quit now
                 return -np.inf
-
 
         for t0 in range(len(doppler[s])):
             time_step = timestamps[s][t0]
@@ -374,7 +371,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             alt1, az1, distance1 = topocentric.altaz()
             pointing = topocentric.position.km
             velo = topocentric.velocity.km_per_s
-            #angle = np.dot(pointing, velo)
+            # angle = np.dot(pointing, velo)
             angle = (pointing[0] * velo[0] + pointing[1] * velo[1] + pointing[2] * velo[2]) / (
                     np.linalg.norm(pointing) * np.linalg.norm(velo))
             angle = np.arccos(angle)
@@ -386,11 +383,10 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             if alt1.degrees >= elevation_min:
                 track_doppler[s][t0] = doppler_c
             else:
-                #track_doppler[s][t0] = np.inf
+                # track_doppler[s][t0] = np.inf
 
                 # if one value is not good, then it is already infinity and we can also quit now
                 return -np.inf
-
 
         for t0 in range(len(ra[s])):
             time_step = timestamps[s][t0]
@@ -408,15 +404,11 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
                 track_ra[s][t0] = ra1.radians * 180.0 / np.pi
                 track_dec[s][t0] = dec1.degrees
             else:
-                #track_ra[s][t0] = np.inf
-                #track_dec[s][t0] = np.inf
+                # track_ra[s][t0] = np.inf
+                # track_dec[s][t0] = np.inf
 
                 # if one value is not good, then it is already infinity and we can also quit now
                 return -np.inf
-
-
-
-
 
     # now we just do a simple Root-mean-square of the measurement positions
     # and the orbit positions based on the simulation
@@ -430,9 +422,9 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     for s in range(len(satellite_pos)):
         if len(satellite_pos[s]) > 0:
             for pos in range(len(satellite_pos[s])):
-                satellite_radius.append((satellite_pos[s][pos][0]**2 +
-                                         satellite_pos[s][pos][1]**2 +
-                                         satellite_pos[s][pos][2]**2)**0.5)
+                satellite_radius.append((satellite_pos[s][pos][0] ** 2 +
+                                         satellite_pos[s][pos][1] ** 2 +
+                                         satellite_pos[s][pos][2] ** 2) ** 0.5)
 
             mean_radius = np.mean(satellite_radius)
 
@@ -447,9 +439,8 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             rms = np.multiply(rms, emcee_factor)
             rms_sum += np.sum(np.square(rms))
 
-
     for s in range(len(az)):
-        if len(az[s])> 0:
+        if len(az[s]) > 0:
             mean_az = np.mean(np.abs(az[s]))
             mean_el = np.mean(np.abs(el[s]))
 
@@ -470,7 +461,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             rms_sum += np.sum(np.square(rms))
 
     for s in range(len(ranging)):
-        if len(ranging[s])> 0:
+        if len(ranging[s]) > 0:
             mean_range = np.mean(ranging[s])
 
             # normalizing with mean az
@@ -481,10 +472,8 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             rms = np.multiply(rms, emcee_factor)
             rms_sum += np.sum(np.square(rms))
 
-
     for s in range(len(doppler)):
-        if len(doppler[s])> 0:
-
+        if len(doppler[s]) > 0:
             mean_doppler = np.mean(np.abs(doppler[s]))
 
             # normalizing with mean az
@@ -495,9 +484,8 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
             rms = np.multiply(rms, emcee_factor)
             rms_sum += np.sum(np.square(rms))
 
-
     for s in range(len(ra)):
-        if len(ra[s])> 0:
+        if len(ra[s]) > 0:
             mean_ra = np.mean(np.abs(ra[s]))
             mean_dec = np.mean(np.abs(dec[s]))
 
@@ -520,9 +508,7 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
     return -0.5 * rms_sum
 
 
-
 def get_kepler_parameters(theta, parameters, finding, orbit):
-
     key = "r_a"
     r_a = parameters[key]
     if key in finding:
@@ -570,7 +556,6 @@ def get_kepler_parameters(theta, parameters, finding, orbit):
         for keykey in finding[key].keys():
             td[int(keykey)] = theta[finding[key][keykey]]
 
-
     return r_p, r_a, AoP, inc, raan, tp, bstar, td
 
 
@@ -587,12 +572,11 @@ def log_prior(theta, parameters, finding, orbit):
 
     r_earth = 6378.0
 
-    if r_earth < r_p and r_p <= r_a and\
-            inc >= 0.0 and inc <= 180.0 and\
+    if r_earth < r_p and r_p <= r_a and \
+            inc >= 0.0 and inc <= 180.0 and \
             raan >= -90.0 and \
             AoP > -90.0 and \
             np.abs(bstar) <= 1.0:
-
         return 0.0
 
     return -np.inf
@@ -604,7 +588,8 @@ def log_probability(theta, parameters, finding, station, timestamp_min, timestam
     if not np.isfinite(lp):
         return -np.inf
 
-    sum = log_likelihood(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit, meta)
+    sum = log_likelihood(theta, parameters, finding, station, timestamp_min, timestamps, mode, measurements, orbit,
+                         meta)
 
     if np.isnan(sum) == True:
         return -np.inf
@@ -635,7 +620,7 @@ def compare(line1_1, line1_2, line2_1, line2_2, timestamp_min, timestamps, td):
             R1 = satellite1.at(t).position.km
             R2 = satellite2.at(t).position.km
 
-            distance = ((R1[0]-R2[0])**2 + (R1[1]-R2[1])**2 + (R1[2]-R2[2])**2)**0.5
+            distance = ((R1[0] - R2[0]) ** 2 + (R1[1] - R2[1]) ** 2 + (R1[2] - R2[2]) ** 2) ** 0.5
             residual += distance
 
     return residual / number_of_measurements
@@ -643,12 +628,10 @@ def compare(line1_1, line1_2, line2_1, line2_2, timestamp_min, timestamps, td):
 
 def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, station, timestamp_min, timestamps,
                mode, measurements, orbit, meta=[[]], generated={}):
-
     # preparing the optimizer
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability,
                                     args=(parameters, finding, station, timestamp_min, timestamps, mode,
                                           measurements, orbit, meta))
-
 
     # preparing the storage of the best result of all loops
     results_min = []
@@ -667,12 +650,13 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
     print("RuntimeWarning: invalid value encountered in double_scalars lnpdiff = f + nlp - state.log_prob[j]")
     print("just ignore it. it will run anyways")
     for i in range(loops):
-        #start the optimization with emcee
+        # start the optimization with emcee
         pos, prob, state = sampler.run_mcmc(pos, walks, progress=True)
 
         # extracting the orbit parameters back from the resulting POS.
         # in this case, we just use the best result, which is argmax of POS
-        r_p, r_a, AoP, inc, raan, tp, bstar, td = get_kepler_parameters(pos[np.argmax(prob)], parameters, finding, orbit)
+        r_p, r_a, AoP, inc, raan, tp, bstar, td = get_kepler_parameters(pos[np.argmax(prob)], parameters, finding,
+                                                                        orbit)
 
         eccentricity = (r_a - r_p) / (r_a + r_p)
         h_angularmomentuum = np.sqrt(r_p * (1.0 + eccentricity * np.cos(0)) * mu)
@@ -708,11 +692,11 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
                 b4_tle_line2 = tle_line2
                 b4_result = pos[np.argmax(prob)]
 
-        #print("prob", np.max(prob), np.argmax(prob), b4)
-        #print(pos[np.argmax(prob)])
+        # print("prob", np.max(prob), np.argmax(prob), b4)
+        # print(pos[np.argmax(prob)])
 
-        #save_progress(plotnames, counter, r_p, r_a, AoP, inc, raan, tp, bstar, td, np.max(prob), s1, t1, mode, filename_1)
-        #save_progress_pos(plotnames, pos, prob, state)
+        # save_progress(plotnames, counter, r_p, r_a, AoP, inc, raan, tp, bstar, td, np.max(prob), s1, t1, mode, filename_1)
+        # save_progress_pos(plotnames, pos, prob, state)
 
         '''
         for ii in range(ndim):
@@ -731,59 +715,51 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
         print(np.mean(results_min[0]), np.mean(results_min[1]))
         '''
 
-        #get_state_plot(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements)
-
+        # get_state_plot(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_min, timestamps, mode, measurements)
 
         samples = sampler.chain[:, 0:, :].reshape((-1, ndim))
 
         result_percentile = np.percentile(samples, [16, 50, 84], axis=0)
 
-        #import corner
-        #import matplotlib.pyplot as plt
-        #flat_samples = samples
-        #fig = corner.corner(flat_samples)
-        #plt.show()
+        # import corner
+        # import matplotlib.pyplot as plt
+        # flat_samples = samples
+        # fig = corner.corner(flat_samples)
+        # plt.show()
 
-        #print(samples.shape)
-        #print(len(samples))
-        #print(samples[:, 0])
-        #print(samples[:, 1])
-        #print(samples[:, 2])
-        #print(samples[:, 3])
-        #print(samples[:, 4])
-        #print(samples[:, 5])
+        # print(samples.shape)
+        # print(len(samples))
+        # print(samples[:, 0])
+        # print(samples[:, 1])
+        # print(samples[:, 2])
+        # print(samples[:, 3])
+        # print(samples[:, 4])
+        # print(samples[:, 5])
 
-        #plt.plot(samples[:, 0])
-        #plt.plot(samples[:, 1])
-        #plt.show()
-        #print(np.mean(samples[:, 0]))
-        #print(np.mean(samples[:, 1]))
-
-
+        # plt.plot(samples[:, 0])
+        # plt.plot(samples[:, 1])
+        # plt.show()
+        # print(np.mean(samples[:, 0]))
+        # print(np.mean(samples[:, 1]))
 
         for r in range(len(result_percentile[1])):
-
 
             for key in finding.keys():
                 if finding[key] == r:
                     parameters_name = key
 
-                #if finding[key].keys() > 1:
+                # if finding[key].keys() > 1:
                 #    for keykey in finding[key].keys():
                 #        if finding[key][keykey] == r:
                 #            parameters_name = r
 
-
             result_b4[r] = result_percentile[1][r]
-
-
-
-
 
         print("tle_line1:", b4_tle_line1)
         print("tle_line2:", b4_tle_line2)
         if "tle" in generated:
-            print("compare", compare(b4_tle_line1, b4_tle_line2, generated["tle"]["line1"], generated["tle"]["line2"], timestamp_min, timestamps, td))
+            print("compare", compare(b4_tle_line1, b4_tle_line2, generated["tle"]["line1"], generated["tle"]["line2"],
+                                     timestamp_min, timestamps, td))
         print("rp=", r_p,
               "ra=", r_a,
               "AoP=", AoP,
@@ -792,10 +768,8 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
               "tp=", tp,
               "bstar=", bstar,
               "td=", td)
-        print("overall", counter+1, i+1, "/", loops,"rms=", b4, "runtime=", time.time() - starttime)
+        print("overall", counter + 1, i + 1, "/", loops, "rms=", b4, "runtime=", time.time() - starttime)
         print("")
-
-
 
         # filtering the POS to change the values within their limits.
         # this shall help also with the percentiles and averages
@@ -815,21 +789,19 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
         counter += 1
         sampler.reset()
 
-
     return b4_result, counter
 
 
 def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, station, timestamp_min, timestamps, mode,
                        measurements, orbit=0, meta=[[]], generated={},
-                       r_a_lim= [0.0, 10.0],
-                       r_p_lim= [0.0, 10.0],
-                       AoP_lim= [0.0, 360.0],
-                       inc_lim= [0.0, 180.0],
-                       raan_lim= [0.0, 360.0],
-                       tp_lim= [0.0, 1.0],
-                       bstar_lim= [-100000.0, 100000.0],
-                       td_lim= [-0.5, 0.5]):
-
+                       r_a_lim=[0.0, 10.0],
+                       r_p_lim=[0.0, 10.0],
+                       AoP_lim=[0.0, 360.0],
+                       inc_lim=[0.0, 180.0],
+                       raan_lim=[0.0, 360.0],
+                       tp_lim=[0.0, 1.0],
+                       bstar_lim=[-100000.0, 100000.0],
+                       td_lim=[-0.5, 0.5]):
     pos = []
     for _ in range(nwalkers):
 
@@ -845,13 +817,15 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
         if "r_p" in finding:
             random_steps = 10000.0
             random_factor = random_steps / np.abs(r_p_lim[1] - r_p_lim[0])
-            r_p = np.random.randint(int(r_p_lim[0] * random_factor), int(r_p_lim[1] * random_factor)) / random_factor + r_p
+            r_p = np.random.randint(int(r_p_lim[0] * random_factor),
+                                    int(r_p_lim[1] * random_factor)) / random_factor + r_p
             inputs.append(r_p)
 
         if "r_a" in finding:
             random_steps = 10000.0
             random_factor = random_steps / np.abs(r_a_lim[1] - r_a_lim[0])
-            r_a = np.random.randint(int(r_a_lim[0] * random_factor), int(r_a_lim[1] * random_factor)) / random_factor + r_a
+            r_a = np.random.randint(int(r_a_lim[0] * random_factor),
+                                    int(r_a_lim[1] * random_factor)) / random_factor + r_a
             if r_a < r_p:
                 r_a = r_p
             inputs.append(r_a)
@@ -860,19 +834,22 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
         if "AoP" in finding:
             random_steps = 10000.0
             random_factor = random_steps / np.abs(AoP_lim[1] - AoP_lim[0])
-            AoP = np.random.randint(int(AoP_lim[0] * random_factor), int(AoP_lim[1] * random_factor)) / random_factor + parameters["AoP"]
+            AoP = np.random.randint(int(AoP_lim[0] * random_factor), int(AoP_lim[1] * random_factor)) / random_factor + \
+                  parameters["AoP"]
             inputs.append(AoP)
 
         if "inc" in finding:
             random_steps = 10000.0
             random_factor = random_steps / np.abs(inc_lim[1] - inc_lim[0])
-            inc = np.random.randint(int(inc_lim[0] * random_factor), int(inc_lim[1] * random_factor)) / random_factor + parameters["inc"]
+            inc = np.random.randint(int(inc_lim[0] * random_factor), int(inc_lim[1] * random_factor)) / random_factor + \
+                  parameters["inc"]
             inputs.append(inc)
 
         if "raan" in finding:
             random_steps = 10000.0
             random_factor = random_steps / np.abs(raan_lim[1] - raan_lim[0])
-            raan = np.random.randint(int(raan_lim[0] * random_factor), int(raan_lim[1] * random_factor)) / random_factor + parameters["raan"]
+            raan = np.random.randint(int(raan_lim[0] * random_factor),
+                                     int(raan_lim[1] * random_factor)) / random_factor + parameters["raan"]
             inputs.append(raan)
 
         if "tp" in finding:
@@ -893,7 +870,6 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
             inputs.append(tp)
 
         if "bstar" in finding:
-
             bstar = np.random.randint(int(bstar_lim[0]), int(bstar_lim[1])) / 100000.0 + parameters["bstar"]
             inputs.append(bstar)
 
@@ -953,10 +929,7 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
     return parameters
 
 
-
-def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], generated={}, loops=30, walks=100):
-
-
+def start(opt, station, timestamp_min, timestamps, mode, measurements, meta=[[]], generated={}, loops=30, walks=100):
     r_a0 = 6378.0
     r_p0 = 6378.0
     AoP0 = 0.0
@@ -965,40 +938,6 @@ def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], gen
     tp0 = -1.0
     bstar0 = 0.0
     td0 = np.zeros(len(station))
-
-
-    print("")
-    print("## Determination1: Finding the orbit parameters")
-
-    # distributing the initial positions within the scope of AoP, inclination and raan.
-    finding = {
-        "r_p": 0,
-        "r_a": 1,
-        "AoP": 2,
-        "inc": 3,
-        "raan": 4,
-        "tp": 5,
-        # "bstar": 6# ,
-        # "td": {"0": 7,
-        #       "2": 8}
-    }
-
-    r_a_min = 0.0
-    r_a_max = 2000.0
-    r_p_min = 0.0
-    r_p_max = 2000.0
-    AoP_min = 0.0
-    AoP_max = 360.0
-    inc_min = 0.0
-    inc_max = 180.0
-    raan_min = 0.0
-    raan_max = 360.0
-    tp_min = 0.0
-    tp_max = 1.0
-    bstar_min = -100000.0
-    bstar_max = 100000.0
-
-    orbit = 1
 
     counter = 0
 
@@ -1013,76 +952,34 @@ def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], gen
         "td": td0
     }
 
-    orbit = 1  # 0 = circle
+
+    for loop in range(len(opt.nwalkers)):
+        print("")
+        print("## Determination", loop, ": Finding the orbit parameters")
+
+        # distributing the initial positions within the scope of AoP, inclination and raan.
+        finding = opt.finding[loop]
+
+        orbit = 1  # 0 = circle
+        #parameters["tp"] = -1
+
+        nwalkers = opt.nwalkers[loop]
+
+        parameters = optimize_with_mcmc(parameters, finding, opt.loops[loop], opt.walks[loop], nwalkers,
+                                        counter, station, timestamp_min, timestamps,
+                                        mode, measurements, orbit=orbit, meta=meta, generated=generated,
+                                        r_a_lim=opt.r_a_lim[loop],
+                                        r_p_lim=opt.r_p_lim[loop],
+                                        AoP_lim=opt.AoP_lim[loop],
+                                        inc_lim=opt.inc_lim[loop],
+                                        raan_lim=opt.raan_lim[loop],
+                                        tp_lim=opt.tp_lim[loop],
+                                        bstar_lim=opt.bstar_lim[loop],
+                                        td_lim=opt.td_lim[loop])
+
+        counter += loops
 
 
-    nwalkers = 200
-
-    parameters = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
-                                    counter, station, timestamp_min, timestamps,
-                                    mode, measurements, orbit=orbit, meta=meta, generated=generated,
-                                    r_a_lim=[r_a_min, r_a_max],
-                                    r_p_lim=[r_p_min, r_p_max],
-                                    AoP_lim=[AoP_min, AoP_max],
-                                    inc_lim=[inc_min, inc_max],
-                                    raan_lim=[raan_min, raan_max],
-                                    tp_lim=[tp_min, tp_max],
-                                    bstar_lim=[bstar_min, bstar_max])
-
-    counter += loops
-
-
-    ############# next optimization, just the bstar now
-    print("")
-    print("## Determination2: Finding the bstar")
-
-    finding = {
-        "r_p": 0,
-        "r_a": 1,
-        "AoP": 2,
-        "inc": 3,
-        "raan": 4,
-        "tp": 5#,
-        #"bstar": 6
-        #"td": {"1": 4}
-    }
-
-    r_a_min = -1.0
-    r_a_max = 1.0
-    r_p_min = -4.0
-    r_p_max = 4.0
-    AoP_min = 0.0
-    AoP_max = 360.0
-    inc_min = -1.0
-    inc_max = 1.0
-    raan_min = -1.0
-    raan_max = 1.0
-    tp_min = 0.0
-    tp_max = 1.0
-    bstar_min = -100000.0
-    bstar_max = 100000.0
-    td_max = 0.5 # secs
-    td_min = -0.5  # secs
-
-    parameters["tp"] = -1
-
-    orbit = 1  # 0 = circle
-
-    nwalkers = 350
-
-    parameters = optimize_with_mcmc(parameters, finding, loops, walks, nwalkers,
-                                    counter, station, timestamp_min, timestamps,
-                                    mode, measurements, orbit=orbit, meta=meta, generated=generated,
-                                    r_a_lim=[r_a_min, r_a_max],
-                                    r_p_lim=[r_p_min, r_p_max],
-                                    AoP_lim=[AoP_min, AoP_max],
-                                    inc_lim=[inc_min, inc_max],
-                                    raan_lim=[raan_min, raan_max],
-                                    tp_lim=[tp_min, tp_max],
-                                    bstar_lim=[bstar_min, bstar_max],
-                                    td_lim=[td_min, td_max])
-
-    counter += loops
 
     '''
     global_grid_dif = []
@@ -1122,8 +1019,7 @@ def start(station, timestamp_min, timestamps, mode, measurements, meta=[[]], gen
 
 
 def fromposition(timestamp, sat, mode=0):
-
-    station =[[]]
+    station = [[]]
     el = [[]]
     az = [[]]
     ranging = [[]]
@@ -1159,13 +1055,12 @@ def fromposition(timestamp, sat, mode=0):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
-    parameters = start(station, timestamp_min, timestamps, mode, measurements, loops= 15, walks=50)
+    parameters = start(station, timestamp_min, timestamps, mode, measurements, loops=15, walks=50)
 
     return parameters
 
 
 def extract_key_and_time_from_data(i, data, keys):
-
     keys_data = []
     times_data = []
 
@@ -1182,7 +1077,6 @@ def extract_key_and_time_from_data(i, data, keys):
                     for j in range(len(data["signal"][i]["data"])):
                         line = data["signal"][i]["data"][j]
 
-
                         if key in line:
                             key_data.append(line[key])
                             time_data.append(line["systemtime"])
@@ -1193,7 +1087,7 @@ def extract_key_and_time_from_data(i, data, keys):
     return keys_data, times_data
 
 
-def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
+def from_iod(opt, filenames=["../example_data/SATOBS-ML-19200716.txt"]):
     print("loading IOD files")
 
     Rs = []
@@ -1230,7 +1124,7 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
             sec = iod_object_data["sec"][i]
             msec = iod_object_data["msec"][i]
 
-            time_iod = datetime(yr, month, day, hour, min, sec, msec*1000)
+            time_iod = datetime(yr, month, day, hour, min, sec, msec * 1000)
             time_iod = observing_time = Time(time_iod, scale="utc").unix
 
             if iod_object_data["right_ascension"][i] != -1 or iod_object_data["declination"][i] != -1:
@@ -1247,17 +1141,16 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
                 lon = gs['Longitude']  # deg
                 alt = gs['Elev']  # meters
 
-        station.append({"lat":lat, "long":lon, "alt": alt})
+        station.append({"lat": lat, "long": lon, "alt": alt})
 
         t.append(timestamp)
         ras.append(ra)
         decs.append(dec)
-        els.append(el) # could be in iod format. not checked for now
-        azs.append(az) # could be in iod format. not checked for now
+        els.append(el)  # could be in iod format. not checked for now
+        azs.append(az)  # could be in iod format. not checked for now
         rangings.append([])
         dopplers.append([])
         Rs.append([])
-
 
         timestamp = []
         ra = []
@@ -1306,7 +1199,6 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
         dopplers.append([])
         Rs.append([])
 
-
     measurements = {}
     measurements["el"] = els
     measurements["az"] = azs
@@ -1334,10 +1226,10 @@ def from_iod(filenames = ["../example_data/SATOBS-ML-19200716.txt"]):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
 
     mode = 0
-    parameters = start(station, timestamp_min, timestamps, mode, measurements, loops=41, walks=50)
+    parameters = start(opt, station, timestamp_min, timestamps, mode, measurements, loops=41, walks=50)
 
 
-def from_json(filenames = ["../example_data/stuttgart.json"]):
+def from_json(opt, filenames=["../example_data/stuttgart.json"]):
     print("loading JSON files")
 
     Rs = []
@@ -1354,7 +1246,6 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
     generated = {}
     meta = []
 
-
     for file in filenames:
 
         print("detecting file", rd.detect_file_format(file))
@@ -1365,7 +1256,7 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
         for i in range(len(data["signal"])):
 
             timestamp_t = []
-            timestamp_azel =[]
+            timestamp_azel = []
             timestamp_ranging = []
             timestamp_doppler = []
             timestamp_radec = []
@@ -1380,7 +1271,6 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             doppler = []
             ra = []
             dec = []
-
 
             ## position
 
@@ -1422,8 +1312,6 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ra = []
             dec = []
 
-
-
             ## AzEl
             keys = ["az", "el"]
 
@@ -1447,11 +1335,11 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
 
             az = input[0]
             if az_unit == "deg" or az_unit == "degrees":
-                az = np.divide(az, 1.0) # todo, adds other conversion
+                az = np.divide(az, 1.0)  # todo, adds other conversion
 
             el = input[1]
             if el_unit == "deg" or el_unit == "degrees":
-                el = np.divide(el, 1.0) # todo, adds other conversion
+                el = np.divide(el, 1.0)  # todo, adds other conversion
 
             timestamp_azel = input_time[0]
 
@@ -1471,8 +1359,6 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             doppler = []
             ra = []
             dec = []
-
-
 
             ## range
 
@@ -1515,8 +1401,6 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ra = []
             dec = []
 
-
-
             ## doppler
 
             keys = ["doppler"]
@@ -1556,7 +1440,6 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             doppler = []
             ra = []
             dec = []
-
 
             ## RaDec
 
@@ -1598,13 +1481,11 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
             ras.append(ra)
             decs.append(dec)
 
-
             timestamps.append(timestamp_t)
             timestamps.append(timestamp_azel)
             timestamps.append(timestamp_ranging)
             timestamps.append(timestamp_doppler)
             timestamps.append(timestamp_radec)
-
 
     # putting the inputs into the measurements
     measurements = {}
@@ -1628,22 +1509,116 @@ def from_json(filenames = ["../example_data/stuttgart.json"]):
                 if timestamp_min > np.min(timestamps[stamp]):
                     timestamp_min = np.min(timestamps[stamp])
 
-
     for stamp in range(len(timestamps)):
         for t0 in range(len(timestamps[stamp])):
             timestamps[stamp][t0] = timestamps[stamp][t0] - timestamp_min
 
-
     mode = 0
-    parameters = start(station, timestamp_min, timestamps, mode, measurements, meta=meta, generated=generated, loops=40, walks=50)
+    parameters = start(opt, station, timestamp_min, timestamps, mode, measurements, meta=meta, generated=generated,
+                       loops=40, walks=50)
+
+
+class optimizer:
+    def __init__(self, name='Unknown'):
+        self.name = name
+        self.test = []
+
+        # for input files
+        self.filepath = []
+
+        # for optimization loops
+        self.nwalkers = []
+        self.walks = []
+        self.loops = []
+        self.finding = []
+
+        # limits
+        self.r_a_lim = []
+        self.r_p_lim = []
+        self.AoP_lim = []
+        self.inc_lim = []
+        self.raan_lim = []
+        self.tp_lim = []
+        self.bstar_lim = []
+        self.td_lim = []
+
+    def add_channel(self, nwalkers, walks, loops, finding):
+        self.nwalkers.append(nwalkers)
+        self.walks.append(walks)
+        self.loops.append(walks)
+        self.finding.append(finding)
+
+    def add_limits(self, r_a_lim, r_p_lim, AoP_lim, inc_lim, raan_lim, tp_lim, bstar_lim, td_lim):
+        self.r_a_lim.append(r_a_lim)
+        self.r_p_lim.append(r_p_lim)
+        self.AoP_lim.append(AoP_lim)
+        self.inc_lim.append(inc_lim)
+        self.raan_lim.append(raan_lim)
+        self.tp_lim.append(tp_lim)
+        self.bstar_lim.append(bstar_lim)
+        self.td_lim.append(td_lim)
+
+    def add_file(self, path):
+        self.filepath.append(path)
+
+    def convert_file(self):
+        pass
+
+    def start(self):
+        pass
 
 
 if __name__ == "__main__":
+    # path = os.path.join("..", "example_data", "iod_23908_20200316")
+    # filenames = rd.get_all_files(path)
+    # from_iod(filenames=filenames)
 
-    #path = os.path.join("..", "example_data", "iod_23908_20200316")
-    #filenames = rd.get_all_files(path)
-    #from_iod(filenames=filenames)
+    # path = os.path.join("..", "example_data", "json")
+    # filenames = rd.get_all_files(path)
+    # from_json(filenames=filenames)
 
-    path = os.path.join("..", "example_data", "json")
+    opt = optimizer()
+    print(opt.nwalkers)
+    opt.add_file(path="test")
+    finding = {
+        "r_p": 0,
+        "r_a": 1,
+        "AoP": 2,
+        "inc": 3,
+        "raan": 4,
+        "tp": 5,
+        # "bstar": 6# ,
+        # "td": {"0": 7,
+        #       "2": 8}
+    }
+
+    r_a_lim = [0.0, 2000.0]
+    r_p_lim = [0.0, 2000.0]
+    AoP_lim = [0.0, 360.0]
+    inc_lim = [0.0, 180.0]
+    raan_lim = [0.0, 360.0]
+    tp_lim = [0.0, 1.0]
+    bstar_lim = [-100000.0, 100000.0]
+    td_lim = [0.0, 0.0]
+
+    opt.add_channel(nwalkers=300, walks=50, loops=40, finding=finding)
+    opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
+                   raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
+
+    r_a_lim = [-1.0, 1.0]
+    r_p_lim = [-4.0, 4.0]
+    AoP_lim = [0.0, 360.0]
+    inc_lim = [-1.0, 1.0]
+    raan_lim = [-1.0, 1.0]
+    tp_lim = [0.0, 1.0]
+    bstar_lim = [-100000.0, 100000.0]
+    td_lim = [0.0, 1.0]
+
+    opt.add_channel(nwalkers=300, walks=50, loops=40, finding=finding)
+    opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
+                   raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
+    print(opt.finding)
+
+    path = os.path.join("..", "example_data", "iod_23908_20200316")
     filenames = rd.get_all_files(path)
-    from_json(filenames=filenames)
+    from_iod(opt, filenames=filenames)
