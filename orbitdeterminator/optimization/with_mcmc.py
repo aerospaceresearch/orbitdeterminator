@@ -1168,95 +1168,49 @@ def from_iod(filename="../example_data/SATOBS-ML-19200716.txt", mode="radec"):
 
         station = {"lat": lat, "long": lon, "alt": alt}
 
-    '''
-    measurements = {}
-    measurements["el"] = els
-    measurements["az"] = azs
-    measurements["ra"] = ras
-    measurements["dec"] = decs
-    measurements["satellite_pos"] = Rs
-    measurements["range"] = rangings
-    measurements["doppler"] = dopplers
-
-    timestamps = t
-
-    timestamp_min = 0.0
-    tested = 0
-    for ii in range(len(timestamps)):
-        if len(timestamps[ii]):
-            if tested == 0:
-                timestamp_min = np.min(timestamps[ii])
-                tested = 1
-            else:
-                if timestamp_min > np.min(timestamps[ii]):
-                    timestamp_min = np.min(timestamps[ii])
-
-    for s in range(len(timestamps)):
-        for t0 in range(len(timestamps[s])):
-            timestamps[s][t0] = timestamps[s][t0] - timestamp_min
-    '''
-
     return station, timestamp, R, ra, dec, az, el, ranging, doppler
 
 
 
-def from_json(opt, filenames=["../example_data/stuttgart.json"]):
-    print("loading JSON files")
-
-    Rs = []
-    timestamps = []
+def from_json(filename="../example_data/stuttgart.json", mode="radec"):
+    print("loading JSON file ", filename, "in", mode, "mode")
 
     station = []
-    els = []
-    azs = []
-    rangings = []
-    dopplers = []
-    ras = []
-    decs = []
-    t = []
     generated = {}
     meta = []
 
-    for file in filenames:
+    with open(filename, 'r') as infile:
+        data = json.load(infile)
 
-        print("detecting file", rd.detect_file_format(file))
+    timestamp = []
+    R = []
+    az = []
+    el = []
+    ranging = []
+    doppler = []
+    ra = []
+    dec = []
 
-        with open(file, 'r') as infile:
-            data = json.load(infile)
+    if mode == "position":
 
         for i in range(len(data["signal"])):
-
-            timestamp_t = []
-            timestamp_azel = []
-            timestamp_ranging = []
-            timestamp_doppler = []
-            timestamp_radec = []
 
             if "generated" in data["signal"][i]["meta"]:
                 generated = data["signal"][i]["meta"]["generated"]
 
-            R = []
-            az = []
-            el = []
-            ranging = []
-            doppler = []
-            ra = []
-            dec = []
-
             ## position
-
             keys = ["position"]
 
             R_unit = "km"
             if "meta" in data["signal"][i]:
-                meta.append([data["signal"][i]["meta"]])
+                meta = [data["signal"][i]["meta"]]
 
                 if "unit" in data["signal"][i]["meta"]:
                     if keys[0] in data["signal"][i]["meta"]["unit"]:
                         R_unit = data["signal"][i]["meta"]["unit"][keys[0]]
 
             else:
-                meta.append([])
+                meta = []
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
 
@@ -1264,24 +1218,17 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
             if R_unit == "m" or R_unit == "meters":
                 R = np.divide(R, 1000.0)
 
-            timestamp_t = input_time[0]
+            timestamp = input_time[0]
+            station = []
 
-            station.append([])
-            Rs.append(R)
-            azs.append(az)
-            els.append(el)
-            rangings.append(ranging)
-            dopplers.append(doppler)
-            ras.append(ra)
-            decs.append(dec)
 
-            R = []
-            az = []
-            el = []
-            ranging = []
-            doppler = []
-            ra = []
-            dec = []
+
+    if mode == "azel":
+
+        for i in range(len(data["signal"])):
+
+            if "generated" in data["signal"][i]["meta"]:
+                generated = data["signal"][i]["meta"]["generated"]
 
             ## AzEl
             keys = ["az", "el"]
@@ -1290,7 +1237,7 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
             el_unit = "deg"
 
             if "meta" in data["signal"][i]:
-                meta.append([data["signal"][i]["meta"]])
+                meta = [data["signal"][i]["meta"]]
 
                 if "unit" in data["signal"][i]["meta"]:
                     if keys[0] in data["signal"][i]["meta"]["unit"]:
@@ -1300,7 +1247,7 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
                         el_unit = data["signal"][i]["meta"]["unit"][keys[1]]
 
             else:
-                meta.append([])
+                meta = []
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
 
@@ -1312,40 +1259,31 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
             if el_unit == "deg" or el_unit == "degrees":
                 el = np.divide(el, 1.0)  # todo, adds other conversion
 
-            timestamp_azel = input_time[0]
+            timestamp = input_time[0]
+            station = data["location"]["fixed"]["data"][0]
 
-            station.append(data["location"]["fixed"]["data"][0])
-            Rs.append(R)
-            azs.append(az)
-            els.append(el)
-            rangings.append(ranging)
-            dopplers.append(doppler)
-            ras.append(ra)
-            decs.append(dec)
 
-            R = []
-            az = []
-            el = []
-            ranging = []
-            doppler = []
-            ra = []
-            dec = []
+    if mode == "range":
+
+        for i in range(len(data["signal"])):
+
+            if "generated" in data["signal"][i]["meta"]:
+                generated = data["signal"][i]["meta"]["generated"]
 
             ## range
-
             keys = ["range"]
 
             ranging_unit = "km"
 
             if "meta" in data["signal"][i]:
-                meta.append([data["signal"][i]["meta"]])
+                meta = [data["signal"][i]["meta"]]
 
                 if "unit" in data["signal"][i]["meta"]:
                     if keys[0] in data["signal"][i]["meta"]["unit"]:
                         ranging_unit = data["signal"][i]["meta"]["unit"][keys[0]]
 
             else:
-                meta.append([])
+                meta = []
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
 
@@ -1353,39 +1291,31 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
             if ranging_unit == "m" or ranging_unit == "meters":
                 ranging = np.divide(ranging, 1000.0)
 
-            timestamp_ranging = input_time[0]
+            timestamp = input_time[0]
 
-            station.append(data["location"]["fixed"]["data"][0])
-            Rs.append(R)
-            azs.append(az)
-            els.append(el)
-            rangings.append(ranging)
-            dopplers.append(doppler)
-            ras.append(ra)
-            decs.append(dec)
+            station = data["location"]["fixed"]["data"][0]
 
-            R = []
-            az = []
-            el = []
-            ranging = []
-            doppler = []
-            ra = []
-            dec = []
+
+    if mode == "doppler":
+
+        for i in range(len(data["signal"])):
+
+            if "generated" in data["signal"][i]["meta"]:
+                generated = data["signal"][i]["meta"]["generated"]
 
             ## doppler
-
             keys = ["doppler"]
 
             doppler_unit = "hz"
             if "meta" in data["signal"][i]:
-                meta.append([data["signal"][i]["meta"]])
+                meta = [data["signal"][i]["meta"]]
 
                 if "unit" in data["signal"][i]["meta"]:
                     if keys[0] in data["signal"][i]["meta"]["unit"]:
                         doppler_unit = data["signal"][i]["meta"]["unit"][keys[0]]
 
             else:
-                meta.append([])
+                meta = []
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
 
@@ -1393,34 +1323,22 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
             if doppler_unit == "khz" or doppler_unit == "KHz":
                 doppler = np.multiply(doppler, 1000.0)
 
-            timestamp_doppler = input_time[0]
+            timestamp = input_time[0]
+            station = data["location"]["fixed"]["data"][0]
 
-            station.append(data["location"]["fixed"]["data"][0])
-            Rs.append(R)
-            azs.append(az)
-            els.append(el)
-            rangings.append(ranging)
-            dopplers.append(doppler)
-            ras.append(ra)
-            decs.append(dec)
 
-            R = []
-            az = []
-            el = []
-            ranging = []
-            doppler = []
-            ra = []
-            dec = []
+    if mode == "doppler":
+
+        for i in range(len(data["signal"])):
 
             ## RaDec
-
             keys = ["ra", "dec"]
 
             ra_unit = "deg"
             dec_unit = "deg"
 
             if "meta" in data["signal"][i]:
-                meta.append([data["signal"][i]["meta"]])
+                meta = [data["signal"][i]["meta"]]
 
                 if "unit" in data["signal"][i]["meta"]:
                     if keys[0] in data["signal"][i]["meta"]["unit"]:
@@ -1430,7 +1348,7 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
                         dec_unit = data["signal"][i]["meta"]["unit"][keys[1]]
 
             else:
-                meta.append([])
+                meta = []
 
             input, input_time = extract_key_and_time_from_data(i, data, keys)
 
@@ -1441,52 +1359,12 @@ def from_json(opt, filenames=["../example_data/stuttgart.json"]):
             dec = input[1]
             if dec_unit == "deg" or dec_unit == "degrees":
                 dec = np.divide(el, 1.0)  # todo, adds other conversion
-            timestamp_radec = input_time[0]
 
-            station.append(data["location"]["fixed"]["data"][0])
-            Rs.append(R)
-            azs.append(az)
-            els.append(el)
-            rangings.append(ranging)
-            dopplers.append(doppler)
-            ras.append(ra)
-            decs.append(dec)
+            timestamp = input_time[0]
+            station = data["location"]["fixed"]["data"][0]
 
-            timestamps.append(timestamp_t)
-            timestamps.append(timestamp_azel)
-            timestamps.append(timestamp_ranging)
-            timestamps.append(timestamp_doppler)
-            timestamps.append(timestamp_radec)
 
-    # putting the inputs into the measurements
-    measurements = {}
-    measurements["el"] = els
-    measurements["az"] = azs
-    measurements["satellite_pos"] = Rs
-    measurements["range"] = rangings
-    measurements["doppler"] = dopplers
-    measurements["ra"] = ras
-    measurements["dec"] = decs
-
-    # finding the minimum time stamp. from this on, the epoch for the TLE is calculated
-    timestamp_min = 0.0
-    tested = 0
-    for stamp in range(len(timestamps)):
-        if len(timestamps[stamp]):
-            if tested == 0:
-                timestamp_min = np.min(timestamps[stamp])
-                tested = 1
-            else:
-                if timestamp_min > np.min(timestamps[stamp]):
-                    timestamp_min = np.min(timestamps[stamp])
-
-    for stamp in range(len(timestamps)):
-        for t0 in range(len(timestamps[stamp])):
-            timestamps[stamp][t0] = timestamps[stamp][t0] - timestamp_min
-
-    mode = 0
-    parameters = start(opt, station, timestamp_min, timestamps, mode, measurements, meta=meta, generated=generated,
-                       loops=40, walks=50)
+    return station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated
 
 
 class optimizer:
@@ -1521,6 +1399,8 @@ class optimizer:
         self.timestamp_min = []
         self.timestamps = []
         self.mode = []
+        self.meta = []
+        self.generated = {}
 
         self.measurements = {}
         self.measurements["satellite_pos"] = []
@@ -1569,6 +1449,8 @@ class optimizer:
                 print("file is iod format")
                 station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode="radec")
                 self.station.append(station)
+                self.meta.append([])
+                self.generated = {}
 
                 self.measurements["satellite_pos"].append(R)
                 self.measurements["ra"].append(ra)
@@ -1582,6 +1464,65 @@ class optimizer:
 
                 station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode="azel")
                 self.station.append(station)
+                self.meta.append([])
+                self.generated ={}
+
+                self.measurements["satellite_pos"].append(R)
+                self.measurements["ra"].append(ra)
+                self.measurements["dec"].append(dec)
+                self.measurements["az"].append(az)
+                self.measurements["el"].append(el)
+                self.measurements["range"].append(ranging)
+                self.measurements["doppler"].append(doppler)
+
+                timestamps.append(timestamp)
+
+
+            if fileformat["file"] == "json":
+                print("file is json format")
+
+                station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = \
+                    from_json(filename=file, mode="azel")
+
+                self.station.append(station)
+                self.meta.append(meta)
+                self.generated = generated
+
+                self.measurements["satellite_pos"].append(R)
+                self.measurements["ra"].append(ra)
+                self.measurements["dec"].append(dec)
+                self.measurements["az"].append(az)
+                self.measurements["el"].append(el)
+                self.measurements["range"].append(ranging)
+                self.measurements["doppler"].append(doppler)
+
+                timestamps.append(timestamp)
+
+
+                station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = \
+                    from_json(filename=file, mode="radec")
+
+                self.station.append(station)
+                self.meta.append(meta)
+                self.generated = generated
+
+                self.measurements["satellite_pos"].append(R)
+                self.measurements["ra"].append(ra)
+                self.measurements["dec"].append(dec)
+                self.measurements["az"].append(az)
+                self.measurements["el"].append(el)
+                self.measurements["range"].append(ranging)
+                self.measurements["doppler"].append(doppler)
+
+                timestamps.append(timestamp)
+
+
+                station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = \
+                    from_json(filename=file, mode="range")
+
+                self.station.append(station)
+                self.meta.append(meta)
+                self.generated = generated
 
                 self.measurements["satellite_pos"].append(R)
                 self.measurements["ra"].append(ra)
@@ -1628,7 +1569,7 @@ if __name__ == "__main__":
     # from_json(filenames=filenames)
 
     opt = optimizer()
-    path = os.path.join("..", "example_data", "iod_23908_20200316")
+    path = os.path.join("..", "example_data", "json")
     opt.add_file(path)
     print(opt.filepath)
     opt.convert_file()
