@@ -1191,6 +1191,7 @@ def from_json(filename="../example_data/stuttgart.json", mode="radec"):
     ra = []
     dec = []
 
+
     if mode == "position":
 
         for i in range(len(data["signal"])):
@@ -1220,7 +1221,6 @@ def from_json(filename="../example_data/stuttgart.json", mode="radec"):
 
             timestamp = input_time[0]
             station = []
-
 
 
     if mode == "azel":
@@ -1327,7 +1327,7 @@ def from_json(filename="../example_data/stuttgart.json", mode="radec"):
             station = data["location"]["fixed"]["data"][0]
 
 
-    if mode == "doppler":
+    if mode == "radec":
 
         for i in range(len(data["signal"])):
 
@@ -1447,92 +1447,52 @@ class optimizer:
 
             if fileformat["file"] == "iod":
                 print("file is iod format")
-                station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode="radec")
-                self.station.append(station)
-                self.meta.append([])
-                self.generated = {}
 
-                self.measurements["satellite_pos"].append(R)
-                self.measurements["ra"].append(ra)
-                self.measurements["dec"].append(dec)
-                self.measurements["az"].append(az)
-                self.measurements["el"].append(el)
-                self.measurements["range"].append(ranging)
-                self.measurements["doppler"].append(doppler)
+                modes = ["radec", "azel"]
 
-                timestamps.append(timestamp)
+                for mode in modes:
+                    station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode=mode)
+                    self.station.append(station)
+                    self.meta.append([])
+                    self.generated = {}
 
-                station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode="azel")
-                self.station.append(station)
-                self.meta.append([])
-                self.generated ={}
+                    self.measurements["satellite_pos"].append(R)
+                    self.measurements["ra"].append(ra)
+                    self.measurements["dec"].append(dec)
+                    self.measurements["az"].append(az)
+                    self.measurements["el"].append(el)
+                    self.measurements["range"].append(ranging)
+                    self.measurements["doppler"].append(doppler)
 
-                self.measurements["satellite_pos"].append(R)
-                self.measurements["ra"].append(ra)
-                self.measurements["dec"].append(dec)
-                self.measurements["az"].append(az)
-                self.measurements["el"].append(el)
-                self.measurements["range"].append(ranging)
-                self.measurements["doppler"].append(doppler)
+                    timestamps.append(timestamp)
 
-                timestamps.append(timestamp)
 
 
             if fileformat["file"] == "json":
                 print("file is json format")
 
-                station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = \
-                    from_json(filename=file, mode="azel")
+                modes = ["radec", "azel", "position", "range", "doppler"]
 
-                self.station.append(station)
-                self.meta.append(meta)
-                self.generated = generated
+                for mode in modes:
 
-                self.measurements["satellite_pos"].append(R)
-                self.measurements["ra"].append(ra)
-                self.measurements["dec"].append(dec)
-                self.measurements["az"].append(az)
-                self.measurements["el"].append(el)
-                self.measurements["range"].append(ranging)
-                self.measurements["doppler"].append(doppler)
+                    station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = \
+                        from_json(filename=file, mode=mode)
 
-                timestamps.append(timestamp)
+                    self.station.append(station)
+                    self.meta.append(meta)
+                    self.generated = generated
+                    print(generated)
 
+                    self.measurements["satellite_pos"].append(R)
+                    self.measurements["ra"].append(ra)
+                    self.measurements["dec"].append(dec)
+                    self.measurements["az"].append(az)
+                    self.measurements["el"].append(el)
+                    self.measurements["range"].append(ranging)
+                    self.measurements["doppler"].append(doppler)
 
-                station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = \
-                    from_json(filename=file, mode="radec")
+                    timestamps.append(timestamp)
 
-                self.station.append(station)
-                self.meta.append(meta)
-                self.generated = generated
-
-                self.measurements["satellite_pos"].append(R)
-                self.measurements["ra"].append(ra)
-                self.measurements["dec"].append(dec)
-                self.measurements["az"].append(az)
-                self.measurements["el"].append(el)
-                self.measurements["range"].append(ranging)
-                self.measurements["doppler"].append(doppler)
-
-                timestamps.append(timestamp)
-
-
-                station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = \
-                    from_json(filename=file, mode="range")
-
-                self.station.append(station)
-                self.meta.append(meta)
-                self.generated = generated
-
-                self.measurements["satellite_pos"].append(R)
-                self.measurements["ra"].append(ra)
-                self.measurements["dec"].append(dec)
-                self.measurements["az"].append(az)
-                self.measurements["el"].append(el)
-                self.measurements["range"].append(ranging)
-                self.measurements["doppler"].append(doppler)
-
-                timestamps.append(timestamp)
 
 
         # when all files are loaded, this is some postprocessing
@@ -1556,7 +1516,7 @@ class optimizer:
 
 
     def start(self, opt):
-        parameters = start(opt, self.station, self.timestamp_min, self.timestamps, self.mode, self.measurements, meta=[[]], generated={})
+        parameters = start(opt, self.station, self.timestamp_min, self.timestamps, self.mode, self.measurements, meta=self.meta, generated=self.generated)
 
 
 if __name__ == "__main__":
