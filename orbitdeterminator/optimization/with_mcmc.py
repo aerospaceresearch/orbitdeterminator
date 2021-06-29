@@ -1088,33 +1088,25 @@ def extract_key_and_time_from_data(i, data, keys):
     return keys_data, times_data
 
 
-def from_iod(filenames=["../example_data/SATOBS-ML-19200716.txt"]):
-    print("loading IOD files")
+def from_iod(filename="../example_data/SATOBS-ML-19200716.txt", mode="radec"):
+    print("loading IOD files", filename, "in", mode, "mode")
+    iod_object_data = por.load_iod_data(filename)
 
-    Rs = []
-    station = []
-    els = []
-    azs = []
-    rangings = []
-    dopplers = []
-    ras = []
-    decs = []
-    t = []
+    station = {}
+    timestamp = []
+    R = []
+    ra = []
+    dec = []
+    az = []
+    el = []
+    ranging = []
+    doppler = []
 
-    for file in filenames:
-        # load IOD data for a given satellite
+    lat = 0.0
+    lon = 0.0
+    alt = 0.0
 
-        iod_object_data = por.load_iod_data(file)
-
-        timestamp = []
-        ra = []
-        dec = []
-        az = []
-        el = []
-
-        lat = 0.0
-        lon = 0.0
-        alt = 0.0
+    if mode == "radec":
 
         for i in range(len(iod_object_data["object"])):
             yr = iod_object_data["yr"][i]
@@ -1142,26 +1134,11 @@ def from_iod(filenames=["../example_data/SATOBS-ML-19200716.txt"]):
                 lon = gs['Longitude']  # deg
                 alt = gs['Elev']  # meters
 
-        station.append({"lat": lat, "long": lon, "alt": alt})
+        station = {"lat": lat, "long": lon, "alt": alt}
 
-        t.append(timestamp)
-        ras.append(ra)
-        decs.append(dec)
-        els.append(el)  # could be in iod format. not checked for now
-        azs.append(az)  # could be in iod format. not checked for now
-        rangings.append([])
-        dopplers.append([])
-        Rs.append([])
 
-        timestamp = []
-        ra = []
-        dec = []
-        az = []
-        el = []
 
-        lat = 0.0
-        lon = 0.0
-        alt = 0.0
+    if mode == "azel":
 
         for i in range(len(iod_object_data["object"])):
             yr = iod_object_data["yr"][i]
@@ -1189,17 +1166,9 @@ def from_iod(filenames=["../example_data/SATOBS-ML-19200716.txt"]):
                 lon = gs['Longitude']  # deg
                 alt = gs['Elev']  # meters
 
-        station.append({"lat": lat, "long": lon, "alt": alt})
+        station = {"lat": lat, "long": lon, "alt": alt}
 
-        t.append(timestamp)
-        ras.append(ra)
-        decs.append(dec)
-        els.append(el)  # could be in iod format. not checked for now
-        azs.append(az)  # could be in iod format. not checked for now
-        rangings.append([])
-        dopplers.append([])
-        Rs.append([])
-
+    '''
     measurements = {}
     measurements["el"] = els
     measurements["az"] = azs
@@ -1225,8 +1194,10 @@ def from_iod(filenames=["../example_data/SATOBS-ML-19200716.txt"]):
     for s in range(len(timestamps)):
         for t0 in range(len(timestamps[s])):
             timestamps[s][t0] = timestamps[s][t0] - timestamp_min
+    '''
 
-    return station, timestamp_min, timestamps, measurements
+    return station, timestamp, R, ra, dec, az, el, ranging, doppler
+
 
 
 def from_json(opt, filenames=["../example_data/stuttgart.json"]):
@@ -1550,7 +1521,16 @@ class optimizer:
         self.timestamp_min = []
         self.timestamps = []
         self.mode = []
-        self.measurements = []
+
+        self.measurements = {}
+        self.measurements["satellite_pos"] = []
+        self.measurements["ra"] = []
+        self.measurements["dec"] = []
+        self.measurements["el"] = []
+        self.measurements["az"] = []
+        self.measurements["range"] = []
+        self.measurements["doppler"] = []
+
 
     def add_optimization_runs(self, nwalkers=200, walks=50, loops=50, finding=None, orbit=1):
         self.nwalkers.append(nwalkers)
@@ -1558,6 +1538,7 @@ class optimizer:
         self.loops.append(loops)
         self.finding.append(finding)
         self.orbit.append(orbit) # orbit = 0 circle, orbit = 1 ellitic
+
 
     def add_limits(self, r_a_lim, r_p_lim, AoP_lim, inc_lim, raan_lim, tp_lim, bstar_lim, td_lim):
         self.r_a_lim.append(r_a_lim)
@@ -1569,16 +1550,69 @@ class optimizer:
         self.bstar_lim.append(bstar_lim)
         self.td_lim.append(td_lim)
 
+
     def add_file(self, path):
         filenames = rd.get_all_files(path)
-        self.filepath = filenames
+
+        for file in filenames:
+            self.filepath.append(file)
+
 
     def convert_file(self):
-        station, timestamp_min, timestamps, measurements = from_iod(filenames=self.filepath)
-        self.station = station
+
+        timestamps = []
+
+        for file in self.filepath:
+            fileformat = rd.detect_file_format(file)
+
+            if fileformat["file"] == "iod":
+                print("file is iod format")
+                station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode="radec")
+                self.station.append(station)
+
+                self.measurements["satellite_pos"].append(R)
+                self.measurements["ra"].append(ra)
+                self.measurements["dec"].append(dec)
+                self.measurements["az"].append(az)
+                self.measurements["el"].append(el)
+                self.measurements["range"].append(ranging)
+                self.measurements["doppler"].append(doppler)
+
+                timestamps.append(timestamp)
+
+                station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode="azel")
+                self.station.append(station)
+
+                self.measurements["satellite_pos"].append(R)
+                self.measurements["ra"].append(ra)
+                self.measurements["dec"].append(dec)
+                self.measurements["az"].append(az)
+                self.measurements["el"].append(el)
+                self.measurements["range"].append(ranging)
+                self.measurements["doppler"].append(doppler)
+
+                timestamps.append(timestamp)
+
+
+        # when all files are loaded, this is some postprocessing
+        timestamp_min = 0.0
+        tested = 0
+        for ii in range(len(timestamps)):
+            if len(timestamps[ii]):
+                if tested == 0:
+                    timestamp_min = np.min(timestamps[ii])
+                    tested = 1
+                else:
+                    if timestamp_min > np.min(timestamps[ii]):
+                        timestamp_min = np.min(timestamps[ii])
+
+        for s in range(len(timestamps)):
+            for t0 in range(len(timestamps[s])):
+                timestamps[s][t0] = timestamps[s][t0] - timestamp_min
+
         self.timestamp_min = timestamp_min
         self.timestamps = timestamps
-        self.measurements = measurements
+
 
     def start(self, opt):
         parameters = start(opt, self.station, self.timestamp_min, self.timestamps, self.mode, self.measurements, meta=[[]], generated={})
@@ -1596,6 +1630,7 @@ if __name__ == "__main__":
     opt = optimizer()
     path = os.path.join("..", "example_data", "iod_23908_20200316")
     opt.add_file(path)
+    print(opt.filepath)
     opt.convert_file()
 
     finding = {
