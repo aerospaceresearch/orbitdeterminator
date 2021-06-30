@@ -1374,6 +1374,7 @@ class optimizer:
     def __init__(self, name='Unknown'):
         self.name = name
         self.test = []
+        self.parameters = {}
 
         # for input files
         self.filepath = []
@@ -1439,6 +1440,43 @@ class optimizer:
 
         for file in filenames:
             self.filepath.append(file)
+
+
+    def add_from_positions(self, timestamp, R):
+
+        timestamps = []
+
+        self.station.append({})
+        self.meta.append([])
+        self.generated = {}
+
+        self.measurements["satellite_pos"].append(R)
+        self.measurements["ra"].append([])
+        self.measurements["dec"].append([])
+        self.measurements["az"].append([])
+        self.measurements["el"].append([])
+        self.measurements["range"].append([])
+        self.measurements["doppler"].append([])
+
+        timestamps.append(timestamp)
+
+        timestamp_min = 0.0
+        tested = 0
+        for ii in range(len(timestamps)):
+            if len(timestamps[ii]):
+                if tested == 0:
+                    timestamp_min = np.min(timestamps[ii])
+                    tested = 1
+                else:
+                    if timestamp_min > np.min(timestamps[ii]):
+                        timestamp_min = np.min(timestamps[ii])
+
+        for s in range(len(timestamps)):
+            for t0 in range(len(timestamps[s])):
+                timestamps[s][t0] = timestamps[s][t0] - timestamp_min
+
+        self.timestamp_min = timestamp_min
+        self.timestamps = timestamps
 
 
     def convert_file(self):
@@ -1519,7 +1557,16 @@ class optimizer:
 
 
     def start(self, opt):
-        parameters = start(opt, self.station, self.timestamp_min, self.timestamps, self.mode, self.measurements, meta=self.meta, generated=self.generated)
+        parameters = start(opt,
+                           self.station,
+                           self.timestamp_min,
+                           self.timestamps,
+                           self.mode,
+                           self.measurements,
+                           meta=self.meta,
+                           generated=self.generated)
+
+        self.parameters = parameters
 
 
 if __name__ == "__main__":

@@ -327,7 +327,33 @@ def process(data_file, error_apriori, units):
                     R_short = R
 
 
-                parameters = with_mcmc.from_position(timestamps_short, R_short)
+                opt = with_mcmc.optimizer()
+                opt.add_from_positions(timestamps_short, R_short)
+
+                finding = {
+                    "r_p": 0,
+                    "r_a": 1,
+                    "AoP": 2,
+                    "inc": 3,
+                    "raan": 4,
+                    "tp": 5
+                }
+
+                r_a_lim = [0.0, 2000.0]
+                r_p_lim = [0.0, 2000.0]
+                AoP_lim = [0.0, 360.0]
+                inc_lim = [0.0, 180.0]
+                raan_lim = [0.0, 360.0]
+                tp_lim = [0.0, 1.0]
+                bstar_lim = [-100000.0, 100000.0]
+                td_lim = [0.0, 0.0]
+
+                opt.add_optimization_runs(nwalkers=200, walks=50, loops=40, finding=finding)
+                opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
+                               raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
+                opt.start(opt)
+                parameters = opt.parameters
+
 
                 r_a = parameters["r_a"]
                 r_p = parameters["r_p"]
