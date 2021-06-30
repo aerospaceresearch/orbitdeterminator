@@ -1019,7 +1019,7 @@ def start(opt, station, timestamp_min, timestamps, mode, measurements, meta=[[]]
     return parameters
 
 
-def fromposition(timestamp, sat, mode=0):
+def from_position(timestamp, sat, mode=0):
     station = [[]]
     el = [[]]
     az = [[]]
@@ -1093,6 +1093,9 @@ def from_iod(filename="../example_data/SATOBS-ML-19200716.txt", mode="radec"):
     iod_object_data = por.load_iod_data(filename)
 
     station = {}
+    generated = {}
+    meta = []
+
     timestamp = []
     R = []
     ra = []
@@ -1168,14 +1171,14 @@ def from_iod(filename="../example_data/SATOBS-ML-19200716.txt", mode="radec"):
 
         station = {"lat": lat, "long": lon, "alt": alt}
 
-    return station, timestamp, R, ra, dec, az, el, ranging, doppler
+    return station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated
 
 
 
 def from_json(filename="../example_data/stuttgart.json", mode="radec"):
     print("loading JSON file ", filename, "in", mode, "mode")
 
-    station = []
+    station = {}
     generated = {}
     meta = []
 
@@ -1220,7 +1223,7 @@ def from_json(filename="../example_data/stuttgart.json", mode="radec"):
                 R = np.divide(R, 1000.0)
 
             timestamp = input_time[0]
-            station = []
+            station = {}
 
 
     if mode == "azel":
@@ -1451,10 +1454,10 @@ class optimizer:
                 modes = ["radec", "azel"]
 
                 for mode in modes:
-                    station, timestamp, R, ra, dec, az, el, ranging, doppler = from_iod(filename=file, mode=mode)
+                    station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = from_iod(filename=file, mode=mode)
                     self.station.append(station)
-                    self.meta.append([])
-                    self.generated = {}
+                    self.meta.append(meta)
+                    self.generated = generated
 
                     self.measurements["satellite_pos"].append(R)
                     self.measurements["ra"].append(ra)
@@ -1529,7 +1532,7 @@ if __name__ == "__main__":
     # from_json(filenames=filenames)
 
     opt = optimizer()
-    path = os.path.join("..", "example_data", "json")
+    path = os.path.join("..", "example_data", "iod_23908_20200316")
     opt.add_file(path)
     print(opt.filepath)
     opt.convert_file()
