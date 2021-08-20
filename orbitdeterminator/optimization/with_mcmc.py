@@ -1357,11 +1357,11 @@ def from_json(filename="../example_data/stuttgart.json", mode="radec"):
 
             ra = input[0]
             if ra_unit == "deg" or ra_unit == "degrees":
-                ra = np.divide(az, 1.0)  # todo, adds other conversion
+                ra = np.divide(ra, 1.0)  # todo, adds other conversion
 
             dec = input[1]
             if dec_unit == "deg" or dec_unit == "degrees":
-                dec = np.divide(el, 1.0)  # todo, adds other conversion
+                dec = np.divide(dec, 1.0)  # todo, adds other conversion
 
             timestamp = input_time[0]
             station = data["location"]["fixed"]["data"][0]
