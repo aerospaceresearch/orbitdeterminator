@@ -1522,7 +1522,6 @@ class optimizer:
                     self.station.append(station)
                     self.meta.append(meta)
                     self.generated = generated
-                    print(generated)
 
                     self.measurements["satellite_pos"].append(R)
                     self.measurements["ra"].append(ra)
@@ -1569,19 +1568,10 @@ class optimizer:
         self.parameters = parameters
 
 
-if __name__ == "__main__":
-    # path = os.path.join("..", "example_data", "iod_23908_20200316")
-    # filenames = rd.get_all_files(path)
-    # from_iod(filenames=filenames)
-
-    # path = os.path.join("..", "example_data", "json")
-    # filenames = rd.get_all_files(path)
-    # from_json(filenames=filenames)
-
+def start_json(path):
     opt = optimizer()
-    path = os.path.join("..", "example_data", "iod_23908_20200316")
     opt.add_file(path)
-    print(opt.filepath)
+    print("This is your filepath:", opt.filepath)
     opt.convert_file()
 
     finding = {
@@ -1595,9 +1585,11 @@ if __name__ == "__main__":
         # "td": {"0": 7,
         #       "2": 8}
     }
+    print("let's find these parameters with...")
+    print(finding)
 
-    r_a_lim = [0.0, 2000.0]
-    r_p_lim = [0.0, 2000.0]
+    r_a_lim = [200.0, 1000.0]
+    r_p_lim = [200.0, 1000.0]
     AoP_lim = [0.0, 360.0]
     inc_lim = [0.0, 180.0]
     raan_lim = [0.0, 360.0]
@@ -1605,12 +1597,30 @@ if __name__ == "__main__":
     bstar_lim = [-100000.0, 100000.0]
     td_lim = [0.0, 0.0]
 
-    opt.add_optimization_runs(nwalkers=300, walks=50, loops=40, finding=finding)
+    opt.add_optimization_runs(nwalkers=300, walks=40, loops=30, finding=finding)
+    # opt.add_optimization_runs(nwalkers=300, walks=40, loops=20, finding=finding, orbit=0)
     opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
                    raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
 
+    print("next run, now.")
+
+
+    finding = {
+        "r_p": 0,
+        "r_a": 1,
+        "AoP": 2,
+        "inc": 3,
+        "raan": 4,
+        "tp": 5,
+        # "bstar": 6# ,
+        # "td": {"0": 7,
+        #       "2": 8}
+    }
+    print("let's find these parameters with...")
+    print(finding)
+
     r_a_lim = [-1.0, 1.0]
-    r_p_lim = [-4.0, 4.0]
+    r_p_lim = [-10.0, 10.0]
     AoP_lim = [0.0, 360.0]
     inc_lim = [-1.0, 1.0]
     raan_lim = [-1.0, 1.0]
@@ -1618,8 +1628,18 @@ if __name__ == "__main__":
     bstar_lim = [-100000.0, 100000.0]
     td_lim = [0.0, 1.0]
 
-    opt.add_optimization_runs(nwalkers=300, walks=50, loops=40, finding=finding)
+    opt.add_optimization_runs(nwalkers=300, walks=40, loops=30, finding=finding)
+    # opt.add_optimization_runs(nwalkers=300, walks=50, loops=30, finding=finding, orbit=0)
     opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
                    raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
 
     opt.start(opt)
+
+
+if __name__ == "__main__":
+
+    # taket this input file,
+    # but in this file is an observation site and this needs to be in "sat_tracking_observatories.txt
+    path = os.path.join("..", "example_data", "iod_23908_20200316")
+
+    start_json(path)

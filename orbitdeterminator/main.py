@@ -434,25 +434,34 @@ def read_args():
     parser.add_argument('-f', '--file_path', type = str, help = "path to .csv data file", default = 'example_data/orbit.csv')
     parser.add_argument('-e', '--error', type = float, help = "estimation of the measurement error", default = 10.0)
     parser.add_argument('-u', '--units', type = str, help = "m for metres, k for kilometres", default = 'm')
+    parser.add_argument("-m", "--mode", action='store_true', help="directly use json input", default=False)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     print("\n************Welcome To OrbitDeterminator************\n")
-    print("Workflow for OrbitDeterminator is as follows:")
-    workflow = "                   -----------    ----------------------\n"\
-               "Positional data--->| Filters |--->| Keplerian elements |--->Determined Orbit\n"\
-               "                   |         |    | Determination      |\n"\
-               "                   -----------    ----------------------\n\n"\
-               "Available filters:               | Available methods for orbit determination:\n"\
-               "  1. None (original data)        |   1. Lamberts Kalman\n"\
-               "  2. Savitzky Golay Filter       |   2. Cubic spline interpolation\n"\
-               "  4. Triple Moving Average Filter|   3. Ellipse Bset Fit\n"\
-               "  5. Wiener Filter               |   4. Gibbs 3 Vector\n"\
-               "                                 |   5. Gauss 3 Vector\n"\
-               "                                 |   6. MCMC (experimental)\n"
-    print("\n" + workflow)
 
     args = read_args()
-    process(args.file_path, args.error, args.units)
-    animate_orbit.animate(args.file_path, 6400)
+
+    if args.mode == False:
+
+        print("Workflow for OrbitDeterminator is as follows:")
+        workflow = "                   -----------    ----------------------\n" \
+                   "Positional data--->| Filters |--->| Keplerian elements |--->Determined Orbit\n" \
+                   "                   |         |    | Determination      |\n" \
+                   "                   -----------    ----------------------\n\n" \
+                   "Available filters:               | Available methods for orbit determination:\n" \
+                   "  1. None (original data)        |   1. Lamberts Kalman\n" \
+                   "  2. Savitzky Golay Filter       |   2. Cubic spline interpolation\n" \
+                   "  4. Triple Moving Average Filter|   3. Ellipse Bset Fit\n" \
+                   "  5. Wiener Filter               |   4. Gibbs 3 Vector\n" \
+                   "                                 |   5. Gauss 3 Vector\n" \
+                   "                                 |   6. MCMC (experimental)\n"
+        print("\n" + workflow)
+        process(args.file_path, args.error, args.units)
+        animate_orbit.animate(args.file_path, 6400)
+
+    else:
+
+        print("Workflow for OrbitDeterminator is by JSON inputs")
+        with_mcmc.start_json(args.file_path)
