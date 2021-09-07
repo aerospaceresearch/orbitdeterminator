@@ -81,15 +81,21 @@ def detect_uk(filename):
 def detect_csv(filename):
 
     file = {"file": None}
-
-    linecheck = np.genfromtxt(filename, delimiter='\t')[1]
     file1 = file
+
     try:
-        if len(linecheck) > 1:
-            file1 = {"file": "csv",
-                    "delimiter": "\t"}
+        linecheck = np.genfromtxt(filename, delimiter='\t')[1]
+
+        try:
+            if len(linecheck) > 1:
+                file1 = {"file": "csv",
+                         "delimiter": "\t"}
+        except:
+            file1 = {"file": None}
+
     except:
         file1 = {"file": None}
+
 
 
     linecheck = np.genfromtxt(filename, delimiter=';')[1]
@@ -148,6 +154,7 @@ def detect_file_format(filename):
 def get_all_files(path):
     # list all files from a folder, or just the one file that was stated.
 
+    files = []
     if os.path.isdir(path):
         files = glob.glob((path + os.sep+'*'))
 
