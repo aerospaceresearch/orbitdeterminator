@@ -1574,64 +1574,70 @@ def start_json(path):
     print("This is your filepath:", opt.filepath)
     opt.convert_file()
 
-    finding = {
-        "r_p": 0,
-        "r_a": 1,
-        "AoP": 2,
-        "inc": 3,
-        "raan": 4,
-        "tp": 5,
-        # "bstar": 6# ,
-        # "td": {"0": 7,
-        #       "2": 8}
-    }
-    print("let's find these parameters with...")
-    print(finding)
 
-    r_a_lim = [200.0, 1000.0]
-    r_p_lim = [200.0, 1000.0]
-    AoP_lim = [0.0, 360.0]
-    inc_lim = [0.0, 180.0]
-    raan_lim = [0.0, 360.0]
-    tp_lim = [0.0, 1.0]
-    bstar_lim = [-100000.0, 100000.0]
-    td_lim = [0.0, 0.0]
+    config = [
+        {"finding": {"r_p": 0,
+                     "r_a": 1,
+                     "AoP": 2,
+                     "inc": 3,
+                     "raan": 4,
+                     "tp": 5},
+         "orbit": 1,
+         "nwalkers" : 300, "walks" : 40, "loops" : 30,
+         "limits" : {"r_a" : [200.0, 1000.0],
+                     "r_p" : [200.0, 1000.0],
+                     "AoP" : [0.0, 360.0],
+                     "inc" : [0.0, 180.0],
+                     "raan" : [0.0, 360.0],
+                     "tp" : [0.0, 1.0],
+                     "bstar" : [-100000.0, 100000.0],
+                     "td" : [0.0, 0.0]}
+         },
 
-    opt.add_optimization_runs(nwalkers=300, walks=40, loops=30, finding=finding)
-    # opt.add_optimization_runs(nwalkers=300, walks=40, loops=20, finding=finding, orbit=0)
-    opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
-                   raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
+        {"finding": {"r_p": 0,
+                     "r_a": 1,
+                     "AoP": 2,
+                     "inc": 3,
+                     "raan": 4,
+                     "tp": 5},
+         "orbit": 1,
+         "nwalkers": 300, "walks": 40, "loops": 30,
+         "limits": {"r_a": [-10.0, 10.0],
+                    "r_p": [-10.0, 10.0],
+                    "AoP": [0.0, 360.0],
+                    "inc": [-1.0, 1.0],
+                    "raan": [-1.0, 1.0],
+                    "tp": [0.0, 1.0],
+                    "bstar": [-100000.0, 100000.0],
+                    "td": [0.0, 1.0]}
+         }
+    ]
 
-    print("next run, now.")
+    for run in range(len(config)):
+        print(run)
 
+        finding = config[run]["finding"]
+        print("let's find these parameters with...")
+        print(finding)
 
-    finding = {
-        "r_p": 0,
-        "r_a": 1,
-        "AoP": 2,
-        "inc": 3,
-        "raan": 4,
-        "tp": 5,
-        # "bstar": 6# ,
-        # "td": {"0": 7,
-        #       "2": 8}
-    }
-    print("let's find these parameters with...")
-    print(finding)
+        r_a_lim = config[run]["limits"]["r_a"]
+        r_p_lim = config[run]["limits"]["r_p"]
+        AoP_lim = config[run]["limits"]["AoP"]
+        inc_lim = config[run]["limits"]["inc"]
+        raan_lim = config[run]["limits"]["raan"]
+        tp_lim = config[run]["limits"]["tp"]
+        bstar_lim = config[run]["limits"]["bstar"]
+        td_lim = config[run]["limits"]["td"]
 
-    r_a_lim = [-1.0, 1.0]
-    r_p_lim = [-10.0, 10.0]
-    AoP_lim = [0.0, 360.0]
-    inc_lim = [-1.0, 1.0]
-    raan_lim = [-1.0, 1.0]
-    tp_lim = [0.0, 1.0]
-    bstar_lim = [-100000.0, 100000.0]
-    td_lim = [0.0, 1.0]
+        opt.add_optimization_runs(nwalkers=config[run]["nwalkers"],
+                                  walks=config[run]["walks"],
+                                  loops=config[run]["loops"],
+                                  finding=finding,
+                                  orbit=config[run]["orbit"])
+        opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
+                       raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
 
-    opt.add_optimization_runs(nwalkers=300, walks=40, loops=30, finding=finding)
-    # opt.add_optimization_runs(nwalkers=300, walks=50, loops=30, finding=finding, orbit=0)
-    opt.add_limits(r_a_lim=r_a_lim, r_p_lim=r_p_lim, AoP_lim=AoP_lim, inc_lim=inc_lim,
-                   raan_lim=raan_lim, tp_lim=tp_lim, bstar_lim=bstar_lim, td_lim=td_lim)
+        print("next run, now.")
 
     opt.start(opt)
 
