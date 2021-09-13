@@ -1130,8 +1130,17 @@ def from_iod(filename="../example_data/SATOBS-ML-19200716.txt", mode="radec"):
 
                 site_codes_0 = iod_object_data["station"][i]
 
-                sat_observatories_data = por.load_sat_observatories_data(
-                    '../station_observatory_data/sat_tracking_observatories.txt')
+                # this allows to access the file from the main and from the with_mcmc file
+                url = os.getcwd().split(os.sep)
+                levels_up = len(url) - url.index('orbitdeterminator') - 1
+
+                fname_observatories = ""
+                for _ in range(levels_up):
+                    fname_observatories = fname_observatories + ".." + os.sep
+                fname_observatories = fname_observatories + "station_observatory_data" + os.sep + "sat_tracking_observatories.txt"
+
+                sat_observatories_data = por.load_sat_observatories_data(fname_observatories)
+
                 gs = por.get_station_data(site_codes_0, sat_observatories_data)
                 lat = gs['Latitude']  # deg
                 lon = gs['Longitude']  # deg
@@ -1534,7 +1543,6 @@ class optimizer:
                     timestamps.append(timestamp)
 
 
-
         # when all files are loaded, this is some postprocessing
         timestamp_min = 0.0
         tested = 0
@@ -1583,7 +1591,7 @@ def start_json(path):
                      "raan": 4,
                      "tp": 5},
          "orbit": 1,
-         "nwalkers" : 300, "walks" : 40, "loops" : 30,
+         "nwalkers" : 300, "walks" : 40, "loops" : 15,
          "limits" : {"r_a" : [200.0, 1000.0],
                      "r_p" : [200.0, 1000.0],
                      "AoP" : [0.0, 360.0],
@@ -1605,8 +1613,8 @@ def start_json(path):
          "limits": {"r_a": [-10.0, 10.0],
                     "r_p": [-10.0, 10.0],
                     "AoP": [0.0, 360.0],
-                    "inc": [-1.0, 1.0],
-                    "raan": [-1.0, 1.0],
+                    "inc": [-2.0, 2.0],
+                    "raan": [-2.0, 2.0],
                     "tp": [0.0, 1.0],
                     "bstar": [-100000.0, 100000.0],
                     "td": [0.0, 1.0]}

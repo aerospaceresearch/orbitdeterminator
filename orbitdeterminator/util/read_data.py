@@ -98,12 +98,20 @@ def detect_csv(filename):
 
 
 
-    linecheck = np.genfromtxt(filename, delimiter=';')[1]
+    
     file2 = file
     try:
-        if len(linecheck) > 1:
-            file2 = {"file": "csv",
-                     "delimiter": ";"}
+        linecheck = np.genfromtxt(filename, delimiter=';')[1]
+        
+        try:
+        
+            if len(linecheck) > 1:
+                file2 = {"file": "csv",
+                         "delimiter": ";"}
+                         
+        except:
+            file2 = {"file": None}
+            
     except:
         file2 = {"file": None}
 

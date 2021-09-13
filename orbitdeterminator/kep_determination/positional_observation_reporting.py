@@ -23,8 +23,7 @@ def check_iod_format(fname):
             confirmed_lines += 1
 
 
-
-    if confirmed_lines >= 3:
+    if confirmed_lines >= 1:
         return True
     else:
         return False
@@ -62,6 +61,11 @@ def get_iod_lines(fname):
                   2, 1, 3, 3, 9]
 
     iod_input_lines = np.genfromtxt(fname, dtype=dt, names=iod_names, delimiter=iod_delims, autostrip=True)
+    
+    try:
+        a = len(iod_input_lines)
+    except:
+        iod_input_lines = np.array([iod_input_lines])
 
     return iod_input_lines
 
@@ -285,6 +289,11 @@ def get_uk_lines(fname):
                   8, 5, 3, 3, 5, 1]
 
     uk_input_lines = np.genfromtxt(fname, dtype=dt, names=uk_names, delimiter=uk_delims, autostrip=True)
+    
+    try:
+        a = len(uk_input_lines)
+    except:
+        uk_input_lines = np.array([uk_input_lines])
 
     return uk_input_lines
 
