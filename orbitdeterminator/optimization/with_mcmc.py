@@ -1504,7 +1504,8 @@ class optimizer:
                     station, timestamp, R, ra, dec, az, el, ranging, doppler, meta, generated = from_iod(filename=file, mode=mode)
                     self.station.append(station)
                     self.meta.append(meta)
-                    self.generated = generated
+                    if len(self.generated) == 0:
+                        self.generated = generated
 
                     self.measurements["satellite_pos"].append(R)
                     self.measurements["ra"].append(ra)
@@ -1530,7 +1531,8 @@ class optimizer:
 
                     self.station.append(station)
                     self.meta.append(meta)
-                    self.generated = generated
+                    if len(self.generated) == 0:
+                        self.generated = generated
 
                     self.measurements["satellite_pos"].append(R)
                     self.measurements["ra"].append(ra)
