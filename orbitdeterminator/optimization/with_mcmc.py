@@ -978,7 +978,7 @@ def start(opt, station, timestamp_min, timestamps, mode, measurements, meta=[[]]
                                         bstar_lim=opt.bstar_lim[loop],
                                         td_lim=opt.td_lim[loop])
 
-        counter += loops
+        counter += opt.loops[loop]
 
 
 
