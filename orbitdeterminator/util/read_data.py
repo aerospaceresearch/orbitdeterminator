@@ -8,6 +8,7 @@ import pickle
 import numpy as np
 import json
 import sys
+import glob
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import kep_determination.positional_observation_reporting as por
 
@@ -50,7 +51,8 @@ def save_orbits(source, destination):
 def detect_json(filename):
     # detect json
     try:
-        json.loads(filename)
+        with open(filename, 'r') as infile:
+            data = json.load(infile)
         file = {"file" : "json"}
     except:
         file = {"file" : None}
@@ -79,23 +81,37 @@ def detect_uk(filename):
 def detect_csv(filename):
 
     file = {"file": None}
-
-    linecheck = np.genfromtxt(filename, delimiter='\t')[1]
     file1 = file
+
     try:
-        if len(linecheck) > 1:
-            file1 = {"file": "csv",
-                    "delimiter": "\t"}
+        linecheck = np.genfromtxt(filename, delimiter='\t')[1]
+
+        try:
+            if len(linecheck) > 1:
+                file1 = {"file": "csv",
+                         "delimiter": "\t"}
+        except:
+            file1 = {"file": None}
+
     except:
         file1 = {"file": None}
 
 
-    linecheck = np.genfromtxt(filename, delimiter=';')[1]
+
+    
     file2 = file
     try:
-        if len(linecheck) > 1:
-            file2 = {"file": "csv",
-                     "delimiter": ";"}
+        linecheck = np.genfromtxt(filename, delimiter=';')[1]
+        
+        try:
+        
+            if len(linecheck) > 1:
+                file2 = {"file": "csv",
+                         "delimiter": ";"}
+                         
+        except:
+            file2 = {"file": None}
+            
     except:
         file2 = {"file": None}
 
@@ -141,6 +157,20 @@ def detect_file_format(filename):
     else:
         # no file available
         return file
+
+
+def get_all_files(path):
+    # list all files from a folder, or just the one file that was stated.
+
+    files = []
+    if os.path.isdir(path):
+        files = glob.glob((path + os.sep+'*'))
+
+    if os.path.isfile(path):
+        files = glob.glob((path))
+
+    return files
+
 
 if __name__ == "__main__":
 

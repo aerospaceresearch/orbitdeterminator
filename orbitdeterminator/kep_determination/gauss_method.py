@@ -16,10 +16,12 @@ from astropy.coordinates.earth_orientation import obliquity
 from astropy.coordinates.matrix_utilities import rotation_matrix
 import argparse
 import inquirer
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 import kep_determination.lamberts_method as lm
 import kep_determination.orbital_elements as oe
 import kep_determination.positional_observation_reporting as por
-import sys
 
 
 # declare astronomical constants in appropriate units
