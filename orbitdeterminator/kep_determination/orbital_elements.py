@@ -8,6 +8,20 @@ from astropy import constants as cts
 mu_Earth = cts.GM_earth.to(uts.Unit('km3 / s2')).value
 
 
+def keplers_equation_by_newtons_method(eccentricity, mean_anomaly, etol=1.e-8):
+
+    E_eccentric_anomaly = mean_anomaly - eccentricity / 2.0
+    if mean_anomaly < np.pi:
+        E_eccentric_anomaly = mean_anomaly + eccentricity / 2.0
+
+    ratio = 1.0
+    while np.abs(ratio) > etol:
+        ratio = (E_eccentric_anomaly - eccentricity * np.sin(E_eccentric_anomaly) - mean_anomaly) / (1.0 - eccentricity * np.cos(E_eccentric_anomaly))
+        E_eccentric_anomaly = E_eccentric_anomaly - ratio
+
+    return E_eccentric_anomaly
+
+
 def zeroTo360(x, deg=True):
 
     if deg == True:
@@ -33,10 +47,16 @@ def v_radial(R, V):
     return v_radial
 
 
-def h_angularmomentuum(R, V):
+def h_angularmomentuum(R=None, V=None, semimajor_axis=None, eccentricity=None):
 
-    h = np.cross(R, V)
-    h_angularmomentuum = np.linalg.norm(h)
+    h_angularmomentuum = None
+
+    if R != None and V != None:
+        h = np.cross(R, V)
+        h_angularmomentuum = np.linalg.norm(h)
+
+    if semimajor_axis != None and eccentricity != None:
+        h_angularmomentuum = (semimajor_axis * mu_Earth * (1.0 - eccentricity**2))**0.5
 
     return h_angularmomentuum
 
@@ -44,7 +64,7 @@ def h_angularmomentuum(R, V):
 def inclination(R, V):
 
     h = np.cross(R, V)
-    h_angularmomentuum_abs = h_angularmomentuum(R, V)
+    h_angularmomentuum_abs = h_angularmomentuum(R=R, V=V)
 
     inclination = np.arccos(h[2] / h_angularmomentuum_abs)
 
@@ -95,28 +115,45 @@ def AoP(R, V):
     return AoP
 
 
-def true_anomaly(R , V):
+def true_anomaly(R=None, V=None, eccentricity=None, E_eccentric_anomaly=None):
 
-    r_abs = np.linalg.norm(R)
-    v_abs = np.linalg.norm(V)
+    true_anomaly = None
 
-    v_radial = np.dot(R, V) / r_abs
+    if R != R and V != V:
 
-    eccentricity_vec = eccentricity_v(R, V)
-    eccentricity = np.linalg.norm(eccentricity_vec)
+        r_abs = np.linalg.norm(R)
+        v_abs = np.linalg.norm(V)
 
-    true_anomaly = np.arccos(np.dot(eccentricity_vec / eccentricity, R / r_abs))
+        v_radial = np.dot(R, V) / r_abs
 
-    if v_radial < 0.0:
-        true_anomaly = 2.0 * np.pi - true_anomaly
+        eccentricity_vec = eccentricity_v(R, V)
+        eccentricity = np.linalg.norm(eccentricity_vec)
+
+        true_anomaly = np.arccos(np.dot(eccentricity_vec / eccentricity, R / r_abs))
+
+        if v_radial < 0.0:
+            true_anomaly = 2.0 * np.pi - true_anomaly
+
+
+    if eccentricity != None and E_eccentric_anomaly != None:
+        true_anomaly = 2.0 * np.arctan(((1.0 + eccentricity) / (1.0 - eccentricity)) ** 0.5 *
+                                       np.tan(E_eccentric_anomaly / 2.0))
+
+        true_anomaly = zeroTo360(true_anomaly, deg=False)
 
     return true_anomaly
 
 
-def E_eccentric_anomaly(eccentricity, true_anomaly):
+def E_eccentric_anomaly(eccentricity=None, true_anomaly=None, mean_anomaly=None):
 
-    E_eccentric_anomaly = 2.0 * np.arctan(((1.0 - eccentricity) / (1.0 + eccentricity)) ** 0.5
-                                          * np.tan(true_anomaly / 2.0))
+    E_eccentric_anomaly = None
+
+    if eccentricity != None and true_anomaly != None:
+        E_eccentric_anomaly = 2.0 * np.arctan(((1.0 - eccentricity) / (1.0 + eccentricity)) ** 0.5
+                                              * np.tan(true_anomaly / 2.0))
+
+    if eccentricity != None and mean_anomaly != None:
+        E_eccentric_anomaly = keplers_equation_by_newtons_method(eccentricity, mean_anomaly)
 
     return E_eccentric_anomaly
 
@@ -132,7 +169,7 @@ def mean_anomaly(E_eccentric_anomaly, eccentricity, true_anomaly):
 
         mean_anomaly = eccentricity * np.sinh(F_hyp_eccentric_anomaly) - F_hyp_eccentric_anomaly
 
-    mean_anomaly = zeroTo360(mean_anomaly, False)
+    mean_anomaly = zeroTo360(mean_anomaly, deg=False)
 
     return mean_anomaly
 
@@ -148,18 +185,24 @@ def T_orbitperiod(h_angularmomentuum = None, eccentricity = None, semimajor_axis
     return T_orbitperiod
 
 
-def semimajor_axis(R, V):
+def semimajor_axis(R = None, V = None, T_orbitperiod = None):
 
-    eccentricity_vec = eccentricity_v(R, V)
-    eccentricity = np.linalg.norm(eccentricity_vec)
+    semimajor_axis = None
 
-    h_abs = h_angularmomentuum(R, V)
+    if R != None and V != None:
+        eccentricity_vec = eccentricity_v(R, V)
+        eccentricity = np.linalg.norm(eccentricity_vec)
 
-    semimajor_axis = h_abs ** 2 / mu_Earth * 1.0 / (1.0 - eccentricity ** 2)
+        h_abs = h_angularmomentuum(R=R, V=V)
 
-    if eccentricity > 1.0:
-        # if hyperbola
-        semimajor_axis = h_abs ** 2 / mu_Earth * 1.0 / (eccentricity ** 2 - 1.0)
+        semimajor_axis = h_abs ** 2 / mu_Earth * 1.0 / (1.0 - eccentricity ** 2)
+
+        if eccentricity > 1.0:
+            # if hyperbola
+            semimajor_axis = h_abs ** 2 / mu_Earth * 1.0 / (eccentricity ** 2 - 1.0)
+
+    if T_orbitperiod != None:
+        semimajor_axis = (T_orbitperiod * mu_Earth ** 0.5 / (2.0 * np.pi)) ** (2.0 / 3.0)
 
     return semimajor_axis
 
@@ -234,7 +277,7 @@ class orbital_parameters:
 
         self.AoP = AoP(R, V)
 
-        self.true_anomaly = true_anomaly(R, V)
+        self.true_anomaly = true_anomaly(R=R, V=V)
 
         self.E_eccentric_anomaly = E_eccentric_anomaly(self.eccentricity, self.true_anomaly)
 
@@ -250,3 +293,54 @@ class orbital_parameters:
         self.semimajor_axis = semimajor_axis(R, V)
 
         self.p_orbitparameter = p_orbitparameter(self.h_angularmomentuum)
+
+
+if __name__ == "__main__":
+    '''
+            OMFES (4th), H.D.Curtis, p.210, ALGORITHM 4.5
+
+            :param R: position vector of satellite [km]
+            :param V: velocity vector of satellite [km/s
+            :return:
+            '''
+
+    line1 = "1 47856U 21020C   21331.06251800 -.00000072  00000-0  30707-4 0  9998"
+    line2 = "2 47856  63.4086 209.7279 0025693 342.6358  17.3780 13.45215752 34829"
+
+    epoch = 331.06251800
+    i = 63.4086
+    raan = 209.7279
+    e = 0.0025693
+    aop = 342.6358
+    Me = 17.3780
+    n = 13.45215752
+
+    T_period = (24.0 * 3600.0) / n
+    a = semimajor_axis(T_orbitperiod=T_period)
+    h = h_angularmomentuum(semimajor_axis=a, eccentricity=e)
+    E = E_eccentric_anomaly(eccentricity=e, mean_anomaly=Me * np.pi/180.0)
+    true = true_anomaly(eccentricity=e, E_eccentric_anomaly=E) * 180. / np.pi
+
+    # p. 211
+    R = h**2 / (mu_Earth) * 1.0 / (1 + e * np.cos(true * np.pi / 180.0))
+    R = R * np.array([np.cos(true * np.pi / 180.0), np.sin(true * np.pi / 180.0), 0.0])
+
+    i = i*np.pi/180
+    raan = raan*np.pi/180
+    aop = aop*np.pi/180
+
+    Q_Xx = np.array([[+np.cos(aop), np.sin(aop), 0.0],
+                     [-np.sin(aop), np.cos(aop), 0.0],
+                     [0.0, 0.0, 1.0]])
+    Q_Xx = np.dot(Q_Xx,
+                       np.array([[1.0, 0.0, 0.0],
+                                 [0.0, +np.cos(i), np.sin(i)],
+                                 [0.0, -np.sin(i), np.cos(i)]]))
+    Q_Xx = np.dot(Q_Xx,
+                       np.array([[+np.cos(raan), np.sin(raan), 0.0],
+                                 [-np.sin(raan), np.cos(raan), 0.0],
+                                 [0.0, 0.0, 1.0]]))
+
+    Q_xX = np.transpose(Q_Xx)
+    R = np.array([6285.,3628.6,0.0])
+    r = np.dot(R, Q_Xx)
