@@ -174,13 +174,18 @@ def mean_anomaly(E_eccentric_anomaly, eccentricity, true_anomaly):
     return mean_anomaly
 
 
-def T_orbitperiod(h_angularmomentuum = None, eccentricity = None, semimajor_axis = None):
+def T_orbitperiod(h_angularmomentuum = None, eccentricity = None, semimajor_axis = None, n_mean_motion_perday=None):
+
+    T_orbitperiod = None
 
     if h_angularmomentuum != None and eccentricity != None:
         T_orbitperiod = 2.0 * np.pi / mu_Earth ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
     if semimajor_axis != None:
         T_orbitperiod = 2.0 * np.pi / mu_Earth ** 0.5 * semimajor_axis ** (3.0/2.0)
+
+    if n_mean_motion_perday != None:
+        T_orbitperiod = (24.0 * 3600.0) / n_mean_motion_perday
 
     return T_orbitperiod
 
@@ -295,6 +300,50 @@ class orbital_parameters:
         self.p_orbitparameter = p_orbitparameter(self.h_angularmomentuum)
 
 
+    def get_statevector_from_orbital_elemts(self, inclination, raan, eccentricity,
+                                            AoP, mean_anomaly, n_mean_motion_perday):
+
+        self.inclination = inclination
+        self.raan = raan
+        self.eccentricity = eccentricity
+        self.AoP = AoP
+        self.mean_anomaly = mean_anomaly
+        self.n_mean_motion_perday = n_mean_motion_perday
+
+        self.T_orbitperiod = T_orbitperiod(n_mean_motion_perday = self.n_mean_motion_perday)
+        self.semimajor_axis = semimajor_axis(T_orbitperiod=self.T_orbitperiod)
+        self.h_angularmomentuum = h_angularmomentuum(semimajor_axis=self.semimajor_axis, eccentricity=self.eccentricity)
+        self.E_eccentric_anomaly = E_eccentric_anomaly(eccentricity=self.eccentricity,
+                                                       mean_anomaly=self.mean_anomaly * np.pi / 180.0)
+        self.true_anomaly = true_anomaly(eccentricity=self.eccentricity, E_eccentric_anomaly=self.E_eccentric_anomaly) * 180. / np.pi
+
+        # p. 211
+        R = self.h_angularmomentuum ** 2 / (mu_Earth) * \
+            1.0 / (1 + self.eccentricity * np.cos(self.true_anomaly * np.pi / 180.0))
+        R = R * np.array([np.cos(self.true_anomaly * np.pi / 180.0), np.sin(self.true_anomaly * np.pi / 180.0), 0.0])
+
+        inc = self.inclination * np.pi / 180
+        raan = self.raan * np.pi / 180
+        aop = self.AoP * np.pi / 180
+
+        Q_Xx = np.array([[+np.cos(aop), np.sin(aop), 0.0],
+                         [-np.sin(aop), np.cos(aop), 0.0],
+                         [0.0, 0.0, 1.0]])
+        Q_Xx = np.dot(Q_Xx,
+                      np.array([[1.0, 0.0, 0.0],
+                                [0.0, +np.cos(inc), np.sin(inc)],
+                                [0.0, -np.sin(inc), np.cos(inc)]]))
+        Q_Xx = np.dot(Q_Xx,
+                      np.array([[+np.cos(raan), np.sin(raan), 0.0],
+                                [-np.sin(raan), np.cos(raan), 0.0],
+                                [0.0, 0.0, 1.0]]))
+
+        # Q_xX = np.transpose(Q_Xx)
+        r = np.dot(R, Q_Xx)
+
+        return r
+
+
 if __name__ == "__main__":
     '''
             OMFES (4th), H.D.Curtis, p.210, ALGORITHM 4.5
@@ -304,43 +353,32 @@ if __name__ == "__main__":
             :return:
             '''
 
-    line1 = "1 47856U 21020C   21331.06251800 -.00000072  00000-0  30707-4 0  9998"
+    from astropy.time import Time
+    from skyfield.api import load, wgs84
+    from skyfield.api import EarthSatellite
+    import time
+
+    line1 = "1 47856U 21020C   21331.00000000 -.00000072  00000-0  30707-4 0  9998"
     line2 = "2 47856  63.4086 209.7279 0025693 342.6358  17.3780 13.45215752 34829"
 
-    epoch = 331.06251800
-    i = 63.4086
+    inclination = 63.4086
     raan = 209.7279
-    e = 0.0025693
-    aop = 342.6358
-    Me = 17.3780
-    n = 13.45215752
+    eccentricity = 0.0025693
+    AoP = 342.6358
+    mean_anomaly = 17.3780
+    n_mean_motion_perday = 13.45215752
 
-    T_period = (24.0 * 3600.0) / n
-    a = semimajor_axis(T_orbitperiod=T_period)
-    h = h_angularmomentuum(semimajor_axis=a, eccentricity=e)
-    E = E_eccentric_anomaly(eccentricity=e, mean_anomaly=Me * np.pi/180.0)
-    true = true_anomaly(eccentricity=e, E_eccentric_anomaly=E) * 180. / np.pi
+    epoch = 21331.00000000 #2021-11-27T00:00:00
 
-    # p. 211
-    R = h**2 / (mu_Earth) * 1.0 / (1 + e * np.cos(true * np.pi / 180.0))
-    R = R * np.array([np.cos(true * np.pi / 180.0), np.sin(true * np.pi / 180.0), 0.0])
+    observing_time = Time("2021-11-27T00:00:00", format="isot", scale="utc")
+    ts = load.timescale()
+    t = ts.from_astropy(observing_time)
+    satellite = EarthSatellite(line1, line2, 'TEST', ts)
+    R1 = satellite.at(t).position.km
+    print(R1, np.linalg.norm(R1))
 
-    i = i*np.pi/180
-    raan = raan*np.pi/180
-    aop = aop*np.pi/180
 
-    Q_Xx = np.array([[+np.cos(aop), np.sin(aop), 0.0],
-                     [-np.sin(aop), np.cos(aop), 0.0],
-                     [0.0, 0.0, 1.0]])
-    Q_Xx = np.dot(Q_Xx,
-                       np.array([[1.0, 0.0, 0.0],
-                                 [0.0, +np.cos(i), np.sin(i)],
-                                 [0.0, -np.sin(i), np.cos(i)]]))
-    Q_Xx = np.dot(Q_Xx,
-                       np.array([[+np.cos(raan), np.sin(raan), 0.0],
-                                 [-np.sin(raan), np.cos(raan), 0.0],
-                                 [0.0, 0.0, 1.0]]))
-
-    Q_xX = np.transpose(Q_Xx)
-    R = np.array([6285.,3628.6,0.0])
-    r = np.dot(R, Q_Xx)
+    oe = orbital_parameters()
+    R2 = oe.get_statevector_from_orbital_elemts(inclination, raan, eccentricity,
+                                                AoP, mean_anomaly, n_mean_motion_perday)
+    print(R2, np.linalg.norm(R2))
