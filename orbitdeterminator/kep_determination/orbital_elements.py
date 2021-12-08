@@ -255,6 +255,8 @@ class orbital_parameters:
         self.h_angularmomentuum = 0.0
         self.v_radial = 0.0
         self.E_eccentric_anomaly = 0.0
+        self.R = []
+        self.V = []
 
 
     def get_orbital_elemts_from_statevector(self, R, V):
@@ -318,9 +320,16 @@ class orbital_parameters:
         self.true_anomaly = true_anomaly(eccentricity=self.eccentricity, E_eccentric_anomaly=self.E_eccentric_anomaly) * 180. / np.pi
 
         # p. 211
-        R = self.h_angularmomentuum ** 2 / (mu_Earth) * \
+        R = self.h_angularmomentuum ** 2 / mu_Earth * \
             1.0 / (1 + self.eccentricity * np.cos(self.true_anomaly * np.pi / 180.0))
-        R = R * np.array([np.cos(self.true_anomaly * np.pi / 180.0), np.sin(self.true_anomaly * np.pi / 180.0), 0.0])
+        R = R * np.array([np.cos(self.true_anomaly * np.pi / 180.0),
+                          np.sin(self.true_anomaly * np.pi / 180.0),
+                          0.0])
+
+        V = mu_Earth / self.h_angularmomentuum
+        V = V * np.array([-np.sin(self.true_anomaly * np.pi / 180.0),
+                          self.eccentricity + np.cos(self.true_anomaly * np.pi / 180.0),
+                          0.0])
 
         inc = self.inclination * np.pi / 180
         raan = self.raan * np.pi / 180
@@ -339,10 +348,8 @@ class orbital_parameters:
                                 [0.0, 0.0, 1.0]]))
 
         # Q_xX = np.transpose(Q_Xx)
-        r = np.dot(R, Q_Xx)
-
-        return r
-
+        self.R = np.dot(R, Q_Xx)
+        self.V = np.dot(V, Q_Xx)
 
 if __name__ == "__main__":
     '''
@@ -379,6 +386,11 @@ if __name__ == "__main__":
 
 
     oe = orbital_parameters()
-    R2 = oe.get_statevector_from_orbital_elemts(inclination, raan, eccentricity,
-                                                AoP, mean_anomaly, n_mean_motion_perday)
+    oe.get_statevector_from_orbital_elemts(inclination, raan, eccentricity,
+                                            AoP, mean_anomaly, n_mean_motion_perday)
+
+    R2 = oe.R
+    V2 = oe.V
+
     print(R2, np.linalg.norm(R2))
+    print(np.linalg.norm(R2-R1))
