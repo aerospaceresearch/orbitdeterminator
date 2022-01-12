@@ -12,7 +12,7 @@ import math
 import re
 
 pi = np.pi
-mu = 398600.4418
+mu_Earth = 398600.4418
 
 
 def check_coplanarity(r1, r2, r3, tol = 1e-4):
@@ -73,7 +73,7 @@ def gibbs_method(r1, r2, r3):
         np.multiply(r2, (mag_r3 - mag_r1)) + \
         np.multiply(r3, (mag_r1 - mag_r2))
 
-    v2 = np.sqrt(mu / mag_N / mag_D) * (np.cross(D, r2) / mag_r2 + S)
+    v2 = np.sqrt(mu_Earth / mag_N / mag_D) * (np.cross(D, r2) / mag_r2 + S)
 
     return v2
 
@@ -230,7 +230,7 @@ class Gibbs(object):
             r2 = r3
             i = i + 1
 
-        # Now find average and return data        
+        # Now find average and return data
         for j in range(6):
             kep[j, 0] /= upto
         return kep
@@ -338,10 +338,10 @@ class Gibbs(object):
         if(N[1] < 0):
             ascension = 360 - ascension
 
-        var1 = [(mag_v ** 2 - mu / mag_r) * i for i in r]
+        var1 = [(mag_v ** 2 - mu_Earth / mag_r) * i for i in r]
         var2 = [np.dot(r, v)*i for i in v]
         vec = self.operate_vector(var1, var2, 0)
-        eccentricity = [i / mu for i in vec]
+        eccentricity = [i / mu_Earth for i in vec]
         mag_e = np.linalg.norm(eccentricity)
 
         # Requires further research, not put in try block because one set should not affect entire calculation
@@ -366,8 +366,8 @@ class Gibbs(object):
         if(vr < 0):
             anomaly = 360 - anomaly
 
-        rp = mag_h**2 / (mu * (1 + mag_e))
-        ra = mag_h**2 / (mu * (1 - mag_e))
+        rp = mag_h**2 / (mu_Earth * (1 + mag_e))
+        ra = mag_h**2 / (mu_Earth * (1 - mag_e))
         axis = (rp+ra) / 2.0
 
         # Following format trend from test_gibbsMethod file
@@ -376,7 +376,7 @@ class Gibbs(object):
         return [axis, mag_e, inclination, perigee, ascension, anomaly]
 
 def gibbs_get_kep(dataset):
-    ''' 
+    '''
     Determines keplerian elements using Gibbs 3 vector method.
 
     Args:

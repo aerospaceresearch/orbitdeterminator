@@ -33,8 +33,8 @@ def propagate(kep,init_time,final_time,bstar=avg_bstar):
     t0 = "{:14.8f}".format(t0)
     tf = time.gmtime(final_time)
 
-    mu = 398600.4405
-    n = 86400/2/np.pi * (mu/kep[0]**3)**0.5
+    mu_Earth = 398600.4405
+    n = 86400/2/np.pi * (mu_Earth/kep[0]**3)**0.5
 
     tanom = np.radians(kep[5])
     e = kep[1]

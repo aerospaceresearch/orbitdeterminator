@@ -22,7 +22,7 @@ def ypol_a(t,y):
 	# y_parag(1,2,3) = velocity vector and y_parag(4,5,6) = acceleration vector
 	# y_parag(1,2,3) = m/s and y_parag(4,5,6) = m/s^2
 
-	mu=398600.4405
+	mu_Earth=398600.4405
 	y_parag = np.zeros((6,1))
 	agrav = np.zeros((3,1))
 
@@ -32,7 +32,7 @@ def ypol_a(t,y):
 	r3 = r2*r1
 
 	for i in range(0,3):
-		agrav[i,0] = agrav[i,0] -(mu * y[i,0] / r3)
+		agrav[i,0] = agrav[i,0] -(mu_Earth * y[i,0] / r3)
 
 
 	y_parag[0,0]=y[3,0]

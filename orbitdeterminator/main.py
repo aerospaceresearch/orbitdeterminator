@@ -76,7 +76,7 @@ def process(data_file, error_apriori, units):
 
         # Use the golay_window.py script to find the window for the Savitzky Golay filter based on the error you input
         window = golay_window.window(error_apriori, data_after_filter)
-        
+
         polyorder = 3
         if polyorder < window:
             # Apply the Savitzky Golay filter with window = window (51 for example_data/orbit.csv) and polynomial order = 3
@@ -104,14 +104,14 @@ def process(data_file, error_apriori, units):
                 print("Applying Wiener Filter...")
                 # Apply the Wiener filter
                 data_after_filter = wiener.wiener_new(data_after_filter, 3)
-                
+
             else:
                 print("Applying Triple Moving Average Filter...")
                 # Apply the Triple moving average filter with window = 3
                 data_after_filter = triple_moving_average.generate_filtered_data(data_after_filter, 3)
 
-              
-            
+
+
 
     # Compute the residuals between filtered data and initial data and then the sum and mean values of each axis
     res = data_after_filter[:, 1:4] - data[:, 1:4]
@@ -427,7 +427,7 @@ def process(data_file, error_apriori, units):
             ax.set_ylabel('y (km)')
             ax.set_zlabel('z (km)')
             plt.show()
-         
+
 
 def read_args():
     parser = argparse.ArgumentParser()

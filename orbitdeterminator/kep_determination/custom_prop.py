@@ -13,13 +13,17 @@ from astropy.coordinates import solar_system_ephemeris
 from astropy.coordinates import get_sun
 from astropy.constants import G, M_earth, R_earth
 
-from poliastro.twobody.propagation import propagate, cowell
-from poliastro.ephem import build_ephem_interpolant
-from poliastro.core.perturbations import atmospheric_drag, third_body, J2_perturbation,J3_perturbation,shadow_function
-from poliastro.bodies import Earth, Moon, Sun
-from poliastro.twobody import Orbit
-from poliastro.plotting import OrbitPlotter2D, OrbitPlotter3D
-from poliastro.neos import neows
+# from poliastro.twobody.propagation import propagate, cowell
+# from poliastro.ephem import build_ephem_interpolant
+# # from poliastro.core.perturbations import atmospheric_drag, third_body, J2_perturbation,J3_perturbation,shadow_function
+# import poliastro.core.perturbations
+# from poliastro.bodies import Earth, Moon, Sun
+# from poliastro.twobody import Orbit
+# from poliastro.plotting import OrbitPlotter2D, OrbitPlotter3D
+# from poliastro import neos
+
+#Commented all codes above regarding poliastro and written one code below to import poliastro
+import poliastro
 
 from sgp4.model import Satellite
 from sgp4.earth_gravity import wgs72
@@ -34,11 +38,12 @@ from kep_determination.gauss_method import *
 from util.state_kep import state_kep
 from util.kep_state import kep_state
 
-mu = G.value*M_earth.value
+mu_Earth = G.value*M_earth.value
+# print(mu)
 Re = R_earth.value
 mu_Sun = cts.GM_sun.to(u.Unit('au3 / day2')).value
-mu_Earth = cts.GM_earth.to(u.Unit('km3 / s2')).value
-
+#mu_Earth = cts.GM_earth.to(u.Unit('km3 / s2')).value
+# print(mu_Earth)
 # we need to increase the timeout time to allow the download of data occur properly
 conf.remote_timeout = 10000
 
@@ -87,12 +92,12 @@ pi = np.pi
 dot = np.dot
 
 fig = plt.figure(figsize=plt.figaspect(1))  # Square figure
-ax = fig.add_subplot(111, projection='3d', aspect=1)
+ax = fig.add_subplot(111, projection='3d', aspect='auto')
 
 
 
 max_radius = 0
-def plotOrbit(semi_major_axis, eccentricity=0, inclination=0, 
+def plotOrbit(semi_major_axis, eccentricity=0, inclination=0,
               right_ascension=0, argument_perigee=0, true_anomaly=0, label=None):
 
     global max_radius
@@ -101,9 +106,9 @@ def plotOrbit(semi_major_axis, eccentricity=0, inclination=0,
     Earth_radius = 6371.1 # units in km
 
     max_radius = max(max_radius, Earth_radius)
-    
-    # Coefficients in a0/c x**2 + a1/c y**2 + a2/c z**2 = 1 
-    coefs = (1, 1, 1)  
+
+    # Coefficients in a0/c x**2 + a1/c y**2 + a2/c z**2 = 1
+    coefs = (1, 1, 1)
 
     rx, ry, rz = [Earth_radius/np.sqrt(coef) for coef in coefs]
 
@@ -118,9 +123,9 @@ def plotOrbit(semi_major_axis, eccentricity=0, inclination=0,
 
     # Plot:
     ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='g')
-  
-     
-        
+
+
+
     "Draws orbit around an earth in units of kilometers."
     # Rotation matrix for inclination
     inc = inclination * pi / 180
@@ -132,7 +137,7 @@ def plotOrbit(semi_major_axis, eccentricity=0, inclination=0,
     rot = (right_ascension + argument_perigee) * pi/180
     R2 = np.matrix([[cos(rot), -sin(rot), 0],
                     [sin(rot), cos(rot), 0],
-                    [0, 0, 1]    ])    
+                    [0, 0, 1]    ])
 
     # Plot orbit
     theta = np.linspace(0,2*pi, 360)
@@ -172,7 +177,7 @@ def plotOrbit(semi_major_axis, eccentricity=0, inclination=0,
     lat = np.arctan2(satz, c) * 180/pi
     lon = np.arctan2(saty, satx) * 180/pi
     print ("%s : Lat: %g° Long: %g" % (label, lat, lon))
-    
+
     # Radius vector from earth and satellite as red sphere
     ax.plot([0, satx], [0, saty], [0, satz], 'r-')
 
@@ -187,10 +192,10 @@ def plotOrbit(semi_major_axis, eccentricity=0, inclination=0,
 
     for axis in 'xyz':
         getattr(ax, 'set_{}lim'.format(axis))((-max_radius, max_radius))
-    
+
     plt.show()
 
-  
+
 
 
 #converts keplerian elements to cartesian
@@ -199,21 +204,21 @@ def kep_2_cart(a,e,i,omega_AP,omega_LAN,T, EA):
     i=np.deg2rad(i)
     omega_AP=np.deg2rad(omega_AP)
     omega_LAN=np.deg2rad(omega_LAN)
-    mu = G.value*M_earth.value
+    mu_Earth = G.value*M_earth.value
     Re = R_earth.value
     t=0
-    n = np.sqrt(mu/(a**3))
+    n = np.sqrt(mu_Earth/(a**3))
     M = n*(t - T)
-    
+
     MA = EA - e*np.sin(EA)
 
 
     nu = 2*np.arctan(np.sqrt((1+e)/(1-e)) * np.tan(EA/2))
-    
+
     r = a*(1 - e*np.cos(EA))
-    
-    h = np.sqrt(mu*a * (1 - e**2))
-    
+
+    h = np.sqrt(mu_Earth*a * (1 - e**2))
+
     Om = omega_LAN
     w =  omega_AP
 
@@ -221,7 +226,7 @@ def kep_2_cart(a,e,i,omega_AP,omega_LAN,T, EA):
     Y = r*(np.sin(Om)*np.cos(w+nu) + np.cos(Om)*np.sin(w+nu)*np.cos(i))
     Z = r*(np.sin(i)*np.sin(w+nu))
 
-    
+
     p = a*(1-e**2)
 
     V_X = (X*h*e/(r*p))*np.sin(nu) - (h/r)*(np.cos(Om)*np.sin(w+nu) + \
@@ -337,7 +342,7 @@ def kep_to_sat(kep,epoch,bstar=0.21109E-4,whichconst=wgs72,afspc_mode=False):
     sgp4init(whichconst, afspc_mode, satrec.satnum, satrec.jdsatepoch-2433281.5, satrec.bstar,
              satrec.ecco, satrec.argpo, satrec.inclo, satrec.mo, satrec.no,
              satrec.nodeo, satrec)
-             
+
 
     return satrec
 
@@ -370,7 +375,7 @@ def propagate_kep(kep,t0,tf,bstar=0.21109E-4):
 
 
 def third_body_moon(initial,time,f_time):                               # propogate under perturbation of a third body(moon)
-    
+
     # database keeping positions of bodies in Solar system over time
     x_ephem="de432s"
     questions = [
@@ -381,11 +386,11 @@ def third_body_moon(initial,time,f_time):                               # propog
     ]
     answers = inquirer.prompt(questions)
 
-    
+
     x_ephem=answers["Ephemerides"]
 
-    solar_system_ephemeris.set(x_ephem)     
-    
+    solar_system_ephemeris.set(x_ephem)
+
 
     #epoch = Time(time, format='iso', scale='utc')  # setting the exact event date is important
     epoch=Time(time, format='iso').jd
@@ -406,17 +411,17 @@ def third_body_moon(initial,time,f_time):                               # propog
         pass
     else:
         k_third=input("Enter moon's gravity:")
-        x=input("Multiply Moon's gravity by X times so that effect is visible,input X:")    
+        x=input("Multiply Moon's gravity by X times so that effect is visible,input X:")
 
     datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
     diff =datetime.strptime(str(f_time), datetimeFormat)\
-        - datetime.strptime(str(time), datetimeFormat)    
+        - datetime.strptime(str(time), datetimeFormat)
     print("Time difference:")
     print(diff)
     tofs=TimeDelta(f_time-time)
     tofs = TimeDelta(np.linspace(0, 31* u.day, num=1))
-    
-    
+
+
 
     # multiply Moon gravity by x so that effect is visible :)
     rr = propagate(
@@ -446,15 +451,15 @@ def third_body_moon(initial,time,f_time):                               # propog
     #print(f_orbit.ecc)
     plotOrbit((f_orbit.a.value),(f_orbit.ecc.value),(f_orbit.inc.value),(f_orbit.raan.value),(f_orbit.argp.value),(f_orbit.nu.value))
 
-     #if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
-        #print("In shadow.")
-    #else:
-        #print("Not in shadow.")    
+    if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
+        print("In shadow.")
+    else:
+        print("Not in shadow.")
 
-     
 
-    
-                                                      
+
+
+
 
 
 def no_pert_earth(initial,time,f_time):                                                   # No perturbation
@@ -470,13 +475,13 @@ def no_pert_earth(initial,time,f_time):                                         
 
     datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
     diff =datetime.strptime(str(f_time), datetimeFormat)\
-        - datetime.strptime(str(time), datetimeFormat)    
+        - datetime.strptime(str(time), datetimeFormat)
     print("Time difference:")
     print(diff)
     tofs=TimeDelta(f_time-time)
     tofs = TimeDelta(np.linspace(0, 31* u.day, num=1))
-    
-    
+
+
     rr =propagate(
         initial,
         tofs,
@@ -496,20 +501,20 @@ def no_pert_earth(initial,time,f_time):                                         
     print(v)
     #f_orbit.plot()
     print("")
-    print("Orbital elements:")    
+    print("Orbital elements:")
     print(f_orbit.classical())
     print("")
     #print("")
     #print(f_orbit.ecc)
     plotOrbit((f_orbit.a.value),(f_orbit.ecc.value),(f_orbit.inc.value),(f_orbit.raan.value),(f_orbit.argp.value),(f_orbit.nu.value))
-    
+
 
     #if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
         #print("In shadow.")
     #else:
-        #print("Not in shadow.")    
+        #print("Not in shadow.")
 
-     
+
 
 
 def j2_earth(initial,time,f_time):                                                  # perturbation for oblateness
@@ -533,13 +538,13 @@ def j2_earth(initial,time,f_time):                                              
         pass
     else:
         J2=input("Enter J2 constant")
-        R=input("Enter radius of earth in km")        
+        R=input("Enter radius of earth in km")
 
 
 
     datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
     diff =datetime.strptime(str(f_time), datetimeFormat)\
-        - datetime.strptime(str(time), datetimeFormat)    
+        - datetime.strptime(str(time), datetimeFormat)
     print("Time difference:")
     print(diff)
     tofs=TimeDelta(f_time-time)
@@ -549,7 +554,7 @@ def j2_earth(initial,time,f_time):                                              
         tofs,
         method=cowell,
         ad=J2_perturbation,
-        J2=J2, 
+        J2=J2,
         R=R
         )
 
@@ -565,7 +570,7 @@ def j2_earth(initial,time,f_time):                                              
     print(v)
     #f_orbit.plot()
     print("")
-    print("Orbital elements:")    
+    print("Orbital elements:")
     print(f_orbit.classical())
     print("")
     #print("")
@@ -575,7 +580,7 @@ def j2_earth(initial,time,f_time):                                              
     #if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
         #print("In shadow.")
     #else:
-        #print("Not in shadow.")    
+        #print("Not in shadow.")
 
 
 
@@ -601,24 +606,24 @@ def j3_earth(initial,time,f_time):                                              
         pass
     else:
         J3=input("Enter J3 constant:")
-        R=input("Enter radius of earth in km:")       
+        R=input("Enter radius of earth in km:")
 
 
     datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
     diff =datetime.strptime(str(f_time), datetimeFormat)\
-        - datetime.strptime(str(time), datetimeFormat)    
+        - datetime.strptime(str(time), datetimeFormat)
     print("Time difference:")
     print(diff)
     tofs=TimeDelta(f_time-time)
     tofs = TimeDelta(np.linspace(0, 31* u.day, num=1))
-    
-    
+
+
     rr =propagate(
         initial,
         tofs,
         method=cowell,
         ad=J3_perturbation,
-        J3=J3, 
+        J3=J3,
         R=R
         )
 
@@ -644,8 +649,8 @@ def j3_earth(initial,time,f_time):                                              
     #if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
         #print("In shadow.")
     #else:
-        #print("Not in shadow.")    
- 
+        #print("Not in shadow.")
+
 
 
 
@@ -667,7 +672,7 @@ def atmd_earth(initial,time,f_time):                                            
     # parameters of the atmosphere
     rho0 = Earth.rho0.to(u.kg / u.km ** 3).value  # kg/km^3
     H0 = Earth.H0.to(u.km).value
-    
+
     print("Use default constants or you want to customize?\n1.Default.\n2.Custom.")
     check=input()
     if(check=='1'):
@@ -684,13 +689,13 @@ def atmd_earth(initial,time,f_time):                                            
 
     datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
     diff =datetime.strptime(str(f_time), datetimeFormat)\
-        - datetime.strptime(str(time), datetimeFormat)    
+        - datetime.strptime(str(time), datetimeFormat)
     print("Time difference:")
     print(diff)
     tofs=TimeDelta(f_time-time)
     tofs = TimeDelta(np.linspace(0, 31* u.day, num=1))
-    
- 
+
+
 
     #print("tofs:")
     #print(tofs)
@@ -708,7 +713,7 @@ def atmd_earth(initial,time,f_time):                                            
         H0=H0,
         rho0=rho0,
     )
-  
+
     print("")
     print("Positions and velocity vectors are:")
     #print(str(rr.x))
@@ -726,13 +731,13 @@ def atmd_earth(initial,time,f_time):                                            
     #print("")
     #print(f_orbit.ecc)
     plotOrbit((f_orbit.a.value),(f_orbit.ecc.value),(f_orbit.inc.value),(f_orbit.raan.value),(f_orbit.argp.value),(f_orbit.nu.value))
- 
+
     #if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
         #print("In shadow.")
     #else:
-        #print("Not in shadow.")    
+        #print("Not in shadow.")
 
-  
+
 def a_d_1(t0, state,k, J2, R,C_D, A, m, H0, rho0):                                                    # J2+atmospheric_drag
     return (J2_perturbation(t0, state, k, J2, R)+ atmospheric_drag(t0, state, k, R, C_D, A, m, H0, rho0))
 
@@ -747,7 +752,7 @@ def accel(t0, state, k):
      v_vec = state[3:]
      norm_v = (v_vec * v_vec).sum() ** .5
      return 1e-5 * v_vec / norm_v
- 
+
 
 
 def custom(initial,choice,state,time,f_time):                                          # requires modification and validation
@@ -774,14 +779,14 @@ def custom(initial,choice,state,time,f_time):                                   
 
     datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
     diff =datetime.strptime(str(f_time), datetimeFormat)\
-        - datetime.strptime(str(time), datetimeFormat)    
+        - datetime.strptime(str(time), datetimeFormat)
     print("Time difference:")
     print(diff)
     tofs=TimeDelta(f_time-time)
     tofs = TimeDelta(np.linspace(0, 31* u.day, num=1))
-    
 
-    if(choice=='7'):                                                        
+
+    if(choice=='7'):
 
 
         rr =propagate(
@@ -790,8 +795,8 @@ def custom(initial,choice,state,time,f_time):                                   
             method=cowell,
             ad=accel,
             #k=k,
-            
-        )          
+
+        )
 
     elif(choice=='5'):
 
@@ -808,7 +813,7 @@ def custom(initial,choice,state,time,f_time):                                   
             m=m,
             H0=H0,
             rho0=rho0
-        )         
+        )
 
     elif(choice=='6'):
 
@@ -825,12 +830,12 @@ def custom(initial,choice,state,time,f_time):                                   
             m=m,
             H0=H0,
             rho0=rho0
-        )          
+        )
 
     else:
-        pass      
+        pass
 
-    
+
 
     print("")
     print("Positions and velocity vectors are:")
@@ -843,7 +848,7 @@ def custom(initial,choice,state,time,f_time):                                   
     print(v)
     #f_orbit.plot()
     print("")
-    print("Orbital elements:")    
+    print("Orbital elements:")
     print(f_orbit.classical())
     print("")
     #print("")
@@ -853,7 +858,7 @@ def custom(initial,choice,state,time,f_time):                                   
     #if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
         #print("In shadow.")
     #else:
-        #print("Not in shadow.")       
+        #print("Not in shadow.")
 
 # converts iso format time to tle format, returns float
 
@@ -874,54 +879,57 @@ if __name__ == "__main__":
     if(a_b == '1'):
         args = read_args_earth()
         if args.obs_array is None:
+            print("NONE")
+            print(args.file_path)
             x0 = gauss_method_sat(args.file_path, bodyname=args.body_name,
                                   r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=False)
 
             time=Time(x0[7], format='jd').iso
 
-            x0=np.asarray(x0)                      
-                                 
+            x0=np.asarray(x0)
+
             #x0[3:6] = np.deg2rad(x0[3:6])
             time_p=Time(x0[2], format='jd').iso
             time_obj=Time(time,format="iso",scale="utc")
             time_p_obj=Time(time_p,format="iso",scale="utc")
             #print("chk:")
             #print(time_obj.tdb.jd)
-            nu=time2truean(x0[0],x0[1], mu,time_obj.tdb.jd,x0[2])
+            nu=time2truean(x0[0],x0[1], mu_Earth,time_obj.tdb.jd,x0[2])
             eccentric_anomaly=truean2eccan(x0[1],nu)
- 
+
             nu=np.rad2deg(nu)
             kep_i=(x0[0],x0[1],x0[4],x0[3],x0[5],nu)
             kep_i=np.asarray(kep_i)
             initial_state = kep_state(kep_i.reshape(-1, 1))
             initial = Orbit.from_classical(Earth, x0[0] * u.km, x0[1] * u.one, x0[4] * u.deg, x0[5]* u.deg, x0[3] * u.deg, nu* u.deg,epoch=Time(time, format='iso', scale='utc'))
-           
+
 
         else:
+            print("OBS_ARRAY")
             obs_arr = [int(item) for item in args.obs_array.split(',')]
             x0 = gauss_method_sat(args.file_path, obs_arr=obs_arr, bodyname=args.body_name,
                                   r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=False)
             time=Time(x0[7], format='jd').iso
 
-            x0=np.asarray(x0)                      
-                                  
+            x0=np.asarray(x0)
+
             #x0[3:6] = np.deg2rad(x0[3:6])
             time_p=Time(x0[2], format='jd').iso
             time_obj=Time(time,format="iso",scale="utc")
             time_p_obj=Time(time_p,format="iso",scale="utc")
             #print("chk:")
             #print(time_obj.tdb.jd)
-            nu=time2truean(x0[0],x0[1], mu,time_obj.tdb.jd,x0[2])
+            nu=time2truean(x0[0],x0[1], mu_Earth,time_obj.tdb.jd,x0[2])
             eccentric_anomaly=truean2eccan(x0[1],nu)
- 
+
             nu=np.rad2deg(nu)
             kep_i=(x0[0],x0[1],x0[4],x0[3],x0[5],nu)
             kep_i=np.asarray(kep_i)
             initial_state = kep_state(kep_i.reshape(-1, 1))
             initial = Orbit.from_classical(Earth, x0[0] * u.km, x0[1] * u.one, x0[4] * u.deg, x0[5]* u.deg, x0[3] * u.deg, nu* u.deg,epoch=Time(time, format='iso', scale='utc'))
-           
-              
-            
+
+
+
         initial_state_r=[float(initial_state[0, 0]),float(initial_state[1, 0]),float(initial_state[2, 0])]
         initial_state_v=[float(initial_state[3, 0]),float(initial_state[4, 0]),float(initial_state[5, 0])]
         initial_state=[float(initial_state[0, 0]),float(initial_state[1, 0]),float(initial_state[2, 0]),float(initial_state[3, 0]),float(initial_state[4, 0]),float(initial_state[5, 0])]
@@ -929,8 +937,8 @@ if __name__ == "__main__":
 
         print("\nDo you want to add perturbations?[y/n]")           # tofs in the form of time delta
         a_p = input()
-                                                                   
-        print("Enter time to propagate to(format='iso', scale='utc'):\n2016-08-20 01:33:42.250")                                             
+
+        print("Enter time to propagate to(format='iso', scale='utc'):\n2016-08-20 01:33:42.250")
         f_time ="2016-08-20 01:33:42.250"
 
         time=Time(time, format='iso', scale='utc')
@@ -938,7 +946,7 @@ if __name__ == "__main__":
 
         if(a_p == 'N' or a_p == 'n'):
             no_pert_earth(initial,time,f_time)         # normal propagation without perturbations
-       
+
         elif(a_p=='Y' or a_p=='y'):
 
             print("\nWhat perturbation do you want to add?\n1.J2(Oblateness).\n2.J3(Oblateness).\n3.Atmospheric Drag.\n4.Third body perturbations.(Moon)")
@@ -971,7 +979,7 @@ if __name__ == "__main__":
             elif(ch=='8'):
                 #kep=[x0[0],x0[4],x0[5],x0[1],x0[3],mean_anomaly]
                 #kep=np.asarray(kep)
-                
+
                 time=time.tt.datetime
                 f_time=f_time.tt.datetime
                 time=time.timestamp()
@@ -979,14 +987,14 @@ if __name__ == "__main__":
 
                 kep = state_kep(np.asarray(initial_state_r),np.asarray(initial_state_v))
                 f_r,f_v = propagate_state(np.asarray(initial_state_r),np.asarray(initial_state_v),time,f_time,bstar=0.21109E-4)
-                
+
                 #r= [float(f_v[0]),float(initial_state[1, 0]),float(initial_state[2, 0])]
                 f_r= np.asarray(f_r)
                 f_v= np.asarray(f_v)
                 #f_orbit= Orbit.from_vectors(Earth, r, v)
- 
+
                 #f_orbit.plot()
-                print("Orbital elements:")    
+                print("Orbital elements:")
                 print(state_kep(f_r,f_v))
                 print("")
                 print("Position and velocity vectors are(r,v):")
@@ -996,30 +1004,30 @@ if __name__ == "__main__":
 
             else:
                 print("Invalid Input.Exiting...")
-                sys.exit()        
+                sys.exit()
         else:
             print("Invalid Input.Exiting...")
             sys.exit()
-       
 
-          
+
+
 
     elif(a_b=='2'):
         print("\nDetermine orbit for-")
         print("1.An mpc datafile.")
-        print("2.A neo using NASA NEO Webservice(you’ll need an internet connection).")    
-        opt_1=input()   
-        if(opt_1=='1'): 
+        print("2.A neo using NASA NEO Webservice(you’ll need an internet connection).")
+        opt_1=input()
+        if(opt_1=='1'):
              args = read_args_sun()
              args.obs_array = [1, 14, 15, 24, 32, 37, 68, 81, 122, 162, 184, 206, 223]
              if args.obs_array is None:
-            
+
 
                  x0 = gauss_method_mpc(args.file_path,bodyname=args.body_name,
                                   r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=False)
                  time=Time(x0[7], format='jd').iso
 
-                 x0=np.asarray(x0)                      
+                 x0=np.asarray(x0)
                  #x0[3:6] = np.deg2rad(x0[3:6])
 
                  mean_motion=meanmotion(mu_Sun,x0[0])
@@ -1031,49 +1039,49 @@ if __name__ == "__main__":
 
                  #initial = kep_2_cart(x0[0],x0[1],x0[4],x0[3],x0[5],x0[6],eccentric_anomaly)
                  initial = Orbit.from_classical(Sun, x0[0] * u.AU, x0[1] * u.one, x0[4] * u.deg, x0[5]* u.deg, x0[3] * u.deg, nu * u.deg,epoch=Time(time, format='iso', scale='utc'))
-                 
-                 
+
+
                  print("")
                  print(initial)
                  print(initial.rv())
 
                  print("\nPropagate to(Enter time in format='iso', scale='utc':")
-                 p_t_s=input()    
+                 p_t_s=input()
                  p_t_o= Time(p_t_s, format='iso', scale='utc')
                  print("")
                  final=initial.propagate(p_t_o)
                  #final.plot()
-                 print("Orbital elements:")    
+                 print("Orbital elements:")
                  print(final.classical())
-                 print("")                 
+                 print("")
                  print("Final co-ordinates:")
-                 final.rv()                                 
+                 final.rv()
                  print("")
                  f_orbit=final
                  #print(f_orbit.ecc)
                  plotOrbit((f_orbit.a.value),(f_orbit.ecc.value),(f_orbit.inc.value),(f_orbit.raan.value),(f_orbit.argp.value),(f_orbit.nu.value))
 
-        
-            
+
+
              else:
 
                  obs_arr=[1, 14, 15, 24, 32, 37, 68, 81, 122, 162, 184, 206, 223]
                  #obs_arr = [int(item) for item in args.obs_array.split(',')]
-                 
+
                  x0 = gauss_method_mpc(args.file_path, obs_arr=obs_arr, bodyname=args.body_name,
                                        r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=False)
-                 
+
                  time=Time(x0[7], format='jd').iso
-                 x0=np.asarray(x0)                
-                                       
-                                
+                 x0=np.asarray(x0)
+
+
                  #x0[3:6] = np.deg2rad(x0[3:6])
                  mean_motion=meanmotion(mu_Sun,x0[0])
                  mean_anomaly=meananomaly(mean_motion,time.tdb.jd,x0[2])
                  eccentric_anomaly=eccentricanomaly(x0[1],mean_anomaly)
                  nu=trueanomaly(x0[1],eccentric_anomaly)
                  nu=np.rad2deg(nu)
-                 
+
 
                  #initial = kep_2_cart(x0[0],x0[1],x0[4],x0[3],x0[5],x0[6],eccentric_anomaly)
                  initial = Orbit.from_classical(Sun, x0[0] * u.AU, x0[1] * u.one, x0[4] * u.deg, x0[5]* u.deg, x0[3] * u.deg, nu * u.deg,epoch=Time(time, format='iso', scale='utc'))
@@ -1081,16 +1089,16 @@ if __name__ == "__main__":
                  print(initial)
                  print(initial.rv())
                  print("\nPropagate to(Enter time in format='iso', scale='utc':")
-                 p_t_s=input()    
+                 p_t_s=input()
                  p_t_o= Time(p_t_s, format='iso', scale='utc')
                  print("")
                  final=initial.propagate(p_t_o)
                  #final.plot()
-                 print("Orbital elements:")    
+                 print("Orbital elements:")
                  print(final.classical())
-                 print("")                 
+                 print("")
                  print("Final co-ordinates:")
-                 print(final.rv())                                 
+                 print(final.rv())
                  print("")
                  f_orbit=final
                  #print(f_orbit.ecc)
@@ -1112,21 +1120,21 @@ if __name__ == "__main__":
                 frame = OrbitPlotter2D()
                 frame.plot(orbit, label=str_1)
                 print("\nPropagate to(Enter time in format='iso', scale='utc':")
-                p_t_s=input()    
+                p_t_s=input()
                 p_t_o= Time(p_t_s, format='iso', scale='utc')
                 print("")
                 final=orbit.propagate(p_t_o)
                 #final.plot()
-                print("Orbital elements:")    
+                print("Orbital elements:")
                 print(final.classical())
                 print("")
                 print("Final co-ordinates:")
-                print(final.rv())                                 
+                print(final.rv())
                 print("")
                 f_orbit=final
                 #print(f_orbit.ecc)
                 plotOrbit((f_orbit.a.value),(f_orbit.ecc.value),(f_orbit.inc.value),(f_orbit.raan.value),(f_orbit.argp.value),(f_orbit.nu.value))
- 
+
 
 
 
@@ -1140,23 +1148,23 @@ if __name__ == "__main__":
                 frame.plot(orbit, label=str_2)
 
                 print("\nPropagate to(Enter time in format='iso', scale='utc':")
-                p_t_s=input()    
+                p_t_s=input()
                 p_t_o= Time(p_t_s, format='iso', scale='utc')
                 print("")
                 final=orbit.propagate(p_t_o)
                 #final.plot()
-                print("Orbital elements:")    
+                print("Orbital elements:")
                 print(final.classical())
-                print("")                
+                print("")
                 print("Final co-ordinates:")
-                print(final.rv())                                 
+                print(final.rv())
                 print("")
                 f_orbit=final
                 #print(f_orbit.ecc)
                 plotOrbit((f_orbit.a.value),(f_orbit.ecc.value),(f_orbit.inc.value),(f_orbit.raan.value),(f_orbit.argp.value),(f_orbit.nu.value))
 
 
-            else:   
+            else:
                 print("Invalid Input.Exiting...")
                 sys.exit()
 
@@ -1164,4 +1172,4 @@ if __name__ == "__main__":
 
         else:
             print("Invalid Input.Exiting...")
-            sys.exit()            
+            sys.exit()

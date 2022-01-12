@@ -50,7 +50,7 @@ def Kep_state(kep):
 	# r(3),r(4),r(5) = velocity vector (vx,vy,vz) m/s
 
 	r = np.zeros((6, 1))
-	mu = 398600.4405
+	mu_Earth = 398600.4405
 
 	# unload orbital elements array
 
@@ -75,7 +75,7 @@ def Kep_state(kep):
 	arglat = degrees(arglat)
 
 	argper = radians(argper)
-	c4 = sqrt(mu / slr)
+	c4 = sqrt(mu_Earth / slr)
 	c5 = ecc * cos(argper) + carglat
 	c6 = ecc * sin(argper) + sarglat
 	argper = degrees(argper)
@@ -111,5 +111,3 @@ if __name__ == "__main__":
 
 	r = Kep_state(kep)
 	print(r)
-
-

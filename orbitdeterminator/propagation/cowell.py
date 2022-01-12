@@ -2,7 +2,7 @@
 
 import numpy as np
 
-mu = 398600.4418  # gravitational parameter mu
+mu_Earth = 398600.4418  # gravitational parameter mu
 J2 = 1.08262668e-3 # J2 coefficient
 Re = 6378.137  # equatorial radius of the Earth
 we = 7.292115e-5  # rotation rate of the Earth in rad/s
@@ -41,7 +41,7 @@ def j2_pert(s):
     """
 
     r = np.linalg.norm(s[0:3])
-    K = -3*mu*J2*(Re**2)/2/r**5
+    K = -3*mu_Earth*J2*(Re**2)/2/r**5
     comp = np.array([1,1,3])
     comp = comp - 5*(s[2]/r)**2
     comp = np.multiply(comp,s[0:3])
@@ -59,9 +59,9 @@ def sdot(s):
            1x6 numpy array: the time derivative of s [vx,vy,vz,ax,ay,az]
     """
 
-    mu = 398600.4405
+    mu_Earth = 398600.4405
     r = np.linalg.norm(s[0:3])
-    a = -mu/(r**3)*s[0:3]
+    a = -mu_Earth/(r**3)*s[0:3]
 
     p_j2 = j2_pert(s)
     p_drag = drag(s)
