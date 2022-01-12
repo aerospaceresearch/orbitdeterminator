@@ -92,7 +92,7 @@ pi = np.pi
 dot = np.dot
 
 fig = plt.figure(figsize=plt.figaspect(1))  # Square figure
-ax = fig.add_subplot(111, projection='3d', aspect='auto')
+ax = fig.add_subplot(111, projection='3d', aspect=1)
 
 
 
@@ -451,10 +451,10 @@ def third_body_moon(initial,time,f_time):                               # propog
     #print(f_orbit.ecc)
     plotOrbit((f_orbit.a.value),(f_orbit.ecc.value),(f_orbit.inc.value),(f_orbit.raan.value),(f_orbit.argp.value),(f_orbit.nu.value))
 
-    if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
-        print("In shadow.")
-    else:
-        print("Not in shadow.")
+    # if(shadow_function(np.asarray(r),get_sun(Time(datetime.now(),format='datetime')),Earth.R.to(u.km).value)):
+    #     print("In shadow.")
+    # else:
+    #     print("Not in shadow.")
 
 
 

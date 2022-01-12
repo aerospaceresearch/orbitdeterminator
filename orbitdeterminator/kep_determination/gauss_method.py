@@ -696,13 +696,13 @@ def get_observations_data_sat(iod_object_data, inds):
     timeobs = np.zeros((3,), dtype=Time)
     obs_radec = np.zeros((3,), dtype=SkyCoord)
     obs_t = np.zeros((3,))
-    # print("IOD OBJECT TYPE",type(iod_object_data)) -> dict
-    # print("LENGTH IOD OBJECT ",len(iod_object_data))->33
-    print("INDS ",inds)
-    for i in iod_object_data:
-        print("name ",i)
-        print("value ",iod_object_data[i])
-    print("LAST VALUE")
+    # # print("IOD OBJECT TYPE",type(iod_object_data)) -> dict
+    # # print("LENGTH IOD OBJECT ",len(iod_object_data))->33
+    # print("INDS ",inds)
+    # for i in iod_object_data:
+    #     print("name ",i)
+    #     print("value ",iod_object_data[i])
+    # print("LAST VALUE")
     td1 = timedelta(hours=1.0*iod_object_data['hr'][inds[0]], minutes=1.0*iod_object_data['min'][inds[0]], seconds=(iod_object_data['sec'][inds[0]]+iod_object_data['msec'][inds[0]]/1000.0))
     td2 = timedelta(hours=1.0*iod_object_data['hr'][inds[1]], minutes=1.0*iod_object_data['min'][inds[1]], seconds=(iod_object_data['sec'][inds[1]]+iod_object_data['msec'][inds[1]]/1000.0))
     td3 = timedelta(hours=1.0*iod_object_data['hr'][inds[2]], minutes=1.0*iod_object_data['min'][inds[2]], seconds=(iod_object_data['sec'][inds[2]]+iod_object_data['msec'][inds[2]]/1000.0))
@@ -2619,13 +2619,13 @@ def read_args():
 if __name__ == "__main__":
 
     args = read_args()
-    print(args)
+    # print(args)
     if args.obs_array is None:
-        print("None ")
+        # print("None ")
         gauss_method_sat(args.file_path, bodyname=args.body_name,
                          r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
     else:
-        print("INSIDE OBS_ARRAY")
+        # print("INSIDE OBS_ARRAY")
         obs_arr = [int(item) for item in args.obs_array.split(',')]
         gauss_method_sat(args.file_path, obs_arr=obs_arr, bodyname=args.body_name,
                          r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
