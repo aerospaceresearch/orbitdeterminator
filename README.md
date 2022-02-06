@@ -11,7 +11,7 @@ __orbitdeterminator__ is a package written in python3 for determining orbit of s
 
 ## Installation Instructions
 
-orbitdeterminator runs on Windoes, Linux and MacOs. Some minor adaptions on the presented commands need to be done by you for your OS.
+orbitdeterminator runs on Windows, Linux and MacOs. Some minor adaptations on the present commands will need to be done by you for your OS.
 Run the following commands to install orbitdeterminator:
 
 **Step 1**: Download/Clone the repository
