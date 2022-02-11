@@ -696,7 +696,13 @@ def get_observations_data_sat(iod_object_data, inds):
     timeobs = np.zeros((3,), dtype=Time)
     obs_radec = np.zeros((3,), dtype=SkyCoord)
     obs_t = np.zeros((3,))
-
+    # # print("IOD OBJECT TYPE",type(iod_object_data)) -> dict
+    # # print("LENGTH IOD OBJECT ",len(iod_object_data))->33
+    # print("INDS ",inds)
+    # for i in iod_object_data:
+    #     print("name ",i)
+    #     print("value ",iod_object_data[i])
+    # print("LAST VALUE")
     td1 = timedelta(hours=1.0*iod_object_data['hr'][inds[0]], minutes=1.0*iod_object_data['min'][inds[0]], seconds=(iod_object_data['sec'][inds[0]]+iod_object_data['msec'][inds[0]]/1000.0))
     td2 = timedelta(hours=1.0*iod_object_data['hr'][inds[1]], minutes=1.0*iod_object_data['min'][inds[1]], seconds=(iod_object_data['sec'][inds[1]]+iod_object_data['msec'][inds[1]]/1000.0))
     td3 = timedelta(hours=1.0*iod_object_data['hr'][inds[2]], minutes=1.0*iod_object_data['min'][inds[2]], seconds=(iod_object_data['sec'][inds[2]]+iod_object_data['msec'][inds[2]]/1000.0))
@@ -1378,7 +1384,7 @@ def get_observer_pos_wrt_earth(sat_observatories_data, obs_radec, site_codes):
 
 def gauss_method_get_velocity(r1, r2, r3, t1, t2, t3, r2_star=None):
 
-    mu = mu_Earth
+    # mu = mu_Earth
 
     tau1 = (t1 - t2)
     tau3 = (t3 - t2)
@@ -1387,11 +1393,11 @@ def gauss_method_get_velocity(r1, r2, r3, t1, t2, t3, r2_star=None):
     if r2_star == None:
         r2_star = np.linalg.norm(r2)
 
-    f1 = lagrangef(mu, r2_star, tau1)
-    f3 = lagrangef(mu, r2_star, tau3)
+    f1 = lagrangef(mu_Earth, r2_star, tau1)
+    f3 = lagrangef(mu_Earth, r2_star, tau3)
 
-    g1 = lagrangeg(mu, r2_star, tau1)
-    g3 = lagrangeg(mu, r2_star, tau3)
+    g1 = lagrangeg(mu_Earth, r2_star, tau1)
+    g3 = lagrangeg(mu_Earth, r2_star, tau3)
 
     v2 = (-f3 * r1 + f1 * r3) / (f1 * g3 - f3 * g1)
 
@@ -1624,7 +1630,7 @@ def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_in
            obs_t (1x3 array): three times of observations
     """
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    # mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
 
     # extract observations data
     obs_radec, obs_t, site_codes = get_observations_data(mpc_object_data, inds)
@@ -1634,7 +1640,7 @@ def gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_in
 
     # perform core Gauss method
     r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr = \
-        gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
+        gauss_method_core(obs_radec, obs_t, R, mu_Sun, r2_root_ind=r2_root_ind)
 
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3,\
            f1, g1, f3, g3, Ea_hc_pos, rho_1_sr, rho_2_sr, rho_3_sr, obs_t
@@ -1671,8 +1677,8 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
            rho_3_sr (float): slant range at third observation
            obs_t_jd (1x3 array): three Julian dates of observations
     """
-    # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu = mu_Earth
+    # mu_Earth = 398600.435436 # Earth's G*m, km^3/sec^2
+    # mu = mu_Earth
 
     # extract observations data
 
@@ -1684,7 +1690,7 @@ def gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_in
 
     # perform core Gauss method
     r1, r2, r3, v2, D, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr = \
-        gauss_method_core(obs_radec, obs_t, R, mu, r2_root_ind=r2_root_ind)
+        gauss_method_core(obs_radec, obs_t, R, mu_Earth, r2_root_ind=r2_root_ind)
 
     return r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, rho_1_sr, rho_2_sr, rho_3_sr, obs_t_jd
 
@@ -1716,7 +1722,7 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=0
            obs_t (1x3 array): times of observations
     """
     # mu_Earth = 398600.435436 # Earth's G*m, km^3/seg^2
-    mu = mu_Earth
+    # mu = mu_Earth
     r1_est, r2_est, r3_est, v2_est, D_est, R_est, rho1_est, rho2_est, rho3_est, tau1_est, tau3_est, f1_est, g1_est, f3_est, g3_est, rho_1_sr_est, rho_2_sr_est, rho_3_sr_est, obs_t_est = \
         gauss_estimate_sat(iod_object_data, sat_observatories_data, inds, r2_root_ind=r2_root_ind)
 
@@ -1729,7 +1735,7 @@ def gauss_iterator_sat(iod_object_data, sat_observatories_data, inds, refiters=0
 
     for i in range(0,refiters):
         r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3, refinement_success = \
-            gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+            gauss_refinement(mu_Earth, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
 
 
     if refinement_success == 1:
@@ -1768,14 +1774,14 @@ def gauss_iterator_mpc(mpc_object_data, mpc_observatories_data, inds, refiters=0
            obs_t (1x3 array): times of observations
     """
     # mu_Sun = 0.295912208285591100E-03 # Sun's G*m, au^3/day^2
-    mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    # mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
     r1, r2, r3, v2, D, R, rho1, rho2, rho3, tau1, tau3, f1, g1, f3, g3, Ea_hc_pos, rho_1_sr, rho_2_sr, rho_3_sr, obs_t =\
         gauss_estimate_mpc(mpc_object_data, mpc_observatories_data, inds, r2_root_ind=r2_root_ind)
 
     # Apply refinement to Gauss' method, `refiters` iterations
     for i in range(0,refiters):
         r1, r2, r3, v2, rho_1_sr, rho_2_sr, rho_3_sr, f1, g1, f3, g3, refinement_success= \
-            gauss_refinement(mu, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
+            gauss_refinement(mu_Sun, tau1, tau3, r2, v2, 3e-14, D, R, rho1, rho2, rho3, f1, g1, f3, g3)
 
     return r1, r2, r3, v2, R, rho1, rho2, rho3, rho_1_sr, rho_2_sr, rho_3_sr, Ea_hc_pos, obs_t
 
@@ -2038,7 +2044,7 @@ def gauss_method_mpc(filename, bodyname, obs_arr=None, r2_root_ind_vec=None, ref
 
     # Sun's G*m value
     # mu_Sun = 0.295912208285591100E-03 # au^3/day^2
-    mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
+    # mu = mu_Sun # cts.GM_sun.to(uts.Unit("au3 / day2")).value
     # handle default behavior for obs_arr
 
     # load JPL DE432s ephemeris SPK kernel
@@ -2125,15 +2131,15 @@ def gauss_method_mpc(filename, bodyname, obs_arr=None, r2_root_ind_vec=None, ref
         r2_eclip = np.matmul(rot_equat_to_eclip, r2)
         v2_eclip = np.matmul(rot_equat_to_eclip, v2)
 
-        a_num = semimajoraxis(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
-        e_num = eccentricity(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
-        f_num = trueanomaly5(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu)
-        n_num = meanmotion(mu, a_num)
+        a_num = semimajoraxis(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu_Sun)
+        e_num = eccentricity(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu_Sun)
+        f_num = trueanomaly5(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu_Sun)
+        n_num = meanmotion(mu_Sun, a_num)
 
         a_vec[j] = a_num
         e_vec[j] = e_num
         taup_vec[j] = taupericenter(obs_t[1], e_num, f_num, n_num)
-        w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu) )
+        w_vec[j] = np.rad2deg( argperi(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2], mu_Sun) )
         I_vec[j] = np.rad2deg( inclination(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
         W_vec[j] = np.rad2deg( longascnode(r2_eclip[0], r2_eclip[1], r2_eclip[2], v2_eclip[0], v2_eclip[1], v2_eclip[2]) )
         n_vec[j] = n_num
@@ -2250,7 +2256,7 @@ def gauss_method_sat_passes(filename, obs_arr=None, bodyname=None, r2_root_ind_v
     sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
 
     # Earth's G*m value
-    mu = mu_Earth
+    # mu = mu_Earth
 
     # if r2_root_ind_vec was not specified, then use always the first positive root by default
     if r2_root_ind_vec is None:
@@ -2419,7 +2425,7 @@ def gauss_method_sat(filename, obs_arr=None, bodyname=None, r2_root_ind_vec=None
     sat_observatories_data = por.load_sat_observatories_data('../station_observatory_data/sat_tracking_observatories.txt')
 
     # Earth's G*m value
-    mu = mu_Earth
+    # mu = mu_Earth
 
     # if r2_root_ind_vec was not specified, then use always the first positive root by default
     if r2_root_ind_vec is None:
@@ -2613,10 +2619,13 @@ def read_args():
 if __name__ == "__main__":
 
     args = read_args()
+    # print(args)
     if args.obs_array is None:
+        # print("None ")
         gauss_method_sat(args.file_path, bodyname=args.body_name,
                          r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)
     else:
+        # print("INSIDE OBS_ARRAY")
         obs_arr = [int(item) for item in args.obs_array.split(',')]
         gauss_method_sat(args.file_path, obs_arr=obs_arr, bodyname=args.body_name,
                          r2_root_ind_vec=args.root_index, refiters=args.iterations, plot=args.plot)

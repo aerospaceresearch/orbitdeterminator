@@ -59,7 +59,7 @@ def res_vec_1(x, my_data):
 
 def get_weights(resid):
     """
-    This function calculates the weights per (x,y,z) by using the inverse of the squared residuals divided by the total sum of the inverse of the squared residuals. 
+    This function calculates the weights per (x,y,z) by using the inverse of the squared residuals divided by the total sum of the inverse of the squared residuals.
     """
     total = sum([abs(resid[i]) for i in range(len(resid))])
     fract = np.array([resid[i]/total for i in range(len(resid))])
@@ -112,7 +112,7 @@ def radec_res_vec_rov_sat_w(x, inds, iod_object_data, sat_observatories_data, ro
         # store O-C residual into vector (O-C = "Observed minus Computed")
         rv[2*i-2], rv[2*i-1] = diff_ra, diff_dec
         rv[2*i-2]= weights[i]*rv[2*i-2]
-        rv[2*i-1]= weights[i]*rv[2*i-1] 
+        rv[2*i-1]= weights[i]*rv[2*i-1]
     return rv
 
 def radec_res_vec_rov_mpc_w(x, inds, mpc_object_data, mpc_observatories_data, rov, weights):
@@ -144,7 +144,7 @@ def radec_res_vec_rov_mpc_w(x, inds, mpc_object_data, mpc_observatories_data, ro
         # assign residuals to ra/dec residuals vector
         rv[2*i-2], rv[2*i-1] = radec_res
         rv[2*i-2]= weights[i]*rv[2*i-2]
-        rv[2*i-1]= weights[i]*rv[2*i-1]        
+        rv[2*i-1]= weights[i]*rv[2*i-1]
     return rv
 
 # evaluate cost function given a set of observations
@@ -232,16 +232,16 @@ def gauss_LS_sat(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
                                   args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov, weights),
                                   method='lm',
                                   xtol=1e-13)
-             
+
     elif(chk=='1'):
              Q_ls = least_squares(radec_res_vec_rov_sat, x0,
                                   args=(obs_arr_ls, iod_object_data, sat_observatories_data, rov),
                                   method='lm',
                                   xtol=1e-13)
-             
+
     else:
              print("Invalid input.Exiting...")
-             sys.exit()  
+             sys.exit()
 
     print('\nINFO: scipy.optimize.least_squares exited with code', Q_ls.status)
     print(Q_ls.message,'\n')
@@ -375,10 +375,10 @@ def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
              Q_ls = least_squares(radec_res_vec_rov_mpc, x0,
                                   args=(obs_arr_ls, mpc_object_data, mpc_observatories_data, rov),
                                   method='lm')
-             
+
     else:
              print("Invalid input.Exiting...")
-             sys.exit()  
+             sys.exit()
 
 
     print('\nINFO: scipy.optimize.least_squares exited with code ', Q_ls.status)
@@ -460,7 +460,8 @@ def gauss_LS_mpc(filename, bodyname, obs_arr, r2_root_ind_vec=None, obs_arr_ls=N
 
 if __name__ == "__main__":
     # Earth's mass parameter in appropriate units:
-    mu_Earth = 398600.435436E9 # m^3/seg^2
+    # mu_Earth = 398600.435436E9 # m^3/sec^2
+    mu_Earth = 398600.435436 # km^3/sec^2
     #Earth's radius in appropriate units:
     # R_Earth =  6378136.3 #m
     #minimal acceptable altitude for satellites (150 km)??
@@ -486,11 +487,11 @@ if __name__ == "__main__":
     #estimate time of pericenter passage from true anomaly at epoch
     E_ = truean2eccan(e_, f_) #ecc. anomaly
     M_ = E_-e_*np.sin(E_) #mean anomaly
-    n_ = meanmotion(mu_Earth,a_) #mean motion
+    n_ = meanmotion(mu_Earth*(10**9),a_) #mean motion
     taup_ = data[0,0]-M_/n_ #time of pericenter passage
 
     # this is the vector of initial guess of orbital elements:
-    x0 = np.array((a_, e_, taup_, omega_, I_, Omega_, mu_Earth))
+    x0 = np.array((a_, e_, taup_, omega_, I_, Omega_, mu_Earth*(10**9)))
 
     print('Orbital elements, initial guess:')
     print('Semi-major axis (a):                 ',a_,'m')
@@ -499,7 +500,7 @@ if __name__ == "__main__":
     print('Argument of pericenter (omega):      ',np.rad2deg(omega_),'deg')
     print('Inclination (I):                     ',np.rad2deg(I_),'deg')
     print('Longitude of Ascending Node (Omega): ',np.rad2deg(Omega_),'deg')
-    print('Earth\'s G*mass                     : ',mu_Earth,'m^3 s^-2\n')
+    print('Earth\'s G*mass                     : ',mu_Earth*(10**9),'m^3 s^-2\n')
 
     #the arithmetic mean will be used as the reference epoch for the elements
     t_mean = np.mean(data[:,0])
@@ -525,12 +526,12 @@ if __name__ == "__main__":
              #print(weights)
              #print("--")
              Q_ls = least_squares(res_vec, x0, args=(data,weights), method='lm')
-             
+
     elif(chk=='1'):
              Q_ls = least_squares(res_vec_1, x0, args=(data,), method='lm')
     else:
              print("Invalid input.Exiting...")
-             sys.exit()          
+             sys.exit()
 
     print('scipy.optimize.least_squares exited with code ', Q_ls.status)
     print(Q_ls.message,'\n')
@@ -542,7 +543,7 @@ if __name__ == "__main__":
     print('Time of pericenter passage (tau):    ', Q_ls.x[2], 'sec')
     print('Pericenter distance (q):             ', Q_ls.x[0]*(1.0-Q_ls.x[1]), 'm')
     print('Apocenter distance (Q):              ', Q_ls.x[0]*(1.0+Q_ls.x[1]), 'm')
-    print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth , t_mean, Q_ls.x[2])), 'deg')
+    print('True anomaly at epoch (f0):          ', np.rad2deg(time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth*(10**9) , t_mean, Q_ls.x[2])), 'deg')
     print('Argument of pericenter (omega):      ', np.rad2deg(Q_ls.x[3]), 'deg')
     print('Inclination (I):                     ', np.rad2deg(Q_ls.x[4]), 'deg')
     print('Longitude of Ascending Node (Omega): ', np.rad2deg(Q_ls.x[5]), 'deg')
@@ -557,10 +558,10 @@ if __name__ == "__main__":
 
     #generate plots:
     plt.scatter( data[:,0], ranges_ ,s=0.1, label='observed data')
-    plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth, data[:,0], x0[2])),
+    plt.plot( data[:,0], kep_r_(x0[0], x0[1], time2truean(x0[0], x0[1], mu_Earth*(10**9), data[:,0], x0[2])),
               color="green",
               label='initial fit')
-    plt.plot( data[:,0], kep_r_(Q_ls.x[0], Q_ls.x[1], time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth, data[:,0], Q_ls.x[2])),
+    plt.plot( data[:,0], kep_r_(Q_ls.x[0], Q_ls.x[1], time2truean(Q_ls.x[0], Q_ls.x[1], mu_Earth*(10**9), data[:,0], Q_ls.x[2])),
               color="orange",
               label='LS fit')
     plt.xlabel('time')
@@ -568,4 +569,3 @@ if __name__ == "__main__":
     plt.title('LS fit vs observations: range')
     plt.legend()
     plt.show()
-

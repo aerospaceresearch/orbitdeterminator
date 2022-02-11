@@ -20,7 +20,7 @@ def ypol_a(y):
         numpy array: derivative of the state vector (velocity + acceleration)
 
     '''
-    mu=398600.4405
+    mu_Earth=398600.4405
     y_parag = np.zeros((6,1))
     agrav = np.zeros((3,1))
 
@@ -29,7 +29,7 @@ def ypol_a(y):
     r3 = r2*r1
 
     for i in range(0,3):
-        agrav[i,0] = agrav[i,0] -(mu * y[i,0] / r3)
+        agrav[i,0] = agrav[i,0] -(mu_Earth * y[i,0] / r3)
 
     y_parag[0,0]=y[3,0]
     y_parag[1,0]=y[4,0]
@@ -215,4 +215,3 @@ if __name__ == "__main__":
     xout = rkf78(neq, ti, tf, h, tetol, x)
     print(sqrt(xout[0]**2+xout[1]**2+xout[2]**2))
     print(xout)
-

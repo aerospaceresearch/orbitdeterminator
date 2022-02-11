@@ -26,7 +26,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 import kep_determination.positional_observation_reporting as por
 import util.read_data as rd
 
-mu = 398600.0
+mu_Earth = 398600.0
 
 plotnames = "ggg_"
 starttime = time.time()
@@ -253,8 +253,8 @@ def get_state_sum(r_a, r_p, inc, raan, AoP, tp, bstar, td, station, timestamp_mi
 
     # preparing the orbit parameter needed for the simulated orbit
     eccentricity = (r_a - r_p) / (r_a + r_p)
-    h_angularmomentuum = np.sqrt(r_p * (1.0 + eccentricity * np.cos(0)) * mu)
-    T_orbitperiod = 2.0 * np.pi / mu ** 2.0 * (h_angularmomentuum / np.sqrt(1.0 - eccentricity ** 2)) ** 3
+    h_angularmomentuum = np.sqrt(r_p * (1.0 + eccentricity * np.cos(0)) * mu_Earth)
+    T_orbitperiod = 2.0 * np.pi / mu_Earth ** 2.0 * (h_angularmomentuum / np.sqrt(1.0 - eccentricity ** 2)) ** 3
 
     me = tp * (2.0 * np.pi) / T_orbitperiod * 180.0 / np.pi
     me = zeroTo360(me)
@@ -659,8 +659,8 @@ def find_orbit(nwalkers, ndim, pos, parameters, finding, loops, walks, counter, 
                                                                         orbit)
 
         eccentricity = (r_a - r_p) / (r_a + r_p)
-        h_angularmomentuum = np.sqrt(r_p * (1.0 + eccentricity * np.cos(0)) * mu)
-        T_orbitperiod = 2.0 * np.pi / mu ** 2.0 * (h_angularmomentuum / np.sqrt(1.0 - eccentricity ** 2)) ** 3
+        h_angularmomentuum = np.sqrt(r_p * (1.0 + eccentricity * np.cos(0)) * mu_Earth)
+        T_orbitperiod = 2.0 * np.pi / mu_Earth ** 2.0 * (h_angularmomentuum / np.sqrt(1.0 - eccentricity ** 2)) ** 3
 
         me = tp * (2.0 * np.pi) / T_orbitperiod * 180.0 / np.pi
         me = zeroTo360(me)
@@ -855,8 +855,8 @@ def optimize_with_mcmc(parameters, finding, loops, walks, nwalkers, counter, sta
         if "tp" in finding:
 
             eccentricity = (r_a - r_p) / (r_a + r_p)
-            h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu)
-            T_orbitperiod = 2.0 * np.pi / mu ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
+            h_angularmomentuum = np.sqrt(r_p * (1 + eccentricity * np.cos(0)) * mu_Earth)
+            T_orbitperiod = 2.0 * np.pi / mu_Earth ** 2 * (h_angularmomentuum / np.sqrt(1 - eccentricity ** 2)) ** 3
 
             random_steps = 10000.0
             random_factor = random_steps / np.abs(tp_lim[1] - tp_lim[0])

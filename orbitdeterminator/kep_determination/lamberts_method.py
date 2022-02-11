@@ -23,12 +23,12 @@ def F_z_i(z, t, r1, r2, A):
     F: function
 
     """
-    mu = mu_Earth
+    # mu = mu_Earth
     C_z_i = c2(z)
     S_z_i = c3(z)
     y_z = r1 + r2 + A * (z * S_z_i - 1.0) / np.sqrt(C_z_i)
 
-    F = (y_z / C_z_i) ** 1.5 * S_z_i + A * np.sqrt(np.abs(y_z)) - np.sqrt(mu) * t
+    F = (y_z / C_z_i) ** 1.5 * S_z_i + A * np.sqrt(np.abs(y_z)) - np.sqrt(mu_Earth) * t
 
     return F
 
@@ -45,7 +45,7 @@ def dFdz(z, r1, r2, A):
     df: derivative for Netwon's method.
 
     """
-    mu = mu_Earth
+    # mu = mu_Earth
 
     if z == 0:
         C_z_i = c2(0)
@@ -138,8 +138,8 @@ def lamberts_method(R1, R2, delta_time, trajectory_cw=False):
 
     f = 1.0 - y_z / r1
 
-    mu = mu_Earth
-    g = A * np.sqrt(y_z / mu)
+    # mu = mu_Earth
+    g = A * np.sqrt(y_z / mu_Earth)
 
     gdot = 1.0 - y_z / r2
 

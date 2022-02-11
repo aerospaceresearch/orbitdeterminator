@@ -26,14 +26,14 @@ def state_kep(r, v):
         kep(5): true anomaly (degrees)
     '''
 
-    mu = 398600.4405
+    mu_Earth = 398600.4405
     mag_r = np.sqrt(r.dot(r))
     mag_v = np.sqrt(v.dot(v))
 
     h = np.cross(r, v)
     mag_h = np.sqrt(h.dot(h))
 
-    e = ((np.cross(v, h)) / mu) - (r / mag_r)
+    e = ((np.cross(v, h)) / mu_Earth) - (r / mag_r)
     mag_e = np.sqrt(e.dot(e))
 
     n = np.array([-h[1], h[0], 0])
@@ -59,7 +59,7 @@ def state_kep(r, v):
         per = 2 * math.pi - per
     per = math.degrees(per)
 
-    a = 1 / ((2 / mag_r) - (mag_v**2 / mu))
+    a = 1 / ((2 / mag_r) - (mag_v**2 / mu_Earth))
 
     if i >= 360.0:
         i = i - 360

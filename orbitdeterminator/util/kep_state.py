@@ -27,7 +27,7 @@ def kep_state(kep):
     '''
 
     r = np.zeros((6, 1))
-    mu = 398600.4405
+    mu_Earth = 398600.4405
 
     # unload orbital elements array
 
@@ -50,7 +50,7 @@ def kep_state(kep):
     sarglat = sin(arglat)
     carglat = cos(arglat)
 
-    c4 = sqrt(mu / slr)
+    c4 = sqrt(mu_Earth / slr)
     c5 = ecc * cos(argper) + carglat
     c6 = ecc * sin(argper) + sarglat
 
@@ -104,6 +104,3 @@ if __name__ == "__main__":
 	kep = np.array([[15711.578566], [0.377617], [90.0], [0.887383], [0.0], [28.357744]])
 	r = kep_state(kep)
 	print(r)
-
-
-

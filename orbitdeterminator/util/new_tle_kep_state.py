@@ -4,7 +4,7 @@ import math
 import numpy as np
 from scipy.optimize import fsolve
 
-mu = 398600.4418
+mu_Earth = 398600.4418
 
 def __MtoE(M,e):
     """Calculates the eccentric anomaly from the mean anomaly.
@@ -60,7 +60,7 @@ def tle_to_state(tle):
 
     # unload orbital elements array
     T = 86400/tle[5]
-    sma = (mu*(T/2/math.pi)**2)**(1/3)
+    sma = (mu_Earth*(T/2/math.pi)**2)**(1/3)
     ecc = tle[2]  # eccentricity
     inc = tle[0]  # inclination
     argp = tle[3]  # argument of perigee
@@ -111,7 +111,7 @@ def kep_to_state(kep):
     y = smb * math.sin(eanom)
 
     # calculate position and velocity in orbital frame
-    m_dot = (mu/sma**3)**0.5
+    m_dot = (mu_Earth/sma**3)**0.5
     e_dot = m_dot/(1 - ecc*math.cos(eanom))
     x_dot = -sma * math.sin(eanom) * e_dot
     y_dot =  smb * math.cos(eanom) * e_dot
