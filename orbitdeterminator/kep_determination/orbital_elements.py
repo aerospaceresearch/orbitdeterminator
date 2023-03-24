@@ -51,7 +51,7 @@ def h_angularmomentuum(R=None, V=None, semimajor_axis=None, eccentricity=None):
 
     h_angularmomentuum = None
 
-    if R.any != None and V.any != None:
+    if R is not None and V is not None:
         h = np.cross(R, V)
         h_angularmomentuum = np.linalg.norm(h)
 
@@ -119,7 +119,7 @@ def true_anomaly(R=None, V=None, eccentricity=None, E_eccentric_anomaly=None):
 
     true_anomaly = None
 
-    if R.any != None and V.any != None:
+    if R is not None and V is not None:
 
         r_abs = np.linalg.norm(R)
         v_abs = np.linalg.norm(V)
@@ -194,7 +194,7 @@ def semimajor_axis(R = None, V = None, T_orbitperiod = None):
 
     semimajor_axis = None
 
-    if R.any != None and V.any != None:
+    if R is not None and V is not None:
         eccentricity_vec = eccentricity_v(R, V)
         eccentricity = np.linalg.norm(eccentricity_vec)
 
